@@ -1,0 +1,34 @@
+{
+  "version": "1.5.2",
+  "blockSets": [
+    {
+      "name": "Scriptorium Focus Block (Social & Video)",
+      "sites": [
+        "*youtube.com*",
+        "*reddit.com*",
+        "*twitter.com*",
+        "*x.com*",
+        "*instagram.com*",
+        "*facebook.com*",
+        "*tiktok.com*",
+        "*twitch.tv*",
+        "*netflix.com*",
+        "*news.ycombinator.com*",
+        "*threads.net*"
+      ],
+      "times": "0900-1300,1400-1700",
+      "days": "0123456",
+      "limit": 0,
+      "period": "day",
+      "action": "block",
+      "blockPage": "https://en.wikipedia.org/wiki/Special:Random",
+      "password": "",
+      "active": true
+    }
+  ],
+  "general": {
+    "showWarning": true,
+    "warningTime": 60,
+    "override": false
+  }
+}

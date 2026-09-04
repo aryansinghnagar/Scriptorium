@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=New World Creator
+GenericName=Scriptorium World Initializer
+Comment=Scaffold a new world folder with Obsidian World Bible and novelWriter manuscript templates
+Exec=bash -c "__PROJECT_ROOT__/scripts/init_world.sh"
+TryExec=bash
+Icon=folder-new
+Terminal=false
+Categories=Office;Utility;Writing;
+Keywords=Writing;Worldbuilding;Novel;Obsidian;
+StartupNotify=true

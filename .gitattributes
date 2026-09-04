@@ -1,0 +1,6 @@
+*.sh text eol=lf
+*.typ text eol=lf
+*.desktop text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.nwx text eol=lf

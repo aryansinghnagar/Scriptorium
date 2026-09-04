@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Scriptorium placeholder (H7).
+  This is NOT a complete novelWriter project file. Real novelWriter >=2.0 projects
+  use <novelWriterXML fileVersion="1.5" ...> with hex handles, a content/ folder
+  of .nwd documents, meta/ indexes, and ToC.txt (see https://novelwriter.io/docs/technical/storage.html).
+  Do NOT rely on opening this stub directly. Workflow:
+  1. Open novelWriter -> New Project -> create in 01-Manuscript/
+  2. Import the Markdown chapters from Book-01/*/ as documents, or draft natively.
+  3. Scriptorium export (export_book.sh) reads the Markdown files directly, so the
+     .nwx is optional for PDF/EPUB. Keep this stub only to preserve folder shape.
+-->
+<novelWriterRoot id="scriptorium-starter-project" version="2.0">
+  <project>
+    <title>My Novel</title>
+    <author>Author Name</author>
+    <saveCount>1</saveCount>
+    <autoCount>0</autoCount>
+    <editTime>0</editTime>
+  </project>
+  <settings>
+    <spellChecking>true</spellChecking>
+    <autoSave>true</autoSave>
+  </settings>
+  <content>
+    <item id="root" parent="None" root="None" type="Root" handle="root">
+      <name>Novel Root</name>
+    </item>
+  </content>
+</novelWriterRoot>
