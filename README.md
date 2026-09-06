@@ -3,6 +3,18 @@
 > **A low-effort, beginner-friendly system for novels and worldbuilding.**  
 > Built for authors on Linux Mint (XFCE) & Debian. Everything in open Markdown. Zero terminal required for daily writing.
 
+[![Status: Work in Progress](https://img.shields.io/badge/Status-Work--In--Progress-orange.svg)](#)
+[![Testing: Untested](https://img.shields.io/badge/Testing-Untested-red.svg)](#)
+[![Stability: Experimental](https://img.shields.io/badge/Stability-Experimental-red.svg)](#)
+
+> [!CAUTION]
+> ### ⚠️ EXPERIMENTAL & UNTESTED — WORK IN PROGRESS
+> This repository is an active **Work-In-Progress (WIP)** and is currently **untested across standard Linux distributions**.
+>
+> - **Experimental Setup Scripts**: The automated setup and environment scripts (`setup.sh`, `verify.sh`, package installations) are experimental and may overwrite or conflict with local desktop configurations.
+> - **Not for General End Users**: This workspace template is not intended for non-technical users or mission-critical authoring without prior independent backups.
+> - **Use at Your Own Risk**: Automated system scripts and configuration adjustments could alter local system packages, fonts, or desktop settings unexpectedly.
+
 > **Start here:** [Quick Start](#-quick-start-automated-setup) installs everything. Remaining Linux-only checks (Typst compile, LeechBlock import, novelWriter project) are in [Finishing_Touches.md](Finishing_Touches.md). Run `bash scripts/verify.sh` anytime for a 30-second health check.
 
 ---
