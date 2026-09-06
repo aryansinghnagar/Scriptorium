@@ -1,0 +1,74 @@
+name: Scriptorium CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: Lint, Validate & Smoke Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck desktop-file-utils pandoc
+
+      - name: Set up Typst
+        uses: typst-community/setup-typst@v4
+        with:
+          typst-version: 'latest'
+
+      - name: Print environment and tool versions
+        run: |
+          bash --version | head -n 1
+          python3 --version
+          pandoc --version | head -n 2
+          typst --version
+          shellcheck --version
+          desktop-file-validate --version
+
+      - name: Bash syntax validation (bash -n)
+        run: |
+          for f in scripts/*.sh; do
+            bash -n "$f" && echo "  OK $f"
+          done
+
+      - name: ShellCheck static analysis
+        run: |
+          shellcheck -S warning scripts/*.sh
+
+      - name: Validate desktop launcher entries
+        run: |
+          desktop-file-validate launchers/*.desktop
+
+      - name: Validate JSON and XML configurations
+        run: |
+          python3 -c "import json; json.load(open('configs/leechblock_scriptorium_rules.json')); print('  OK leechblock JSON')"
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('templates/manuscript/nwProject.nwx'); print('  OK nwProject XML')"
+
+      - name: Run verification harness (scripts/verify.sh)
+        run: |
+          bash scripts/verify.sh
+
+      - name: Smoke test Typst book preview compilation
+        run: |
+          typst compile templates/typst/preview_sample.typ /tmp/scriptorium-preview.pdf
+          ls -lh /tmp/scriptorium-preview.pdf
+
+      - name: Smoke test Pandoc Markdown to Typst conversion
+        run: |
+          pandoc -f markdown -t typst templates/manuscript/Book-01/01_Act_I/01_Chapter_01.md -o /tmp/chapter1.typ
+          head -n 25 /tmp/chapter1.typ

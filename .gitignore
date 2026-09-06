@@ -1,26 +1,81 @@
 # Scriptorium root .gitignore — repo holds templates/scripts/docs only.
 # Runtime worlds live in ~/Worlds (outside this repo) and are never committed.
 
-# Export outputs (in case a world folder is ever staged by accident)
+# Export and publishing outputs (in case a world folder is staged by accident)
 *.pdf
 *.epub
 *.mobi
 *.azw3
+*.docx
+04-Exports/
+04-Publishing/
 
-# Editor / OS noise
+# Runtime world folders
+Worlds/
+00-World-Bible/
+01-Manuscript/
+02-Maps/
+03-Art/
+
+# Editor and IDE noise
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*.swn
+*~
+.#*
+\#*#
+
+# Obsidian Vault runtime noise
 .obsidian/workspace.json
-.obsidian/cache
+.obsidian/workspace-mobile.json
+.obsidian/cache/
+.obsidian/graph.json
+.obsidian/indexeddb/
+
+# Operating System noise
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+Thumbs.db
+Thumbs.db:encryptable
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Python and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Local backup directories and archives
+05-Backups/
+*.tar.xz
+*.tar.gz
+*.zip
+*.7z
+
+# Verification artifacts and temporary files
 *.bak
 *.tmp
 *.log
-.DS_Store
-Thumbs.db
-*~
-
-# Local backup dirs and archives
-05-Backups/
-*.tar.xz
-*.zip
-
-# Verification artifacts (stay in /tmp, referenced by name in commit messages)
 /tmp/
+scratch/
+
+# Secrets and environment files
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
