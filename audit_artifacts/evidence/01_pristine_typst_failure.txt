@@ -1,0 +1,18 @@
+=================================================================
+EVIDENCE 1: Typst compile failure on PRISTINE tree (SYS-01)
+=================================================================
+$ typst --version
+typst 0.12.0 (737895d7)
+
+$ /usr/local/bin/typst compile templates/typst/preview_sample.typ /tmp/out.pdf
+error: pagebreaks are not allowed inside of containers
+RESULT: FAILED — no PDF produced
+$ /tmp/typst-013 compile templates/typst/preview_sample.typ /tmp/out.pdf
+error: pagebreaks are not allowed inside of containers
+RESULT: FAILED — no PDF produced
+$ /tmp/typst-014 compile templates/typst/preview_sample.typ /tmp/out.pdf
+error: pagebreaks are not allowed inside of containers
+RESULT: FAILED — no PDF produced
+
+The pristine repo's Definition of Done ('typst compile preview_sample.typ
+produces a paginated PDF') is unmet on every modern Typst release.

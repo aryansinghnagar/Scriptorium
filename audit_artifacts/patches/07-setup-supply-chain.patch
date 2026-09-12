@@ -1,0 +1,62 @@
+From c5660be65b9264536d413f6dd1baf0bd5f9727fb Mon Sep 17 00:00:00 2001
+From: Z User <z@container>
+Date: Sat, 12 Sep 2026 08:44:49 +0000
+Subject: [PATCH] hardening(setup): verify Typst release tarball sha256 against
+ GitHub asset digest before install
+
+---
+ scripts/setup_scriptorium.sh | 38 +++++++++++++++++++++++++++++++-----
+ 1 file changed, 33 insertions(+), 5 deletions(-)
+
+diff --git a/scripts/setup_scriptorium.sh b/scripts/setup_scriptorium.sh
+index 77ab744..ab74620 100644
+--- a/scripts/setup_scriptorium.sh
++++ b/scripts/setup_scriptorium.sh
+@@ -97,11 +97,39 @@ if ! command -v typst &> /dev/null; then
+     if [ -n "${TYPST_ARCH:-}" ]; then
+         TYPST_URL="https://github.com/typst/typst/releases/latest/download/typst-${TYPST_ARCH}.tar.xz"
+         if curl -L -f -o "${TEMP_DIR}/typst.tar.xz" "${TYPST_URL}"; then
+-            tar -xf "${TEMP_DIR}/typst.tar.xz" -C "${TEMP_DIR}"
+-            TYPST_BIN=$(find "${TEMP_DIR}" -type f -name "typst" | head -n 1)
+-            if [ -n "${TYPST_BIN}" ]; then
+-                sudo install -m 755 "${TYPST_BIN}" /usr/local/bin/typst
+-                echo "[✓] Typst installed successfully to /usr/local/bin/typst"
++            # P-07: verify the tarball digest against the GitHub release asset
++            # digest before installing a root-owned binary. GitHub publishes
++            # sha256 digests for release assets via the REST API; we fetch the
++            # expected value over the same TLS channel as the artifact and
++            # refuse to install on mismatch or unverifiable digest.
++            TYPST_TAG=$(curl -sS -f "https://api.github.com/repos/typst/typst/releases/latest" | jq -r '.tag_name // empty' 2>/dev/null || true)
++            TYPST_OK=0
++            if [ -n "${TYPST_TAG}" ]; then
++                EXPECTED=$(curl -sS -f "https://api.github.com/repos/typst/typst/releases/tags/${TYPST_TAG}" \
++                    | jq -r --arg asset "typst-${TYPST_ARCH}.tar.xz" \
++                        '.assets[] | select(.name == $asset) | .digest // empty' 2>/dev/null || true)
++                if [ -n "${EXPECTED}" ]; then
++                    EXPECTED=${EXPECTED#sha256:}
++                    ACTUAL=$(sha256sum "${TEMP_DIR}/typst.tar.xz" | cut -d' ' -f1)
++                    if [ "${EXPECTED}" = "${ACTUAL}" ]; then
++                        TYPST_OK=1
++                        echo "[✓] Typst tarball digest verified (sha256 ${ACTUAL:0:16}...)"
++                    else
++                        echo "[!] Typst digest mismatch: expected ${EXPECTED}, got ${ACTUAL}. Aborting install."
++                    fi
++                else
++                    echo "[!] GitHub did not publish a digest for this asset. Skipping unverifiable install (install manually or via cargo: cargo install --locked typst-cli)."
++                fi
++            fi
++            if [ "${TYPST_OK}" -eq 1 ]; then
++                tar -xf "${TEMP_DIR}/typst.tar.xz" -C "${TEMP_DIR}"
++                TYPST_BIN=$(find "${TEMP_DIR}" -type f -name "typst" | head -n 1)
++                if [ -n "${TYPST_BIN}" ]; then
++                    sudo install -m 755 "${TYPST_BIN}" /usr/local/bin/typst
++                    echo "[✓] Typst installed successfully to /usr/local/bin/typst"
++                fi
++            elif [ -z "${TYPST_TAG}" ]; then
++                echo "[!] Could not reach the GitHub API to verify the Typst digest. Skipping unverifiable install (install manually or via cargo: cargo install --locked typst-cli)."
+             fi
+         else
+             echo "[!] Warning: Could not download precompiled Typst binary. You can install cargo and run: cargo install --locked typst-cli"
+-- 
+2.47.3
+

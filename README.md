@@ -55,7 +55,7 @@ If you have booted into Linux Mint XFCE or Debian:
 1. **Clone or download this repository** into your home folder:
    ```bash
    cd ~/Downloads
-   git clone https://github.com/<your-username>/7-Scriptorium.git Scriptorium
+   git clone https://github.com/aryansinghnagar/Scriptorium.git Scriptorium
    cd Scriptorium
    ```
    > Replace `<your-username>` with your GitHub username after pushing this project.

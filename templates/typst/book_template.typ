@@ -35,7 +35,7 @@
 
   // Configure base text styles
   set text(
-    font: (body-font, "Libertinus Serif", "EB Garamond", "DejaVu Serif", "serif"),
+    font: (body-font, "Libertinus Serif", "EB Garamond", "DejaVu Serif"),
     size: font-size,
     lang: "en"
   )
@@ -160,14 +160,17 @@
   counter(page).update(1)
 
   // Heading 1 (# Chapter) configuration
-  show heading.where(level: 1): it => block(width: 100%)[
-    #pagebreak(to: "odd")
-    #v(1.5in)
-    #align(center)[
+  // NOTE: `pagebreak` MUST NOT be wrapped in a `block()` container — Typst
+  // 0.12+ rejects pagebreaks inside containers ("pagebreaks are not allowed
+  // inside of containers"), which killed every level-1 chapter compile.
+  show heading.where(level: 1): it => {
+    pagebreak(to: "odd")
+    v(1.5in)
+    align(center)[
       #text(font: heading-font, size: 16pt, weight: "bold", tracking: 0.1em, upper(it.body))
     ]
-    #v(1.2in)
-  ]
+    v(1.2in)
+  }
 
   // Heading 2 (Sub-sections)
   show heading.where(level: 2): it => block(width: 100%)[

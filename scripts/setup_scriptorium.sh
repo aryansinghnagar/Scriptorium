@@ -60,7 +60,7 @@ fi
 
 # Ensure Flathub is enabled for Flatpak (M6: explicit --system scope, sudo for system-wide)
 echo "[3/6] Configuring Flathub repository..."
-if ! flatpak remote-list --system 2>/dev/null | grep -q "flathub"; then
+if ! flatpak remotes --system 2>/dev/null | grep -q "flathub"; then
     sudo flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 fi
 
@@ -97,11 +97,39 @@ if ! command -v typst &> /dev/null; then
     if [ -n "${TYPST_ARCH:-}" ]; then
         TYPST_URL="https://github.com/typst/typst/releases/latest/download/typst-${TYPST_ARCH}.tar.xz"
         if curl -L -f -o "${TEMP_DIR}/typst.tar.xz" "${TYPST_URL}"; then
-            tar -xf "${TEMP_DIR}/typst.tar.xz" -C "${TEMP_DIR}"
-            TYPST_BIN=$(find "${TEMP_DIR}" -type f -name "typst" | head -n 1)
-            if [ -n "${TYPST_BIN}" ]; then
-                sudo install -m 755 "${TYPST_BIN}" /usr/local/bin/typst
-                echo "[✓] Typst installed successfully to /usr/local/bin/typst"
+            # P-07: verify the tarball digest against the GitHub release asset
+            # digest before installing a root-owned binary. GitHub publishes
+            # sha256 digests for release assets via the REST API; we fetch the
+            # expected value over the same TLS channel as the artifact and
+            # refuse to install on mismatch or unverifiable digest.
+            TYPST_TAG=$(curl -sS -f "https://api.github.com/repos/typst/typst/releases/latest" | jq -r '.tag_name // empty' 2>/dev/null || true)
+            TYPST_OK=0
+            if [ -n "${TYPST_TAG}" ]; then
+                EXPECTED=$(curl -sS -f "https://api.github.com/repos/typst/typst/releases/tags/${TYPST_TAG}" \
+                    | jq -r --arg asset "typst-${TYPST_ARCH}.tar.xz" \
+                        '.assets[] | select(.name == $asset) | .digest // empty' 2>/dev/null || true)
+                if [ -n "${EXPECTED}" ]; then
+                    EXPECTED=${EXPECTED#sha256:}
+                    ACTUAL=$(sha256sum "${TEMP_DIR}/typst.tar.xz" | cut -d' ' -f1)
+                    if [ "${EXPECTED}" = "${ACTUAL}" ]; then
+                        TYPST_OK=1
+                        echo "[✓] Typst tarball digest verified (sha256 ${ACTUAL:0:16}...)"
+                    else
+                        echo "[!] Typst digest mismatch: expected ${EXPECTED}, got ${ACTUAL}. Aborting install."
+                    fi
+                else
+                    echo "[!] GitHub did not publish a digest for this asset. Skipping unverifiable install (install manually or via cargo: cargo install --locked typst-cli)."
+                fi
+            fi
+            if [ "${TYPST_OK}" -eq 1 ]; then
+                tar -xf "${TEMP_DIR}/typst.tar.xz" -C "${TEMP_DIR}"
+                TYPST_BIN=$(find "${TEMP_DIR}" -type f -name "typst" | head -n 1)
+                if [ -n "${TYPST_BIN}" ]; then
+                    sudo install -m 755 "${TYPST_BIN}" /usr/local/bin/typst
+                    echo "[✓] Typst installed successfully to /usr/local/bin/typst"
+                fi
+            elif [ -z "${TYPST_TAG}" ]; then
+                echo "[!] Could not reach the GitHub API to verify the Typst digest. Skipping unverifiable install (install manually or via cargo: cargo install --locked typst-cli)."
             fi
         else
             echo "[!] Warning: Could not download precompiled Typst binary. You can install cargo and run: cargo install --locked typst-cli"
@@ -124,11 +152,24 @@ mkdir -p "${HOME}/Worlds"
 chmod +x "${PROJECT_ROOT}/scripts/"*.sh || true
 
 # Copy desktop launchers
+# P-03: escape sed replacement metachars (backslash, &, |) so home/project
+# paths containing spaces, '&', '|' or backslashes cannot corrupt the
+# generated .desktop files. Exec lines drop the `bash -c` wrapper (bash
+# re-parses its string argument, so spaced paths word-split fatally).
+escape_sed_repl() {
+    local s="$1"
+    s="${s//\\\\/\\\\\\\\}"
+    s="${s//&/\\&}"
+    s="${s//|/\\|}"
+    printf '%s' "$s"
+}
+HOME_ESC=$(escape_sed_repl "${HOME}")
+ROOT_ESC=$(escape_sed_repl "${PROJECT_ROOT}")
 for launcher in "${PROJECT_ROOT}/launchers/"*.desktop; do
     if [ -f "${launcher}" ]; then
         filename=$(basename "${launcher}")
         # Replace template placeholders with real home paths
-        sed "s|\${HOME}|${HOME}|g; s|__PROJECT_ROOT__|${PROJECT_ROOT}|g" "${launcher}" > "${HOME}/.local/share/applications/${filename}"
+        sed "s|\${HOME}|${HOME_ESC}|g; s|__PROJECT_ROOT__|${ROOT_ESC}|g" "${launcher}" > "${HOME}/.local/share/applications/${filename}"
         cp "${HOME}/.local/share/applications/${filename}" "${DESKTOP_DIR}/"
         chmod +x "${DESKTOP_DIR}/${filename}" || true
         chmod +x "${HOME}/.local/share/applications/${filename}" || true

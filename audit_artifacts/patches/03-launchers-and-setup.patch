@@ -1,0 +1,94 @@
+From 9790be47a46043ebabf4620c607c3f9450cee18b Mon Sep 17 00:00:00 2001
+From: Z User <z@container>
+Date: Sat, 12 Sep 2026 08:43:09 +0000
+Subject: [PATCH] fix(launchers): drop bash -c wrapper (spaced paths fatal),
+ escape sed replacement metachars, canonical flatpak remotes
+
+---
+ launchers/export-book.desktop   |  2 +-
+ launchers/init-world.desktop    |  2 +-
+ launchers/save-snapshot.desktop |  2 +-
+ scripts/setup_scriptorium.sh    | 17 +++++++++++++++--
+ 4 files changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/launchers/export-book.desktop b/launchers/export-book.desktop
+index bdae499..ad520b4 100644
+--- a/launchers/export-book.desktop
++++ b/launchers/export-book.desktop
+@@ -4,7 +4,7 @@ Type=Application
+ Name=Export Book
+ GenericName=Book Typesetter
+ Comment=Compile Markdown and novelWriter manuscripts into print-ready PDF and EPUB
+-Exec=bash -c "__PROJECT_ROOT__/scripts/export_book.sh"
++Exec=bash "__PROJECT_ROOT__/scripts/export_book.sh"
+ TryExec=bash
+ Icon=document-print
+ Terminal=false
+diff --git a/launchers/init-world.desktop b/launchers/init-world.desktop
+index d8aae67..63332a6 100644
+--- a/launchers/init-world.desktop
++++ b/launchers/init-world.desktop
+@@ -4,7 +4,7 @@ Type=Application
+ Name=New World Creator
+ GenericName=Scriptorium World Initializer
+ Comment=Scaffold a new world folder with Obsidian World Bible and novelWriter manuscript templates
+-Exec=bash -c "__PROJECT_ROOT__/scripts/init_world.sh"
++Exec=bash "__PROJECT_ROOT__/scripts/init_world.sh"
+ TryExec=bash
+ Icon=folder-new
+ Terminal=false
+diff --git a/launchers/save-snapshot.desktop b/launchers/save-snapshot.desktop
+index 96d2ac6..e26881b 100644
+--- a/launchers/save-snapshot.desktop
++++ b/launchers/save-snapshot.desktop
+@@ -4,7 +4,7 @@ Type=Application
+ Name=Save Snapshot
+ GenericName=Project Snapshot
+ Comment=Record a point-in-time version snapshot of your manuscript and world bible
+-Exec=bash -c "__PROJECT_ROOT__/scripts/save_snapshot.sh"
++Exec=bash "__PROJECT_ROOT__/scripts/save_snapshot.sh"
+ TryExec=bash
+ Icon=document-save
+ Terminal=false
+diff --git a/scripts/setup_scriptorium.sh b/scripts/setup_scriptorium.sh
+index f4921fc..77ab744 100644
+--- a/scripts/setup_scriptorium.sh
++++ b/scripts/setup_scriptorium.sh
+@@ -60,7 +60,7 @@ fi
+ 
+ # Ensure Flathub is enabled for Flatpak (M6: explicit --system scope, sudo for system-wide)
+ echo "[3/6] Configuring Flathub repository..."
+-if ! flatpak remote-list --system 2>/dev/null | grep -q "flathub"; then
++if ! flatpak remotes --system 2>/dev/null | grep -q "flathub"; then
+     sudo flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+ fi
+ 
+@@ -124,11 +124,24 @@ mkdir -p "${HOME}/Worlds"
+ chmod +x "${PROJECT_ROOT}/scripts/"*.sh || true
+ 
+ # Copy desktop launchers
++# P-03: escape sed replacement metachars (backslash, &, |) so home/project
++# paths containing spaces, '&', '|' or backslashes cannot corrupt the
++# generated .desktop files. Exec lines drop the `bash -c` wrapper (bash
++# re-parses its string argument, so spaced paths word-split fatally).
++escape_sed_repl() {
++    local s="$1"
++    s="${s//\\\\/\\\\\\\\}"
++    s="${s//&/\\&}"
++    s="${s//|/\\|}"
++    printf '%s' "$s"
++}
++HOME_ESC=$(escape_sed_repl "${HOME}")
++ROOT_ESC=$(escape_sed_repl "${PROJECT_ROOT}")
+ for launcher in "${PROJECT_ROOT}/launchers/"*.desktop; do
+     if [ -f "${launcher}" ]; then
+         filename=$(basename "${launcher}")
+         # Replace template placeholders with real home paths
+-        sed "s|\${HOME}|${HOME}|g; s|__PROJECT_ROOT__|${PROJECT_ROOT}|g" "${launcher}" > "${HOME}/.local/share/applications/${filename}"
++        sed "s|\${HOME}|${HOME_ESC}|g; s|__PROJECT_ROOT__|${ROOT_ESC}|g" "${launcher}" > "${HOME}/.local/share/applications/${filename}"
+         cp "${HOME}/.local/share/applications/${filename}" "${DESKTOP_DIR}/"
+         chmod +x "${DESKTOP_DIR}/${filename}" || true
+         chmod +x "${HOME}/.local/share/applications/${filename}" || true
+-- 
+2.47.3
+

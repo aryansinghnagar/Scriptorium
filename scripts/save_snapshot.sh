@@ -18,6 +18,47 @@ if [ ! -d "${WORLDS_BASE}" ]; then
     mkdir -p "${WORLDS_BASE}"
 fi
 
+usage() {
+    cat << 'USAGE'
+Scriptorium Save Snapshot — one-click Git version snapshot of a world.
+
+Usage:
+  save_snapshot.sh [OPTIONS]
+
+Options:
+  -w, --world NAME    World directory name under ~/Worlds (skips picker)
+  -m, --note NOTE     Snapshot note (default: "Snapshot: <date>")
+  -h, --help          Show this help and exit
+
+Exit codes:
+  0  snapshot saved (or nothing to commit)
+  1  error (git missing, commit rejected)
+  3  user abort (no world selected)
+USAGE
+}
+
+WORLD_CLI=""
+NOTE_CLI=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -w|--world)
+            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
+            WORLD_CLI="$2"; shift 2 ;;
+        -m|--note)
+            [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 1; }
+            NOTE_CLI="$2"; shift 2 ;;
+        -h|--help) usage; exit 0 ;;
+        -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+        *) echo "Error: unexpected argument: $1 (see --help)" >&2; exit 1 ;;
+    esac
+done
+
+# P-04: a snapshot without git is a hard error, not a set -e crash
+if ! command -v git &> /dev/null; then
+    echo "Error: git is not installed or not in PATH. Install git to snapshot."
+    exit 1
+fi
+
 # Find available worlds (H5: NUL-safe, space-safe)
 WORLDS=()
 while IFS= read -r -d '' d; do
@@ -30,12 +71,18 @@ if [ ${#WORLDS[@]} -eq 0 ]; then
     else
         echo "No world directories found in ${WORLDS_BASE}."
     fi
-    exit 0
+    exit 3
 fi
 
 SELECTED_WORLD=""
 
-if [ ${#WORLDS[@]} -eq 1 ]; then
+if [ -n "${WORLD_CLI}" ]; then
+    SELECTED_WORLD="${WORLDS_BASE}/${WORLD_CLI}"
+    if [ ! -d "${SELECTED_WORLD}" ]; then
+        echo "Error: world '${WORLD_CLI}' not found in ${WORLDS_BASE}."
+        exit 1
+    fi
+elif [ ${#WORLDS[@]} -eq 1 ]; then
     SELECTED_WORLD="${WORLDS[0]}"
 else
     # Build list for Zenity or CLI
@@ -64,7 +111,7 @@ fi
 
 if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
     echo "No world selected. Aborting snapshot."
-    exit 0
+    exit 3
 fi
 
 WORLD_NAME=$(basename "${SELECTED_WORLD}")
@@ -88,12 +135,12 @@ EOF
     fi
 fi
 
-# Prompt for snapshot notes
+# Prompt for snapshot notes (P-04: --note flag is honored headlessly)
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M")
 DEFAULT_MSG="Snapshot: ${TIMESTAMP}"
-NOTE=""
+NOTE="${NOTE_CLI:-}"
 
-if has_gui; then
+if [ -z "${NOTE}" ] && has_gui; then
     NOTE=$(zenity --entry \
         --title="Save Snapshot — ${WORLD_NAME}" \
         --text="Enter a note describing what you wrote or changed (optional):" \

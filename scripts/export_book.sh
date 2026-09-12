@@ -35,8 +35,53 @@ safe_filename() {
     printf '%s' "$s"
 }
 
-# 1. Select World / Manuscript Folder
-WORLD_DIR="${1:-}"
+usage() {
+    cat << 'USAGE'
+Scriptorium Book Exporter — compile a Markdown/novelWriter manuscript into
+print-ready PDF (Typst) and distribution EPUB (Pandoc).
+
+Usage:
+  export_book.sh [WORLD_DIR] [OPTIONS]
+
+Options:
+  -t, --title TITLE    Book title (default: world manifest or directory name)
+  -a, --author NAME    Author name (default: world manifest or "Author Name")
+  -h, --help           Show this help and exit
+
+Exit codes:
+  0  success (at least one artifact produced, no compile errors)
+  1  error (missing tools, compile failure, invalid directory)
+  3  user abort (no world directory selected)
+
+If WORLD_DIR is omitted, a directory picker is shown (GUI) or the script
+aborts with exit code 3 (no GUI).
+USAGE
+}
+
+# 1. Parse arguments (P-04: non-interactive use is first-class)
+BOOK_TITLE_CLI=""
+AUTHOR_NAME_CLI=""
+POSITIONAL=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -t|--title)
+            [ $# -ge 2 ] || { echo "Error: --title requires a value." >&2; exit 1; }
+            BOOK_TITLE_CLI="$2"; shift 2 ;;
+        -a|--author)
+            [ $# -ge 2 ] || { echo "Error: --author requires a value." >&2; exit 1; }
+            AUTHOR_NAME_CLI="$2"; shift 2 ;;
+        -h|--help)
+            usage; exit 0 ;;
+        --)
+            shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
+        -*)
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+        *)
+            POSITIONAL+=("$1"); shift ;;
+    esac
+done
+
+WORLD_DIR="${POSITIONAL[0]:-}"
 
 if [ -z "${WORLD_DIR}" ]; then
     if has_gui; then
@@ -48,7 +93,7 @@ fi
 
 if [ -z "${WORLD_DIR}" ]; then
     echo "No world directory selected. Aborting."
-    exit 0
+    exit 3
 fi
 
 if [ ! -d "${WORLD_DIR}" ]; then
@@ -63,27 +108,41 @@ mkdir -p "${PUBLISHING_DIR}"
 
 echo "Compiling publication files for: ${WORLD_NAME} ..."
 
-# 2. Extract title & author from settings or prompt
-BOOK_TITLE="${WORLD_NAME}"
-AUTHOR_NAME="Author Name"
+# 2. Extract title & author: CLI flags > world manifest (D-02) > GUI prompt > defaults
+BOOK_TITLE="${BOOK_TITLE_CLI:-}"
+AUTHOR_NAME="${AUTHOR_NAME_CLI:-}"
 
-if has_gui; then
+# Read world manifest (scriptorium.yaml) if present — flat `key: value` pairs only
+MANIFEST="${WORLD_DIR}/scriptorium.yaml"
+if [ -f "${MANIFEST}" ]; then
+    if [ -z "${BOOK_TITLE}" ]; then
+        BOOK_TITLE=$(sed -n -E 's/^title:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    fi
+    if [ -z "${AUTHOR_NAME}" ]; then
+        AUTHOR_NAME=$(sed -n -E 's/^author:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    fi
+fi
+
+if has_gui && { [ -z "${BOOK_TITLE}" ] || [ -z "${AUTHOR_NAME}" ]; }; then
     METADATA=$(zenity --forms --title="Scriptorium — Book Metadata" \
         --text="Enter metadata for the compiled book:" \
         --add-entry="Book Title" \
         --add-entry="Author Name" || true)
     if [ -n "${METADATA}" ]; then
         # Split on first '|' so titles containing '|' degrade gracefully (H3)
-        BOOK_TITLE="${METADATA%%|*}"
+        METADATA_TITLE="${METADATA%%|*}"
         if [[ "${METADATA}" == *"|"* ]]; then
-            AUTHOR_NAME="${METADATA#*|}"
+            METADATA_AUTHOR="${METADATA#*|}"
         else
-            AUTHOR_NAME=""
+            METADATA_AUTHOR=""
         fi
-        [ -z "${BOOK_TITLE}" ] && BOOK_TITLE="${WORLD_NAME}"
-        [ -z "${AUTHOR_NAME}" ] && AUTHOR_NAME="Author Name"
+        [ -z "${BOOK_TITLE}" ] && [ -n "${METADATA_TITLE}" ] && BOOK_TITLE="${METADATA_TITLE}"
+        [ -z "${AUTHOR_NAME}" ] && [ -n "${METADATA_AUTHOR}" ] && AUTHOR_NAME="${METADATA_AUTHOR}"
     fi
 fi
+
+[ -z "${BOOK_TITLE}" ] && BOOK_TITLE="${WORLD_NAME}"
+[ -z "${AUTHOR_NAME}" ] && AUTHOR_NAME="Author Name"
 
 TEMP_WORK_DIR=$(mktemp -d)
 # Ensure temp cleanup even if typst/pandoc fail (H4)
@@ -92,21 +151,35 @@ COMBINED_MD="${TEMP_WORK_DIR}/manuscript.md"
 TYPST_SRC="${TEMP_WORK_DIR}/book.typ"
 
 # 3. Collect and concatenate all manuscript chapter files
+# D2/P-02: collect EVERY Book-XX volume (Book-01, Book-02, ...), not just
+# Book-01. The old `if [ -d Book-01 ]` branch silently dropped every volume
+# after the first from every export. Outlines are excluded at every level.
 echo "Collecting manuscript scenes..."
-> "${COMBINED_MD}"
+: > "${COMBINED_MD}"
 
-# Find all markdown files in 01-Manuscript/Book-01 sorted by natural path
-if [ -d "${MANUSCRIPT_DIR}/Book-01" ]; then
-    find "${MANUSCRIPT_DIR}/Book-01" -type f -name "*.md" | sort -V | while IFS= read -r file; do
-        # Strip novelWriter metadata tags (@pov, @focus, @tag, @status, % comments) for clean publication
+# novelWriter tag stripping: ANY line-start `@tag:` is novelWriter metadata
+# (novelWriter supports @pov, @char, @plot, @location, @time, @object, @entity
+# AND user-defined tags). The old 7-name whitelist let @time/@plot/@entity and
+# custom tags through, which (a) leaked them into the EPUB and (b) turned them
+# into pandoc citations (#cite) / Typst label references (@word) that aborted
+# the PDF compile outright.
+strip_nw_tags() {
+    sed -E '/^@[A-Za-z0-9_-]+:/d; /^%/d' "$1"
+}
+
+if find "${MANUSCRIPT_DIR}" -type d -name 'Book-*' -print0 2>/dev/null | read -r -d '' _; then
+    # Multi-volume manuscript: all Book-*/ files in natural order
+    find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" \
+        -path "*/Book-*/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
         echo "" >> "${COMBINED_MD}"
-        sed -E '/^@(pov|focus|tag|status|char|location|object):/d; /^%/d' "${file}" >> "${COMBINED_MD}"
+        strip_nw_tags "${file}" >> "${COMBINED_MD}"
         echo -e "\n" >> "${COMBINED_MD}"
     done
 elif [ -d "${MANUSCRIPT_DIR}" ]; then
-    find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" | sort -V | while IFS= read -r file; do
+    # Single-book fallback: everything except Outlines
+    find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
         echo "" >> "${COMBINED_MD}"
-        sed -E '/^@(pov|focus|tag|status|char|location|object):/d; /^%/d' "${file}" >> "${COMBINED_MD}"
+        strip_nw_tags "${file}" >> "${COMBINED_MD}"
         echo -e "\n" >> "${COMBINED_MD}"
     done
 fi
@@ -192,14 +265,16 @@ fi
 # Convert Markdown headings into Typst markup (M1)
 # Prefer Pandoc's native Typst writer when available; fall back to sed for
 # # / ## / ### levels. Handles the common novel structure without mangling body text.
+# P-02: `-f markdown-citations` disables pandoc's `@key` citation syntax so a
+# stray `@word` in prose can never compile into a fatal #cite(...) call.
 if command -v pandoc &> /dev/null; then
-    if pandoc "${COMBINED_MD}" -t typst -o "${TEMP_WORK_DIR}/body.typ" 2>/dev/null; then
+    if pandoc -f markdown-citations "${COMBINED_MD}" -t typst -o "${TEMP_WORK_DIR}/body.typ" 2>/dev/null; then
         cat "${TEMP_WORK_DIR}/body.typ" >> "${TYPST_SRC}"
     else
-        sed -E -e 's/^#### +(.*)/==== \1/' -e 's/^### +(.*)/=== \1/' -e 's/^## +(.*)/== \1/' -e 's/^# +(.*)/= \1/' "${COMBINED_MD}" >> "${TYPST_SRC}"
+        sed -E -e 's/^#### +(.*)/==== \1/' -e 's/^### +(.*)/=== \1/' -e 's/^## +(.*)/== \1/' -e 's/^# +(.*)/= \1/' -e 's/^@([A-Za-z0-9_-]+):/\1:/' "${COMBINED_MD}" >> "${TYPST_SRC}"
     fi
 else
-    sed -E -e 's/^#### +(.*)/==== \1/' -e 's/^### +(.*)/=== \1/' -e 's/^## +(.*)/== \1/' -e 's/^# +(.*)/= \1/' "${COMBINED_MD}" >> "${TYPST_SRC}"
+    sed -E -e 's/^#### +(.*)/==== \1/' -e 's/^### +(.*)/=== \1/' -e 's/^## +(.*)/== \1/' -e 's/^# +(.*)/= \1/' -e 's/^@([A-Za-z0-9_-]+):/\1:/' "${COMBINED_MD}" >> "${TYPST_SRC}"
 fi
 
 # 5. Compile PDF with Typst (H3: safe filenames, D3: collision-safe)
@@ -214,14 +289,17 @@ if [ -e "${PDF_OUTPUT}" ] || [ -e "${EPUB_OUTPUT}" ]; then
 fi
 
 echo "Rendering print PDF with Typst..."
+EXIT_STATUS=0
 if command -v typst &> /dev/null; then
     if (cd "${TEMP_WORK_DIR}" && typst compile "${TYPST_SRC}" "${PDF_OUTPUT}"); then
         echo "[✓] PDF generated at: ${PDF_OUTPUT}"
     else
         echo "[!] Typst compile failed. See ${TYPST_SRC} and ${TEMP_WORK_DIR}/book_template.typ for details."
+        EXIT_STATUS=1
     fi
 else
     echo "[!] Typst not found. Skipping PDF generation."
+    EXIT_STATUS=1
 fi
 
 # 6. Compile EPUB with Pandoc
@@ -250,3 +328,5 @@ else
     echo -e "${MSG}"
     echo "============================================================"
 fi
+
+exit "${EXIT_STATUS}"

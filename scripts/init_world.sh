@@ -19,9 +19,46 @@ has_gui() {
     { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
 }
 
-# Prompt for World Name (GUI or Terminal)
+usage() {
+    cat << 'USAGE'
+Scriptorium World Initializer — scaffold ~/Worlds/<WorldName> with the
+Obsidian World Bible, novelWriter manuscript, maps/art/publishing dirs,
+and a local Git snapshot repository.
+
+Usage:
+  init_world.sh [WORLD_NAME] [OPTIONS]
+
+Options:
+  -n, --name NAME    World name (same as the positional argument)
+  -h, --help         Show this help and exit
+
+Exit codes:
+  0  world created
+  1  error (invalid name, world already exists)
+  3  user abort (no name provided)
+
+Names are sanitized to [A-Za-z0-9_-] (max 64 chars); spaces become dashes.
+USAGE
+}
+
+# Prompt for World Name: CLI arg > GUI entry > TTY prompt (P-04)
 WORLD_NAME=""
-if has_gui; then
+WORLD_NAME_CLI=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -n|--name)
+            [ $# -ge 2 ] || { echo "Error: --name requires a value." >&2; exit 1; }
+            WORLD_NAME_CLI="$2"; shift 2 ;;
+        -h|--help) usage; exit 0 ;;
+        --) shift; [ $# -gt 0 ] && { WORLD_NAME_CLI="$1"; shift; } ;;
+        -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+        *) WORLD_NAME_CLI="$1"; shift ;;
+    esac
+done
+
+if [ -n "${WORLD_NAME_CLI}" ]; then
+    WORLD_NAME="${WORLD_NAME_CLI}"
+elif has_gui; then
     WORLD_NAME=$(zenity --entry \
         --title="Scriptorium — New World Creator" \
         --text="Enter the name for your new World or Novel Project:\n(e.g., 'Eldoria', 'Cyberpunk-2099', 'The-Last-Archon')" \
@@ -32,8 +69,8 @@ if [ -z "${WORLD_NAME}" ]; then
     if [ -t 0 ]; then
         read -rp "Enter World / Novel Name: " WORLD_NAME
     else
-        echo "No world name provided (no GUI, no TTY). Aborting."
-        exit 0
+        echo "No world name provided (no argument, no GUI, no TTY). Aborting."
+        exit 3
     fi
 fi
 
@@ -96,7 +133,7 @@ if [ -d "${PROJECT_ROOT}/templates/typst" ]; then
     cp -a "${PROJECT_ROOT}/templates/typst/." "${TARGET_DIR}/04-Publishing/typst-template/" 2>/dev/null || true
 fi
 
-# 5. Create .gitignore for the world
+# 5. Create .gitignore and world manifest (D-02) for the world
 cat << 'EOF' > "${TARGET_DIR}/.gitignore"
 # Scriptorium World Git Ignore
 .obsidian/workspace.json
@@ -106,6 +143,14 @@ cat << 'EOF' > "${TARGET_DIR}/.gitignore"
 *.log
 .DS_Store
 05-Backups/
+EOF
+
+cat << EOF > "${TARGET_DIR}/scriptorium.yaml"
+# Scriptorium world manifest — read by export_book.sh (flat key: value)
+title: "${WORLD_NAME}"
+author: "Author Name"
+# Add one volume per line under 01-Manuscript/ (Book-01, Book-02, ...);
+# export_book.sh auto-discovers Book-* directories in natural order.
 EOF
 
 # 6. Initialize local Git repository for snapshots (M11: explicit identity check)
