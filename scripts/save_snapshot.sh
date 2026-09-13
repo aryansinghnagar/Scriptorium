@@ -20,7 +20,7 @@ usage() {
 Scriptorium Save Snapshot — one-click Git version snapshot of a world.
 
 Usage:
-  save_snapshot.sh [OPTIONS]
+  save_snapshot.sh [WORLD_NAME|WORLD_DIR] [OPTIONS]
 
 Options:
   -w, --world NAME     World directory name or path (skips picker)
@@ -38,6 +38,7 @@ USAGE
 WORLD_CLI=""
 UNIVERSE_CLI=""
 NOTE_CLI=""
+POSITIONAL=()
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -51,10 +52,15 @@ while [ $# -gt 0 ]; do
             [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 1; }
             NOTE_CLI="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
+        --)
+            shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
         -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
-        *) echo "Error: unexpected argument: $1 (see --help)" >&2; exit 1 ;;
+        *) POSITIONAL+=("$1"); shift ;;
     esac
 done
+
+TARGET_INPUT="${WORLD_CLI:-${POSITIONAL[0]:-}}"
+WORLD_CLI="${TARGET_INPUT}"
 
 if ! command -v git &> /dev/null; then
     echo "Error: git is not installed or not in PATH. Install git to snapshot." >&2
@@ -217,7 +223,7 @@ if git diff --cached --quiet; then
     exit 0
 fi
 
-if ! git commit -q -m "${NOTE}"; then
+if ! git commit -q -m "${NOTE}" 2>/dev/null; then
     if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "${NOTE}"; then
         echo "[!] Snapshot failed: git commit rejected the change." >&2
         exit 1

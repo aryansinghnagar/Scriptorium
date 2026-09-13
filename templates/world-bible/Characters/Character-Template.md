@@ -5,7 +5,8 @@ aliases: []
 tags:
   - world/character
   - status/active
-role: Protagonist / Antagonist / Supporting / Mentor
+role: Protagonist / Antagonist / Supporting / Minor
+status: Alive / Deceased / Missing / Unknown
 faction: "[[Faction-Name]]"
 origin: "[[Location-Name]]"
 current_location: "[[Location-Name]]"

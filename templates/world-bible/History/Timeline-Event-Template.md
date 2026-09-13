@@ -1,17 +1,18 @@
 ---
 type: timeline_event
 name: "<% tp.file.title %>"
+aliases: []
 tags:
   - world/history
   - status/active
 era: "Age of Dawn / The Sundering / Pre-Imperial / Current Era"
-year_date: "-450 IE"
-location: "[[Location-Name]]"
-key_factions:
-  - "[[Faction-A]]"
-  - "[[Faction-B]]"
-key_figures:
+year: 100
+start_year: 100
+end_year: 102
+primary_location: "[[Location-Name]]"
+key_participants:
   - "[[Historical-Figure-A]]"
+  - "[[Faction-A]]"
 significance: "World-Altering / Regional Cataclysm / Treaty / Cultural Milestone"
 ---
 

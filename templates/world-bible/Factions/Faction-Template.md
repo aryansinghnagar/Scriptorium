@@ -5,10 +5,10 @@ aliases: []
 tags:
   - world/faction
   - status/active
+faction_type: "Empire / Realm / Guild / Order / Religious Cult / Sect / Rebel / Resistance / Corporation / Syndicate"
 leader: "[[Leader-Character]]"
 headquarters: "[[Location-Name]]"
-sphere_of_influence: "Global / Continental / City / Underground"
-ideology: "Theocratic / Merchant Guild / Rebel Resistance / Imperial Order"
+influence_level: "Dominant / Regional / Local / Underground"
 symbols_colors: "Silver Hawk on Indigo / Crimson Dragon"
 motto: "In Ferro Veritas"
 ---

@@ -1,6 +1,7 @@
 ---
 type: magic_tech_system
 name: "<% tp.file.title %>"
+aliases: []
 tags:
   - world/system
   - status/active

@@ -76,7 +76,7 @@ for p in required_plugins:
     assert p in plugins, f"Missing required plugin in pre-configured suite: {p}"
 
 # Validate fileClasses schemas
-for fc in ("Character", "Location", "Faction", "TimelineEvent", "Creature", "Artifact", "Cosmology"):
+for fc in ("Character", "Location", "Faction", "TimelineEvent", "Creature", "Artifact", "Cosmology", "MagicSystem", "Language"):
     fc_path = f"templates/world-bible/Templates/fileClasses/{fc}.md"
     assert os.path.isfile(fc_path), f"Missing fileClass schema: {fc_path}"
     with open(fc_path, 'r', encoding='utf-8') as f:
@@ -84,6 +84,12 @@ for fc in ("Character", "Location", "Faction", "TimelineEvent", "Creature", "Art
         assert f"fileClass: {fc}" in content, f"Invalid fileClass header in {fc_path}"
 print("  OK Obsidian pre-configured plugin & fileClasses schemas")
 PYEOF
+
+# 2e. Subplot Outline & Decluttering verification
+[ -f "templates/manuscript/Outlines/Subplot-Thread-Matrix.md" ] || { echo "  FAIL missing Subplot-Thread-Matrix.md"; exit 1; }
+[ ! -f "Finishing_Touches.md" ] || { echo "  FAIL obsolete Finishing_Touches.md must be removed"; exit 1; }
+grep -q "@thread:" "templates/manuscript/Outlines/Subplot-Thread-Matrix.md" || { echo "  FAIL missing @thread: tag conventions in Subplot-Thread-Matrix.md"; exit 1; }
+echo "  OK Subplot & Narrative Thread Matrix template & root decluttering"
 
 echo "[3/7] Pandoc Markdown->Typst smoke test..."
 if command -v pandoc >/dev/null; then
@@ -138,8 +144,14 @@ WORLD_PATH="${HOME}/Universes/${UNIVERSE}/Worlds/${WORLD}"
 [ -d "${WORLD_PATH}/01-Manuscript/Book-01/.git" ] || { echo "  FAIL discrete manuscript git repository missing"; exit 1; }
 echo "  OK init_world (Multi-tier Universe, World & Manuscript Git repositories + Expanded Taxonomy)"
 
-# 6c. Inject Multi-volume + tag-poisoning test chapters
-mkdir -p "${WORLD_PATH}/01-Manuscript/Book-02/01_Act_I"
+# 6c. Test add-book volume scaffolding & tag-poisoning test chapters
+bash scripts/scriptorium add-book "${WORLD_PATH}" "Book-02" >/dev/null
+[ -d "${WORLD_PATH}/01-Manuscript/Book-02/01_Act_I" ] || { echo "  FAIL Book-02 Act I missing"; exit 1; }
+[ -d "${WORLD_PATH}/01-Manuscript/Book-02/02_Act_II" ] || { echo "  FAIL Book-02 Act II missing"; exit 1; }
+[ -d "${WORLD_PATH}/01-Manuscript/Book-02/03_Act_III" ] || { echo "  FAIL Book-02 Act III missing"; exit 1; }
+[ -d "${WORLD_PATH}/01-Manuscript/Book-02/.git" ] || { echo "  FAIL Book-02 discrete git repo missing"; exit 1; }
+echo "  OK add-book volume scaffolding (Acts + discrete Git repo)"
+
 cat > "${WORLD_PATH}/01-Manuscript/Book-02/01_Act_I/01_Chapter_05.md" << 'EOF'
 # Chapter 5: The Second Book Begins
 
@@ -150,11 +162,11 @@ This chapter lives in Book-02 and must appear in exports.
 @theme: Honor & Steel
 EOF
 
-# 6d. Export book compilation (Testing specific volume selection & omnibus)
+# 6d. Export book compilation (Testing specific volume selection, paper size & omnibus)
 set +e
-bash scripts/export_book.sh "${WORLD_PATH}" --book Book-01 --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_b1.log" 2>&1
+bash scripts/export_book.sh "${WORLD_PATH}" --book Book-01 --paper-size trade --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_b1.log" 2>&1
 EXPORT_B1_RC=$?
-bash scripts/export_book.sh "${WORLD_PATH}" --book all --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_all.log" 2>&1
+bash scripts/export_book.sh "${WORLD_PATH}" --book all --paper-size us-trade --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_all.log" 2>&1
 EXPORT_ALL_RC=$?
 set -e
 
@@ -190,27 +202,124 @@ else
     echo "  SKIP full PDF/EPUB export build (typst/pandoc not installed in local environment)"
 fi
 
-# 6e. World Doctor consistency check
-DOCTOR_JSON=$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json)
-python3 -c "import json, sys; d = json.loads('''${DOCTOR_JSON}'''); assert d['notes'] >= 0; print('  OK world_doctor --json valid')"
-bash scripts/world_doctor.sh "${WORLD_PATH}" >/dev/null || true
-echo "  OK world_doctor functional run"
+# 6e. Multi-Era World Doctor consistency check
+cat > "${WORLD_PATH}/00-World-Bible/Characters/Aethelgard.md" << 'EOF'
+---
+name: "Aethelgard"
+type: character
+role: protagonist
+birth_year: "450 BCE"
+death_year: "380 BCE"
+---
+A legendary general from the classical era.
+EOF
 
-# 6f. Wordcount & Progress Analytics
+cat > "${WORLD_PATH}/00-World-Bible/History/The_Great_Sundering.md" << 'EOF'
+---
+name: "The Great Sundering"
+type: timeline_event
+start_year: "-450 IE"
+end_year: "-400 IE"
+---
+An ancient cataclysm reshaping the realms.
+EOF
+
+DOCTOR_JSON=$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)
+python3 -c "import json; d = json.loads('''${DOCTOR_JSON}'''); assert d['notes'] >= 0; assert len(d['timeline_errors']) == 0; print('  OK world_doctor multi-era valid timeline passed')"
+
+# Test chronological paradox detection
+cat > "${WORLD_PATH}/00-World-Bible/Characters/ParadoxLord.md" << 'EOF'
+---
+name: "ParadoxLord"
+type: character
+role: antagonist
+birth_year: "Age of Fire 500"
+death_year: "Age of Fire 410"
+---
+A chronologically inverted paradox lord.
+EOF
+
+DOCTOR_ERR_JSON=$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)
+python3 -c "import json; d = json.loads('''${DOCTOR_ERR_JSON}'''); assert any('ParadoxLord' in e['file'] for e in d['timeline_errors']); print('  OK world_doctor multi-era chronological paradox error caught')"
+rm -f "${WORLD_PATH}/00-World-Bible/Characters/ParadoxLord.md"
+
+# 6f. Back-Matter Concordance & Dramatis Personae Engine
+cat > "${WORLD_PATH}/00-World-Bible/Factions/Solar_Hegemony.md" << 'EOF'
+---
+name: "Solar Hegemony"
+type: faction
+faction_type: "Empire"
+leader: "[[Aethelgard]]"
+headquarters: "Sun Citadel"
+motto: "Light Eternal"
+---
+## 1. Executive Overview
+The dominant star empire ruling the core worlds.
+EOF
+
+cat > "${WORLD_PATH}/00-World-Bible/Artifacts/Solar_Scepter.md" << 'EOF'
+---
+name: "Solar Scepter"
+type: artifact
+artifact_type: "Relic"
+rarity: "Legendary"
+current_bearer: "[[Aethelgard]]"
+---
+## 1. Physical Description
+A radiant staff focusing cosmic energy.
+EOF
+
+cat > "${WORLD_PATH}/00-World-Bible/Bestiary/Void_Stalker.md" << 'EOF'
+---
+name: "Void Stalker"
+type: creature
+classification: "Apex Predator"
+threat_level: "Lethal"
+habitat: "Outer Rim"
+---
+## 1. Physical Anatomy
+Lethal shadow beasts navigating vacuum.
+EOF
+
+cat > "${WORLD_PATH}/00-World-Bible/Languages/Solar_Tongue.md" << 'EOF'
+---
+name: "Solar Tongue"
+type: language
+language_family: "High Archaic"
+spoken_by: "[[Solar_Hegemony]]"
+---
+## 3. Essential Lexicon & Vocabulary
+| Foreign Word | Part of Speech | Pronunciation | English Translation | Cultural Connotation |
+| :--- | :--- | :--- | :--- | :--- |
+| *Aethel* | Noun | /ˈaɪ.θəl/ | Sun King | Royal honorific |
+| *Vaelor* | Noun | /ˈvaɪ.lɔːr/ | Eternal Shield | Military vow |
+EOF
+
+bash scripts/scriptorium concordance "${WORLD_PATH}" --book Book-01 >/dev/null
+[ -f "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/01_Dramatis_Personae.md" ] || { echo "  FAIL missing 01_Dramatis_Personae.md"; exit 1; }
+[ -f "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md" ] || { echo "  FAIL missing 02_Glossary_and_Concordance.md"; exit 1; }
+grep -q "Aethelgard" "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/01_Dramatis_Personae.md" || { echo "  FAIL Aethelgard missing from Dramatis Personae"; exit 1; }
+grep -q "Solar Hegemony" "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md" || { echo "  FAIL Solar Hegemony missing from Glossary"; exit 1; }
+grep -q "Solar Scepter" "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md" || { echo "  FAIL Solar Scepter missing from Glossary"; exit 1; }
+grep -q "Void Stalker" "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md" || { echo "  FAIL Void Stalker missing from Glossary"; exit 1; }
+grep -q "Aethel" "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md" || { echo "  FAIL Aethel lexicon term missing from Glossary"; exit 1; }
+echo "  OK generate_concordance (Dramatis Personae + Glossary back-matter)"
+
+# 6g. Wordcount & Progress Analytics
 bash scripts/wordcount_report.sh "${WORLD_PATH}" --markdown > "${TMP_VERIFY}/wc.md"
 [ -s "${TMP_VERIFY}/wc.md" ] || { echo "  FAIL wordcount report empty"; exit 1; }
 bash scripts/wordcount_report.sh "${WORLD_PATH}" --json > "${TMP_VERIFY}/wc.json"
 python3 -c "import json; d = json.load(open('${TMP_VERIFY}/wc.json')); assert d['total_words'] >= 0; assert d['chapter_count'] >= 1"
 echo "  OK wordcount_report (markdown + json)"
 
-# 6g. Save Snapshot (Git Versioning across World & Manuscript)
-bash scripts/save_snapshot.sh --world "${WORLD}" --note "verify.sh lifecycle test" > "${TMP_VERIFY}/snapshot.log" 2>&1 \
+# 6h. Save Snapshot (Git Versioning across World & Manuscript with positional syntax)
+bash scripts/save_snapshot.sh "${WORLD}" --note "verify.sh lifecycle test" > "${TMP_VERIFY}/snapshot.log" 2>&1 \
     || { echo "  FAIL save_snapshot:"; tail -n 5 "${TMP_VERIFY}/snapshot.log"; exit 1; }
 git -C "${WORLD_PATH}" log --oneline | grep -q "verify.sh lifecycle test" \
     || { echo "  FAIL snapshot note not committed"; exit 1; }
 echo "  OK save_snapshot (multi-tier Git snapshots recorded)"
 
-# 6h. Decoupled Backup & Verified Restore Drill
+# 6i. Decoupled Backup & Verified Restore Drill
 echo "  Running backup & restore verification drill..."
 bash scripts/backup_world.sh --world "${WORLD}" --note "harness drill" > "${TMP_VERIFY}/backup.log" 2>&1 \
     || { echo "  FAIL backup_world:"; tail -n 5 "${TMP_VERIFY}/backup.log"; exit 1; }
@@ -228,12 +337,12 @@ RESTORED_PATH="${HOME}/Universes/${UNIVERSE}/Worlds/${RESTORE_TARGET}"
 [ -f "${RESTORED_PATH}/01-Manuscript/Book-02/01_Act_I/01_Chapter_05.md" ] || { echo "  FAIL restored chapter missing"; exit 1; }
 echo "  OK restore_world (drill verified: archive -> wipe -> restore -> verify content)"
 
-# 6i. Unified Scriptorium Doctor
+# 6j. Unified Scriptorium Doctor
 bash scripts/scriptorium_doctor.sh --world "${RESTORE_TARGET}" > "${TMP_VERIFY}/doc.log" 2>&1 || true
 [ -s "${TMP_VERIFY}/doc.log" ] || { echo "  FAIL scriptorium_doctor produced no output"; exit 1; }
 echo "  OK scriptorium_doctor diagnostics"
 
-# 6j. Dry-run simulation tests
+# 6k. Dry-run simulation tests
 bash scripts/setup_scriptorium.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \
     || { echo "  FAIL setup_scriptorium --dry-run:"; tail -n 5 "${TMP_VERIFY}/setup_dryrun.log"; exit 1; }
 bash scripts/uninstall_scriptorium.sh --dry-run --force > "${TMP_VERIFY}/uninstall_dryrun.log" 2>&1 \
@@ -244,6 +353,8 @@ echo "[7/7] Scriptorium CLI facade tests..."
 bash scripts/scriptorium --version >/dev/null
 bash scripts/scriptorium --help >/dev/null
 bash scripts/scriptorium universe --list >/dev/null
-echo "  OK scriptorium CLI entrypoint (with universe command)"
+bash scripts/scriptorium add-book --help >/dev/null
+bash scripts/scriptorium concordance --help >/dev/null
+echo "  OK scriptorium CLI entrypoint (with universe, add-book & concordance commands)"
 
 echo "ALL-CHECKS-PASS"

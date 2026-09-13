@@ -78,9 +78,9 @@ FRONTMATTER_DELIM = "---"
 
 TYPED_REF_FIELDS = {
     "faction", "origin", "current_location", "leader", "headquarters",
-    "dominant_faction", "realm_region", "rival", "ally", "mentor",
+    "dominant_faction", "realm_region", "region", "rival", "ally", "mentor",
     "magic_ability", "key_landmarks", "habitat", "creator", "current_bearer",
-    "associated_faction",
+    "associated_faction", "primary_location",
 }
 
 REQUIRED_BY_TYPE = {
@@ -143,6 +143,94 @@ def parse_frontmatter(text):
 def norm(name):
     return name.strip().lower()
 
+# ---- Multi-Era Chronological Parser (WLD-104) ----
+ERA_ORDER = {
+    '1e': 1, '1a': 1, 'first age': 1, 'age 1': 1, 'era 1': 1, 'first era': 1, 'fa': 1,
+    '2e': 2, '2a': 2, 'second age': 2, 'age 2': 2, 'era 2': 2, 'second era': 2, 'sa': 2,
+    '3e': 3, '3a': 3, 'third age': 3, 'age 3': 3, 'era 3': 3, 'third era': 3, 'ta': 3,
+    '4e': 4, '4a': 4, 'fourth age': 4, 'age 4': 4, 'era 4': 4, 'fourth era': 4,
+    '5e': 5, '5a': 5, 'fifth age': 5, 'age 5': 5, 'era 5': 5, 'fifth era': 5,
+}
+
+BC_PATTERN = re.compile(r'\b(bce|bc|b\.c\.e\.|b\.c\.|before common era|before era)\b', re.IGNORECASE)
+CE_PATTERN = re.compile(r'\b(ce|ad|c\.e\.|a\.d\.|common era|anno domini)\b', re.IGNORECASE)
+
+def parse_timeline_date(val):
+    if val is None:
+        return None
+    s = str(val).strip().strip('"').strip("'")
+    if not s:
+        return None
+
+    # Direct integer or float string
+    try:
+        return (None, float(s), s)
+    except ValueError:
+        pass
+
+    # BCE / BC pattern (e.g. 500 BCE -> -500)
+    if BC_PATTERN.search(s):
+        num_m = re.search(r'([+-]?\d+(?:\.\d+)?)', s)
+        if num_m:
+            num = float(num_m.group(1))
+            return (None, -abs(num), s)
+
+    # CE / AD pattern (e.g. 1422 CE -> +1422)
+    if CE_PATTERN.search(s):
+        num_m = re.search(r'([+-]?\d+(?:\.\d+)?)', s)
+        if num_m:
+            num = float(num_m.group(1))
+            return (None, abs(num), s)
+
+    # Pattern: [Number] [Era String] (e.g. -450 IE, 1422 3E, 500 FA)
+    m1 = re.match(r'^([+-]?\d+(?:\.\d+)?)\s+([A-Za-z0-9_\s\.\'-]+)$', s)
+    if m1:
+        num = float(m1.group(1))
+        era = m1.group(2).strip().lower()
+        return (era, num, s)
+
+    # Pattern: [Era String] [Number] (e.g. Age of Fire 410, 3E 1422, IE -450)
+    m2 = re.match(r'^([A-Za-z0-9_\s\.\'-]+?)\s+([+-]?\d+(?:\.\d+)?)$', s)
+    if m2:
+        era = m2.group(1).strip().lower()
+        num = float(m2.group(2))
+        return (era, num, s)
+
+    return None
+
+def compare_timeline_dates(d1_val, d2_val):
+    p1 = parse_timeline_date(d1_val)
+    p2 = parse_timeline_date(d2_val)
+    if p1 is None or p2 is None:
+        return None
+
+    era1, num1, _ = p1
+    era2, num2, _ = p2
+
+    # Both simple numbers or BC/CE
+    if era1 is None and era2 is None:
+        if num1 < num2: return -1
+        if num1 > num2: return 1
+        return 0
+
+    # Sequential ordinal eras (e.g. 2E vs 3E)
+    if era1 in ERA_ORDER and era2 in ERA_ORDER:
+        o1 = ERA_ORDER[era1]
+        o2 = ERA_ORDER[era2]
+        if o1 < o2: return -1
+        if o1 > o2: return 1
+        if num1 < num2: return -1
+        if num1 > num2: return 1
+        return 0
+
+    # Matching custom era names (e.g. both "age of fire" or both "ie")
+    if era1 is not None and era2 is not None and era1 == era2:
+        if num1 < num2: return -1
+        if num1 > num2: return 1
+        return 0
+
+    return None
+
 # ---- Pass 1: Indexing & Frontmatter Validation ----
 index = {}
 aliases = {}
@@ -175,20 +263,18 @@ for root, dirs, files in os.walk(BIBLE):
             if not fm.get(req):
                 required_errors.append((rel, etype, req))
 
-        # Timeline chronological checks
-        try:
-            if "birth_year" in fm and "death_year" in fm:
-                b = int(str(fm["birth_year"]).strip())
-                d = int(str(fm["death_year"]).strip())
-                if d < b:
-                    timeline_errors.append((rel, f"Death year ({d}) precedes birth year ({b})"))
-            if "start_year" in fm and "end_year" in fm:
-                s = int(str(fm["start_year"]).strip())
-                e = int(str(fm["end_year"]).strip())
-                if e < s:
-                    timeline_errors.append((rel, f"End year ({e}) precedes start year ({s})"))
-        except (ValueError, TypeError):
-            pass
+        # Timeline chronological checks (Multi-Era regex-based)
+        for (b_key, d_key, label) in [("birth_year", "death_year", "Death year ({d}) precedes birth year ({b})"),
+                                      ("birth_date", "death_date", "Death date ({d}) precedes birth date ({b})"),
+                                      ("start_year", "end_year", "End year ({e}) precedes start year ({s})"),
+                                      ("start_date", "end_date", "End date ({e}) precedes start date ({s})")]:
+            if b_key in fm and d_key in fm:
+                b_val = fm[b_key]
+                d_val = fm[d_key]
+                cmp = compare_timeline_dates(b_val, d_val)
+                if cmp is not None and cmp > 0:
+                    msg = label.replace("{b}", str(b_val)).replace("{d}", str(d_val)).replace("{s}", str(b_val)).replace("{e}", str(d_val))
+                    timeline_errors.append((rel, msg))
 
         notes.append((rel, fm, text))
 

@@ -15,7 +15,7 @@
 > - **Not for General End Users**: This workspace template is not intended for non-technical users or mission-critical authoring without prior independent backups.
 > - **Use at Your Own Risk**: Automated system scripts and configuration adjustments could alter local system packages, fonts, or desktop settings unexpectedly.
 
-> **Start here:** Consult the comprehensive [Author's Field Manual](docs/AUTHOR_MANUAL.md) for a visual step-by-step guide to worldbuilding and publishing. Run [Quick Start](#-quick-start-automated-setup) to install everything. Remaining Linux-only checks (Typst compile, LeechBlock import, novelWriter project) are in [Finishing_Touches.md](Finishing_Touches.md). Run `bash scripts/verify.sh` anytime for a comprehensive health check.
+> **Start here:** Consult the comprehensive [Author's Field Manual](docs/AUTHOR_MANUAL.md) for a visual step-by-step guide to worldbuilding, multi-volume drafting, automated concordance generation, and publishing. Run [Quick Start](#-quick-start-automated-setup) to install everything. Run `bash scripts/verify.sh` anytime for a comprehensive health check.
 
 ---
 
@@ -80,7 +80,7 @@ If you have booted into Linux Mint XFCE or Debian:
 | Creative Phase | Tool | Format | Role & Setup |
 | :--- | :--- | :--- | :--- |
 | **Desktop Control Center** | **Scriptorium App** | Native GTK 3 / Zenity | 5-tab author dashboard for Cosmos management, live word count analytics, 1-click Typst/Pandoc publishing, Git version snapshots, and Doctor diagnostics. |
-| **World Bible & Wiki** | **Obsidian** | Markdown (`.md`) | Open `00-World-Bible` as Vault. Comes pre-configured with **Longform**, **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git** (10-min auto-commits). (See [Plugin Guide](templates/world-bible/.obsidian-recommended-plugins.md)) |
+| **World Bible & Wiki** | **Obsidian** | Markdown (`.md`) | Open `00-World-Bible` as Vault. Comes pre-configured with **Longform**, **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git** (10-min auto-commits). (See [Plugin Guide](docs/OBSIDIAN_PLUGINS_GUIDE.md)) |
 | **Outlining & Drafting** | **novelWriter** / **Longform** | Markdown (`.md`) + `nwProject.nwx` | In novelWriter choose `New Project` inside `01-Manuscript` or draft natively in Obsidian with Longform atomic scenes. In novelWriter, import `Book-01/*/*.md` starters with `@pov:` and `@tag:` annotations. Use full-screen Focus Mode. |
 | **Deep Sprint Canvas** | **FocusWriter** | Plaintext (`.txt` / `.md`) | Minimalist full-screen distraction-free distraction sprint sessions (`F11`). |
 | **Revisions & Collaboration**| **LibreOffice Writer** | `.odt` / `.docx` | Track changes with professional editors and redlining. |
@@ -96,12 +96,14 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 1. **`Scriptorium Control Center` (`scriptorium gui`)**: Native Python/GTK 3 dashboard with 5 tabs:
    - **Cosmos & Projects**: Universe and World management, creation wizards, toolchain launchers.
    - **Writing & Analytics**: Manuscript hierarchy tree, live word counts, act rollups, session pacing.
-   - **Publishing Studio**: 1-Click Typst PDF & Pandoc EPUB export, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
+   - **Publishing Studio**: 1-Click Typst PDF & Pandoc EPUB export, automated Back-Matter Concordance & Dramatis Personae generator, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
    - **Vault Safety & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, restore drill wizard.
    - **Doctor Diagnostics**: Scriptorium toolchain status badges, World Bible lore consistency checks (`world_doctor`), 7-stage verification trigger.
-2. **`New World Creator` (`scriptorium new` / `scriptorium universe`)**: Graphical wizard to scaffold a new Universe or World with multi-tier Git repos and pre-configured Obsidian vault suites.
-3. **`Export Book` (`scriptorium export <world> [-b Book-01|all]`)**: Compiles your manuscript or specific volume into a print-ready PDF via Typst and an EPUB via Pandoc in one click (with interactive volume picker when multiple books exist).
-4. **`Save Snapshot` (`scriptorium snapshot`)**: Records timestamped Git version snapshots across your world and manuscript repositories.
+2. **`New World Creator` (`scriptorium init <name>` / `scriptorium universe`)**: Graphical wizard to scaffold a new Universe or World with multi-tier Git repos and pre-configured Obsidian vault suites.
+3. **`Add Book Volume` (`scriptorium add-book <world> [book]`)**: Scaffolds subsequent manuscript volumes (`Book-02`, `Book-03`, etc.) with three acts, sample chapters, and discrete Git repos.
+4. **`Back-Matter Concordance` (`scriptorium concordance <world> [-b Book-01|all]`)**: Automatically parses World Bible lore into publication-ready `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
+5. **`Export Book` (`scriptorium export <world> [-b Book-01|all] [-s us-trade|trade|pocket]`)**: Compiles your manuscript or specific volume into a print-ready PDF via Typst and an EPUB via Pandoc in one click (with trim size presets, auto-detected EPUB cover art in `03-Art/cover.png` or `.jpg`, and interactive volume picker when multiple books exist).
+6. **`Save Snapshot` (`scriptorium snapshot <world> [-m note]`)**: Records timestamped Git version snapshots across your world and manuscript repositories.
 
 ---
 
@@ -156,6 +158,5 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 | [decisions.md](decisions.md) | Architecture decision records (why Mint, Markdown, Typst, Multi-tier Git, Obsidian plugins, GTK App) |
 | [knowledge.md](knowledge.md) | Tool ecosystem facts, multi-tier Git invariants, and script safety standards |
 | [status.md](status.md) | Current state + momentum queues (now / next / blocked / improve / recurring) |
-| [Finishing_Touches.md](Finishing_Touches.md) | Manual for live Linux verification and writer workflows |
 | [scripts/verify.sh](scripts/verify.sh) | 7-stage automated health check: syntax, schema validation, Universe/World lifecycle, Git snapshots, and backup/restore drills |
 

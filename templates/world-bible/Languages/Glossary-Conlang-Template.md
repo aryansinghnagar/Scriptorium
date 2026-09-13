@@ -1,6 +1,7 @@
 ---
 type: language
 name: "<% tp.file.title %>"
+aliases: []
 tags:
   - world/language
   - status/active

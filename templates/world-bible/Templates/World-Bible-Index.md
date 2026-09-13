@@ -26,7 +26,7 @@ Welcome to your central worldbuilding hub. Every note created in this vault is i
 
 ## 👤 Active Characters
 ```dataview
-TABLE role as "Role", faction as "Faction", origin as "Origin"
+TABLE role as "Role", status as "Status", faction as "Faction", current_location as "Location"
 FROM #world/character
 SORT file.name ASC
 ```
@@ -35,7 +35,7 @@ SORT file.name ASC
 
 ## 🗺️ Key Locations & Realms
 ```dataview
-TABLE realm_region as "Region", dominant_faction as "Ruling Faction", danger_level as "Danger"
+TABLE region as "Region", dominant_faction as "Ruling Faction", scale as "Scale", danger_level as "Danger"
 FROM #world/location
 SORT file.name ASC
 ```
@@ -44,8 +44,26 @@ SORT file.name ASC
 
 ## ⚔️ Factions & Power Structures
 ```dataview
-TABLE leader as "Leader", headquarters as "HQ", ideology as "Ideology"
+TABLE leader as "Leader", headquarters as "HQ", faction_type as "Type", influence_level as "Influence"
 FROM #world/faction
+SORT file.name ASC
+```
+
+---
+
+## ⚡ Magic & Tech Systems
+```dataview
+TABLE classification as "Classification", source_of_power as "Power Source", prevalence as "Prevalence", danger_cost as "Cost / Danger"
+FROM #world/system
+SORT file.name ASC
+```
+
+---
+
+## 🗣️ Languages & Dialects
+```dataview
+TABLE language_family as "Family", spoken_by as "Spoken By", status as "Status", writing_system as "Writing System"
+FROM #world/language
 SORT file.name ASC
 ```
 
@@ -80,9 +98,9 @@ SORT file.name ASC
 
 ## ⏳ Historical Timeline
 ```dataview
-TABLE year_date as "Date", era as "Era", significance as "Significance"
+TABLE year as "Year", era as "Era", primary_location as "Location", significance as "Significance"
 FROM #world/history
-SORT year_date ASC
+SORT year ASC
 ```
 
 ---

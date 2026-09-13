@@ -7,15 +7,15 @@
 *.mobi
 *.azw3
 *.docx
-04-Exports/
-04-Publishing/
+/04-Exports/
+/04-Publishing/
 
 # Runtime world folders
-Worlds/
-00-World-Bible/
-01-Manuscript/
-02-Maps/
-03-Art/
+/Worlds/
+/00-World-Bible/
+/01-Manuscript/
+/02-Maps/
+/03-Art/
 
 # Editor and IDE noise
 .vscode/
@@ -59,7 +59,7 @@ venv/
 env/
 
 # Local backup directories and archives
-05-Backups/
+/05-Backups/
 *.tar.xz
 *.tar.gz
 *.zip

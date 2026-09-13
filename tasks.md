@@ -74,8 +74,31 @@
 - [x] Create `docs/AUTHOR_MANUAL.md` (Visual 8-chapter plain-English author handbook)
 - [x] Document ADR-017 (Unified Python GTK Desktop Control Center & Author Onboarding Architecture) in `decisions.md`
 
-### 10. Verification & Release Gates
-- [x] Expand `scripts/verify.sh` 7-stage verification suite with Python compilation, Author Manual check, Universe/World lifecycle, expanded taxonomy, and multi-volume tests
+### 10. Speculative Ontology Harmonization, Multi-Volume Engine & Publishing Polish (M12)
+- [x] Anchor root-level directories in `.gitignore` (`/Worlds/`, `/00-World-Bible/`, etc.)
+- [x] Fix positional CLI arguments in `scripts/save_snapshot.sh` (`save_snapshot.sh <world> [-m note]`)
+- [x] Add GTK 3 dependencies (`python3-gi`, `python3-gi-cairo`, `gir1.2-gtk-3.0`) in `scripts/setup_scriptorium.sh`
+- [x] Wire `-s, --paper-size` trim size options and EPUB cover art auto-detection in `scripts/export_book.sh`
+- [x] Update `scripts/scriptorium_app.py` novelWriter launcher to open `nwProject.nwx` and check Flatpak before `$PATH`
+- [x] Relocate `templates/world-bible/.obsidian-recommended-plugins.md` to `docs/OBSIDIAN_PLUGINS_GUIDE.md`
+- [x] Create `templates/world-bible/Templates/fileClasses/MagicSystem.md` and `fileClasses/Language.md`
+- [x] Harmonize frontmatter templates (`Character`, `Location`, `Faction`, `TimelineEvent`) with `fileClasses` schemas
+- [x] Update `Templates/World-Bible-Index.md` with dynamic Dataview tables for Magic/Tech Systems and Languages
+- [x] Create `scripts/add_book.sh` and add `add-book` command to `scripts/scriptorium` CLI facade
+- [x] Document ADR-018 in `decisions.md`
+
+### 11. Automated Narrative Concordance, Multi-Era Chronology & Subplot Matrix (M13)
+- [x] Create `scripts/generate_concordance.sh` for automated back-matter generation (`01_Dramatis_Personae.md` & `02_Glossary_and_Concordance.md`)
+- [x] Add `concordance` command to `scripts/scriptorium` CLI facade (`scriptorium concordance <world> [--book Book-01]`)
+- [x] Implement multi-era chronological parser in `scripts/world_doctor.sh` (`WLD-104`) supporting BC/BCE, CE/AD, sequential numbered eras, and custom named eras
+- [x] Create `templates/manuscript/Outlines/Subplot-Thread-Matrix.md` with `@thread:` conventions and Dataview matrix queries
+- [x] Integrate "Add New Volume" (Tab 2) and "Generate Concordance" (Tab 3) in `scripts/scriptorium_app.py`
+- [x] Update Zenity desktop control dashboard in `scripts/control_center.sh`
+- [x] Remove obsolete `Finishing_Touches.md` and synchronize all repository documentation
+- [x] Document ADR-019 in `decisions.md`
+
+### 12. Verification & Release Gates
+- [x] Expand `scripts/verify.sh` 7-stage verification suite with concordance generation and multi-era timeline parsing tests
 - [x] Pass all automated checks via `bash scripts/verify.sh` (`ALL-CHECKS-PASS`)
 - [ ] Final live acceptance test on physical Linux Mint / Debian desktop
 

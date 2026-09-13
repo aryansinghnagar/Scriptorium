@@ -28,6 +28,8 @@ Universe & World Management:
   control-center             Launch graphical desktop control center
 
 Writing & Publishing:
+  add-book <world> [book]    Scaffold a new manuscript volume (Book-02, etc.)
+  concordance <world> [-b BK]Generate Dramatis Personae & Glossary back-matter
   export <world> [-b BOOK]   Compile manuscript into print PDF and EPUB (--book Book-01|all)
   report <world> [--markdown]Show word counts and manuscript progress analytics
 
@@ -62,6 +64,12 @@ case "${COMMAND}" in
         ;;
     init)
         exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
+        ;;
+    add-book|new-book)
+        exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
+        ;;
+    concordance|glossary|dramatis-personae)
+        exec bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$@"
         ;;
     doctor)
         exec bash "${PROJECT_ROOT}/scripts/scriptorium_doctor.sh" "$@"

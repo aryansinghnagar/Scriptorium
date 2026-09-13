@@ -5,10 +5,10 @@ aliases: []
 tags:
   - world/location
   - status/active
-realm_region: "[[Region-Name]]"
+region: "[[Region-Name]]"
 dominant_faction: "[[Faction-Name]]"
+scale: "Continent / Realm / Nation / Province / Region / Settlement / City / Landmark / Site / Building / Interior"
 climate_terrain: "Temperate Highland / Arid Desert / Dense Rainforest"
-population_scale: "Metropolis / Fortress City / Hamlet / Wilderness"
 key_landmarks: []
 danger_level: "Safe / Moderate / Perilous / Lethal"
 ---

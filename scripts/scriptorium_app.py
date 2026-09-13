@@ -24,6 +24,9 @@ try:
     HAS_GTK = True
 except (ImportError, ValueError):
     HAS_GTK = False
+    class _DummyGtk:
+        class Window: pass
+    Gtk = _DummyGtk()
 
 HOME_DIR = Path.home()
 UNIVERSES_DIR = HOME_DIR / "Universes"
@@ -292,6 +295,11 @@ class ScriptoriumApp(Gtk.Window):
         btn_refresh_stats.connect("clicked", lambda b: self.refresh_manuscript_analytics())
         btn_box.pack_start(btn_refresh_stats, False, False, 0)
 
+        btn_add_vol = Gtk.Button(label="📚 Add New Volume")
+        btn_add_vol.get_style_context().add_class("suggested-action")
+        btn_add_vol.connect("clicked", self.on_add_volume_clicked)
+        btn_box.pack_start(btn_add_vol, False, False, 0)
+
         btn_open_drafting = Gtk.Button(label="✍️ Open in novelWriter")
         btn_open_drafting.connect("clicked", self.on_launch_novelwriter)
         btn_box.pack_start(btn_open_drafting, False, False, 0)
@@ -370,6 +378,11 @@ class ScriptoriumApp(Gtk.Window):
         self.btn_compile.get_style_context().add_class("suggested-action")
         self.btn_compile.connect("clicked", self.on_compile_clicked)
         action_box.pack_start(self.btn_compile, True, True, 0)
+
+        self.btn_concordance = Gtk.Button(label="📖 Generate Concordance")
+        self.btn_concordance.set_tooltip_text("Generate Dramatis Personae & Glossary back-matter from World Bible lore")
+        self.btn_concordance.connect("clicked", self.on_generate_concordance_clicked)
+        action_box.pack_start(self.btn_concordance, False, False, 0)
 
         self.btn_open_pdf = Gtk.Button(label="📄 Open PDF")
         self.btn_open_pdf.connect("clicked", self.on_open_pdf_clicked)
@@ -874,13 +887,15 @@ class ScriptoriumApp(Gtk.Window):
         title = self.entry_pub_title.get_text().strip() or "Book Title"
         author = self.entry_pub_author.get_text().strip() or "Author Name"
         volume = self.combo_pub_volume.get_active_id() or "Book-01"
+        paper_size = self.combo_paper_size.get_active_id() or "us-trade"
 
         cmd = [
             "bash", str(PROJECT_ROOT / "scripts" / "export_book.sh"),
             self.current_world_path,
             "--title", title,
             "--author", author,
-            "--book", volume
+            "--book", volume,
+            "--paper-size", paper_size
         ]
 
         self.btn_compile.set_sensitive(False)
@@ -924,6 +939,75 @@ class ScriptoriumApp(Gtk.Window):
             if epubs:
                 latest = max(epubs, key=os.path.getmtime)
                 subprocess.Popen(["xdg-open", str(latest)])
+
+    def on_add_volume_clicked(self, btn):
+        if not self.current_world_path:
+            self.show_error("Please select an active world first.")
+            return
+
+        wpath = Path(self.current_world_path)
+        ms_dir = wpath / "01-Manuscript"
+        max_num = 0
+        if ms_dir.is_dir():
+            for b in ms_dir.glob("Book-*"):
+                if b.is_dir():
+                    m = re.match(r"Book-(\d+)", b.name)
+                    if m:
+                        max_num = max(max_num, int(m.group(1)))
+        default_vol = f"Book-{max_num + 1:02d}"
+
+        dialog = Gtk.Dialog(title="Add Manuscript Volume", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+        box.set_spacing(8)
+
+        lbl = Gtk.Label(label=f"Enter volume name for '{wpath.name}':")
+        box.pack_start(lbl, False, False, 0)
+
+        entry = Gtk.Entry()
+        entry.set_text(default_vol)
+        box.pack_start(entry, False, False, 0)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            vol_name = entry.get_text().strip()
+            if vol_name:
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "add_book.sh"), self.current_world_path, vol_name]
+                self.set_status(f"Scaffolding volume '{vol_name}'...")
+                threading.Thread(target=self._run_async_command, args=(cmd, f"Volume '{vol_name}' created successfully!", self.refresh_after_add_volume)).start()
+        dialog.destroy()
+
+    def refresh_after_add_volume(self):
+        self.refresh_volume_options()
+        self.refresh_manuscript_analytics()
+
+    def on_generate_concordance_clicked(self, btn):
+        if not self.current_world_path:
+            self.show_error("Please select an active world first.")
+            return
+
+        volume = self.combo_pub_volume.get_active_id() or "all"
+        cmd = [
+            "bash", str(PROJECT_ROOT / "scripts" / "generate_concordance.sh"),
+            self.current_world_path,
+            "--book", volume
+        ]
+        self.set_status(f"Generating back-matter concordance for volume '{volume}'...")
+        self.pub_log_buffer.set_text(f"Starting Concordance & Dramatis Personae generation [{volume}]...\n")
+
+        def _worker():
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in proc.stdout:
+                GLib.idle_add(self._append_log, self.pub_log_buffer, line)
+            proc.wait()
+            if proc.returncode == 0:
+                GLib.idle_add(self.set_status, "Concordance and Dramatis Personae generated successfully!")
+                GLib.idle_add(self.refresh_manuscript_analytics)
+            else:
+                GLib.idle_add(self.set_status, "Concordance generation encountered warnings/errors.")
+
+        threading.Thread(target=_worker).start()
 
     def run_diagnostics(self):
         if not self.current_world_path:
@@ -971,26 +1055,57 @@ class ScriptoriumApp(Gtk.Window):
 
         threading.Thread(target=_worker).start()
 
+    def _is_flatpak_installed(self, app_id):
+        try:
+            res = subprocess.run(["flatpak", "info", app_id], capture_output=True)
+            return res.returncode == 0
+        except Exception:
+            return False
+
     def on_launch_obsidian(self, btn):
         if self.current_world_path:
             bible = Path(self.current_world_path) / "00-World-Bible"
-            subprocess.Popen(["obsidian", str(bible)] if subprocess.run(["which", "obsidian"], capture_output=True).stdout else ["xdg-open", str(bible)])
+            if self._is_flatpak_installed("md.obsidian.Obsidian"):
+                subprocess.Popen(["flatpak", "run", "md.obsidian.Obsidian", str(bible)])
+            elif subprocess.run(["which", "obsidian"], capture_output=True).stdout:
+                subprocess.Popen(["obsidian", str(bible)])
+            else:
+                subprocess.Popen(["xdg-open", str(bible)])
 
     def on_launch_novelwriter(self, btn):
         if self.current_world_path:
-            nw = Path(self.current_world_path) / "01-Manuscript"
-            subprocess.Popen(["novelwriter", str(nw)] if subprocess.run(["which", "novelwriter"], capture_output=True).stdout else ["xdg-open", str(nw)])
+            nw_proj = Path(self.current_world_path) / "01-Manuscript" / "nwProject.nwx"
+            target = str(nw_proj) if nw_proj.is_file() else str(Path(self.current_world_path) / "01-Manuscript")
+            if self._is_flatpak_installed("io.gitlab.novelwriter.novelWriter"):
+                subprocess.Popen(["flatpak", "run", "io.gitlab.novelwriter.novelWriter", target])
+            elif subprocess.run(["which", "novelwriter"], capture_output=True).stdout:
+                subprocess.Popen(["novelwriter", target])
+            else:
+                subprocess.Popen(["xdg-open", str(Path(self.current_world_path) / "01-Manuscript")])
 
     def on_launch_focuswriter(self, btn):
         if self.current_world_path:
             ms = Path(self.current_world_path) / "01-Manuscript" / "Book-01"
-            subprocess.Popen(["focuswriter", str(ms)] if subprocess.run(["which", "focuswriter"], capture_output=True).stdout else ["xdg-open", str(ms)])
+            if subprocess.run(["which", "focuswriter"], capture_output=True).stdout:
+                subprocess.Popen(["focuswriter", str(ms)])
+            else:
+                subprocess.Popen(["xdg-open", str(ms)])
 
     def on_launch_libreoffice(self, btn):
-        subprocess.Popen(["libreoffice", "--writer"] if subprocess.run(["which", "libreoffice"], capture_output=True).stdout else ["xdg-open", str(HOME_DIR)])
+        if subprocess.run(["which", "libreoffice"], capture_output=True).stdout:
+            subprocess.Popen(["libreoffice", "--writer"])
+        else:
+            subprocess.Popen(["xdg-open", str(HOME_DIR)])
 
     def on_launch_calibre(self, btn):
-        subprocess.Popen(["calibre"] if subprocess.run(["which", "calibre"], capture_output=True).stdout else ["xdg-open", str(HOME_DIR)])
+        if self._is_flatpak_installed("com.calibredesk.calibre"):
+            subprocess.Popen(["flatpak", "run", "com.calibredesk.calibre"])
+        elif self._is_flatpak_installed("com.calibre_ebook.calibre"):
+            subprocess.Popen(["flatpak", "run", "com.calibre_ebook.calibre"])
+        elif subprocess.run(["which", "calibre"], capture_output=True).stdout:
+            subprocess.Popen(["calibre"])
+        else:
+            subprocess.Popen(["xdg-open", str(HOME_DIR)])
 
     def on_open_folder_clicked(self, btn):
         if self.current_world_path:

@@ -127,3 +127,26 @@
   - Maintain a multi-tier fallback architecture: `scriptorium_app.py` -> Zenity dialogs (`control_center.sh`) -> CLI (`scriptorium`).
   - Link the in-app menu directly to the plain-English author handbook (`docs/AUTHOR_MANUAL.md`).
 - **Consequences**: Zero terminal barrier to entry for creative authors, rich visual feedback during writing and export, safe async background processing, and complete system resilience across all environments.
+
+## ADR-018: Speculative Ontology Harmonization, Multi-Volume Scaffolding & Publishing Polish
+- **Context**: Ontological divergence between frontmatter templates (`Character`, `Location`, `Faction`, `TimelineEvent`) and `fileClasses` schemas caused inconsistent Dataview reporting. Additionally, authoring multi-book series required manual volume folder and Git repo setup, while publishing lacked cover image auto-detection and paper trim size configurability.
+- **Decision**:
+  - Harmonize all frontmatter templates and `Templates/World-Bible-Index.md` Dataview tables with strict `fileClasses` definitions.
+  - Create formal `fileClasses` schemas for `MagicSystem.md` and `Language.md` completing the 9 core lore ontologies.
+  - Relocate `.obsidian-recommended-plugins.md` to `docs/OBSIDIAN_PLUGINS_GUIDE.md` to keep newly scaffolded world vaults clean.
+  - Introduce `scripts/add_book.sh` and `scriptorium add-book <world> [book]` to scaffold subsequent manuscript volumes with 3 acts, sample chapters, and isolated Git repositories.
+  - Wire `-s, --paper-size <us-trade|trade|pocket>` across `export_book.sh` and `scriptorium_app.py`, and implement EPUB cover image auto-detection (`03-Art/cover.png` or `03-Art/cover.jpg`).
+  - Anchor root `.gitignore` entries to prevent unintended swallowing of test fixture directories.
+- **Consequences**: Complete ontological consistency across the 9 World Bible domains, frictionless multi-volume series authoring, publication-grade cover and trim sizing, and robust test suite isolation.
+
+## ADR-019: Automated Narrative Concordance & Multi-Era Chronological Parsing Engine
+- **Context**: Authors of speculative fiction and epic sagas manually assemble Dramatis Personae rosters and world glossaries at publication time, leading to desynchronization with World Bible lore notes. Furthermore, timeline consistency checking in `world_doctor.sh` (`WLD-104`) previously relied on strict integer casting, failing or silently bypassing fantasy/sci-fi era notation (e.g. `-450 IE`, `1422 3E`, `Age of Fire 410`, `500 BCE`).
+- **Decision**:
+  - Implement `scripts/generate_concordance.sh` (`scriptorium concordance <world> [--book Book-01]`) to automatically parse structured YAML frontmatter from `Characters/`, `Languages/`, `Bestiary/`, `Artifacts/`, and `Factions/` and generate publication-ready `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` in `01-Manuscript/<Book>/04_Back_Matter/`.
+  - Seamlessly position `04_Back_Matter/` so natural sorting in `export_book.sh` automatically compiles Dramatis Personae and Glossary at the end of Typst print PDFs and Pandoc EPUBs.
+  - Implement a regex-based multi-era chronological parser and comparator in `scripts/world_doctor.sh` supporting BC/BCE negative intervals, CE/AD, sequential numbered eras (1E..5E, First..Fifth Age), and custom named eras (`Age of Fire`, `IE`).
+  - Introduce `templates/manuscript/Outlines/Subplot-Thread-Matrix.md` with `@thread:` tag standards and dynamic Dataview dashboards.
+  - Integrate 1-click "Add New Volume" and "Generate Concordance" buttons directly into the GTK Desktop Control Center (`scriptorium_app.py`).
+  - Safely remove obsolete `Finishing_Touches.md` and harmonize documentation.
+- **Consequences**: Zero manual toil generating book back-matter, automated synchronization between world lore and published glossaries, robust chronological diagnostics across speculative timelines, and a decluttered root repository.
+

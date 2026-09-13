@@ -116,12 +116,14 @@ ACTION=$(zenity --list --title="Scriptorium Control Center — [${ACTIVE_WORLD} 
     "1. Write: Obsidian" "Open World Bible in Obsidian (Plugins & Lore)" \
     "2. Write: novelWriter" "Open Manuscript in novelWriter" \
     "3. Export Book" "Compile manuscript to print PDF and EPUB" \
-    "4. Save Snapshot" "Record a point-in-time Git version" \
-    "5. Backup Archive" "Create standalone verified .tar.gz backup" \
-    "6. Run Diagnostics" "Check world consistency and system health" \
-    "7. Word Count Report" "View manuscript progress analytics" \
-    "8. New World" "Scaffold a brand new world" \
-    "9. New Universe" "Create a new universe container" || true)
+    "4. Generate Concordance" "Generate Dramatis Personae & Glossary back-matter" \
+    "5. Add Manuscript Volume" "Scaffold a new book volume (Book-02, etc.)" \
+    "6. Save Snapshot" "Record a point-in-time Git version" \
+    "7. Backup Archive" "Create standalone verified .tar.gz backup" \
+    "8. Run Diagnostics" "Check world consistency and system health" \
+    "9. Word Count Report" "View manuscript progress analytics" \
+    "10. New World" "Scaffold a brand new world" \
+    "11. New Universe" "Create a new universe container" || true)
 
 [ -z "${ACTION}" ] && exit 0
 
@@ -148,28 +150,34 @@ case "${ACTION}" in
     "3. Export Book")
         bash "${PROJECT_ROOT}/scripts/export_book.sh" "${WORLD_DIR}"
         ;;
-    "4. Save Snapshot")
+    "4. Generate Concordance")
+        bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "${WORLD_DIR}"
+        ;;
+    "5. Add Manuscript Volume")
+        bash "${PROJECT_ROOT}/scripts/add_book.sh" "${WORLD_DIR}"
+        ;;
+    "6. Save Snapshot")
         bash "${PROJECT_ROOT}/scripts/save_snapshot.sh" --world "${ACTIVE_WORLD}"
         ;;
-    "5. Backup Archive")
+    "7. Backup Archive")
         bash "${PROJECT_ROOT}/scripts/backup_world.sh" --world "${ACTIVE_WORLD}"
         ;;
-    "6. Run Diagnostics")
+    "8. Run Diagnostics")
         REPORT=$(bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "${WORLD_DIR}" 2>&1 || true)
         zenity --text-info --title="World Doctor — ${ACTIVE_WORLD}" \
             --width=600 --height=450 \
             --filename=<(printf '%s\n' "${REPORT}")
         ;;
-    "7. Word Count Report")
+    "9. Word Count Report")
         REPORT=$(bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "${WORLD_DIR}" 2>&1 || true)
         zenity --text-info --title="Wordcount Report — ${ACTIVE_WORLD}" \
             --width=600 --height=450 \
             --filename=<(printf '%s\n' "${REPORT}")
         ;;
-    "8. New World")
+    "10. New World")
         bash "${PROJECT_ROOT}/scripts/init_world.sh"
         ;;
-    "9. New Universe")
+    "11. New Universe")
         bash "${PROJECT_ROOT}/scripts/init_universe.sh"
         ;;
 esac

@@ -99,10 +99,12 @@ The Scriptorium desktop application is organized into **5 intuitive tabs**:
 ### Tab 2: Writing & Analytics
 - **Live Word Count Dashboard**: Displays total manuscript word counts, scene counts, and daily pacing metrics.
 - **Manuscript Explorer**: An interactive tree view listing every Volume (`Book-01`, `Book-02`), Act, Chapter, and Scene file with individual word count tallies.
+- **Add New Volume**: 1-Click button (`📚 Add New Volume`) to scaffold subsequent manuscript books with 3-act structures and isolated Git repositories.
 - **Refresh Stats**: Instantly recalculates word counts after a writing session.
 
 ### Tab 3: Publishing Studio
 - **1-Click Typesetting**: Turn your Markdown manuscript into a print-ready vector PDF and an EPUB ebook in seconds.
+- **Generate Concordance**: 1-Click button (`📖 Generate Concordance`) to automatically extract characters, factions, relics, bestiary creatures, and linguistics from your World Bible into publication-grade `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
 - **Volume Selector**: Choose to compile an individual volume (`Book-01`, `Book-02`) or the entire series omnibus.
 - **Trim Size Presets**:
   - `US Trade (6 × 9 in)`: Standard commercial fiction and fantasy trade paperback.
@@ -164,6 +166,18 @@ Your manuscript in `01-Manuscript/Book-01/` is structured for long-form narrativ
 - **Longform (Obsidian)**: Organize atomic Markdown scenes in your left sidebar, drag-and-drop to reorder chapters, and draft directly in your vault.
 - **novelWriter**: Open `01-Manuscript` to use novelWriter's structured project tree, status badges (`Draft`, `Revision`, `Finished`), and POV annotations (`@pov: CharacterName`).
 
+### Multi-Volume Series Scaffolding (`add-book`)
+When writing sequels, trilogies, or serials, you can scaffold subsequent volumes in your world with 1 click or a single command:
+```bash
+scriptorium add-book My-World Book-02
+```
+This automatically scaffolds:
+- `01-Manuscript/Book-02/01_Act_I`
+- `01-Manuscript/Book-02/02_Act_II`
+- `01-Manuscript/Book-02/03_Act_III`
+- Starter chapters for each act
+- A discrete, isolated Git repository for granular drafting commits in `Book-02`!
+
 ### Scene Breaks in Trade Typography
 To insert a scene break within a chapter, use standard Markdown:
 ```markdown
@@ -173,7 +187,11 @@ The castle gates slammed shut behind them.
 
 Morning brought no comfort to the besieged city.
 ```
-When compiled with Scriptorium's Typst engine, `* * *` or `***` or `---` is automatically transformed into an elegant, publication-grade ornament (`✦ ✦ ✦`).
+### Subplot & Narrative Thread Pacing (`Subplot-Thread-Matrix.md`)
+For complex speculative narratives with multiple intertwining plotlines, consult `01-Manuscript/Outlines/Subplot-Thread-Matrix.md`.
+- Annotate your scenes with `@thread: Main-Plot`, `@thread: Subplot-Romance`, or `@thread: Subplot-Heist`.
+- Dynamic Dataview queries provide a live matrix showing which subplots advance in each act and ensure that minor threads never vanish mid-book.
+- All `@thread:` tags are completely scrubbed during export.
 
 ### Distraction-Free Sprints (FocusWriter)
 Click **"⚡ Sprint Canvas"** in the Control Center to launch FocusWriter.
@@ -188,15 +206,25 @@ Scriptorium includes an automated publishing pipeline that eliminates complex La
 
 ### How Compilation Works
 1. In the Control Center, open **Tab 3: Publishing Studio**.
-2. Select your book volume (`Book-01` or `All Books (Omnibus)`).
+2. Select your book volume (`Book-01`, `Book-02`, or `All Books (Omnibus)`).
 3. Select your paper size (`US Trade 6x9 in`, `Trade 5.5x8.5 in`, or `Pocket 5x8 in`).
 4. Click **"🚀 Compile Book"**.
+
+### Automated Back-Matter Concordance & Dramatis Personae
+Click **"📖 Generate Concordance"** (or run `scriptorium concordance <world>`). Scriptorium's concordance engine reads all registered dossiers across your World Bible (`Characters/`, `Languages/`, `Bestiary/`, `Artifacts/`, and `Factions/`) and automatically creates:
+- `01-Manuscript/<Book>/04_Back_Matter/01_Dramatis_Personae.md`
+- `01-Manuscript/<Book>/04_Back_Matter/02_Glossary_and_Concordance.md`
+
+Because of Scriptorium's natural alphabetical collation order, `04_Back_Matter` files are seamlessly compiled at the end of your Typst print PDFs and Pandoc EPUBs with zero manual copy-pasting.
+
+### Automated Cover Image Detection
+Place your book's cover art in `03-Art/cover.png` or `03-Art/cover.jpg`. When exporting to EPUB, Pandoc automatically detects and embeds your cover image (`--epub-cover-image`) into the ebook manifest.
 
 ### What Typst Automatically Formats
 - **Front Matter**: Formats Half-Title, Full Title, Copyright page (with ISBN and copyright notice), Dedication, and Epigraph without page numbers or headers.
 - **Running Headers & Footers**: Verso (Left) pages display the Author Name; Recto (Right) pages display the Book Title.
 - **Gutter Binding Margins**: Alternates inside margin (`0.85 in`) and outside margin (`0.70 in`) so text never disappears into the book's glued spine.
-- **Clean Tag Stripping**: Automatically scrubs internal `@pov:` or `%` notes so they never leak into consumer PDFs or EPUBs.
+- **Clean Tag Stripping**: Automatically scrubs internal `@pov:`, `@thread:`, or `%` notes so they never leak into consumer PDFs or EPUBs.
 - **Flush-Left First Paragraphs**: Automatically keeps opening paragraphs after chapter headings and scene breaks flush-left according to traditional fiction typesetting standards.
 
 ---
@@ -253,7 +281,9 @@ Or install the individual tool via your package manager (see `resources/software
 
 #### Q: Can I open Scriptorium without using the desktop app?
 **A**: Yes! Scriptorium includes a full command-line interface:
-- `scriptorium export <world> --book Book-01`
+- `scriptorium add-book <world> Book-02`
+- `scriptorium concordance <world> --book Book-01`
+- `scriptorium export <world> --book Book-01 --paper-size trade`
 - `scriptorium snapshot <world> -m "Note"`
 - `scriptorium backup <world>`
 - `scriptorium doctor`

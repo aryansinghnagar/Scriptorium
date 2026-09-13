@@ -6,12 +6,12 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 ## 2. Core Philosophy & Design Invariants
 1. **Plain Text & Open Formats First**: Every word, outline, character sheet, and chapter is stored in standard Markdown and plain text files. No proprietary lock-in.
 2. **One Tool Per Creative Stage**:
-   - *World Bible & Local Wiki*: **Obsidian** (pre-configured with Longform, Dataview, Metadata Menu fileClasses schemas, Calendarium, Storyteller Suite, Storyline, Novel Word Count, and Obsidian Git).
-   - *Outlining & Drafting*: **novelWriter** or **Obsidian Longform** (structured project hierarchy, plain Markdown storage, atomic scene compilation, focus mode).
+   - *World Bible & Local Wiki*: **Obsidian** (pre-configured with Longform, Dataview, Metadata Menu 9 `fileClasses` schemas: Character, Location, Faction, TimelineEvent, Creature, Artifact, Cosmology, MagicSystem, Language; Calendarium, Storyteller Suite, Storyline, Novel Word Count, and Obsidian Git).
+   - *Outlining & Drafting*: **novelWriter** or **Obsidian Longform** (structured project hierarchy, plain Markdown storage, multi-volume `add-book` scaffolding, atomic scene compilation, focus mode).
    - *Deep Focus Sessions*: **FocusWriter** (full-screen distraction-free canvas).
    - *Revisions / Word Processing*: **LibreOffice Writer** (standard `.docx`/`.odt` track changes with editors).
-   - *Ebook Compilation*: **Calibre** (EPUB generation and inspection).
-   - *Typesetting & Print PDF*: **Typst + Pandoc** (modern typographic engine producing Vellum-quality print PDFs).
+   - *Ebook Compilation*: **Calibre** (EPUB generation, cover art inspection, and e-reader sync).
+   - *Typesetting & Print PDF*: **Typst + Pandoc** (modern typographic engine producing Vellum-quality print PDFs with trade trim size options: us-trade, trade, pocket).
 3. **Zero Terminal Requirement for Daily Work**: Every daily action (writing, snapshotting, exporting, backing up, diagnostics, universe/world creation) is executable via native GTK 3 desktop UI (`scriptorium_app.py`), desktop launchers, Zenity dialog fallbacks, and the comprehensive visual Author's Field Manual (`docs/AUTHOR_MANUAL.md`).
 4. **Targeted Distraction Filtering**: Keep full browser capability for research, but enforce automated site blocking (LeechBlock NG) during designated writing hours and activate XFCE Do Not Disturb mode.
 5. **Multi-Layer Data Protection & Version Control**: Multi-tier Git version control (Universe, World with Obsidian Git auto-commits, discrete Manuscript repos), standalone verified archive backups (`backup_world.sh` / `restore_world.sh`), full-disk LUKS encryption, and automated external Déjà Dup backups.

@@ -44,10 +44,11 @@ Usage:
   export_book.sh [WORLD_DIR] [OPTIONS]
 
 Options:
-  -t, --title TITLE    Book title (default: world manifest or directory name)
-  -a, --author NAME    Author name (default: world manifest or "Author Name")
-  -b, --book VOLUME    Book volume to export (e.g., Book-01, Book-02, or "all")
-  -h, --help           Show this help and exit
+  -t, --title TITLE        Book title (default: world manifest or directory name)
+  -a, --author NAME        Author name (default: world manifest or "Author Name")
+  -b, --book VOLUME        Book volume to export (e.g., Book-01, Book-02, or "all")
+  -s, --paper-size SIZE    Paper trim size (us-trade, trade, pocket; default: us-trade)
+  -h, --help               Show this help and exit
 
 Exit codes:
   0  success (at least one artifact produced, no compile errors)
@@ -63,6 +64,7 @@ USAGE
 BOOK_TITLE_CLI=""
 AUTHOR_NAME_CLI=""
 BOOK_VOLUME_CLI=""
+PAPER_SIZE_CLI=""
 POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -75,6 +77,9 @@ while [ $# -gt 0 ]; do
         -b|--book)
             [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 1; }
             BOOK_VOLUME_CLI="$2"; shift 2 ;;
+        -s|--paper-size)
+            [ $# -ge 2 ] || { echo "Error: --paper-size requires a value." >&2; exit 1; }
+            PAPER_SIZE_CLI="$2"; shift 2 ;;
         -h|--help)
             usage; exit 0 ;;
         --)
@@ -269,6 +274,16 @@ fi
 ESC_TITLE="$(typst_escape "${BOOK_TITLE}")"
 ESC_AUTHOR="$(typst_escape "${AUTHOR_NAME}")"
 
+# Resolve and validate paper size
+PAPER_SIZE="${PAPER_SIZE_CLI:-us-trade}"
+case "${PAPER_SIZE}" in
+    us-trade|trade|pocket) ;;
+    *)
+        echo "[!] Warning: Unknown paper size '${PAPER_SIZE}', defaulting to 'us-trade'." >&2
+        PAPER_SIZE="us-trade"
+        ;;
+esac
+
 cat << EOF > "${TYPST_SRC}"
 #import "book_template.typ": book-layout, scene-break, unindented
 
@@ -279,7 +294,7 @@ cat << EOF > "${TYPST_SRC}"
   year: "$(date +%Y)",
   isbn: "978-0-000000-00-0",
   publisher: "Scriptorium Press",
-  paper-size: "us-trade", // Options: "us-trade" (6x9in), "trade" (5.5x8.5in), "pocket" (5x8in)
+  paper-size: "${PAPER_SIZE}", // Options: "us-trade" (6x9in), "trade" (5.5x8.5in), "pocket" (5x8in)
   body-font: "Linux Libertine",
 )
 
@@ -302,8 +317,15 @@ else
   body-font: "Linux Libertine",
   body
 ) = {
+  let (width, height) = if paper-size == "trade" {
+    (5.5in, 8.5in)
+  } else if paper-size == "pocket" {
+    (5in, 8in)
+  } else {
+    (6in, 9in)
+  }
   set document(title: title, author: author)
-  set page(paper: "us-trade", margin: (inside: 0.8in, outside: 0.65in, top: 0.75in, bottom: 0.75in))
+  set page(width: width, height: height, margin: (inside: 0.8in, outside: 0.65in, top: 0.75in, bottom: 0.75in))
   set text(font: body-font, size: 10.5pt, lang: "en")
   set par(justify: true, first-line-indent: 1.25em, leading: 0.7em)
   
@@ -375,13 +397,33 @@ else
     EXIT_STATUS=1
 fi
 
-# 6. Compile EPUB with Pandoc (AUD-02: Dedicated error trap)
+# 6. Compile EPUB with Pandoc (AUD-02: Dedicated error trap & Cover auto-detection)
 echo "Generating EPUB with Pandoc..."
 if command -v pandoc &> /dev/null; then
-    if pandoc "${COMBINED_MD}" -o "${EPUB_OUTPUT}" \
-        --metadata title="${BOOK_TITLE}" \
-        --metadata author="${AUTHOR_NAME}" \
-        --toc --toc-depth=2 2>"${TEMP_WORK_DIR}/pandoc_err.log"; then
+    PANDOC_ARGS=(
+        "${COMBINED_MD}"
+        -o "${EPUB_OUTPUT}"
+        --metadata title="${BOOK_TITLE}"
+        --metadata author="${AUTHOR_NAME}"
+        --toc
+        --toc-depth=2
+    )
+
+    COVER_IMAGE=""
+    if [ -f "${WORLD_DIR}/03-Art/cover.png" ]; then
+        COVER_IMAGE="${WORLD_DIR}/03-Art/cover.png"
+    elif [ -f "${WORLD_DIR}/03-Art/cover.jpg" ]; then
+        COVER_IMAGE="${WORLD_DIR}/03-Art/cover.jpg"
+    elif [ -f "${WORLD_DIR}/03-Art/cover.jpeg" ]; then
+        COVER_IMAGE="${WORLD_DIR}/03-Art/cover.jpeg"
+    fi
+
+    if [ -n "${COVER_IMAGE}" ]; then
+        echo "[i] Auto-detected EPUB cover image: ${COVER_IMAGE}"
+        PANDOC_ARGS+=(--epub-cover-image="${COVER_IMAGE}")
+    fi
+
+    if pandoc "${PANDOC_ARGS[@]}" 2>"${TEMP_WORK_DIR}/pandoc_err.log"; then
         if [ -s "${EPUB_OUTPUT}" ]; then
             echo "[✓] EPUB generated at: ${EPUB_OUTPUT}"
         else
