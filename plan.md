@@ -13,6 +13,7 @@ The Scriptorium environment is organized into modular tiers:
 9. **Multi-Tier Git & Narrative Universe Architecture**: 3-tier version control hierarchy (`~/Universes/<Name>/` -> `Worlds/<Name>/` -> `01-Manuscript/<Book>/`) with Universe manifests (`universe.yaml`) and discrete manuscript git repos.
 10. **Pre-Configured Obsidian Worldbuilding & Drafting Suite**: Production-grade vault pre-configuration with Longform, Dataview, Metadata Menu (`fileClasses` schemas: Character, Location, Faction, TimelineEvent), Calendarium, Storyteller Suite, Storyline, Novel Word Count, and Obsidian Git (10-min interval auto-commits).
 11. **Comprehensive 7-Stage Verification Harness**: `scripts/verify.sh` exercising syntax, schemas, transactional Universe & World init, exports, doctor diagnostics, wordcount reports, Git multi-tier snapshots, and backup/restore recovery drills.
+12. **Unified GTK 3 Desktop Application & Author Field Manual**: Native Python 3/GTK 3 Control Center (`scripts/scriptorium_app.py`) with 5-tab author workflow, first-flight onboarding wizard, and comprehensive visual guide (`docs/AUTHOR_MANUAL.md`).
 
 ## 2. Milestone Execution Status
 - [x] **M0: Governance & Architecture Freeze**: Security policy (`SECURITY.md`), OS matrix (`docs/SUPPORT_MATRIX.md`), compatibility baselines (`docs/COMPATIBILITY.md`), `.editorconfig`, CI 40-char SHA pinning (`ci.yml`), and README cleanup.
@@ -21,4 +22,11 @@ The Scriptorium environment is organized into modular tiers:
 - [x] **M3: Production Diagnostics & Domain Toolchain**: Unified Scriptorium Doctor (`scriptorium_doctor.sh`), enhanced World Doctor with timeline and entity validation (`world_doctor.sh`), and progress analytics (`wordcount_report.sh`).
 - [x] **M4: Scriptorium Unified Authoring Platform**: Unified CLI entrypoint (`scripts/scriptorium`), desktop Control Center GUI (`control_center.sh`, `launchers/scriptorium-control-center.desktop`), and comprehensive 7-stage verification harness (`scripts/verify.sh`).
 - [x] **M5: Narrative Universe Architecture & Out-of-the-Box Obsidian Suite**: Multi-tier Git architecture (`init_universe.sh`, `init_world.sh --universe`, `save_snapshot.sh`), pre-configured Obsidian worldbuilding & drafting suite (`.obsidian/` configs, `Templates/fileClasses/`, Dataview JS/DQL, Obsidian Git auto-commits), decluttered codebase, and ADR-013/ADR-014 documentation.
+- [x] **M6: Multi-Volume Manuscript Compilation Isolation**: Volume discovery, explicit `-b, --book <Volume>` selector, interactive GUI volume picker, omnibus option, and volume-isolated output artifact stems (`export_book.sh`, `scriptorium export`, ADR-015).
+- [x] **M7: Professional Literary Typography & Typesetting Engine**: Ornamental scene breaks mapping (`show line: it => scene-break()`), unindented opening paragraph helpers, epigraph support, and trade typography formatting (`book_template.typ`, `preview_sample.typ`).
+- [x] **M8: Worldbuilding Taxonomy Expansion & Schema Enrichment**: Bestiary (`Bestiary/`, `fileClasses/Creature.md`), Artifacts/Relics (`Artifacts/`, `fileClasses/Artifact.md`), and Pantheons/Cosmology (`Cosmology/`, `fileClasses/Cosmology.md`) with Dataview dashboards and `world_doctor.sh` validation (ADR-016).
+- [x] **M9: Git Concurrency Resilience & Universe Index Hub**: Transient `.git/index.lock` wait-and-retry handling in `save_snapshot.sh` and automated `Universe-Index.md` cosmos hub generation in `init_universe.sh`.
+- [x] **M10: Architecture Documentation & Regression Suite**: Synchronized ADRs (ADR-001..ADR-016), updated charters, and 7-stage verification harness passing with `ALL-CHECKS-PASS`.
+- [x] **M11: Unified GTK 3 Desktop Control Center & Author's Field Manual**: Native GTK 3 5-tab author dashboard (`scripts/scriptorium_app.py`), first-flight onboarding wizard with starter demo cosmos (*"The Chronicles of Eldoria"*), comprehensive 8-chapter Author's Field Manual (`docs/AUTHOR_MANUAL.md`), and ADR-017 documentation.
+
 

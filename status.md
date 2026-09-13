@@ -1,9 +1,9 @@
 # Operational Status & Momentum Queues: Scriptorium
 
 ## Real-Time State
-- **Active Phase**: Scriptorium Unified Engineering & Improvement Plan (Milestones M0–M5) Complete & Verified
-- **Status**: All remediations and feature enhancements (AUD-01..04, SEC-01..03, DEP-01, UX-01, REL-01..03, M5 Multi-Tier Git & Obsidian Suite) implemented and tested. Narrative Universe architecture (`~/Universes/<Name>/`), transactional world initialization (`init_world.sh --universe`), decoupled backup/restore engine, discrete manuscript Git repos, pre-configured Obsidian writing suite (Longform, Dataview, Metadata Menu, Calendarium, Storyteller Suite, Storyline, Novel Word Count, Obsidian Git), unified CLI (`scriptorium`), GUI Control Center, unified doctor diagnostic suite (`scriptorium_doctor.sh`), and comprehensive 7-stage test harness (`scripts/verify.sh`) passing with `ALL-CHECKS-PASS`.
-- **Last Action**: Completed M5 Multi-Tier Git & Obsidian Vault Plugin Suite, synchronized all architecture records, ADR-013/ADR-014, and verified 7-stage test harness.
+- **Active Phase**: Scriptorium Phased Engineering & Enhancement Plan (Milestones M0–M11) Complete & Verified
+- **Status**: All remediations and enhancements (M0–M11) implemented and verified: Unified GTK 3 Desktop Control Center (`scripts/scriptorium_app.py`), First-Flight onboarding wizard, 8-chapter Author's Field Manual (`docs/AUTHOR_MANUAL.md`), Multi-volume compilation isolation (`--book`), trade typography with ornamental scene breaks & unindented paragraph formatting, expanded worldbuilding taxonomy (Bestiary, Artifacts, Cosmology), Git index lock resilience, Universe Index Hub (`Universe-Index.md`), pre-configured Obsidian suite (Longform, Dataview, Metadata Menu, Calendarium, Storyteller Suite, Storyline, Novel Word Count, Obsidian Git), unified CLI (`scriptorium`), and comprehensive 7-stage test harness (`scripts/verify.sh`) passing with `ALL-CHECKS-PASS`.
+- **Last Action**: Implemented Milestone M11 (Python/GTK 3 Desktop App, First-Flight Onboarding, Author's Field Manual, ADR-017).
 
 ## Active Momentum Queues
 
@@ -12,7 +12,7 @@
 - [ ] Physical machine deployment drill on Linux Mint 22 (XFCE) / Debian 13 (XFCE).
 
 ### `next` (Immediately Ready to Execute)
-- [ ] User deployment on Linux Mint XFCE / Debian system.
+- [ ] User deployment and first-flight walk-through on Linux Mint XFCE / Debian system.
 
 ### `blocked`
 - None.
@@ -24,4 +24,5 @@
 ### `recurring`
 - [ ] Run `bash scripts/verify.sh` on every change and pull request.
 - [ ] Validate ShellCheck zero-warning policy across scripts.
+
 

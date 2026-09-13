@@ -12,7 +12,7 @@ if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ]; then
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 fi
 
-VERSION="1.3.0"
+VERSION="1.4.0"
 
 usage() {
     cat << USAGE
@@ -28,7 +28,7 @@ Universe & World Management:
   control-center             Launch graphical desktop control center
 
 Writing & Publishing:
-  export <world> [options]   Compile manuscript into print PDF and EPUB
+  export <world> [-b BOOK]   Compile manuscript into print PDF and EPUB (--book Book-01|all)
   report <world> [--markdown]Show word counts and manuscript progress analytics
 
 Data Protection & Version Control:

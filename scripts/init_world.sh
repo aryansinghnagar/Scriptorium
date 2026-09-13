@@ -204,6 +204,9 @@ mkdir -p "${STAGING_DIR}/00-World-Bible/Characters"
 mkdir -p "${STAGING_DIR}/00-World-Bible/Locations"
 mkdir -p "${STAGING_DIR}/00-World-Bible/Factions"
 mkdir -p "${STAGING_DIR}/00-World-Bible/Magic-Technology"
+mkdir -p "${STAGING_DIR}/00-World-Bible/Bestiary"
+mkdir -p "${STAGING_DIR}/00-World-Bible/Artifacts"
+mkdir -p "${STAGING_DIR}/00-World-Bible/Cosmology"
 mkdir -p "${STAGING_DIR}/00-World-Bible/History"
 mkdir -p "${STAGING_DIR}/00-World-Bible/Languages"
 mkdir -p "${STAGING_DIR}/00-World-Bible/Templates/fileClasses"
@@ -278,6 +281,7 @@ EOF
 
 # Run Validation Checks on Staged Structure
 [ -d "${STAGING_DIR}/00-World-Bible/Characters" ] || { echo "Validation error: World Bible missing" >&2; exit 1; }
+[ -d "${STAGING_DIR}/00-World-Bible/Bestiary" ] || { echo "Validation error: Bestiary directory missing" >&2; exit 1; }
 [ -d "${STAGING_DIR}/01-Manuscript/Book-01" ] || { echo "Validation error: Manuscript directory missing" >&2; exit 1; }
 [ -f "${STAGING_DIR}/scriptorium.yaml" ] || { echo "Validation error: scriptorium.yaml manifest missing" >&2; exit 1; }
 

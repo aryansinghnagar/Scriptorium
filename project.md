@@ -12,7 +12,7 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
    - *Revisions / Word Processing*: **LibreOffice Writer** (standard `.docx`/`.odt` track changes with editors).
    - *Ebook Compilation*: **Calibre** (EPUB generation and inspection).
    - *Typesetting & Print PDF*: **Typst + Pandoc** (modern typographic engine producing Vellum-quality print PDFs).
-3. **Zero Terminal Requirement for Daily Work**: Every daily action (writing, snapshotting, exporting, backing up, diagnostics, universe/world creation) is executable via GUI desktop launchers, Scriptorium Control Center, and intuitive dialogs.
+3. **Zero Terminal Requirement for Daily Work**: Every daily action (writing, snapshotting, exporting, backing up, diagnostics, universe/world creation) is executable via native GTK 3 desktop UI (`scriptorium_app.py`), desktop launchers, Zenity dialog fallbacks, and the comprehensive visual Author's Field Manual (`docs/AUTHOR_MANUAL.md`).
 4. **Targeted Distraction Filtering**: Keep full browser capability for research, but enforce automated site blocking (LeechBlock NG) during designated writing hours and activate XFCE Do Not Disturb mode.
 5. **Multi-Layer Data Protection & Version Control**: Multi-tier Git version control (Universe, World with Obsidian Git auto-commits, discrete Manuscript repos), standalone verified archive backups (`backup_world.sh` / `restore_world.sh`), full-disk LUKS encryption, and automated external Déjà Dup backups.
 
@@ -29,14 +29,15 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 - No mobile companion workflow.
 
 ## 5. Constraints & Assumptions
-- Daily work can be GUI-only (XFCE panel, desktop launchers, Zenity dialogs on X11 and Wayland) or CLI-driven via the unified `scriptorium` entrypoint.
+- Daily work can be GUI-only (Python 3/GTK 3 Control Center, XFCE panel, desktop launchers, Zenity dialogs on X11 and Wayland) or CLI-driven via the unified `scriptorium` entrypoint.
 - World initialization is strictly transactional: staged in temporary space, validated, and atomically moved into `~/Universes/<Universe>/Worlds/<name>` or `~/Worlds/<name>`.
 - Multi-tier Git version control is automatically established during creation: Universe repo tracks high-level continuity, World repo tracks lore/assets with Obsidian Git, and individual Book folders receive isolated Git repos for granular manuscript revision histories.
 - novelWriter projects (`nwProject.nwx`) conform to valid fileVersion 1.5 XML schema while Markdown chapter files under `Book-*` serve as the source of truth for Pandoc, Typst, and Longform.
 
 ## 6. Definition of Done
 - `bash scripts/verify.sh` prints `ALL-CHECKS-PASS` across all 7 verification stages.
-- `typst compile templates/typst/preview_sample.typ` produces a paginated PDF with clean front matter and running headers.
+- `python3 -m py_compile scripts/scriptorium_app.py` compiles without syntax errors.
+- `docs/AUTHOR_MANUAL.md` provides visual, plain-English guidance for all creative and technical workflows.
+- `typst compile templates/typst/preview_sample.typ` produces a paginated PDF with clean front matter, ornamental scene breaks, and running headers.
 - A test universe and world scaffold, export (PDF + EPUB), record multi-tier Git snapshots, and complete verified backup & restore drill without data loss.
 - Zero warnings under `shellcheck -S warning scripts/*.sh scripts/scriptorium`.
-

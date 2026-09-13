@@ -79,7 +79,8 @@ FRONTMATTER_DELIM = "---"
 TYPED_REF_FIELDS = {
     "faction", "origin", "current_location", "leader", "headquarters",
     "dominant_faction", "realm_region", "rival", "ally", "mentor",
-    "magic_ability", "key_landmarks",
+    "magic_ability", "key_landmarks", "habitat", "creator", "current_bearer",
+    "associated_faction",
 }
 
 REQUIRED_BY_TYPE = {
@@ -89,6 +90,9 @@ REQUIRED_BY_TYPE = {
     "magic_tech_system": ("name",),
     "timeline_event": ("name",),
     "language": ("name",),
+    "creature": ("name",),
+    "artifact": ("name",),
+    "cosmology": ("name",),
 }
 
 def read_capped(path):

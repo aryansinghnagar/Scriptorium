@@ -53,8 +53,30 @@
 - [x] Declutter repository: safely delete legacy `audit_artifacts/`, `Plans/`, and `docs/archive/`
 - [x] Document ADR-013 (Multi-Tier Git Architecture) and ADR-014 (Obsidian Plugin Suite) in `decisions.md`
 
-### 8. Verification & Release Gates
-- [x] Expand `scripts/verify.sh` 7-stage verification suite with Universe/World lifecycle and multi-tier Git tests
+### 8. Next-Gen Authoring & Worldbuilding Enhancements (M6–M10)
+- [x] Enhance `scripts/export_book.sh` with `-b, --book <Volume>` selector, interactive GUI volume picker, and omnibus option (M6, ADR-015)
+- [x] Update `scripts/scriptorium` CLI facade to forward `--book` flag (M6)
+- [x] Enhance `templates/typst/book_template.typ` with ornamental scene breaks mapping and unindented paragraph helpers (M7)
+- [x] Create `templates/world-bible/Bestiary/Creature-Flora-Fauna-Template.md` and `Templates/fileClasses/Creature.md` (M8, ADR-016)
+- [x] Create `templates/world-bible/Artifacts/Artifact-Relic-Template.md` and `Templates/fileClasses/Artifact.md` (M8, ADR-016)
+- [x] Create `templates/world-bible/Cosmology/Deity-Cosmology-Template.md` and `Templates/fileClasses/Cosmology.md` (M8, ADR-016)
+- [x] Update `templates/world-bible/Templates/World-Bible-Index.md` with Bestiary, Artifacts, and Cosmology Dataview tables (M8)
+- [x] Update `scripts/world_doctor.sh` to validate `creature`, `artifact`, and `cosmology` entity types (M8)
+- [x] Update `scripts/init_world.sh` to scaffold `Bestiary/`, `Artifacts/`, and `Cosmology/` folders (M8)
+- [x] Add transient `.git/index.lock` wait-and-retry helper to `scripts/save_snapshot.sh` (M9)
+- [x] Add `Universe-Index.md` generation in `scripts/init_universe.sh` (M9)
+- [x] Document ADR-015 and ADR-016 in `decisions.md` (M10)
+
+### 9. Unified GTK 3 Desktop Application & Author's Field Manual (M11)
+- [x] Create `scripts/scriptorium_app.py` (Python 3 / PyGObject GTK 3 native desktop control center with 5-tab author workflow) (ADR-017)
+- [x] Update `scripts/control_center.sh` with seamless GTK 3 launch and Zenity fallback
+- [x] Implement First-Flight onboarding welcoming dialog and 1-click demo cosmos (*"The Chronicles of Eldoria"*)
+- [x] Create `docs/AUTHOR_MANUAL.md` (Visual 8-chapter plain-English author handbook)
+- [x] Document ADR-017 (Unified Python GTK Desktop Control Center & Author Onboarding Architecture) in `decisions.md`
+
+### 10. Verification & Release Gates
+- [x] Expand `scripts/verify.sh` 7-stage verification suite with Python compilation, Author Manual check, Universe/World lifecycle, expanded taxonomy, and multi-volume tests
 - [x] Pass all automated checks via `bash scripts/verify.sh` (`ALL-CHECKS-PASS`)
 - [ ] Final live acceptance test on physical Linux Mint / Debian desktop
+
 

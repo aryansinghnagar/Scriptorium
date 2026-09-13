@@ -14,15 +14,29 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "[1/7] bash -n syntax validation..."
+echo "[1/7] Script syntax & Python compilation validation..."
 for f in scripts/*.sh scripts/scriptorium; do
     if [ -f "$f" ]; then
         bash -n "$f" && echo "  OK $f"
     fi
 done
+if command -v python3 >/dev/null; then
+    python3 -m py_compile scripts/scriptorium_app.py && echo "  OK scripts/scriptorium_app.py (Python syntax valid)"
+fi
 
-echo "[2/7] JSON & XML schema validation..."
-# 2a. LeechBlock JSON schema validation
+echo "[2/7] JSON, XML & Documentation schema validation..."
+# 2a. Author Manual verification
+[ -f "docs/AUTHOR_MANUAL.md" ] || { echo "  FAIL missing docs/AUTHOR_MANUAL.md"; exit 1; }
+python3 - << 'PYEOF'
+with open('docs/AUTHOR_MANUAL.md', 'r', encoding='utf-8') as f:
+    text = f.read()
+assert len(text) > 5000, "docs/AUTHOR_MANUAL.md is unexpectedly short"
+for ch in ("## 1. ", "## 2. ", "## 3. ", "## 4. ", "## 5. ", "## 6. ", "## 7. ", "## 8. "):
+    assert ch in text, f"Missing section {ch} in docs/AUTHOR_MANUAL.md"
+print("  OK Author's Field Manual structure & chapter integrity")
+PYEOF
+
+# 2b. LeechBlock JSON schema validation
 python3 - << 'PYEOF'
 import json, sys
 with open('configs/leechblock_scriptorium_rules.json') as f:
@@ -35,7 +49,7 @@ for req in ("sites", "times", "days", "active"):
 print("  OK leechblock JSON schema")
 PYEOF
 
-# 2b. novelWriter XML schema validation
+# 2c. novelWriter XML schema validation
 python3 - << 'PYEOF'
 import xml.etree.ElementTree as ET
 tree = ET.parse('templates/manuscript/nwProject.nwx')
@@ -47,7 +61,7 @@ assert root.find("content") is not None, "Missing <content> node"
 print("  OK nwProject XML fileVersion 1.5")
 PYEOF
 
-# 2c. Obsidian vault pre-configured suite validation
+# 2d. Obsidian vault pre-configured suite validation
 python3 - << 'PYEOF'
 import json, os
 plugins_cfg = 'templates/world-bible/.obsidian/community-plugins.json'
@@ -60,7 +74,15 @@ required_plugins = [
 ]
 for p in required_plugins:
     assert p in plugins, f"Missing required plugin in pre-configured suite: {p}"
-print("  OK Obsidian pre-configured plugin suite schema")
+
+# Validate fileClasses schemas
+for fc in ("Character", "Location", "Faction", "TimelineEvent", "Creature", "Artifact", "Cosmology"):
+    fc_path = f"templates/world-bible/Templates/fileClasses/{fc}.md"
+    assert os.path.isfile(fc_path), f"Missing fileClass schema: {fc_path}"
+    with open(fc_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+        assert f"fileClass: {fc}" in content, f"Invalid fileClass header in {fc_path}"
+print("  OK Obsidian pre-configured plugin & fileClasses schemas")
 PYEOF
 
 echo "[3/7] Pandoc Markdown->Typst smoke test..."
@@ -99,18 +121,22 @@ UNIVERSE="TestMultiverse"
 bash scripts/init_universe.sh "${UNIVERSE}" >/dev/null
 [ -d "${HOME}/Universes/${UNIVERSE}/Worlds" ] || { echo "  FAIL universe scaffold missing"; exit 1; }
 [ -d "${HOME}/Universes/${UNIVERSE}/.git" ] || { echo "  FAIL universe git repository missing"; exit 1; }
-echo "  OK init_universe (Universe directory + Universe Git repository)"
+[ -f "${HOME}/Universes/${UNIVERSE}/Universe-Index.md" ] || { echo "  FAIL universe index note missing"; exit 1; }
+echo "  OK init_universe (Universe directory + Universe Git repository + Index Hub)"
 
 # 6b. Transactional world initialization inside Universe
 WORLD="VerifyWorld"
 bash scripts/init_world.sh "${WORLD}" --universe "${UNIVERSE}" >/dev/null
 WORLD_PATH="${HOME}/Universes/${UNIVERSE}/Worlds/${WORLD}"
-[ -d "${WORLD_PATH}/00-World-Bible/Characters" ] || { echo "  FAIL world bible scaffold missing"; exit 1; }
+[ -d "${WORLD_PATH}/00-World-Bible/Characters" ] || { echo "  FAIL world bible Characters missing"; exit 1; }
+[ -d "${WORLD_PATH}/00-World-Bible/Bestiary" ] || { echo "  FAIL world bible Bestiary missing"; exit 1; }
+[ -d "${WORLD_PATH}/00-World-Bible/Artifacts" ] || { echo "  FAIL world bible Artifacts missing"; exit 1; }
+[ -d "${WORLD_PATH}/00-World-Bible/Cosmology" ] || { echo "  FAIL world bible Cosmology missing"; exit 1; }
 [ -f "${WORLD_PATH}/00-World-Bible/.obsidian/community-plugins.json" ] || { echo "  FAIL obsidian config missing"; exit 1; }
 [ -f "${WORLD_PATH}/01-Manuscript/nwProject.nwx" ] || { echo "  FAIL nwProject.nwx missing"; exit 1; }
 [ -d "${WORLD_PATH}/.git" ] || { echo "  FAIL world git repository missing"; exit 1; }
 [ -d "${WORLD_PATH}/01-Manuscript/Book-01/.git" ] || { echo "  FAIL discrete manuscript git repository missing"; exit 1; }
-echo "  OK init_world (Multi-tier Universe, World & Manuscript Git repositories)"
+echo "  OK init_world (Multi-tier Universe, World & Manuscript Git repositories + Expanded Taxonomy)"
 
 # 6c. Inject Multi-volume + tag-poisoning test chapters
 mkdir -p "${WORLD_PATH}/01-Manuscript/Book-02/01_Act_I"
@@ -124,17 +150,22 @@ This chapter lives in Book-02 and must appear in exports.
 @theme: Honor & Steel
 EOF
 
-# 6d. Export book compilation
+# 6d. Export book compilation (Testing specific volume selection & omnibus)
 set +e
-bash scripts/export_book.sh "${WORLD_PATH}" --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export.log" 2>&1
-EXPORT_RC=$?
+bash scripts/export_book.sh "${WORLD_PATH}" --book Book-01 --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_b1.log" 2>&1
+EXPORT_B1_RC=$?
+bash scripts/export_book.sh "${WORLD_PATH}" --book all --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_all.log" 2>&1
+EXPORT_ALL_RC=$?
 set -e
 
 if command -v typst >/dev/null && command -v pandoc >/dev/null; then
-    if [ "${EXPORT_RC}" -ne 0 ]; then
-        echo "  FAIL export_book exited ${EXPORT_RC}:"; tail -n 5 "${TMP_VERIFY}/export.log"; exit 1
+    if [ "${EXPORT_B1_RC}" -ne 0 ] || [ "${EXPORT_ALL_RC}" -ne 0 ]; then
+        echo "  FAIL export_book failed (B1=${EXPORT_B1_RC}, ALL=${EXPORT_ALL_RC})"
+        tail -n 5 "${TMP_VERIFY}/export_b1.log"
+        tail -n 5 "${TMP_VERIFY}/export_all.log"
+        exit 1
     fi
-    echo "  OK export_book (exit 0)"
+    echo "  OK export_book (exit 0 across volume-isolated and omnibus builds)"
 
     PDF="$(find "${WORLD_PATH}/04-Publishing" -name '*.pdf' -print -quit 2>/dev/null)"
     EPUB="$(find "${WORLD_PATH}/04-Publishing" -name '*.epub' -print -quit 2>/dev/null)"

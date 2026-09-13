@@ -46,6 +46,7 @@ Usage:
 Options:
   -t, --title TITLE    Book title (default: world manifest or directory name)
   -a, --author NAME    Author name (default: world manifest or "Author Name")
+  -b, --book VOLUME    Book volume to export (e.g., Book-01, Book-02, or "all")
   -h, --help           Show this help and exit
 
 Exit codes:
@@ -61,6 +62,7 @@ USAGE
 # 1. Parse arguments (P-04: non-interactive use is first-class)
 BOOK_TITLE_CLI=""
 AUTHOR_NAME_CLI=""
+BOOK_VOLUME_CLI=""
 POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -70,6 +72,9 @@ while [ $# -gt 0 ]; do
         -a|--author)
             [ $# -ge 2 ] || { echo "Error: --author requires a value." >&2; exit 1; }
             AUTHOR_NAME_CLI="$2"; shift 2 ;;
+        -b|--book)
+            [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 1; }
+            BOOK_VOLUME_CLI="$2"; shift 2 ;;
         -h|--help)
             usage; exit 0 ;;
         --)
@@ -162,33 +167,79 @@ trap 'rm -rf "${TEMP_WORK_DIR:-}"' EXIT
 COMBINED_MD="${TEMP_WORK_DIR}/manuscript.md"
 TYPST_SRC="${TEMP_WORK_DIR}/book.typ"
 
-# 3. Collect and concatenate all manuscript chapter files
-# D2/P-02: collect EVERY Book-XX volume (Book-01, Book-02, ...), not just
-# Book-01. The old `if [ -d Book-01 ]` branch silently dropped every volume
-# after the first from every export. Outlines are excluded at every level.
-echo "Collecting manuscript scenes..."
+# 3. Discover and Select Manuscript Volume(s)
+AVAILABLE_BOOKS=()
+if [ -d "${MANUSCRIPT_DIR}" ]; then
+    while IFS= read -r -d '' bdir; do
+        AVAILABLE_BOOKS+=("$(basename "$bdir")")
+    done < <(find "${MANUSCRIPT_DIR}" -mindepth 1 -maxdepth 1 -type d -name "Book-*" -print0 2>/dev/null | sort -zV)
+fi
+
+SELECTED_VOLUME=""
+if [ -n "${BOOK_VOLUME_CLI}" ]; then
+    if [ "${BOOK_VOLUME_CLI}" = "all" ] || [ "${BOOK_VOLUME_CLI}" = "ALL" ] || [ "${BOOK_VOLUME_CLI}" = "omnibus" ]; then
+        SELECTED_VOLUME="all"
+    elif [ -d "${MANUSCRIPT_DIR}/${BOOK_VOLUME_CLI}" ]; then
+        SELECTED_VOLUME="${BOOK_VOLUME_CLI}"
+    else
+        echo "Error: Requested book volume '${BOOK_VOLUME_CLI}' not found in ${MANUSCRIPT_DIR}." >&2
+        exit 1
+    fi
+elif [ ${#AVAILABLE_BOOKS[@]} -gt 1 ]; then
+    if has_gui; then
+        CHOICES=()
+        for b in "${AVAILABLE_BOOKS[@]}"; do
+            CHOICES+=("$b" "Volume $b")
+        done
+        CHOICES+=("All (Omnibus)" "Compile entire series omnibus")
+        PICKED=$(zenity --list --title="Scriptorium — Select Volume to Export" \
+            --text="Multiple book volumes detected in '${WORLD_NAME}'.\nWhich volume would you like to export?" \
+            --column="Volume" --column="Description" \
+            --hide-column=2 \
+            --width=420 --height=280 \
+            "${CHOICES[@]}" || true)
+        if [ "$PICKED" = "All (Omnibus)" ]; then
+            SELECTED_VOLUME="all"
+        elif [ -n "$PICKED" ]; then
+            SELECTED_VOLUME="$PICKED"
+        else
+            echo "Volume selection aborted." >&2
+            exit 3
+        fi
+    else
+        # CLI non-interactive default: Book-01
+        SELECTED_VOLUME="${AVAILABLE_BOOKS[0]}"
+    fi
+elif [ ${#AVAILABLE_BOOKS[@]} -eq 1 ]; then
+    SELECTED_VOLUME="${AVAILABLE_BOOKS[0]}"
+else
+    SELECTED_VOLUME="single"
+fi
+
+echo "Collecting manuscript scenes for: ${SELECTED_VOLUME}..."
 : > "${COMBINED_MD}"
 
 # novelWriter tag stripping: ANY line-start `@tag:` is novelWriter metadata
 # (novelWriter supports @pov, @char, @plot, @location, @time, @object, @entity
-# AND user-defined tags). The old 7-name whitelist let @time/@plot/@entity and
-# custom tags through, which (a) leaked them into the EPUB and (b) turned them
-# into pandoc citations (#cite) / Typst label references (@word) that aborted
-# the PDF compile outright.
+# AND user-defined tags). Strips metadata and comment lines.
 strip_nw_tags() {
     sed -E '/^@[A-Za-z0-9_-]+:/d; /^%/d' "$1"
 }
 
-if find "${MANUSCRIPT_DIR}" -type d -name 'Book-*' -print0 2>/dev/null | read -r -d '' _; then
-    # Multi-volume manuscript: all Book-*/ files in natural order
+if [ "${SELECTED_VOLUME}" = "all" ]; then
     find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" \
         -path "*/Book-*/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
         echo "" >> "${COMBINED_MD}"
         strip_nw_tags "${file}" >> "${COMBINED_MD}"
         echo -e "\n" >> "${COMBINED_MD}"
     done
+elif [ "${SELECTED_VOLUME}" != "single" ] && [ -d "${MANUSCRIPT_DIR}/${SELECTED_VOLUME}" ]; then
+    find "${MANUSCRIPT_DIR}/${SELECTED_VOLUME}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
+        echo "" >> "${COMBINED_MD}"
+        strip_nw_tags "${file}" >> "${COMBINED_MD}"
+        echo -e "\n" >> "${COMBINED_MD}"
+    done
 elif [ -d "${MANUSCRIPT_DIR}" ]; then
-    # Single-book fallback: everything except Outlines
     find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
         echo "" >> "${COMBINED_MD}"
         strip_nw_tags "${file}" >> "${COMBINED_MD}"
@@ -219,7 +270,7 @@ ESC_TITLE="$(typst_escape "${BOOK_TITLE}")"
 ESC_AUTHOR="$(typst_escape "${AUTHOR_NAME}")"
 
 cat << EOF > "${TYPST_SRC}"
-#import "book_template.typ": book-layout, scene-break
+#import "book_template.typ": book-layout, scene-break, unindented
 
 #show: book-layout.with(
   title: "${ESC_TITLE}",
@@ -290,7 +341,11 @@ else
 fi
 
 # 5. Compile PDF with Typst (H3: safe filenames, D3: collision-safe)
-SAFE_STEM="$(safe_filename "${BOOK_TITLE}")"
+if [ "${SELECTED_VOLUME}" != "all" ] && [ "${SELECTED_VOLUME}" != "single" ] && [ -n "${SELECTED_VOLUME}" ]; then
+    SAFE_STEM="$(safe_filename "${BOOK_TITLE}_${SELECTED_VOLUME}")"
+else
+    SAFE_STEM="$(safe_filename "${BOOK_TITLE}")"
+fi
 PDF_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}.pdf"
 EPUB_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}.epub"
 if [ -e "${PDF_OUTPUT}" ] || [ -e "${EPUB_OUTPUT}" ]; then

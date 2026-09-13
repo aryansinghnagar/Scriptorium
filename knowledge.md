@@ -36,15 +36,19 @@
 - **Pre-Configured Obsidian Plugin Suite**: Out-of-the-box writing and worldbuilding suite (`templates/world-bible/.obsidian/`):
   - *Longform*: Atomic scene organization and compiled manuscript export.
   - *Dataview*: Dynamic lore querying and relationship rollups (JS & DQL enabled).
-  - *Metadata Menu*: Structured YAML validation with strict `fileClasses` (`Character`, `Location`, `Faction`, `TimelineEvent`).
+  - *Metadata Menu*: Structured YAML validation with strict `fileClasses` (`Character`, `Location`, `Faction`, `TimelineEvent`, `Creature`, `Artifact`, `Cosmology`).
   - *Calendarium*: Custom multi-moon and fantasy calendar systems.
   - *Storyteller Suite* & *Storyline*: Visual narrative graphs and scene beat progression.
   - *Novel Word Count*: Real-time word counts and chapter targets.
   - *Obsidian Git*: Automated background commits (10-minute interval) and backup on save.
+- **Multi-Volume Compilation & Trade Typography**:
+  - `export_book.sh` supports discrete volume isolation via `-b, --book <Volume>` and GUI volume pickers.
+  - `book_template.typ` provides trade geometries (6x9, 5.5x8.5, 5x8), automatic ornamental scene breaks (`show line: it => scene-break()`), and flush-left opening paragraph conventions.
 - **Transactional Staging**: `init_world.sh` builds in a temporary directory, validates directory schemas and manifests, commits initial Git state, and atomically moves to destination. Intermediate failures leave no orphaned state.
-- **Decoupled Data Safety**: Local Git version snapshots (`save_snapshot.sh`) are decoupled from standalone verified archives (`backup_world.sh` tarball + SHA-256 hash manifest). Disaster recovery is verified via `restore_world.sh`.
+- **Decoupled Data Safety & Concurrency**: Local Git version snapshots (`save_snapshot.sh` with index lock retry loops) are decoupled from standalone verified archives (`backup_world.sh` tarball + SHA-256 hash manifest). Disaster recovery is verified via `restore_world.sh`.
 - **Installer Safety & Gating**: `setup_scriptorium.sh` performs OS distribution detection via `/etc/os-release`, gates unverified distros unless `--force` is passed, supports complete non-destructive `--dry-run` simulation, and provides `uninstall_scriptorium.sh` for rollback.
 - **Independent Error Trapping**: Exporter traps Pandoc and Typst independently so that partial compilation outputs are preserved and detailed summaries are surfaced without early `set -e` termination.
-- **Domain Diagnostics**: `scriptorium_doctor.sh` and `world_doctor.sh` enforce entity schema requirements, broken link resolution, duplicate alias collision detection, and timeline chronological consistency (`WLD-101` through `WLD-107`).
-- **Unified Interface**: `scriptorium <command>` CLI dispatcher and `scriptorium-control-center.desktop` GUI provide unified access for terminal and desktop users alike.
+- **Domain Diagnostics**: `scriptorium_doctor.sh` and `world_doctor.sh` enforce entity schema requirements across all 9 worldbuilding types, broken link resolution, duplicate alias collision detection, and timeline chronological consistency (`WLD-101` through `WLD-107`).
+- **Unified Interface & Desktop Control Center**: `scripts/scriptorium_app.py` (Python 3/GTK 3) provides a 5-tab author GUI (Cosmos & Projects, Writing & Analytics, Publishing Studio, Vault Safety, Doctor Diagnostics) with First-Flight onboarding, backed by Zenity dialog fallbacks and the `scriptorium <command>` CLI dispatcher.
+- **Author's Field Manual**: `docs/AUTHOR_MANUAL.md` provides an 8-chapter visual guide explaining the entire worldbuilding, drafting, version control, and publication workflow in plain English.
 

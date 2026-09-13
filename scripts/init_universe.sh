@@ -112,12 +112,35 @@ echo "Scaffolding Narrative Universe: ${UNIVERSE_NAME} ..."
 
 mkdir -p "${TARGET_UNIVERSE_DIR}/Worlds"
 
-# Create universe manifest
+# Create universe manifest & index note
 cat << EOF > "${TARGET_UNIVERSE_DIR}/universe.yaml"
 # Scriptorium Universe Manifest
 name: "${UNIVERSE_NAME}"
 created_at: "$(date +%Y-%m-%d)"
 description: "Narrative Universe housing interconnected worlds and lore."
+EOF
+
+cat << EOF > "${TARGET_UNIVERSE_DIR}/Universe-Index.md"
+---
+type: universe_index
+universe: "${UNIVERSE_NAME}"
+created: "$(date +%Y-%m-%d)"
+tags:
+  - meta/universe
+---
+
+# 🌌 ${UNIVERSE_NAME} — Narrative Universe Hub
+
+**Universe**: \`${UNIVERSE_NAME}\`  
+**Created**: $(date +%Y-%m-%d)  
+
+This central index coordinates all interconnected worlds, overarching continuity, shared celestial mechanics, and cross-world lore across the **${UNIVERSE_NAME}** cosmos.
+
+---
+
+## 🪐 Worlds in this Universe
+All world bibles and manuscript repositories belonging to this universe reside in \`Worlds/\`:
+- Open individual world folders under \`Worlds/<WorldName>/00-World-Bible\` as separate Obsidian vaults, or open this root \`${UNIVERSE_NAME}\` directory as an overarching cosmic vault.
 EOF
 
 # Create .gitignore for universe root

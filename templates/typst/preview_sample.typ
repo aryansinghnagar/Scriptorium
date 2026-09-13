@@ -3,7 +3,7 @@
 // Test file to verify Typst rendering and novel typography formatting.
 // ==============================================================================
 
-#import "book_template.typ": book-layout, scene-break
+#import "book_template.typ": book-layout, scene-break, unindented
 
 #show: book-layout.with(
   title: "The Chronicles of Eldoria",

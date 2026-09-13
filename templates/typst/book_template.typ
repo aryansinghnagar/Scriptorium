@@ -181,10 +181,10 @@
     #v(1em)
   ]
 
-  // NOTE (M3): removed `show heading: it => it + par(...)[]` which emitted a
-  // stray empty paragraph after every heading. Typst keeps the 1.3em
-  // first-line indent uniform; if flush-left chapter openers are required,
-  // start those paragraphs with `#par(first-line-indent: 0pt)[...]`.
+  // Map horizontal lines / dividers to ornamental scene breaks
+  show line: it => {
+    scene-break()
+  }
 
   body
 }
@@ -194,6 +194,12 @@
   v(1.2em)
   align(center)[#text(size: 10pt, tracking: 0.4em, "✦ ✦ ✦")]
   v(1.2em)
+}
+
+// Flush-left first paragraph helper
+#let unindented(body) = {
+  set par(first-line-indent: 0pt)
+  body
 }
 
 // Backward-compat alias: older export_book.sh imported `chapter-title`.

@@ -15,6 +15,9 @@ Welcome to your central worldbuilding hub. Every note created in this vault is i
 - 🗺️ **[[Locations/Location-Template|World Atlas & Geography]]**
 - ⚔️ **[[Factions/Faction-Template|Factions & Guilds]]**
 - ⚡ **[[Magic-Technology/Magic-Tech-System-Template|Magic & Tech Systems]]**
+- 🐾 **[[Bestiary/Creature-Flora-Fauna-Template|Bestiary & Ecosystems]]**
+- 🗡️ **[[Artifacts/Artifact-Relic-Template|Relics & Artifacts]]**
+- ✨ **[[Cosmology/Deity-Cosmology-Template|Pantheons & Cosmology]]**
 - ⏳ **[[History/Timeline-Event-Template|Historical Chronology]]**
 - 🗣️ **[[Languages/Glossary-Conlang-Template|Linguistics & Glossaries]]**
 - 📅 **[[Templates/Daily-Writing-Log|Writing Logs & Word Counts]]**
@@ -43,6 +46,33 @@ SORT file.name ASC
 ```dataview
 TABLE leader as "Leader", headquarters as "HQ", ideology as "Ideology"
 FROM #world/faction
+SORT file.name ASC
+```
+
+---
+
+## 🐾 Bestiary & Flora / Fauna
+```dataview
+TABLE classification as "Classification", threat_level as "Threat", habitat as "Habitat"
+FROM #world/bestiary
+SORT file.name ASC
+```
+
+---
+
+## 🗡️ Legendary Artifacts & Relics
+```dataview
+TABLE artifact_type as "Type", rarity as "Rarity", current_bearer as "Bearer"
+FROM #world/artifact
+SORT file.name ASC
+```
+
+---
+
+## ✨ Pantheons, Deities & Cosmology
+```dataview
+TABLE concept_type as "Type", domain as "Domain", worship_status as "Worship"
+FROM #world/cosmology
 SORT file.name ASC
 ```
 

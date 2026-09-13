@@ -89,7 +89,7 @@
 - **Decision**: Pre-configure an opinionated, premier plugin suite in `templates/world-bible/.obsidian/` featuring:
   - **Longform**: Modular manuscript scene organization and direct compilation.
   - **Dataview**: Dynamic lore querying, character registries, and location rollups.
-  - **Metadata Menu**: Structured frontmatter validation and strict `fileClasses` schemas (`Character`, `Location`, `Faction`, `TimelineEvent`).
+  - **Metadata Menu**: Structured frontmatter validation and strict `fileClasses` schemas (`Character`, `Location`, `Faction`, `TimelineEvent`, `Creature`, `Artifact`, `Cosmology`).
   - **Calendarium**: Custom fantasy/sci-fi calendar engines with event tracking.
   - **Storyteller Suite**: Entity relationship graphs and interactive visual lore nodes.
   - **Storyline**: Timeline and scene beat structuring.
@@ -98,3 +98,32 @@
   - **Templater & Style Settings / Minimal Theme**: Automated note instantiation and typographic styling.
 - **Consequences**: Zero-setup vault initialization for writers, guaranteed schema consistency, automated local version control, and instant productivity upon running `init_world.sh`.
 
+## ADR-015: Multi-Volume Manuscript Compilation & Volume Isolation
+- **Context**: Authors writing multi-book series within a single world project need the ability to compile discrete individual volumes (e.g. `Book-01`, `Book-02`) independently rather than always generating a monolithic omnibus PDF/EPUB.
+- **Decision**: Implement volume discovery and selection in `export_book.sh` and `scriptorium export`:
+  - Add `-b, --book <Volume>` CLI flag allowing explicit target specification.
+  - In GUI mode when multiple `Book-*` volumes exist, prompt the author with an interactive volume selector including an "All (Omnibus)" option.
+  - In non-interactive runs, default gracefully to the first volume (`Book-01`).
+  - Derive volume-aware output filenames (`<Title>_<Volume>.pdf`).
+- **Consequences**: Granular publication workflows, seamless series management, and prevention of multi-volume manuscript collisions.
+
+## ADR-016: Speculative Fiction Taxonomic Expansion (Bestiary, Relics, Cosmology)
+- **Context**: Worldbuilding across epic fantasy and science fiction requires dedicated, first-class ontologies for creatures/flora/fauna, legendary artifacts/relics, and pantheons/cosmologies beyond standard characters, locations, and factions.
+- **Decision**: Expand the canonical World Bible taxonomy to include:
+  - `00-World-Bible/Bestiary/` (`Creature-Flora-Fauna-Template.md`, `fileClasses/Creature.md`).
+  - `00-World-Bible/Artifacts/` (`Artifact-Relic-Template.md`, `fileClasses/Artifact.md`).
+  - `00-World-Bible/Cosmology/` (`Deity-Cosmology-Template.md`, `fileClasses/Cosmology.md`).
+## ADR-017: Unified Python GTK Desktop Control Center & Author Onboarding Architecture
+- **Context**: Authors and worldbuilders with average computer experience find terminal CLI commands intimidating or friction-heavy for daily creative sprints. While Zenity dialogs provide basic graphical interaction, they lack rich state management, hierarchical manuscript progress trees, live word count rollups, asynchronous background task streaming, and visual toolchain diagnostics.
+- **Decision**:
+  - Implement a native desktop GUI dashboard in Python 3 + PyGObject / GTK 3 (`scripts/scriptorium_app.py`) conforming to modern desktop ergonomics.
+  - Organize functionality across a 5-tab author workflow:
+    1. *Cosmos & Projects*: Universe & World management, creation wizards, toolchain launchers.
+    2. *Writing & Analytics*: Manuscript hierarchy tree, live word counts, act rollups, session pacing.
+    3. *Publishing Studio*: 1-Click Typst PDF & Pandoc EPUB export, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
+    4. *Vault Safety & Backups*: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, restore drill wizard.
+    5. *Doctor Diagnostics*: Scriptorium toolchain status badges, World Bible lore consistency checks (`world_doctor`), 7-stage verification trigger.
+  - Provide a First-Flight onboarding wizard detecting unconfigured environments with 1-click demo cosmos generation (*"The Chronicles of Eldoria"*).
+  - Maintain a multi-tier fallback architecture: `scriptorium_app.py` -> Zenity dialogs (`control_center.sh`) -> CLI (`scriptorium`).
+  - Link the in-app menu directly to the plain-English author handbook (`docs/AUTHOR_MANUAL.md`).
+- **Consequences**: Zero terminal barrier to entry for creative authors, rich visual feedback during writing and export, safe async background processing, and complete system resilience across all environments.

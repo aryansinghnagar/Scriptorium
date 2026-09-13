@@ -11,12 +11,23 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 WORLDS_BASE="${HOME}/Worlds"
 UNIVERSES_BASE="${HOME}/Universes"
 
+# Prefer native GTK 3 desktop application if PyGObject is available
+if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/scriptorium_app.py" ]; then
+    set +e
+    python3 "${SCRIPT_DIR}/scriptorium_app.py" "$@"
+    APP_RC=$?
+    set -e
+    if [ "${APP_RC}" -ne 2 ]; then
+        exit "${APP_RC}"
+    fi
+fi
+
 has_gui() {
     { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
 }
 
 if ! has_gui; then
-    echo "Scriptorium Control Center requires a graphical display and Zenity."
+    echo "Scriptorium Control Center requires a graphical display and Zenity (or PyGObject)."
     echo "Use the 'scriptorium' command line interface in terminal environments."
     exit 1
 fi

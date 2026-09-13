@@ -143,6 +143,17 @@ fi
 WORLD_NAME=$(basename "${SELECTED_WORLD}")
 cd "${SELECTED_WORLD}"
 
+# Helper to handle transient index lock contention (e.g. background Obsidian Git commits)
+wait_for_git_lock() {
+    local repo_dir="${1:-.}"
+    local lock_file="${repo_dir}/.git/index.lock"
+    local attempts=0
+    while [ -f "${lock_file}" ] && [ $attempts -lt 6 ]; do
+        sleep 0.5
+        attempts=$((attempts + 1))
+    done
+}
+
 # Ensure Git is initialized
 if [ ! -d ".git" ]; then
     git init -q
@@ -156,7 +167,7 @@ if [ ! -d ".git" ]; then
 .DS_Store
 05-Backups/
 EOF
-    git add .
+    git -c advice.addEmbeddedRepo=false add .
     if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial repository creation for ${WORLD_NAME}" 2>/dev/null; then
         echo "[!] Initial commit skipped (git identity missing). Files staged."
     fi
@@ -168,6 +179,7 @@ if [ -d "01-Manuscript" ]; then
         if [ -d "${ms_repo}.git" ]; then
             (
                 cd "${ms_repo}"
+                wait_for_git_lock "."
                 git add -A
                 if ! git diff --cached --quiet; then
                     git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Manuscript snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null || true
@@ -192,6 +204,7 @@ if [ -z "${NOTE}" ]; then
     NOTE="${DEFAULT_MSG}"
 fi
 
+wait_for_git_lock "."
 git -c advice.addEmbeddedRepo=false add -A
 
 if git diff --cached --quiet; then
