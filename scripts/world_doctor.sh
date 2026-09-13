@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium World Doctor (D-01)
+# Scriptorium World Doctor (D-01 / Workstream 3.2)
 # Purpose: Consistency checker for the Obsidian World Bible. Verifies wiki-link
-#          integrity, typed frontmatter references, orphaned entities, and
-#          duplicate identities — outside Obsidian, from the terminal.
+#          integrity, typed frontmatter references, orphaned entities,
+#          duplicate identities, and timeline chronology.
 #
 # Usage:
 #   world_doctor.sh [WORLD_DIR] [OPTIONS]
@@ -13,22 +13,14 @@
 #   -h, --help    Show this help
 #
 # Exit codes:
-#   0  no findings
-#   1  findings reported (broken links, orphans, dangling references, ...)
+#   0  no findings / consistent world
+#   1  findings reported (broken links, orphans, dangling references, etc.)
 #   2  usage or environment error (world dir missing, python3 missing)
-#
-# Design notes (cross-lens):
-#   - One pass builds an index (name -> file); all link lookups are O(1), so
-#     the whole run is O(files + links), never O(files x links).
-#   - Frontmatter parsing is a strict flat subset (key: value, lists, quoted
-#     strings); nothing is ever eval'd or interpolated into shell.
-#   - File discovery is NUL-safe; each file read is size-capped.
 # ==============================================================================
 set -euo pipefail
 
-
 usage() {
-    sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 WORLD_DIR=""
@@ -43,7 +35,19 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "${WORLD_DIR}" ]; then
-    WORLD_DIR="${1:-${HOME}/Worlds}"
+    WORLD_DIR="${HOME}/Worlds"
+fi
+
+if [ ! -d "${WORLD_DIR}" ]; then
+    if [ -d "${HOME}/Universes" ]; then
+        FOUND="$(find "${HOME}/Universes" -mindepth 3 -maxdepth 3 -type d -name "${WORLD_DIR}" 2>/dev/null | head -n 1 || true)"
+        if [ -n "${FOUND}" ] && [ -d "${FOUND}" ]; then
+            WORLD_DIR="${FOUND}"
+        fi
+    fi
+    if [ ! -d "${WORLD_DIR}" ] && [ -d "${HOME}/Worlds/${WORLD_DIR}" ]; then
+        WORLD_DIR="${HOME}/Worlds/${WORLD_DIR}"
+    fi
 fi
 
 if [ ! -d "${WORLD_DIR}" ]; then
@@ -71,12 +75,13 @@ MAX_BYTES = 2 * 1024 * 1024  # per-file read cap
 
 WIKI_LINK = re.compile(r"\[\[([^\]\|#]+)(?:\|[^\]\]]*)?\]\]")
 FRONTMATTER_DELIM = "---"
-# Typed reference fields: frontmatter keys whose [[...]] values are entity links
+
 TYPED_REF_FIELDS = {
     "faction", "origin", "current_location", "leader", "headquarters",
     "dominant_faction", "realm_region", "rival", "ally", "mentor",
     "magic_ability", "key_landmarks",
 }
+
 REQUIRED_BY_TYPE = {
     "character": ("name",),
     "faction": ("name",),
@@ -91,11 +96,10 @@ def read_capped(path):
         return fh.read(MAX_BYTES).decode("utf-8", "ignore")
 
 def parse_frontmatter(text):
-    """Strict flat-subset parser: key: value / key: [a, b] / lists with '-'.
-    Returns (dict, ok). Nested maps and unknown syntax yield ok=False."""
+    """Strict flat-subset parser: key: value / key: [a, b] / lists with '-'."""
     lines = text.splitlines()
     if not lines or lines[0].strip() != FRONTMATTER_DELIM:
-        return {}, True  # no frontmatter is fine
+        return {}, True
     fm = {}
     i = 1
     n = len(lines)
@@ -109,7 +113,6 @@ def parse_frontmatter(text):
         if m:
             key, val = m.group(1), m.group(2).strip()
             if val == "":
-                # list block: consume following '- item' lines
                 items = []
                 j = i + 1
                 while j < n and re.match(r"^[ \t]+-[ \t]+", lines[j]):
@@ -128,21 +131,21 @@ def parse_frontmatter(text):
                 fm[key] = val.strip('"')
             i += 1
             continue
-        # unknown syntax inside frontmatter
         return fm, False
     if i >= n:
-        return fm, False  # never closed
+        return fm, False
     return fm, True
 
 def norm(name):
     return name.strip().lower()
 
-# ---- Pass 1: index every note (path, stem, frontmatter) ----
-index = {}       # norm(stem) -> relpath
-aliases = {}     # norm(alias) -> relpath
-notes = []       # (relpath, frontmatter, text)
+# ---- Pass 1: Indexing & Frontmatter Validation ----
+index = {}
+aliases = {}
+notes = []
 fm_errors = []
 required_errors = []
+timeline_errors = []
 
 for root, dirs, files in os.walk(BIBLE):
     dirs[:] = [d for d in dirs if d not in (".obsidian", ".git", "Templates")]
@@ -167,6 +170,22 @@ for root, dirs, files in os.walk(BIBLE):
         for req in REQUIRED_BY_TYPE.get(etype, ()):
             if not fm.get(req):
                 required_errors.append((rel, etype, req))
+
+        # Timeline chronological checks
+        try:
+            if "birth_year" in fm and "death_year" in fm:
+                b = int(str(fm["birth_year"]).strip())
+                d = int(str(fm["death_year"]).strip())
+                if d < b:
+                    timeline_errors.append((rel, f"Death year ({d}) precedes birth year ({b})"))
+            if "start_year" in fm and "end_year" in fm:
+                s = int(str(fm["start_year"]).strip())
+                e = int(str(fm["end_year"]).strip())
+                if e < s:
+                    timeline_errors.append((rel, f"End year ({e}) precedes start year ({s})"))
+        except (ValueError, TypeError):
+            pass
+
         notes.append((rel, fm, text))
 
 def resolve(target):
@@ -181,20 +200,18 @@ def is_template(rel, fm):
     name = fm.get("name", "")
     return "Template" in rel or "<%" in str(name)
 
-# ---- Pass 2: link integrity over the indexed set ----
-broken_links = []       # (src, target)
-placeholder_links = []  # (src, target) — links FROM unrenamed templates
-dangling_refs = []      # (src, field, target)
+# ---- Pass 2: Link & Reference Integrity ----
+broken_links = []
+placeholder_links = []
+dangling_refs = []
 inbound = {rel: 0 for rel, _, _ in notes}
 outbound = {}
 
 for rel, fm, text in notes:
     templated = is_template(rel, fm)
-    body = text
     links = []
-    for m in WIKI_LINK.finditer(body):
+    for m in WIKI_LINK.finditer(text):
         target = m.group(1).strip()
-        # ignore embed-only and section-only links like [[#heading]]
         if not target or target.startswith("#"):
             continue
         target = target.split("#")[0].strip()
@@ -226,11 +243,10 @@ for rel, fm, text in notes:
 orphans = [rel for rel, fm, _ in notes
            if inbound.get(rel, 0) == 0 and not outbound.get(rel) and not is_template(rel, fm)]
 
-# duplicate identities: same normalized name claimed by 2+ files via aliases
 claimed = {}
 for rel, fm, _ in notes:
     if is_template(rel, fm):
-        continue  # unrenamed templates share the placeholder name by design
+        continue
     names = [n for n in [fm.get("name")] + (fm.get("aliases") or []) if isinstance(n, str) and n.strip()]
     for n in names:
         claimed.setdefault(norm(n), set()).add(rel)
@@ -239,14 +255,15 @@ duplicates = {n: sorted(rs) for n, rs in claimed.items() if len(rs) > 1}
 findings = {
     "world": BIBLE,
     "notes": len(notes),
-    "broken_links": [{"from": s, "missing": t} for s, t in broken_links],
-    "dangling_frontmatter_refs": [{"from": s, "field": f, "missing": t} for s, f, t in dangling_refs],
+    "broken_links": [{"code": "WLD-101", "from": s, "missing": t} for s, t in broken_links],
+    "dangling_frontmatter_refs": [{"code": "WLD-102", "from": s, "field": f, "missing": t} for s, f, t in dangling_refs],
     "unrenamed_templates": sorted(rel for rel, fm, _ in notes if is_template(rel, fm)),
     "placeholder_links": [{"from": s, "missing": t} for s, t in placeholder_links],
-    "orphans": sorted(orphans),
-    "duplicate_identities": [{"name": n, "files": fs} for n, fs in duplicates.items()],
-    "frontmatter_parse_errors": fm_errors,
-    "missing_required_fields": [{"file": s, "type": t, "field": f} for s, t, f in required_errors],
+    "orphans": [{"code": "WLD-107", "file": rel} for rel in sorted(orphans)],
+    "duplicate_identities": [{"code": "WLD-105", "name": n, "files": fs} for n, fs in duplicates.items()],
+    "frontmatter_parse_errors": [{"code": "WLD-106", "file": f} for f in fm_errors],
+    "missing_required_fields": [{"code": "WLD-103", "file": s, "type": t, "field": f} for s, t, f in required_errors],
+    "timeline_errors": [{"code": "WLD-104", "file": s, "issue": iss} for s, iss in timeline_errors],
 }
 
 if JSON_OUT:
@@ -263,24 +280,25 @@ else:
             print(f"  - {it}")
         print()
 
-    section("Broken wiki-links", [f"{s} -> [[{t}]]" for s, t in broken_links])
+    section("Broken wiki-links [WLD-101]", [f"{s} -> [[{t}]]" for s, t in broken_links])
+    section("Dangling frontmatter references [WLD-102]",
+            [f"{s}: {f} -> [[{t}]]" for s, f, t in dangling_refs])
+    section("Missing required fields [WLD-103]",
+            [f"{s} ({t}) lacks '{f}'" for s, t, f in required_errors])
+    section("Timeline chronological errors [WLD-104]",
+            [f"{s}: {iss}" for s, iss in timeline_errors])
+    section("Duplicate identities [WLD-105]",
+            [f"'{n}' claimed by {', '.join(fs)}" for n, fs in duplicates.items()])
+    section("Frontmatter parse errors [WLD-106]", fm_errors)
+    section("Orphan notes (no links in or out) [WLD-107]", orphans)
     section("Unrenamed templates (placeholders still active)",
             sorted(rel for rel, fm, _ in notes if is_template(rel, fm)))
-    section("Dangling frontmatter references",
-            [f"{s}: {f} -> [[{t}]]" for s, f, t in dangling_refs])
-    section("Orphan notes (no links in or out)", orphans)
-    section("Duplicate identities",
-            [f"'{n}' claimed by {', '.join(fs)}" for n, fs in duplicates.items()])
-    section("Frontmatter parse errors", fm_errors)
-    section("Missing required fields",
-            [f"{s} ({t}) lacks '{f}'" for s, t, f in required_errors])
-    if not any([broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors]):
+
+    if not any([broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors, timeline_errors]):
         print("No findings. World Bible is internally consistent.")
 
 has_findings = any([
-    broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors,
+    broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors, timeline_errors,
 ])
-# Unrenamed templates and their placeholder links are informational on a
-# fresh world; they never flip the exit code by themselves.
 sys.exit(1 if has_findings else 0)
 PYEOF

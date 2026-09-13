@@ -1,0 +1,7 @@
+{
+  "mapsFolder": "02-Maps",
+  "defaultZoom": 1,
+  "enableNestedMaps": true,
+  "pinLinkFormat": "wikilink",
+  "markerIconSize": 24
+}

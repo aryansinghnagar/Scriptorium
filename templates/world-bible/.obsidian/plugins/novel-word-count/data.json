@@ -1,0 +1,12 @@
+{
+  "countType": "word",
+  "countTypeRepeat": "none",
+  "showSameTypeInFolder": true,
+  "folderCountType": "word",
+  "targetCountType": "word",
+  "format": "suffix",
+  "useSeparator": true,
+  "separator": ",",
+  "folderFormat": "suffix",
+  "debugMode": false
+}

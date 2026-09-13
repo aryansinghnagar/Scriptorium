@@ -1,0 +1,7 @@
+{
+  "stripComments": true,
+  "defaultCompileFormat": "markdown",
+  "wordCountGoal": 0,
+  "preserveOriginalHeaders": false,
+  "indentFirstLine": true
+}

@@ -8,15 +8,12 @@
 set -euo pipefail
 
 WORLDS_BASE="${HOME}/Worlds"
+UNIVERSES_BASE="${HOME}/Universes"
 
 # GUI detection works on both X11 and Wayland (M7)
 has_gui() {
     { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
 }
-
-if [ ! -d "${WORLDS_BASE}" ]; then
-    mkdir -p "${WORLDS_BASE}"
-fi
 
 usage() {
     cat << 'USAGE'
@@ -26,9 +23,10 @@ Usage:
   save_snapshot.sh [OPTIONS]
 
 Options:
-  -w, --world NAME    World directory name under ~/Worlds (skips picker)
-  -m, --note NOTE     Snapshot note (default: "Snapshot: <date>")
-  -h, --help          Show this help and exit
+  -w, --world NAME     World directory name or path (skips picker)
+  -u, --universe NAME  Universe name (optional filter)
+  -m, --note NOTE      Snapshot note (default: "Snapshot: <date>")
+  -h, --help           Show this help and exit
 
 Exit codes:
   0  snapshot saved (or nothing to commit)
@@ -38,12 +36,17 @@ USAGE
 }
 
 WORLD_CLI=""
+UNIVERSE_CLI=""
 NOTE_CLI=""
+
 while [ $# -gt 0 ]; do
     case "$1" in
         -w|--world)
             [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
             WORLD_CLI="$2"; shift 2 ;;
+        -u|--universe)
+            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
+            UNIVERSE_CLI="$2"; shift 2 ;;
         -m|--note)
             [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 1; }
             NOTE_CLI="$2"; shift 2 ;;
@@ -53,23 +56,26 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-# P-04: a snapshot without git is a hard error, not a set -e crash
 if ! command -v git &> /dev/null; then
-    echo "Error: git is not installed or not in PATH. Install git to snapshot."
+    echo "Error: git is not installed or not in PATH. Install git to snapshot." >&2
     exit 1
 fi
 
-# Find available worlds (H5: NUL-safe, space-safe)
+# Discover all worlds across ~/Universes/*/Worlds/* and ~/Worlds/*
 WORLDS=()
 while IFS= read -r -d '' d; do
-    WORLDS+=("$d")
+    [ -d "$d" ] && WORLDS+=("$d")
+done < <(find "${UNIVERSES_BASE}" -mindepth 3 -maxdepth 3 -type d -path '*/Worlds/*' -print0 2>/dev/null)
+
+while IFS= read -r -d '' d; do
+    [ -d "$d" ] && WORLDS+=("$d")
 done < <(find "${WORLDS_BASE}" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
 
-if [ ${#WORLDS[@]} -eq 0 ]; then
+if [ ${#WORLDS[@]} -eq 0 ] && [ -z "${WORLD_CLI}" ]; then
     if has_gui; then
-        zenity --warning --title="No Worlds Found" --text="No world folders found in ${WORLDS_BASE}.\nCreate one first with 'New World Creator'."
+        zenity --warning --title="No Worlds Found" --text="No world folders found in ~/Universes or ~/Worlds.\nCreate one first with 'New World Creator'."
     else
-        echo "No world directories found in ${WORLDS_BASE}."
+        echo "No world directories found." >&2
     fi
     exit 3
 fi
@@ -77,26 +83,46 @@ fi
 SELECTED_WORLD=""
 
 if [ -n "${WORLD_CLI}" ]; then
-    SELECTED_WORLD="${WORLDS_BASE}/${WORLD_CLI}"
-    if [ ! -d "${SELECTED_WORLD}" ]; then
-        echo "Error: world '${WORLD_CLI}' not found in ${WORLDS_BASE}."
+    if [ -d "${WORLD_CLI}" ]; then
+        SELECTED_WORLD="$(cd "${WORLD_CLI}" && pwd)"
+    elif [ -n "${UNIVERSE_CLI}" ] && [ -d "${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${WORLD_CLI}" ]; then
+        SELECTED_WORLD="${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${WORLD_CLI}"
+    elif [ -d "${WORLDS_BASE}/${WORLD_CLI}" ]; then
+        SELECTED_WORLD="${WORLDS_BASE}/${WORLD_CLI}"
+    else
+        for w in "${WORLDS[@]}"; do
+            if [ "$(basename "$w")" = "${WORLD_CLI}" ]; then
+                SELECTED_WORLD="$w"
+                break
+            fi
+        done
+    fi
+
+    if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
+        echo "Error: World '${WORLD_CLI}' not found." >&2
         exit 1
     fi
 elif [ ${#WORLDS[@]} -eq 1 ]; then
     SELECTED_WORLD="${WORLDS[0]}"
 else
-    # Build list for Zenity or CLI
     if has_gui; then
         CHOICE_LIST=()
         for w in "${WORLDS[@]}"; do
-            CHOICE_LIST+=("$(basename "$w")" "$w")
+            UNAME="$(basename "$(dirname "$(dirname "$w")")")"
+            [ "$UNAME" = "home" ] || [ "$UNAME" = "aryan" ] && UNAME="Standalone"
+            CHOICE_LIST+=("$(basename "$w")" "[Universe: ${UNAME}] $w")
         done
-        SELECTED_NAME=$(zenity --list --title="Select World to Snapshot" \
-            --column="World Name" --column="Path" \
-            --hide-column=2 \
+        SELECTED_DISPLAY=$(zenity --list --title="Select World to Snapshot" \
+            --column="World Name" --column="Universe & Path" \
+            --width=520 --height=320 \
             "${CHOICE_LIST[@]}" || true)
-        if [ -n "${SELECTED_NAME}" ]; then
-            SELECTED_WORLD="${WORLDS_BASE}/${SELECTED_NAME}"
+        if [ -n "${SELECTED_DISPLAY}" ]; then
+            for w in "${WORLDS[@]}"; do
+                if [ "$(basename "$w")" = "${SELECTED_DISPLAY}" ]; then
+                    SELECTED_WORLD="$w"
+                    break
+                fi
+            done
         fi
     else
         echo "Select world to snapshot:"
@@ -110,16 +136,17 @@ else
 fi
 
 if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
-    echo "No world selected. Aborting snapshot."
+    echo "No world selected. Aborting snapshot." >&2
     exit 3
 fi
 
 WORLD_NAME=$(basename "${SELECTED_WORLD}")
 cd "${SELECTED_WORLD}"
 
-# Ensure Git is initialized (M11: explicit identity handling)
+# Ensure Git is initialized
 if [ ! -d ".git" ]; then
     git init -q
+    git config advice.addEmbeddedRepo false
     cat << 'EOF' > .gitignore
 .obsidian/workspace.json
 .obsidian/cache
@@ -135,7 +162,21 @@ EOF
     fi
 fi
 
-# Prompt for snapshot notes (P-04: --note flag is honored headlessly)
+# Also snapshot discrete manuscript repositories if present under 01-Manuscript/
+if [ -d "01-Manuscript" ]; then
+    for ms_repo in 01-Manuscript/*/; do
+        if [ -d "${ms_repo}.git" ]; then
+            (
+                cd "${ms_repo}"
+                git add -A
+                if ! git diff --cached --quiet; then
+                    git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Manuscript snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null || true
+                fi
+            )
+        fi
+    done
+fi
+
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M")
 DEFAULT_MSG="Snapshot: ${TIMESTAMP}"
 NOTE="${NOTE_CLI:-}"
@@ -151,24 +192,21 @@ if [ -z "${NOTE}" ]; then
     NOTE="${DEFAULT_MSG}"
 fi
 
-# Stage all files and commit
-git add -A
+git -c advice.addEmbeddedRepo=false add -A
 
 if git diff --cached --quiet; then
-    MSG="No changes detected in '${WORLD_NAME}' since last snapshot."
+    MSG="No uncommitted changes in '${WORLD_NAME}' since last snapshot."
     if command -v notify-send &> /dev/null; then
-        notify-send "Scriptorium Snapshot" "${MSG}" -i document-save
+        notify-send "Scriptorium Snapshot" "${MSG}" -i document-save 2>/dev/null || true
     else
         echo "${MSG}"
     fi
     exit 0
 fi
 
-# H6: guarded commit so set -e does not abort silently; falls back to ephemeral identity
 if ! git commit -q -m "${NOTE}"; then
-    echo "[i] No git identity configured, retrying with ephemeral Scriptorium identity..."
     if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "${NOTE}"; then
-        echo "[!] Snapshot failed: git commit rejected the change."
+        echo "[!] Snapshot failed: git commit rejected the change." >&2
         exit 1
     fi
 fi
@@ -176,7 +214,7 @@ fi
 MSG="Snapshot saved successfully for '${WORLD_NAME}'!\n\nNote: ${NOTE}"
 
 if command -v notify-send &> /dev/null; then
-    notify-send "Scriptorium Snapshot Saved" "${NOTE}" -i document-save
+    notify-send "Scriptorium Snapshot Saved" "${NOTE}" -i document-save 2>/dev/null || true
 fi
 
 if has_gui; then

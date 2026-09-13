@@ -1,0 +1,9 @@
+{
+  "command_timeout": 5,
+  "templates_folder": "Templates",
+  "auto_jump_to_cursor": true,
+  "trigger_on_file_creation": true,
+  "user_scripts_folder": "",
+  "syntax_highlighting": true,
+  "enabled_templates": []
+}

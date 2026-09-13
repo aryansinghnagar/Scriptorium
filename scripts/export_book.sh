@@ -96,8 +96,20 @@ if [ -z "${WORLD_DIR}" ]; then
     exit 3
 fi
 
+if [ -n "${WORLD_DIR}" ] && [ ! -d "${WORLD_DIR}" ]; then
+    if [ -d "${HOME}/Universes" ]; then
+        FOUND="$(find "${HOME}/Universes" -mindepth 3 -maxdepth 3 -type d -name "${WORLD_DIR}" 2>/dev/null | head -n 1 || true)"
+        if [ -n "${FOUND}" ] && [ -d "${FOUND}" ]; then
+            WORLD_DIR="${FOUND}"
+        fi
+    fi
+    if [ ! -d "${WORLD_DIR}" ] && [ -d "${WORLDS_BASE}/${WORLD_DIR}" ]; then
+        WORLD_DIR="${WORLDS_BASE}/${WORLD_DIR}"
+    fi
+fi
+
 if [ ! -d "${WORLD_DIR}" ]; then
-    echo "Error: Directory '${WORLD_DIR}' does not exist."
+    echo "Error: Directory '${WORLD_DIR}' does not exist." >&2
     exit 1
 fi
 
@@ -288,40 +300,64 @@ if [ -e "${PDF_OUTPUT}" ] || [ -e "${EPUB_OUTPUT}" ]; then
     echo "[i] Output collision detected, using timestamped stem: ${SAFE_STEM}"
 fi
 
-echo "Rendering print PDF with Typst..."
 EXIT_STATUS=0
+
+echo "Rendering print PDF with Typst..."
 if command -v typst &> /dev/null; then
     if (cd "${TEMP_WORK_DIR}" && typst compile "${TYPST_SRC}" "${PDF_OUTPUT}"); then
-        echo "[✓] PDF generated at: ${PDF_OUTPUT}"
+        if [ -s "${PDF_OUTPUT}" ]; then
+            echo "[✓] PDF generated at: ${PDF_OUTPUT}"
+        else
+            echo "[!] Typst compile finished but PDF artifact is empty (0 bytes)." >&2
+            EXIT_STATUS=1
+        fi
     else
-        echo "[!] Typst compile failed. See ${TYPST_SRC} and ${TEMP_WORK_DIR}/book_template.typ for details."
+        echo "[!] Typst compile failed. See ${TYPST_SRC} and ${TEMP_WORK_DIR}/book_template.typ for details." >&2
         EXIT_STATUS=1
     fi
 else
-    echo "[!] Typst not found. Skipping PDF generation."
+    echo "[!] Typst not found. Skipping PDF generation." >&2
     EXIT_STATUS=1
 fi
 
-# 6. Compile EPUB with Pandoc
+# 6. Compile EPUB with Pandoc (AUD-02: Dedicated error trap)
+echo "Generating EPUB with Pandoc..."
 if command -v pandoc &> /dev/null; then
-    echo "Generating EPUB with Pandoc..."
-    pandoc "${COMBINED_MD}" -o "${EPUB_OUTPUT}" \
+    if pandoc "${COMBINED_MD}" -o "${EPUB_OUTPUT}" \
         --metadata title="${BOOK_TITLE}" \
         --metadata author="${AUTHOR_NAME}" \
-        --toc --toc-depth=2
-    echo "[✓] EPUB generated at: ${EPUB_OUTPUT}"
+        --toc --toc-depth=2 2>"${TEMP_WORK_DIR}/pandoc_err.log"; then
+        if [ -s "${EPUB_OUTPUT}" ]; then
+            echo "[✓] EPUB generated at: ${EPUB_OUTPUT}"
+        else
+            echo "[!] Pandoc completed but EPUB artifact is empty (0 bytes)." >&2
+            EXIT_STATUS=1
+        fi
+    else
+        echo "[!] Pandoc EPUB export failed." >&2
+        if [ -s "${TEMP_WORK_DIR}/pandoc_err.log" ]; then
+            cat "${TEMP_WORK_DIR}/pandoc_err.log" >&2
+        fi
+        EXIT_STATUS=1
+    fi
+else
+    echo "[!] Pandoc not found. Skipping EPUB generation." >&2
+    EXIT_STATUS=1
 fi
 
 # Temp cleanup handled by EXIT trap (H4)
 
 # 7. Notify user
-MSG="Export Complete!\n\n• Print PDF: ${PDF_OUTPUT}\n• EPUB Ebook: ${EPUB_OUTPUT}"
+MSG="Export Summary for: ${BOOK_TITLE}\n"
+[ -f "${PDF_OUTPUT}" ] && MSG="${MSG}\n• Print PDF: ${PDF_OUTPUT}"
+[ -f "${EPUB_OUTPUT}" ] && MSG="${MSG}\n• EPUB Ebook: ${EPUB_OUTPUT}"
+[ "${EXIT_STATUS}" -ne 0 ] && MSG="${MSG}\n\n[!] Note: One or more formats had compilation warnings or errors."
 
 if has_gui; then
-    if [ -f "${PDF_OUTPUT}" ] && zenity --question --title="Export Complete" --text="${MSG}\n\nWould you like to open the PDF now?" --width=450; then
+    if [ -f "${PDF_OUTPUT}" ] && zenity --question --title="Export Summary" --text="${MSG}\n\nWould you like to open the PDF now?" --width=450; then
         xdg-open "${PDF_OUTPUT}" &
-    elif [ ! -f "${PDF_OUTPUT}" ]; then
-        zenity --info --title="Export Complete" --text="${MSG}" --width=450
+    else
+        zenity --info --title="Export Summary" --text="${MSG}" --width=450
     fi
 else
     echo -e "\n============================================================"

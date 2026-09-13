@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Scriptorium Unified CLI Facade (Workstream 4.1)
+# Purpose: Single command-line interface for all Scriptorium authoring workflows.
+# ==============================================================================
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
+if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ]; then
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+fi
+
+VERSION="1.3.0"
+
+usage() {
+    cat << USAGE
+Scriptorium Unified CLI — v${VERSION}
+A reproducible, fail-safe Linux authoring and worldbuilding platform.
+
+Usage:
+  scriptorium <command> [arguments...]
+
+Universe & World Management:
+  universe [NAME] [--list]   Create or list narrative Universes in ~/Universes/
+  init <name> [-u UNIVERSE]  Atomically scaffold a new world in a Universe
+  control-center             Launch graphical desktop control center
+
+Writing & Publishing:
+  export <world> [options]   Compile manuscript into print PDF and EPUB
+  report <world> [--markdown]Show word counts and manuscript progress analytics
+
+Data Protection & Version Control:
+  snapshot <world> [-m note] Record a Git version snapshot (World & Manuscripts)
+  backup <world> [options]   Create a standalone verified .tar.gz backup archive
+  restore <archive> [opts]   Restore a world from a verified backup archive
+
+System Health & Maintenance:
+  doctor [--world <name>]    Run unified health and lore consistency diagnostics
+  verify                     Run complete 7-stage test harness
+  setup [--dry-run]          Install core packages, fonts, and desktop launchers
+  uninstall [--dry-run]      Revert desktop launchers and system components
+
+Global Options:
+  -v, --version              Display Scriptorium version
+  -h, --help                 Display this help menu
+USAGE
+}
+
+if [ $# -eq 0 ]; then
+    usage
+    exit 0
+fi
+
+COMMAND="$1"
+shift
+
+case "${COMMAND}" in
+    universe|multiverse)
+        exec bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$@"
+        ;;
+    init)
+        exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
+        ;;
+    doctor)
+        exec bash "${PROJECT_ROOT}/scripts/scriptorium_doctor.sh" "$@"
+        ;;
+    export)
+        exec bash "${PROJECT_ROOT}/scripts/export_book.sh" "$@"
+        ;;
+    snapshot)
+        exec bash "${PROJECT_ROOT}/scripts/save_snapshot.sh" "$@"
+        ;;
+    backup)
+        exec bash "${PROJECT_ROOT}/scripts/backup_world.sh" "$@"
+        ;;
+    restore)
+        exec bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$@"
+        ;;
+    report)
+        exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
+        ;;
+    verify)
+        exec bash "${PROJECT_ROOT}/scripts/verify.sh" "$@"
+        ;;
+    setup)
+        exec bash "${PROJECT_ROOT}/scripts/setup_scriptorium.sh" "$@"
+        ;;
+    uninstall)
+        exec bash "${PROJECT_ROOT}/scripts/uninstall_scriptorium.sh" "$@"
+        ;;
+    control-center|dashboard|gui)
+        exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
+        ;;
+    -v|--version|version)
+        echo "Scriptorium v${VERSION}"
+        exit 0
+        ;;
+    -h|--help|help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Error: Unknown command '${COMMAND}'" >&2
+        echo "Run 'scriptorium --help' for available commands." >&2
+        exit 1
+        ;;
+esac

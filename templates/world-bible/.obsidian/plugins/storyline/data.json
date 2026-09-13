@@ -1,0 +1,9 @@
+{
+  "activeStory": "",
+  "autoLinkEntities": true,
+  "defaultView": "timeline",
+  "enableArcBoard": true,
+  "charactersFolder": "Characters",
+  "locationsFolder": "Locations",
+  "eventsFolder": "History"
+}

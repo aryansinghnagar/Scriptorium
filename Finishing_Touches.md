@@ -101,23 +101,48 @@ bash scripts/verify.sh 2>&1 | tee /tmp/verify.log
 [EXPECT]:
 
 ```text
-[1/5] bash -n syntax...
+[1/7] bash -n syntax validation...
+  OK scripts/backup_world.sh
+  OK scripts/control_center.sh
   OK scripts/export_book.sh
+  OK scripts/init_universe.sh
   OK scripts/init_world.sh
+  OK scripts/restore_world.sh
   OK scripts/save_snapshot.sh
+  OK scripts/scriptorium_doctor.sh
   OK scripts/setup_scriptorium.sh
+  OK scripts/uninstall_scriptorium.sh
   OK scripts/verify.sh
-[2/5] JSON/XML parse...
-  OK leechblock JSON
-  OK nwProject XML
-[3/5] Pandoc Markdown->Typst smoke test...
+  OK scripts/wordcount_report.sh
+  OK scripts/world_doctor.sh
+  OK scripts/scriptorium
+[2/7] JSON & XML schema validation...
+  OK leechblock JSON schema
+  OK nwProject XML fileVersion 1.5
+  OK Obsidian pre-configured plugin suite schema
+[3/7] Pandoc Markdown->Typst smoke test...
   OK pandoc typst writer present
   OK pandoc conversion
-[4/5] Typst compile (if installed)...
-  SKIP typst missing (install per resources/software_catalog.md)
-  -- or, after Section 5: OK typst compile --
-[5/5] Desktop entries...
-  OK desktop files  (via desktop-file-validate, if installed)
+[4/7] Typst compile smoke test (if installed)...
+  OK typst compile
+[5/7] Desktop launcher validation...
+  OK desktop files
+[6/7] Functional Universe, World lifecycle, diagnostics & recovery (sandboxed HOME)...
+  OK init_universe (Universe directory + Universe Git repository)
+  OK init_world (Multi-tier Universe, World & Manuscript Git repositories)
+  OK export_book (exit 0)
+  OK PDF + EPUB produced and verified non-empty
+  OK multi-volume + tag stripping verified in EPUB
+  OK world_doctor --json valid
+  OK world_doctor functional run
+  OK wordcount_report (markdown + json)
+  OK save_snapshot (multi-tier Git snapshots recorded)
+  OK backup_world (archive + sha256 created)
+  OK restore_world (drill verified: archive -> wipe -> restore -> verify content)
+  OK scriptorium_doctor diagnostics
+  OK setup & uninstall --dry-run simulations
+[7/7] Scriptorium CLI facade tests...
+  OK scriptorium CLI entrypoint (with universe command)
 ALL-CHECKS-PASS
 ```
 

@@ -1,0 +1,10 @@
+{
+  "classFilesPath": "Templates/fileClasses",
+  "isAutosaveEnabled": true,
+  "displayFieldsInContextMenu": true,
+  "globallyIgnoredFields": [],
+  "presetFields": [],
+  "fileClasses": [],
+  "showSavedFieldsMenu": true,
+  "tableViewMaxLines": 30
+}

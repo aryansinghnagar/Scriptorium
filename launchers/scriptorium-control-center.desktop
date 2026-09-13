@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Scriptorium Control Center
+GenericName=Authoring Control Dashboard
+Comment=Unified workspace dashboard for writing, exporting, snapshotting, and diagnostics
+Exec=bash "__PROJECT_ROOT__/scripts/control_center.sh"
+TryExec=bash
+Icon=preferences-desktop-workspaces
+Terminal=false
+Categories=Office;Utility;Writing;
+Keywords=Writing;Novel;Worldbuilding;Obsidian;Typst;Backup;
+StartupNotify=true

@@ -1,0 +1,14 @@
+{
+  "enableDataviewJs": true,
+  "enableInlineDataviewJs": true,
+  "enableInlineDataview": true,
+  "inlineQueryPrefix": "=",
+  "inlineJsQueryPrefix": "$=",
+  "dataviewJsKeyword": "dataviewjs",
+  "refreshEnabled": true,
+  "refreshInterval": 2500,
+  "defaultDateFormat": "MMMM dd, yyyy",
+  "defaultDateTimeFormat": "h:mm a - MMMM dd, yyyy",
+  "renderNullAs": "\\-",
+  "warnOnEmptyResult": true
+}

@@ -1,0 +1,27 @@
+{
+  "autoCommitMessage": "Vault backup: {{date}}",
+  "autoSaveInterval": 10,
+  "autoPullInterval": 0,
+  "autoPushInterval": 0,
+  "autoBackupAfterFileChange": true,
+  "treeStructure": false,
+  "refreshSourceControl": true,
+  "baseSubmodule": false,
+  "lineAuthor": {
+    "show": false,
+    "followMovement": "inactive",
+    "authorFormat": "initials",
+    "authorColor": "#999999",
+    "dateTimeFormatString": "YYYY-MM-DD HH:mm",
+    "coloring": "age"
+  },
+  "gitPath": "",
+  "customMessageOnAutoBackup": false,
+  "autoBackupFileName": false,
+  "syncMethod": "merge",
+  "disablePush": true,
+  "pullBeforePush": false,
+  "showStatusBar": true,
+  "updateSubmodules": false,
+  "gitLocation": "root"
+}

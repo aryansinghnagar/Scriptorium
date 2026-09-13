@@ -1,0 +1,11 @@
+{
+  "useMarkdownLinks": false,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "Templates",
+  "attachmentFolderPath": "03-Art",
+  "showLineNumber": true,
+  "livePreview": true,
+  "autoPairBrackets": true,
+  "autoPairMarkdown": true,
+  "strictLineBreaks": false
+}

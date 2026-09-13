@@ -2,20 +2,23 @@
 
 ## 1. Architectural Overview
 The Scriptorium environment is organized into modular tiers:
-1. **Core Documentation & Resource Catalog**: Links, commands, installation methods (Apt, Flatpak, AppImage, Python), and checksums.
-2. **Automated Setup & Provisioning**: Single-command setup script (`setup_scriptorium.sh`) that provisions the complete OS environment, packages, and dependencies.
-3. **World Directory Hierarchy & Starter Assets**: Automated generator (`init_world.sh`) that creates the canonical `~/Worlds/<WorldName>` structure with Obsidian vaults, templates, and novelWriter starter projects.
-4. **Obsidian World Bible Suite**: Production-grade Markdown templates for characters, factions, locations, magic/tech systems, history, conlangs, and index pages with Dataview metadata.
-5. **novelWriter Manuscript Structure**: Pre-configured chapter/scene hierarchies with metadata tags and outline templates.
-6. **Book Export & Typesetting Engine**: Pandoc + Typst compilation pipeline (`export_book.sh`, `book_template.typ`, `export-book.desktop`) producing print-ready PDFs and EPUBs.
-7. **Version History & Data Protection**: One-click Git snapshotting (`save_snapshot.sh`, `save-snapshot.desktop`) and Déjà Dup automated backup configurations.
-8. **Distraction Control & Notification Management**: Ready-to-import LeechBlock NG configuration files and XFCE Do-Not-Disturb configurations.
+1. **Governance, Security Policy & Compatibility**: `SECURITY.md`, `docs/SUPPORT_MATRIX.md`, `docs/COMPATIBILITY.md`, `.editorconfig`, and immutable CI pinning.
+2. **Automated Setup, Safety & Provisioning**: System installer (`setup_scriptorium.sh`) with `--dry-run` simulation, `/etc/os-release` distribution gating, and rollback uninstaller (`uninstall_scriptorium.sh`).
+3. **Transactional World Provisioning & Assets**: Automated generator (`init_world.sh`) that stages in temporary space, validates directory schemas, writes valid novelWriter `fileVersion 1.5` XML (`nwProject.nwx`), and atomically moves to `~/Worlds/<WorldName>`.
+4. **Obsidian World Bible Suite**: Production-grade Markdown templates with Dataview metadata and domain integrity checking (`world_doctor.sh`).
+5. **novelWriter Manuscript Structure**: Pre-configured chapter/scene hierarchies with metadata tags, outline templates, and manuscript analytics (`wordcount_report.sh`).
+6. **Book Export & Typesetting Engine**: Pandoc + Typst compilation pipeline (`export_book.sh`, `book_template.typ`, `export-book.desktop`) with independent error trapping, collision-safe naming, and artifact verification.
+7. **Version History & Decoupled Data Protection**: One-click Git snapshotting (`save_snapshot.sh`) paired with decoupled standalone backup archives (`backup_world.sh`) and verified disaster recovery restores (`restore_world.sh`).
+8. **Unified CLI & Desktop Control Center**: Unified `scriptorium` entrypoint CLI and `control_center.sh` / `.desktop` GUI dashboard.
+9. **Multi-Tier Git & Narrative Universe Architecture**: 3-tier version control hierarchy (`~/Universes/<Name>/` -> `Worlds/<Name>/` -> `01-Manuscript/<Book>/`) with Universe manifests (`universe.yaml`) and discrete manuscript git repos.
+10. **Pre-Configured Obsidian Worldbuilding & Drafting Suite**: Production-grade vault pre-configuration with Longform, Dataview, Metadata Menu (`fileClasses` schemas: Character, Location, Faction, TimelineEvent), Calendarium, Storyteller Suite, Storyline, Novel Word Count, and Obsidian Git (10-min interval auto-commits).
+11. **Comprehensive 7-Stage Verification Harness**: `scripts/verify.sh` exercising syntax, schemas, transactional Universe & World init, exports, doctor diagnostics, wordcount reports, Git multi-tier snapshots, and backup/restore recovery drills.
 
-## 2. Milestone Phases
-- [x] **Phase 1: Canonical State & Specification**: Define project charter, roadmaps, task lists, and architectural records.
-- [x] **Phase 2: Comprehensive Resource & Software Catalog**: Document exact software sources, Flatpak/Apt IDs, ISO download hubs, and optional creative extras.
-- [x] **Phase 3: System Automation Scripts & Desktop Launchers**: Implement `setup_scriptorium.sh`, `init_world.sh`, `export_book.sh`, `save_snapshot.sh`, and `.desktop` launchers.
-- [x] **Phase 4: Obsidian Vault & novelWriter Templates Pack**: Build complete worldbuilding templates with Dataview attributes and Markdown manuscript starters (nwProject.nwx is a documented placeholder; real project created via novelWriter GUI).
-- [x] **Phase 5: Typst Typesetting Engine & Book Templates**: Develop high-end typographic book template in Typst with headers, margins, and Pandoc bridge (context-based headers, front-matter header suppression).
-- [x] **Phase 6: Distraction Control & Backup Guides**: Generate LeechBlock JSON config and Déjà Dup runbooks (LeechBlock import must be live-verified on Firefox).
-- [ ] **Phase 7: Master Documentation & Live Verification**: `README.md` synthesized; `bash -n` + Pandoc smoke test pass via `scripts/verify.sh` (Windows/Git Bash). Remaining Linux-only: `shellcheck`, `typst compile preview_sample.typ`, LeechBlock import, novelWriter project creation, full `setup_scriptorium.sh` run — see `Finishing_Touches.md`.
+## 2. Milestone Execution Status
+- [x] **M0: Governance & Architecture Freeze**: Security policy (`SECURITY.md`), OS matrix (`docs/SUPPORT_MATRIX.md`), compatibility baselines (`docs/COMPATIBILITY.md`), `.editorconfig`, CI 40-char SHA pinning (`ci.yml`), and README cleanup.
+- [x] **M1: Execution Foundation & Safety**: Installer `--dry-run` simulation and OS gating (`setup_scriptorium.sh`), uninstaller (`uninstall_scriptorium.sh`), transactional staging (`init_world.sh`), and independent Pandoc error trapping (`export_book.sh`).
+- [x] **M2: Data Protection & Supply Chain Hardening**: Standalone verified backups (`backup_world.sh`), verified restore engine (`restore_world.sh`), valid novelWriter XML (`templates/manuscript/nwProject.nwx`), and comprehensive test fixtures (`tests/fixtures/`).
+- [x] **M3: Production Diagnostics & Domain Toolchain**: Unified Scriptorium Doctor (`scriptorium_doctor.sh`), enhanced World Doctor with timeline and entity validation (`world_doctor.sh`), and progress analytics (`wordcount_report.sh`).
+- [x] **M4: Scriptorium Unified Authoring Platform**: Unified CLI entrypoint (`scripts/scriptorium`), desktop Control Center GUI (`control_center.sh`, `launchers/scriptorium-control-center.desktop`), and comprehensive 7-stage verification harness (`scripts/verify.sh`).
+- [x] **M5: Narrative Universe Architecture & Out-of-the-Box Obsidian Suite**: Multi-tier Git architecture (`init_universe.sh`, `init_world.sh --universe`, `save_snapshot.sh`), pre-configured Obsidian worldbuilding & drafting suite (`.obsidian/` configs, `Templates/fileClasses/`, Dataview JS/DQL, Obsidian Git auto-commits), decluttered codebase, and ADR-013/ADR-014 documentation.
+

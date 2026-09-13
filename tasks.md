@@ -2,60 +2,59 @@
 
 ## Task Checklist
 
-### 1. Project Filesystem & State Foundations
-- [x] Create `project.md` (System charter and design rules)
-- [x] Create `plan.md` (Operational roadmap and milestone phases)
-- [x] Create `tasks.md` (Master task graph and definitions of done)
-- [x] Create `knowledge.md` (Distilled tool ecosystem and technical invariants)
-- [x] Create `decisions.md` (Architecture decision records)
-- [x] Create `status.md` (Operational state and active momentum queues)
+### 1. Project Governance, Specifications & Policies (M0)
+- [x] Create `SECURITY.md` (Formal vulnerability disclosure policy & 72-hour SLA)
+- [x] Create `docs/SUPPORT_MATRIX.md` (OS tiers, architectures, display server matrix)
+- [x] Create `docs/COMPATIBILITY.md` (Toolchain baselines, binary digests, Flatpak pins)
+- [x] Create `.editorconfig` (Consistent line endings, UTF-8, indentation standards)
+- [x] Clean `README.md` boilerplate and update with unified CLI & Control Center docs (AUD-03)
+- [x] Pin CI actions in `.github/workflows/ci.yml` by immutable 40-char commit SHAs (AUD-04)
 
 ### 2. Software Resource Catalog & Documentation
 - [x] Create `resources/software_catalog.md` (All core tools, download URLs, Flatpak/Apt commands, verification hashes)
 - [x] Create `resources/optional_extras_guide.md` (Azgaar, Krita, Inkscape, Gramps, PolyGlot, Sigil, Kiwix)
 - [x] Create `resources/typography_and_fonts_guide.md` (High-quality open fonts: Linux Libertine, EB Garamond, Alegreya, etc.)
 
-### 3. Automation Scripts & Desktop Launchers
-- [x] Create `scripts/setup_scriptorium.sh` (Unattended automated provisioning script for Linux Mint / Debian)
-- [x] Create `scripts/init_world.sh` (Interactive/GUI generator for new world directories with full template scaffolding)
-- [x] Create `scripts/export_book.sh` (Pandoc + Typst compilation engine for print PDF and Calibre EPUB)
+### 3. Hardened Automation Scripts & Desktop Launchers (M1 / M4)
+- [x] Harden `scripts/setup_scriptorium.sh` (OS gating, `--dry-run` simulation, categorized dependencies, elimination of `|| true`) (SEC-01, REL-02)
+- [x] Create `scripts/uninstall_scriptorium.sh` (Clean rollback and uninstaller) (SEC-02)
+- [x] Harden `scripts/init_world.sh` (Transactional staging, valid novelWriter XML, error trapping) (REL-01, UX-01)
+- [x] Harden `scripts/export_book.sh` (Independent Pandoc error trapping, artifact size validation) (AUD-02)
 - [x] Create `scripts/save_snapshot.sh` (One-click Git snapshot saver with desktop notification)
-- [x] Create `launchers/export-book.desktop` (Desktop shortcut for book export)
-- [x] Create `launchers/save-snapshot.desktop` (Desktop shortcut for Git snapshot)
-- [x] Create `launchers/init-world.desktop` (Desktop shortcut for creating a new world)
+- [x] Create `scripts/scriptorium` (Unified CLI entrypoint dispatcher)
+- [x] Create `scripts/control_center.sh` & `launchers/scriptorium-control-center.desktop` (GUI desktop control dashboard)
+- [x] Create desktop launchers (`export-book.desktop`, `save-snapshot.desktop`, `init-world.desktop`)
 
-### 4. Obsidian World Bible Starter Pack
-- [x] Create `templates/world-bible/Characters/Character-Template.md` (Dataview YAML frontmatter, character arcs, relations)
-- [x] Create `templates/world-bible/Locations/Location-Template.md` (Sensory details, geography, culture, maps)
-- [x] Create `templates/world-bible/Factions/Faction-Template.md` (Hierarchy, goals, ideology, members)
-- [x] Create `templates/world-bible/Magic-Technology/Magic-Tech-System-Template.md` (Hard/Soft rules, limitations, costs)
-- [x] Create `templates/world-bible/History/Timeline-Event-Template.md` (Chronology, causes, consequences)
-- [x] Create `templates/world-bible/Languages/Glossary-Conlang-Template.md` (Phonology, lexicon, phrases)
-- [x] Create `templates/world-bible/Templates/Daily-Writing-Log.md` (Word counts, session notes, goals)
-- [x] Create `templates/world-bible/Templates/Scene-Note-Template.md` (POV, goal, conflict, outcome)
-- [x] Create `templates/world-bible/Templates/World-Bible-Index.md` (Central navigation dashboard with Dataview queries)
-- [x] Create `templates/world-bible/.obsidian-recommended-plugins.md` (Setup instructions for Dataview, Templater, Kanban, Excalidraw)
+### 4. Data Protection & Verified Disaster Recovery (M2)
+- [x] Create `scripts/backup_world.sh` (Standalone compressed tarball archives with SHA-256 manifests) (REL-03)
+- [x] Create `scripts/restore_world.sh` (Verified restore engine with hash checks and staging) (REL-03)
+- [x] Update `templates/manuscript/nwProject.nwx` (Valid novelWriter fileVersion 1.5 XML schema) (UX-01)
+- [x] Create `tests/fixtures/` (Unicode, multi-volume, novelWriter tag, and Typst special character fixtures)
 
-### 5. novelWriter Manuscript Starter Pack
-- [x] Create `templates/manuscript/nwProject.nwx` (Documented placeholder; real fileVersion 1.5 project must be created via novelWriter GUI — see header comment)
-- [x] Create `templates/manuscript/Outlines/Master-Outline.md` (3-Act / Hero's Journey story structure)
-- [x] Create `templates/manuscript/Book-01/01_Act_I/01_Chapter_01.md` (Starter chapter with novelWriter markdown tags)
-- [x] Create `templates/manuscript/Book-01/01_Act_I/02_Chapter_02.md`
-- [x] Create `templates/manuscript/Book-01/02_Act_II/01_Chapter_03.md`
-- [x] Create `templates/manuscript/Book-01/03_Act_III/01_Chapter_04.md`
+### 5. Diagnostics & Domain Toolchain (M3)
+- [x] Create `scripts/scriptorium_doctor.sh` (Unified System, Toolchain, Workspace, World, and Backup diagnostics)
+- [x] Harden `scripts/world_doctor.sh` (Timeline chronological checks, entity schema validation, WLD-101..107 codes)
+- [x] Enhance `scripts/wordcount_report.sh` (Manuscript analytics, volume/act aggregation, JSON & Markdown output)
 
-### 6. Typst Typesetting Engine & Book Templates
-- [x] Create `templates/typst/book_template.typ` (Publication-grade novel layout: half-title, copyright, alternating running headers, front-matter pagination)
-- [x] Create `templates/typst/preview_sample.typ` (Complete sample book with chapters to test rendering)
+### 6. Obsidian World Bible & Manuscript Starter Packs
+- [x] Create Obsidian World Bible templates (Characters, Locations, Factions, Magic-Technology, History, Languages, Templates)
+- [x] Create novelWriter Manuscript templates (Three-act structural outline, starter chapters in Book-01)
+- [x] Create Typst typesetting book templates (`templates/typst/book_template.typ`, `preview_sample.typ`)
+- [x] Create focus configs (`configs/leechblock_scriptorium_rules.json`, `xfce_dnd_setup.md`, `deja_dup_backup_guide.md`)
 
-### 7. Distraction Control & Backup Runbooks
-- [x] Create `configs/leechblock_scriptorium_rules.json` (Pre-configured LeechBlock NG export file)
-- [x] Create `configs/xfce_dnd_setup.md` (XFCE Do-Not-Disturb & notification configuration)
-- [x] Create `configs/deja_dup_backup_guide.md` (Automated weekly backup runbook with 3-2-1 rule)
+### 7. Narrative Universe Architecture & Out-of-the-Box Obsidian Suite (M5)
+- [x] Create `scripts/init_universe.sh` (Universe scaffolding & Git repository initialization)
+- [x] Enhance `scripts/init_world.sh` with `--universe` support and multi-tier Git repository setup (Universe -> World -> Manuscript)
+- [x] Update `scripts/save_snapshot.sh` to traverse and snapshot multi-tier Git repositories
+- [x] Update `scripts/scriptorium` CLI facade with `universe` command and `--universe` forwarding
+- [x] Pre-configure Obsidian plugin configs: `dataview`, `longform`, `metadata-menu`, `calendarium`, `storyteller-suite`, `storyline`, `novel-word-count`, `obsidian-git`, `templater-obsidian`, `obsidian-style-settings`
+- [x] Pre-configure strict Metadata Menu schemas in `templates/world-bible/Templates/fileClasses/` (`Character`, `Location`, `Faction`, `TimelineEvent`)
+- [x] Configure automated Obsidian Git auto-commit (10-minute interval + save backup)
+- [x] Declutter repository: safely delete legacy `audit_artifacts/`, `Plans/`, and `docs/archive/`
+- [x] Document ADR-013 (Multi-Tier Git Architecture) and ADR-014 (Obsidian Plugin Suite) in `decisions.md`
 
-### 8. Master Setup Guide & Verification
-- [x] Create `README.md` (Comprehensive step-by-step documentation for installing and using Scriptorium)
-- [x] Static hardening pass 2026-09-04 (Typst import, dotfiles, sanitization, trap, NUL-safe listing, git fallback, Wayland, Typst context, arch/XDG)
-- [x] Create `scripts/verify.sh`, `LICENSE`, `.gitattributes`, root `.gitignore`, `Finishing_Touches.md` manual
-- [x] Archive superseded `scriptorium_plan.md/.txt` to `docs/archive/` and refresh project/knowledge/decisions docs
-- [ ] Live verify on Linux Mint XFCE per `Finishing_Touches.md` (`shellcheck`, `typst compile preview_sample.typ`, LeechBlock import, novelWriter GUI project, full setup run)
+### 8. Verification & Release Gates
+- [x] Expand `scripts/verify.sh` 7-stage verification suite with Universe/World lifecycle and multi-tier Git tests
+- [x] Pass all automated checks via `bash scripts/verify.sh` (`ALL-CHECKS-PASS`)
+- [ ] Final live acceptance test on physical Linux Mint / Debian desktop
+

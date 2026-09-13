@@ -1,0 +1,9 @@
+{
+  "calendars": [],
+  "currentCalendar": null,
+  "defaultCalendar": null,
+  "showEventsOnCalendarView": true,
+  "eventFrontmatterKey": "fc-date",
+  "displayWeeks": true,
+  "parseDates": true
+}
