@@ -114,7 +114,12 @@ REQUIRED_BY_TYPE = {
 
 def read_capped(path):
     with open(path, "rb") as fh:
-        return fh.read(MAX_BYTES).decode("utf-8", "ignore")
+        data = fh.read(MAX_BYTES + 1)
+    if len(data) > MAX_BYTES:
+        # F-08: surface silent truncation instead of under-reporting.
+        print(f"[!] Warning: {path} exceeds the {MAX_BYTES // (1024 * 1024)} MB read cap; analysis truncated.", file=sys.stderr)
+        data = data[:MAX_BYTES]
+    return data.decode("utf-8", "ignore")
 
 def parse_frontmatter(text):
     """Strict flat-subset parser: key: value / key: [a, b] / lists with '-'."""

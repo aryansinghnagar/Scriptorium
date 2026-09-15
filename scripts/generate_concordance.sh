@@ -384,9 +384,19 @@ dp_md = []
 dp_md.append("# Dramatis Personae\n")
 dp_md.append("A comprehensive register of key individuals, allies, rivals, and figures encountered throughout the narrative.\n")
 
-protagonists = [c for c in characters if re.search(r'protagonist|major|lead', c['role'], re.IGNORECASE)]
-antagonists = [c for c in characters if re.search(r'antagonist|villain|rival|nemesis', c['role'], re.IGNORECASE)]
-supporting = [c for c in characters if c not in protagonists and c not in antagonists]
+# F-10: partition with explicit precedence so hybrid roles (e.g. "Major
+# Rival") appear in exactly one section — antagonist wins, then protagonist,
+# then supporting. Previously a role matching both patterns (e.g. "Major
+# Rival") was double-listed under Protagonists AND Antagonists.
+def is_antagonist(c):
+    return re.search(r'antagonist|villain|rival|nemesis', c['role'], re.IGNORECASE)
+
+def is_protagonist(c):
+    return re.search(r'protagonist|major|lead', c['role'], re.IGNORECASE)
+
+antagonists = [c for c in characters if is_antagonist(c)]
+protagonists = [c for c in characters if is_protagonist(c) and not is_antagonist(c)]
+supporting = [c for c in characters if not is_protagonist(c) and not is_antagonist(c)]
 
 def format_character_block(c):
     lines = []

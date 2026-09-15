@@ -267,6 +267,9 @@ cat << 'EOF' > "${STAGING_DIR}/.gitignore"
 *.log
 .DS_Store
 05-Backups/
+# F-09: compiled artifacts are outputs, not source; committing them bloats
+# every snapshot with multi-megabyte binaries on each re-export.
+04-Publishing/
 EOF
 
 cat << EOF > "${STAGING_DIR}/scriptorium.yaml"

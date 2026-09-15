@@ -121,7 +121,35 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "Extracting archive into staging..."
-tar -xzf "${ARCHIVE_PATH}" -C "${STAGING_DIR}"
+
+# S-04: refuse archives whose members could escape the staging root or
+# execute code on the next git operation, before extracting anything.
+# Note: .git/hooks/*.sample files ship with every 'git init' and appear in
+# every legitimate Scriptorium backup; only non-sample hooks (which would
+# execute on the next snapshot commit) are rejected. The co-located sha256
+# manifest proves integrity against bit-rot, not authenticity: anyone who
+# can replace the archive can regenerate the manifest.
+ARCHIVE_MEMBERS="$(tar -tzf "${ARCHIVE_PATH}")" || {
+    echo "Error: cannot list archive members (corrupt or non-gzip tarball)." >&2
+    exit 1
+}
+# Absolute paths and '..' traversal components
+if printf '%s\n' "${ARCHIVE_MEMBERS}" | grep -Eq '^/|(^|/)\.\.(/|$)'; then
+    echo "Error: archive contains absolute or path-traversal members; refusing extraction." >&2
+    exit 1
+fi
+# Members outside the single root world directory
+if printf '%s\n' "${ARCHIVE_MEMBERS}" | grep -Ev '^[^/]+/' | grep -q .; then
+    echo "Error: archive contains unexpected root-level entries; refusing extraction." >&2
+    exit 1
+fi
+# Non-sample git hooks planted in the world repository
+if printf '%s\n' "${ARCHIVE_MEMBERS}" | grep -E '/\.git/hooks/[^/]+$' | grep -vq '\.sample$'; then
+    echo "Error: archive contains non-sample .git/hooks members; refusing extraction (code-execution risk)." >&2
+    exit 1
+fi
+
+tar -xzf "${ARCHIVE_PATH}" -C "${STAGING_DIR}" --no-same-owner --no-same-permissions
 
 EXTRACTED_DIR="$(find "${STAGING_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
 if [ -z "${EXTRACTED_DIR}" ] || [ ! -d "${EXTRACTED_DIR}" ]; then

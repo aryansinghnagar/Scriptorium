@@ -101,9 +101,14 @@ for root, dirs, files in os.walk(MS):
         stem = os.path.splitext(fname)[0]
         try:
             with open(path, "rb") as fh:
-                text = fh.read(MAX_BYTES).decode("utf-8", "ignore")
+                data = fh.read(MAX_BYTES + 1)
         except OSError:
             continue
+        if len(data) > MAX_BYTES:
+            # F-08: surface silent truncation instead of under-counting.
+            print(f"[!] Warning: {path} exceeds the {MAX_BYTES // (1024 * 1024)} MB read cap; word counts truncated at the cap.", file=sys.stderr)
+            data = data[:MAX_BYTES]
+        text = data.decode("utf-8", "ignore")
         body = re.sub(r"^@[A-Za-z0-9_-]+:.*$", "", text, flags=re.M)
         body = re.sub(r"^%.*$", "", body, flags=re.M)
         words = len(WORD.findall(body))

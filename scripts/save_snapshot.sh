@@ -147,6 +147,7 @@ if [ ! -d ".git" ]; then
 *.log
 .DS_Store
 05-Backups/
+04-Publishing/
 EOF
     git -c advice.addEmbeddedRepo=false add .
     if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial repository creation for ${WORLD_NAME}" 2>/dev/null; then
@@ -163,7 +164,13 @@ if [ -d "01-Manuscript" ]; then
                 wait_for_git_lock "."
                 git add -A
                 if ! git diff --cached --quiet; then
-                    git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Manuscript snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null || true
+                    # Q-04: never drop manuscript commits silently — a
+                    # persistently locked repo previously produced no error
+                    # at all while the world-level commit recorded a stale
+                    # gitlink.
+                    if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Manuscript snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null; then
+                        echo "[!] Warning: manuscript commit skipped for '${ms_repo}' (git lock contention or identity missing); world snapshot may reference a stale state." >&2
+                    fi
                 fi
             )
         fi

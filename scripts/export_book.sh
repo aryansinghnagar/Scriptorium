@@ -249,16 +249,14 @@ elif [ -d "${MANUSCRIPT_DIR}" ]; then
     done
 fi
 
-# Fallback if empty
+# F-06: hard-fail on empty manuscripts. The previous behavior fabricated a
+# sample chapter and compiled it into a real PDF/EPUB, which masked
+# wrong-world selection mistakes and could ship filler prose into a
+# publishable artifact.
 if [ ! -s "${COMBINED_MD}" ]; then
-    echo "No content found in manuscript. Creating sample chapter."
-    cat << 'EOF' > "${COMBINED_MD}"
-# Chapter 1: The Beginning
-
-The morning sun broke across the ancient spires of the city, casting long amber shadows over the cobblestones. In the quiet sanctuary of the scriptorium, ink met parchment once again.
-
-Every journey of a thousand leagues begins not with a step, but with the courage to envision the path ahead.
-EOF
+    echo "Error: no manuscript content found for '${SELECTED_VOLUME}' under ${MANUSCRIPT_DIR}." >&2
+    echo "       Add chapters first (scriptorium add-book <world>, novelWriter, or plain .md files)." >&2
+    exit 1
 fi
 
 # 4. Generate Typst Book File

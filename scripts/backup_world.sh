@@ -129,17 +129,25 @@ fi
 
 ARCHIVE_BYTES="$(wc -c < "${ARCHIVE_TAR}" | tr -d ' ')"
 
-cat << EOF > "${META_FILE}"
-{
-  "world": "${WORLD_NAME}",
-  "timestamp": "${TIMESTAMP}",
-  "archive": "${ARCHIVE_BASE}.tar.gz",
-  "sha256": "${ACTUAL_SHA}",
-  "size_bytes": ${ARCHIVE_BYTES},
-  "git_commit": "${GIT_COMMIT}",
-  "note": "${NOTE_CLI:-auto-backup}"
+# F-07: write metadata with proper JSON escaping. The previous heredoc
+# interpolated the note directly, so any note containing quotes, backslashes,
+# or newlines produced metadata no JSON consumer could parse. Values are
+# passed as argv (never interpolated into Python source).
+python3 -c '
+import json, sys
+meta = {
+    "world": sys.argv[1],
+    "timestamp": sys.argv[2],
+    "archive": sys.argv[3],
+    "sha256": sys.argv[4],
+    "size_bytes": int(sys.argv[5]),
+    "git_commit": sys.argv[6],
+    "note": sys.argv[7],
 }
-EOF
+with open(sys.argv[8], "w", encoding="utf-8") as f:
+    json.dump(meta, f, indent=2)
+    f.write("\n")
+' "${WORLD_NAME}" "${TIMESTAMP}" "${ARCHIVE_BASE}.tar.gz" "${ACTUAL_SHA}" "${ARCHIVE_BYTES}" "${GIT_COMMIT}" "${NOTE_CLI:-auto-backup}" "${META_FILE}"
 
 (
     cd "${BACKUP_DIR}"
