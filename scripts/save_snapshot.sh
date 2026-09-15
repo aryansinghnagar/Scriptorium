@@ -7,13 +7,11 @@
 
 set -euo pipefail
 
-WORLDS_BASE="${HOME}/Worlds"
-UNIVERSES_BASE="${HOME}/Universes"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# GUI detection works on both X11 and Wayland (M7)
-has_gui() {
-    { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
-}
+# Shared world discovery, resolution, and GUI helpers (Q-01)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
@@ -68,14 +66,7 @@ if ! command -v git &> /dev/null; then
 fi
 
 # Discover all worlds across ~/Universes/*/Worlds/* and ~/Worlds/*
-WORLDS=()
-while IFS= read -r -d '' d; do
-    [ -d "$d" ] && WORLDS+=("$d")
-done < <(find "${UNIVERSES_BASE}" -mindepth 3 -maxdepth 3 -type d -path '*/Worlds/*' -print0 2>/dev/null)
-
-while IFS= read -r -d '' d; do
-    [ -d "$d" ] && WORLDS+=("$d")
-done < <(find "${WORLDS_BASE}" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+discover_worlds WORLDS
 
 if [ ${#WORLDS[@]} -eq 0 ] && [ -z "${WORLD_CLI}" ]; then
     if has_gui; then
@@ -89,21 +80,7 @@ fi
 SELECTED_WORLD=""
 
 if [ -n "${WORLD_CLI}" ]; then
-    if [ -d "${WORLD_CLI}" ]; then
-        SELECTED_WORLD="$(cd "${WORLD_CLI}" && pwd)"
-    elif [ -n "${UNIVERSE_CLI}" ] && [ -d "${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${WORLD_CLI}" ]; then
-        SELECTED_WORLD="${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${WORLD_CLI}"
-    elif [ -d "${WORLDS_BASE}/${WORLD_CLI}" ]; then
-        SELECTED_WORLD="${WORLDS_BASE}/${WORLD_CLI}"
-    else
-        for w in "${WORLDS[@]}"; do
-            if [ "$(basename "$w")" = "${WORLD_CLI}" ]; then
-                SELECTED_WORLD="$w"
-                break
-            fi
-        done
-    fi
-
+    SELECTED_WORLD="$(resolve_world_dir "${WORLD_CLI}" "${UNIVERSE_CLI}")"
     if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
         echo "Error: World '${WORLD_CLI}' not found." >&2
         exit 1
@@ -114,9 +91,7 @@ else
     if has_gui; then
         CHOICE_LIST=()
         for w in "${WORLDS[@]}"; do
-            UNAME="$(basename "$(dirname "$(dirname "$w")")")"
-            [ "$UNAME" = "home" ] || [ "$UNAME" = "aryan" ] && UNAME="Standalone"
-            CHOICE_LIST+=("$(basename "$w")" "[Universe: ${UNAME}] $w")
+            CHOICE_LIST+=("$(basename "$w")" "[Universe: $(universe_label "$w")] $w")
         done
         SELECTED_DISPLAY=$(zenity --list --title="Select World to Snapshot" \
             --column="World Name" --column="Universe & Path" \

@@ -12,12 +12,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-WORLDS_BASE="${HOME}/Worlds"
-UNIVERSES_BASE="${HOME}/Universes"
 
-has_gui() {
-    { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
-}
+# Shared world discovery, resolution, and GUI helpers (Q-01)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
@@ -70,14 +68,7 @@ TARGET_WORLD="${WORLD_CLI:-${POSITIONAL[0]:-}}"
 TARGET_BOOK="${BOOK_CLI:-${POSITIONAL[1]:-}}"
 
 # Discover worlds if not provided
-WORLDS=()
-while IFS= read -r -d '' d; do
-    [ -d "$d" ] && WORLDS+=("$d")
-done < <(find "${UNIVERSES_BASE}" -mindepth 3 -maxdepth 3 -type d -path '*/Worlds/*' -print0 2>/dev/null)
-
-while IFS= read -r -d '' d; do
-    [ -d "$d" ] && WORLDS+=("$d")
-done < <(find "${WORLDS_BASE}" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+discover_worlds WORLDS
 
 if [ -z "${TARGET_WORLD}" ]; then
     if [ ${#WORLDS[@]} -eq 1 ]; then
@@ -85,9 +76,7 @@ if [ -z "${TARGET_WORLD}" ]; then
     elif has_gui && [ ${#WORLDS[@]} -gt 1 ]; then
         CHOICES=()
         for w in "${WORLDS[@]}"; do
-            UNAME="$(basename "$(dirname "$(dirname "$w")")")"
-            [ "$UNAME" = "home" ] || [ "$UNAME" = "aryan" ] && UNAME="Standalone"
-            CHOICES+=("$(basename "$w")" "[Universe: ${UNAME}] $w")
+            CHOICES+=("$(basename "$w")" "[Universe: $(universe_label "$w")] $w")
         done
         PICKED=$(zenity --list --title="Scriptorium — Select World for Concordance" \
             --text="Select the world to generate back-matter concordance for:" \
@@ -109,21 +98,7 @@ if [ -z "${TARGET_WORLD}" ]; then
     exit 3
 fi
 
-WORLD_DIR=""
-if [ -d "${TARGET_WORLD}" ]; then
-    WORLD_DIR="$(cd "${TARGET_WORLD}" && pwd)"
-elif [ -n "${UNIVERSE_CLI}" ] && [ -d "${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${TARGET_WORLD}" ]; then
-    WORLD_DIR="$(cd "${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${TARGET_WORLD}" && pwd)"
-elif [ -d "${WORLDS_BASE}/${TARGET_WORLD}" ]; then
-    WORLD_DIR="$(cd "${WORLDS_BASE}/${TARGET_WORLD}" && pwd)"
-else
-    for w in "${WORLDS[@]}"; do
-        if [ "$(basename "$w")" = "${TARGET_WORLD}" ]; then
-            WORLD_DIR="$(cd "$w" && pwd)"
-            break
-        fi
-    done
-fi
+WORLD_DIR="$(resolve_world_dir "${TARGET_WORLD}" "${UNIVERSE_CLI}")"
 
 if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
     echo "Error: World directory '${TARGET_WORLD}' not found." >&2

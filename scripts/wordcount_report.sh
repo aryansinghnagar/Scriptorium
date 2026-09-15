@@ -20,6 +20,12 @@
 # ==============================================================================
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Shared world discovery, resolution, and GUI helpers (Q-01, F-05)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
+
 usage() {
     sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
@@ -37,19 +43,30 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+# F-05: a bare invocation now discovers worlds (auto-selecting when exactly
+# one exists) instead of defaulting to ~/Worlds, which is a container of
+# worlds and never itself a world.
 if [ -z "${WORLD_DIR}" ]; then
-    WORLD_DIR="${HOME}/Worlds"
-fi
-
-if [ ! -d "${WORLD_DIR}" ]; then
-    if [ -d "${HOME}/Universes" ]; then
-        FOUND="$(find "${HOME}/Universes" -mindepth 3 -maxdepth 3 -type d -name "${WORLD_DIR}" 2>/dev/null | head -n 1 || true)"
-        if [ -n "${FOUND}" ] && [ -d "${FOUND}" ]; then
-            WORLD_DIR="${FOUND}"
-        fi
+    discover_worlds FOUND_WORLDS
+    if [ ${#FOUND_WORLDS[@]} -eq 1 ]; then
+        WORLD_DIR="${FOUND_WORLDS[0]}"
+    elif [ ${#FOUND_WORLDS[@]} -gt 1 ]; then
+        {
+            echo "Multiple worlds discovered — specify one:"
+            for w in "${FOUND_WORLDS[@]}"; do
+                echo "  - $(basename "$w")  [$(universe_label "$w")]  ${w}"
+            done
+            echo "Usage: wordcount_report.sh <WORLD_DIR|WORLD_NAME> [--markdown|--json]"
+        } >&2
+        exit 2
+    else
+        echo "Error: no worlds found under ~/Universes or ~/Worlds. Create one first (scriptorium init <name>)." >&2
+        exit 2
     fi
-    if [ ! -d "${WORLD_DIR}" ] && [ -d "${HOME}/Worlds/${WORLD_DIR}" ]; then
-        WORLD_DIR="${HOME}/Worlds/${WORLD_DIR}"
+else
+    RESOLVED="$(resolve_world_dir "${WORLD_DIR}")"
+    if [ -n "${RESOLVED}" ]; then
+        WORLD_DIR="${RESOLVED}"
     fi
 fi
 

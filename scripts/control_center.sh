@@ -8,8 +8,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-WORLDS_BASE="${HOME}/Worlds"
-UNIVERSES_BASE="${HOME}/Universes"
+
+# Shared world discovery, resolution, and GUI helpers (Q-01)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
 
 # Prefer native GTK 3 desktop application if PyGObject is available
 if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/scriptorium_app.py" ]; then
@@ -22,10 +24,6 @@ if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/scriptorium_app.py" ]; 
     fi
 fi
 
-has_gui() {
-    { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
-}
-
 if ! has_gui; then
     echo "Scriptorium Control Center requires a graphical display and Zenity (or PyGObject)."
     echo "Use the 'scriptorium' command line interface in terminal environments."
@@ -36,14 +34,7 @@ mkdir -p "${UNIVERSES_BASE}"
 mkdir -p "${WORLDS_BASE}"
 
 # Discover all worlds
-WORLDS_PATHS=()
-while IFS= read -r -d '' d; do
-    [ -d "$d" ] && WORLDS_PATHS+=("$d")
-done < <(find "${UNIVERSES_BASE}" -mindepth 3 -maxdepth 3 -type d -path '*/Worlds/*' -print0 2>/dev/null)
-
-while IFS= read -r -d '' d; do
-    [ -d "$d" ] && WORLDS_PATHS+=("$d")
-done < <(find "${WORLDS_BASE}" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+discover_worlds WORLDS_PATHS
 
 ACTIVE_WORLD_PATH=""
 
@@ -69,9 +60,7 @@ else
     CHOICES=()
     for w in "${WORLDS_PATHS[@]}"; do
         WNAME="$(basename "$w")"
-        UNAME="$(basename "$(dirname "$(dirname "$w")")")"
-        [ "$UNAME" = "home" ] || [ "$UNAME" = "aryan" ] && UNAME="Standalone"
-        CHOICES+=("$WNAME" "Universe: ${UNAME}")
+        CHOICES+=("$WNAME" "Universe: $(universe_label "$w")")
     done
     CHOICES+=("+ Create New World" "Add a new world")
     CHOICES+=("+ Create New Universe" "Add a new universe container")
@@ -107,8 +96,7 @@ fi
 
 WORLD_DIR="${ACTIVE_WORLD_PATH}"
 ACTIVE_WORLD="$(basename "${WORLD_DIR}")"
-UNIVERSE_NAME="$(basename "$(dirname "$(dirname "${WORLD_DIR}")")")"
-[ "$UNIVERSE_NAME" = "home" ] || [ "$UNIVERSE_NAME" = "aryan" ] && UNIVERSE_NAME="Standalone"
+UNIVERSE_NAME="$(universe_label "${WORLD_DIR}")"
 
 ACTION=$(zenity --list --title="Scriptorium Control Center — [${ACTIVE_WORLD} (${UNIVERSE_NAME})]" \
     --column="Action" --column="Description" \

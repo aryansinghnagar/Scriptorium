@@ -8,12 +8,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORLDS_BASE="${HOME}/Worlds"
-UNIVERSES_BASE="${HOME}/Universes"
 
-has_gui() {
-    { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
-}
+# Shared world discovery, resolution, and GUI helpers (Q-01)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'

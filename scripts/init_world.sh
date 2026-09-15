@@ -15,10 +15,9 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 UNIVERSES_BASE="${HOME}/Universes"
 LEGACY_WORLDS_BASE="${HOME}/Worlds"
 
-# GUI detection works on both X11 and Wayland (M7)
-has_gui() {
-    { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
-}
+# Shared world discovery, resolution, and GUI helpers (Q-01)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'

@@ -43,7 +43,7 @@ jobs:
       - name: Bash syntax validation (bash -n)
         run: |
           status=0
-          for f in scripts/*.sh scripts/scriptorium tests/*.sh; do
+          for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh; do
             [ -f "$f" ] || continue
             if ! bash -n "$f"; then
               echo "  FAIL $f (bash syntax)" >&2
@@ -56,7 +56,7 @@ jobs:
 
       - name: ShellCheck static analysis
         run: |
-          shellcheck -S warning scripts/*.sh scripts/scriptorium
+          shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium
 
       - name: Validate desktop launcher entries
         run: |

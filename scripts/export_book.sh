@@ -9,12 +9,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-WORLDS_BASE="${HOME}/Worlds"
 
-# GUI detection works on both X11 and Wayland (M7)
-has_gui() {
-    { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
-}
+# Shared world discovery, resolution, and GUI helpers (Q-01)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
 
 # Escape backslashes and double quotes for Typst string literals (H3/D2: also strip CR/LF)
 typst_escape() {
@@ -95,9 +93,13 @@ WORLD_DIR="${POSITIONAL[0]:-}"
 
 if [ -z "${WORLD_DIR}" ]; then
     if has_gui; then
+        # F-06: pickers default to the canonical ~/Universes root, falling
+        # back to the legacy ~/Worlds root when it does not exist yet.
+        PICKER_ROOT="${UNIVERSES_BASE}"
+        [ -d "${PICKER_ROOT}" ] || PICKER_ROOT="${WORLDS_BASE}"
         WORLD_DIR=$(zenity --file-selection --directory \
             --title="Scriptorium — Select World Directory to Export" \
-            --filename="${WORLDS_BASE}/" || true)
+            --filename="${PICKER_ROOT}/" || true)
     fi
 fi
 
@@ -107,14 +109,9 @@ if [ -z "${WORLD_DIR}" ]; then
 fi
 
 if [ -n "${WORLD_DIR}" ] && [ ! -d "${WORLD_DIR}" ]; then
-    if [ -d "${HOME}/Universes" ]; then
-        FOUND="$(find "${HOME}/Universes" -mindepth 3 -maxdepth 3 -type d -name "${WORLD_DIR}" 2>/dev/null | head -n 1 || true)"
-        if [ -n "${FOUND}" ] && [ -d "${FOUND}" ]; then
-            WORLD_DIR="${FOUND}"
-        fi
-    fi
-    if [ ! -d "${WORLD_DIR}" ] && [ -d "${WORLDS_BASE}/${WORLD_DIR}" ]; then
-        WORLD_DIR="${WORLDS_BASE}/${WORLD_DIR}"
+    RESOLVED="$(resolve_world_dir "${WORLD_DIR}")"
+    if [ -n "${RESOLVED}" ]; then
+        WORLD_DIR="${RESOLVED}"
     fi
 fi
 

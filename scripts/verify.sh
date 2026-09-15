@@ -15,7 +15,7 @@ cleanup() {
 trap cleanup EXIT
 
 echo "[1/7] Script syntax & Python compilation validation..."
-for f in scripts/*.sh scripts/scriptorium; do
+for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium; do
     if [ -f "$f" ]; then
         if ! bash -n "$f"; then
             echo "  FAIL $f (bash syntax)" >&2

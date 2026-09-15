@@ -8,12 +8,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORLDS_BASE="${HOME}/Worlds"
-UNIVERSES_BASE="${HOME}/Universes"
 
-has_gui() {
-    { [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; } && command -v zenity &> /dev/null
-}
+# Shared world discovery, resolution, and GUI helpers (Q-01)
+# shellcheck source=scripts/lib/worlds.sh
+source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
@@ -82,20 +80,7 @@ if [ -z "${TARGET_INPUT}" ]; then
     exit 3
 fi
 
-WORLD_DIR=""
-if [ -d "${TARGET_INPUT}" ]; then
-    WORLD_DIR="$(cd "${TARGET_INPUT}" && pwd)"
-elif [ -n "${UNIVERSE_CLI}" ] && [ -d "${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${TARGET_INPUT}" ]; then
-    WORLD_DIR="$(cd "${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds/${TARGET_INPUT}" && pwd)"
-elif [ -d "${WORLDS_BASE}/${TARGET_INPUT}" ]; then
-    WORLD_DIR="$(cd "${WORLDS_BASE}/${TARGET_INPUT}" && pwd)"
-else
-    # Search across all Universes
-    FOUND_WORLD="$(find "${UNIVERSES_BASE}" -mindepth 3 -maxdepth 3 -type d -name "${TARGET_INPUT}" 2>/dev/null | head -n 1 || true)"
-    if [ -n "${FOUND_WORLD}" ] && [ -d "${FOUND_WORLD}" ]; then
-        WORLD_DIR="$(cd "${FOUND_WORLD}" && pwd)"
-    fi
-fi
+WORLD_DIR="$(resolve_world_dir "${TARGET_INPUT}" "${UNIVERSE_CLI}")"
 
 if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
     echo "Error: World directory not found: ${TARGET_INPUT}" >&2
@@ -104,8 +89,7 @@ fi
 
 WORLD_NAME="$(basename "${WORLD_DIR}")"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-SAFE_NAME="$(printf '%s' "${WORLD_NAME}" | tr -cd 'A-Za-z0-9_-')"
-[ -z "${SAFE_NAME}" ] && SAFE_NAME="world"
+SAFE_NAME="$(sanitize_name "${WORLD_NAME}" "world")"
 
 BACKUP_DIR="${DEST_CLI:-${WORLD_DIR}/05-Backups}"
 mkdir -p "${BACKUP_DIR}"
