@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+  schedule:
+    # C-03: weekly drift detection — catches action/toolchain rot between
+    # pushes (e.g. Typst/runner updates breaking the template).
+    - cron: '23 4 * * 1'
+
+# C-03: least privilege — this workflow only needs to read the repository.
+permissions:
+  contents: read
 
 jobs:
   verify:
@@ -29,7 +37,12 @@ jobs:
       - name: Set up Typst
         uses: typst-community/setup-typst@65c09e3962657e3f60f6d8959fbcfeecbb327e58 # v4.0.1
         with:
-          typst-version: 'latest'
+          # C-02: pinned to the minor release line the book template was
+          # developed and verified against. Bump deliberately after testing
+          # (templates/typst/book_template.typ + preview_sample.typ), never
+          # via 'latest' — a silent toolchain bump can break CI
+          # non-deterministically.
+          typst-version: '0.13'
 
       - name: Print environment and tool versions
         run: |
