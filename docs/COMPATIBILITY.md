@@ -29,7 +29,7 @@ All Flatpak packages are sourced from the official Flathub remote repository (`h
 | :--- | :--- | :--- | :--- |
 | **Obsidian** | `md.obsidian.Obsidian` | `stable` | Flathub GPG verified |
 | **novelWriter** | `io.gitlab.novelwriter.novelWriter` | `stable` | Flathub GPG verified |
-| **Calibre** | `com.calibredesk.calibre` | `stable` | Flathub GPG verified |
+| **Calibre** | `com.calibre_ebook.calibre` | `stable` | Flathub GPG verified |
 
 ### Flathub Remote GPG Configuration
 - **Remote URL**: `https://dl.flathub.org/repo/flathub.flatpakrepo`

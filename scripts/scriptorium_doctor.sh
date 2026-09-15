@@ -147,7 +147,7 @@ findings["toolchain"]["focuswriter"] = check_tool("focuswriter", "focuswriter --
 flatpak_apps = {
     "obsidian": "md.obsidian.Obsidian",
     "novelwriter": "io.gitlab.novelwriter.novelWriter",
-    "calibre": "com.calibredesk.calibre"
+    "calibre": "com.calibre_ebook.calibre"
 }
 flatpak_bin = shutil.which("flatpak")
 for label, app_id in flatpak_apps.items():

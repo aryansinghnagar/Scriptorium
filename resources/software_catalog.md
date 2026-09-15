@@ -79,7 +79,7 @@ This catalog provides official download links, package names (APT / Flatpak / Ap
   ```bash
   sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
   # Or via Flatpak:
-  # flatpak install -y flathub com.calibredesk.calibre
+  # flatpak install -y flathub com.calibre_ebook.calibre
   ```
 
 ### 6. Typst (Typesetting & Print PDF)

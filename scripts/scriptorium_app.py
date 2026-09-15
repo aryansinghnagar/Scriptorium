@@ -1098,10 +1098,10 @@ class ScriptoriumApp(Gtk.Window):
             subprocess.Popen(["xdg-open", str(HOME_DIR)])
 
     def on_launch_calibre(self, btn):
-        if self._is_flatpak_installed("com.calibredesk.calibre"):
-            subprocess.Popen(["flatpak", "run", "com.calibredesk.calibre"])
-        elif self._is_flatpak_installed("com.calibre_ebook.calibre"):
+        if self._is_flatpak_installed("com.calibre_ebook.calibre"):
             subprocess.Popen(["flatpak", "run", "com.calibre_ebook.calibre"])
+        elif self._is_flatpak_installed("com.calibredesk.calibre"):
+            subprocess.Popen(["flatpak", "run", "com.calibredesk.calibre"])
         elif subprocess.run(["which", "calibre"], capture_output=True).stdout:
             subprocess.Popen(["calibre"])
         else:

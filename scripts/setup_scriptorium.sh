@@ -142,7 +142,7 @@ TYPOGRAPHY_FONTS=(
 FLATPAK_APPS=(
     "md.obsidian.Obsidian"
     "io.gitlab.novelwriter.novelWriter"
-    "com.calibredesk.calibre"
+    "com.calibre_ebook.calibre"
 )
 
 # 3. APT Package Installation Phase

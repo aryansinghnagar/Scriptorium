@@ -115,7 +115,7 @@ fi
 
 echo "[3/3] Handling Flatpak applications..."
 if [ "${PURGE_FLATPAKS}" -eq 1 ]; then
-    FLATPAKS=("md.obsidian.Obsidian" "io.gitlab.novelwriter.novelWriter" "com.calibredesk.calibre")
+    FLATPAKS=("md.obsidian.Obsidian" "io.gitlab.novelwriter.novelWriter" "com.calibre_ebook.calibre")
     for app in "${FLATPAKS[@]}"; do
         if [ "${DRY_RUN}" -eq 1 ]; then
             echo "  [DRY-RUN] Would uninstall Flatpak: ${app}"
