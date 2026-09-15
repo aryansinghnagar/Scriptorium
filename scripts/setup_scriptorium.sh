@@ -242,9 +242,12 @@ else
                             echo "  [!] Typst digest mismatch: expected ${EXPECTED}, got ${ACTUAL}. Aborting binary install." >&2
                         fi
                     else
-                        echo "  [i] GitHub release digest field empty. Checking binary extraction..."
-                        TYPST_OK=1
+                        echo "  [!] ERROR: GitHub release digest unavailable. Refusing to install unverified binary." >&2
+                        echo "      Install Typst manually: cargo install --locked typst-cli" >&2
                     fi
+                else
+                    echo "  [!] Warning: GitHub API unreachable or rate-limited; Typst not installed." >&2
+                    echo "      Re-run setup later, or install manually: cargo install --locked typst-cli" >&2
                 fi
                 if [ "${TYPST_OK}" -eq 1 ]; then
                     tar -xf "${TEMP_DIR}/typst.tar.xz" -C "${TEMP_DIR}"
