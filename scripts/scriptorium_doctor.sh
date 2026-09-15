@@ -124,7 +124,7 @@ def check_tool(bin_name, version_cmd=None, required=True):
     ver = "unknown"
     if installed and version_cmd:
         try:
-            out = subprocess.check_output(version_cmd, shell=True, stderr=subprocess.STDOUT, timeout=5).decode("utf-8", "ignore")
+            out = subprocess.check_output(version_cmd, stderr=subprocess.STDOUT, timeout=5).decode("utf-8", "ignore")
             ver = out.splitlines()[0].strip() if out.splitlines() else "present"
         except Exception:
             ver = "installed (version check failed)"
@@ -136,12 +136,12 @@ def check_tool(bin_name, version_cmd=None, required=True):
             findings["summary"]["warnings"] += 1
     return {"installed": installed, "path": path or "", "version": ver, "status": status}
 
-findings["toolchain"]["git"] = check_tool("git", "git --version", required=True)
-findings["toolchain"]["pandoc"] = check_tool("pandoc", "pandoc --version", required=True)
-findings["toolchain"]["typst"] = check_tool("typst", "typst --version", required=False)
-findings["toolchain"]["python3"] = check_tool("python3", "python3 --version", required=True)
-findings["toolchain"]["zenity"] = check_tool("zenity", "zenity --version", required=False)
-findings["toolchain"]["focuswriter"] = check_tool("focuswriter", "focuswriter --version", required=False)
+findings["toolchain"]["git"] = check_tool("git", ["git", "--version"], required=True)
+findings["toolchain"]["pandoc"] = check_tool("pandoc", ["pandoc", "--version"], required=True)
+findings["toolchain"]["typst"] = check_tool("typst", ["typst", "--version"], required=False)
+findings["toolchain"]["python3"] = check_tool("python3", ["python3", "--version"], required=True)
+findings["toolchain"]["zenity"] = check_tool("zenity", ["zenity", "--version"], required=False)
+findings["toolchain"]["focuswriter"] = check_tool("focuswriter", ["focuswriter", "--version"], required=False)
 
 # Check Flatpaks if flatpak command exists
 flatpak_apps = {
@@ -154,7 +154,7 @@ for label, app_id in flatpak_apps.items():
     installed = False
     if flatpak_bin:
         try:
-            rc = subprocess.call(f"flatpak info {app_id}", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            rc = subprocess.call(["flatpak", "info", app_id], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             installed = (rc == 0)
         except Exception:
             pass
@@ -232,7 +232,7 @@ for wdir in target_worlds:
     wdoctor_report = {}
     if os.path.isfile(world_doctor_bin):
         try:
-            res = subprocess.run(f"bash \"{world_doctor_bin}\" \"{wdir}\" --json", shell=True, capture_output=True, text=True, timeout=15)
+            res = subprocess.run(["bash", world_doctor_bin, wdir, "--json"], capture_output=True, text=True, timeout=15)
             if res.stdout:
                 wdoctor_report = json.loads(res.stdout)
         except Exception as e:
@@ -243,8 +243,8 @@ for wdir in target_worlds:
     git_clean = True
     if os.path.isdir(os.path.join(wdir, ".git")):
         try:
-            git_commits = int(subprocess.check_output(f"git -C \"{wdir}\" rev-list --count HEAD", shell=True, stderr=subprocess.DEVNULL).decode().strip())
-            status_out = subprocess.check_output(f"git -C \"{wdir}\" status --porcelain", shell=True, stderr=subprocess.DEVNULL).decode().strip()
+            git_commits = int(subprocess.check_output(["git", "-C", wdir, "rev-list", "--count", "HEAD"], stderr=subprocess.DEVNULL).decode().strip())
+            status_out = subprocess.check_output(["git", "-C", wdir, "status", "--porcelain"], stderr=subprocess.DEVNULL).decode().strip()
             git_clean = (len(status_out) == 0)
         except Exception:
             pass
