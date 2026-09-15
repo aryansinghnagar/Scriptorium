@@ -761,9 +761,17 @@ class ScriptoriumApp(Gtk.Window):
         if dialog.run() == Gtk.ResponseType.OK:
             name = entry.get_text().strip()
             if name:
-                subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_universe.sh"), name], capture_output=True)
-                self.current_universe = name
-                self.refresh_universe_and_worlds()
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "init_universe.sh"), name]
+                self.set_status(f"Creating universe '{name}'...")
+
+                def on_universe_created():
+                    self.current_universe = name
+                    self.refresh_universe_and_worlds()
+
+                threading.Thread(
+                    target=self._run_async_command,
+                    args=(cmd, f"Universe '{name}' created successfully!", on_universe_created),
+                ).start()
         dialog.destroy()
 
     def on_new_world_clicked(self, btn):
@@ -788,13 +796,19 @@ class ScriptoriumApp(Gtk.Window):
                 if self.current_universe:
                     cmd.extend(["--universe", self.current_universe])
                 self.set_status(f"Scaffolding world '{wname}'...")
-                res = subprocess.run(cmd, capture_output=True, text=True)
-                self.refresh_universe_and_worlds()
-                # Select the newly created world
-                for name, path, label in self.discovered_worlds:
-                    if name == wname:
-                        self.combo_world.set_active_id(path)
-                        break
+
+                def on_world_created():
+                    self.refresh_universe_and_worlds()
+                    # Select the newly created world
+                    for name, path, label in self.discovered_worlds:
+                        if name == wname:
+                            self.combo_world.set_active_id(path)
+                            break
+
+                threading.Thread(
+                    target=self._run_async_command,
+                    args=(cmd, f"World '{wname}' created successfully!", on_world_created),
+                ).start()
         dialog.destroy()
 
     def on_quick_snapshot_clicked(self, btn):
