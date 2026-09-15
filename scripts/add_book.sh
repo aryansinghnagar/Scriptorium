@@ -9,7 +9,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Shared world discovery, resolution, and GUI helpers (Q-01)
 # shellcheck source=scripts/lib/worlds.sh

@@ -69,7 +69,9 @@ jobs:
 
       - name: ShellCheck static analysis
         run: |
-          shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium
+          # C-01: tests/ contain the same risky patterns as the main scripts;
+          # lib/ joined the tree with the Q-01 refactor.
+          shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh
 
       - name: Validate desktop launcher entries
         run: |
