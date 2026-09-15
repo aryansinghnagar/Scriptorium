@@ -152,6 +152,9 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 | Doc | What it is |
 | :--- | :--- |
 | [docs/AUTHOR_MANUAL.md](docs/AUTHOR_MANUAL.md) | Comprehensive Author's Field Manual for daily writing, lore building, and publication |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: ground rules, quality gate, commit style, submission flow |
+| [AUDIT.md](AUDIT.md) | Line-by-line external repository audit (22 findings) and the remediation roadmap behind the current hardening |
+| [SECURITY.md](SECURITY.md) | Security scope, installer privilege surface disclosure, and private vulnerability reporting |
 | [project.md](project.md) | Charter: goals, design invariants, hardware baseline, non-goals |
 | [plan.md](plan.md) | Build phases and what is done vs pending live verification |
 | [tasks.md](tasks.md) | Checklist of every deliverable |

@@ -9,6 +9,17 @@ Security priorities for Scriptorium focus on:
 - **Data Protection & Integrity**: Non-destructive operations, transactional directory creation, crash recovery, and verified backup archives.
 - **Supply Chain Integrity**: SHA-256 digest validation of downloaded binaries (e.g., Typst) and immutable pinning of external CI actions and dependencies.
 
+### Installer Privilege Surface (disclosed)
+
+`setup_scriptorium.sh` is the only component that elevates privileges. For transparency, everything it does with `sudo` is enumerated here:
+
+- `sudo apt-get update` and `sudo apt-get install` for the ~30 explicitly named packages and 7 font packages declared inside the script (no wildcards, no third-party PPAs).
+- `sudo flatpak remote-add --if-not-exists --system flathub` and `sudo flatpak install --system` (with `--user` fallback) for exactly the three Flathub app IDs listed in `docs/COMPATIBILITY.md`.
+- `sudo install -m 755` of the Typst release binary into `/usr/local/bin/typst` — performed **only** after the GitHub-published SHA-256 digest matches; installation is refused when the digest is unavailable.
+- `gio set metadata::trusted true` on the specific desktop launcher files the installer itself created (no bulk filesystem metadata changes).
+
+`uninstall_scriptorium.sh` reverts the desktop launchers, and with `--purge-flatpaks` also removes the Flatpak apps and `/usr/local/bin/typst`. No Scriptorium script writes outside `${HOME}` (world data), `/usr/local/bin/typst`, and the package/Flatpak targets declared above. Restores additionally refuse archives containing path-traversal members or non-sample git hooks.
+
 ---
 
 ## 2. Supported Versions
