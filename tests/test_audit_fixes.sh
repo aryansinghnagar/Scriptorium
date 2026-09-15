@@ -51,7 +51,7 @@ echo "  OK Test 4 passed: Export options processed"
 echo "[Test 5] World Doctor diagnostics on new schemas..."
 bash scripts/world_doctor.sh "${WORLD_PATH}" >/dev/null || true
 DOC_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json)"
-python3 -c "import json; d = json.loads('''${DOC_JSON}'''); assert d['notes'] >= 0"
+printf '%s' "${DOC_JSON}" | python3 -c "import json, sys; d = json.load(sys.stdin); assert d['notes'] >= 0"
 echo "  OK Test 5 passed: World doctor completed without runtime exceptions"
 
 echo "[Test 6] Concordance Engine & Multi-Era Chronology..."
@@ -82,7 +82,7 @@ grep -q "Aurelius" "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/01_Dramat
 grep -q "Solaris" "${WORLD_PATH}/01-Manuscript/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md"
 
 DOC_MULTI_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)"
-python3 -c "import json; d = json.loads('''${DOC_MULTI_JSON}'''); assert len(d['timeline_errors']) == 0"
+printf '%s' "${DOC_MULTI_JSON}" | python3 -c "import json, sys; d = json.load(sys.stdin); assert len(d['timeline_errors']) == 0"
 echo "  OK Test 6 passed: Concordance generated & multi-era dates validated"
 
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

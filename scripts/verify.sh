@@ -17,11 +17,19 @@ trap cleanup EXIT
 echo "[1/7] Script syntax & Python compilation validation..."
 for f in scripts/*.sh scripts/scriptorium; do
     if [ -f "$f" ]; then
-        bash -n "$f" && echo "  OK $f"
+        if ! bash -n "$f"; then
+            echo "  FAIL $f (bash syntax)" >&2
+            exit 1
+        fi
+        echo "  OK $f"
     fi
 done
 if command -v python3 >/dev/null; then
-    python3 -m py_compile scripts/scriptorium_app.py && echo "  OK scripts/scriptorium_app.py (Python syntax valid)"
+    if ! python3 -m py_compile scripts/scriptorium_app.py; then
+        echo "  FAIL scripts/scriptorium_app.py (Python compilation)" >&2
+        exit 1
+    fi
+    echo "  OK scripts/scriptorium_app.py (Python syntax valid)"
 fi
 
 echo "[2/7] JSON, XML & Documentation schema validation..."
@@ -98,23 +106,46 @@ if command -v pandoc >/dev/null; then
     else
         echo "  WARN pandoc lacks native typst writer (sed fallback will be used)"
     fi
-    printf '# Ch1\n\nHello *world*.\n' | pandoc -f markdown-citations -t typst -o "${TMP_VERIFY}/body.typ" 2>/dev/null && echo "  OK pandoc conversion"
+    if ! printf '# Ch1\n\nHello *world*.\n' | pandoc -f markdown-citations -t typst -o "${TMP_VERIFY}/body.typ" 2>/dev/null; then
+        echo "  FAIL pandoc markdown->typst conversion" >&2
+        exit 1
+    fi
+    echo "  OK pandoc conversion"
 else
     echo "  SKIP pandoc missing on this host"
 fi
 
 echo "[4/7] Typst compile smoke test (if installed)..."
 if command -v typst >/dev/null; then
-    (cd templates/typst && typst compile preview_sample.typ "${TMP_VERIFY}/preview.pdf") && echo "  OK typst compile" && ls -lh "${TMP_VERIFY}/preview.pdf"
+    if ! (cd templates/typst && typst compile preview_sample.typ "${TMP_VERIFY}/preview.pdf"); then
+        echo "  FAIL typst compile of preview_sample.typ" >&2
+        exit 1
+    fi
+    echo "  OK typst compile"
+    ls -lh "${TMP_VERIFY}/preview.pdf"
 else
     echo "  SKIP typst missing on this host (install per resources/software_catalog.md)"
 fi
 
 echo "[5/7] Desktop launcher validation..."
 if command -v desktop-file-validate >/dev/null; then
-    desktop-file-validate launchers/*.desktop && echo "  OK desktop files"
+    if ! desktop-file-validate launchers/*.desktop; then
+        echo "  FAIL desktop launcher validation" >&2
+        exit 1
+    fi
+    echo "  OK desktop files"
 else
-    grep -q '^TryExec=bash$' launchers/*.desktop && echo "  OK TryExec present in all launchers (validator tool skipped)"
+    TRYEXEC_FAIL=0
+    for lf in launchers/*.desktop; do
+        if ! grep -q '^TryExec=bash$' "$lf"; then
+            echo "  FAIL missing TryExec=bash in $lf" >&2
+            TRYEXEC_FAIL=1
+        fi
+    done
+    if [ "${TRYEXEC_FAIL}" -ne 0 ]; then
+        exit 1
+    fi
+    echo "  OK TryExec present in all launchers (validator tool skipped)"
 fi
 
 echo "[6/7] Functional Universe, World lifecycle, diagnostics & recovery (sandboxed HOME)..."
@@ -224,8 +255,14 @@ end_year: "-400 IE"
 An ancient cataclysm reshaping the realms.
 EOF
 
-DOCTOR_JSON=$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)
-python3 -c "import json; d = json.loads('''${DOCTOR_JSON}'''); assert d['notes'] >= 0; assert len(d['timeline_errors']) == 0; print('  OK world_doctor multi-era valid timeline passed')"
+DOCTOR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)"
+printf '%s' "${DOCTOR_JSON}" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+assert d['notes'] >= 0
+assert len(d['timeline_errors']) == 0
+print('  OK world_doctor multi-era valid timeline passed')
+"
 
 # Test chronological paradox detection
 cat > "${WORLD_PATH}/00-World-Bible/Characters/ParadoxLord.md" << 'EOF'
@@ -239,8 +276,13 @@ death_year: "Age of Fire 410"
 A chronologically inverted paradox lord.
 EOF
 
-DOCTOR_ERR_JSON=$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)
-python3 -c "import json; d = json.loads('''${DOCTOR_ERR_JSON}'''); assert any('ParadoxLord' in e['file'] for e in d['timeline_errors']); print('  OK world_doctor multi-era chronological paradox error caught')"
+DOCTOR_ERR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)"
+printf '%s' "${DOCTOR_ERR_JSON}" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+assert any('ParadoxLord' in e['file'] for e in d['timeline_errors'])
+print('  OK world_doctor multi-era chronological paradox error caught')
+"
 rm -f "${WORLD_PATH}/00-World-Bible/Characters/ParadoxLord.md"
 
 # 6f. Back-Matter Concordance & Dramatis Personae Engine
