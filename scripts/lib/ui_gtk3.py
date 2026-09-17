@@ -13,28 +13,32 @@ import os
 import subprocess
 import shutil
 import threading
-import json
 import re
+import logging
 from datetime import datetime
 from pathlib import Path
+
+logger = logging.getLogger("scriptorium.ui_gtk3")
 
 # Check GTK 3 availability
 try:
     import gi
     gi.require_version('Gtk', '3.0')
-    from gi.repository import Gtk, Gdk, GLib, Pango
+    from gi.repository import Gtk, Gdk, GLib
     HAS_GTK = True
 except (ImportError, ValueError):
     HAS_GTK = False
     class _DummyGtk:
-        class Window: pass
+        class Window:
+            pass
     Gtk = _DummyGtk()
 
 HOME_DIR = Path.home()
 UNIVERSES_DIR = HOME_DIR / "Universes"
 MANUSCRIPTS_DIR = HOME_DIR / "Manuscripts"
 WORLDS_DIR = HOME_DIR / "Worlds"
-SCRIPT_DIR = Path(__file__).resolve().parent
+LIB_DIR = Path(__file__).resolve().parent
+SCRIPT_DIR = LIB_DIR.parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 
 class ScriptoriumApp(Gtk.Window):
@@ -124,8 +128,8 @@ class ScriptoriumApp(Gtk.Window):
             screen = Gdk.Screen.get_default()
             if screen:
                 Gtk.StyleContext.add_provider_for_screen(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Could not apply GTK CSS styling: %s", e)
 
     def set_status(self, message):
         self.statusbar.pop(self.status_context)
@@ -856,13 +860,13 @@ class ScriptoriumApp(Gtk.Window):
                                 if ch_file.is_file():
                                     try:
                                         content = ch_file.read_text(encoding="utf-8", errors="ignore")
-                                        lines = [l for l in content.splitlines() if not l.startswith("@") and not l.startswith("%")]
+                                        lines = [line_str for line_str in content.splitlines() if not line_str.startswith("@") and not line_str.startswith("%")]
                                         wc = len(" ".join(lines).split())
                                         act_words += wc
                                         total_chapters += 1
                                         self.manuscript_store.append(a_iter, [ch_file.name, "Scene / Chapter", f"{wc:,} words", str(ch_file)])
-                                    except Exception:
-                                        pass
+                                    except Exception as e:
+                                        logger.debug("Error calculating scene word count for %s: %s", ch_file, e)
                             self.manuscript_store.set_value(a_iter, 2, f"{act_words:,} words")
                             book_words += act_words
                     self.manuscript_store.set_value(b_iter, 2, f"{book_words:,} words")
@@ -888,8 +892,8 @@ class ScriptoriumApp(Gtk.Window):
                     parts = line.split("|", 2)
                     if len(parts) == 3:
                         self.history_store.append([parts[0], parts[1], parts[2]])
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Could not fetch git history: %s", e)
 
     def update_toolchain_badges(self):
         tools = [
@@ -1020,12 +1024,18 @@ class ScriptoriumApp(Gtk.Window):
 
             # Build clean metadata tag header
             tag_lines = []
-            if pov: tag_lines.append(f"@pov: {pov}")
-            if cast: tag_lines.append(f"@char: {cast}")
-            if loc: tag_lines.append(f"@location: {loc}")
-            if thread: tag_lines.append(f"@thread: {thread}")
-            if t_marker: tag_lines.append(f"@time: {t_marker}")
-            if status: tag_lines.append(f"@status: {status}")
+            if pov:
+                tag_lines.append(f"@pov: {pov}")
+            if cast:
+                tag_lines.append(f"@char: {cast}")
+            if loc:
+                tag_lines.append(f"@location: {loc}")
+            if thread:
+                tag_lines.append(f"@thread: {thread}")
+            if t_marker:
+                tag_lines.append(f"@time: {t_marker}")
+            if status:
+                tag_lines.append(f"@status: {status}")
 
             new_body = "\n".join(body_lines).lstrip("\n")
             parts = []
@@ -1442,7 +1452,8 @@ class ScriptoriumApp(Gtk.Window):
         try:
             res = subprocess.run(["flatpak", "info", app_id], capture_output=True)
             return res.returncode == 0
-        except Exception:
+        except Exception as e:
+            logger.debug("Flatpak info probe failed for %s: %s", app_id, e)
             return False
 
     def _launch_in_background(self, chooser):

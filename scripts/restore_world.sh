@@ -166,7 +166,12 @@ DEST_PARENT=""
 if [ -n "${DEST_PARENT_CLI}" ]; then
     DEST_PARENT="${DEST_PARENT_CLI}"
 elif [ -n "${UNIVERSE_CLI}" ]; then
-    DEST_PARENT="${UNIVERSES_BASE}/${UNIVERSE_CLI}"
+    RESOLVED_U="$(resolve_universe_dir "${UNIVERSE_CLI}")"
+    if [ -n "${RESOLVED_U}" ]; then
+        DEST_PARENT="${RESOLVED_U}"
+    else
+        DEST_PARENT="${UNIVERSES_BASE}/${UNIVERSE_CLI}"
+    fi
 elif [ -f "${EXTRACTED_DIR}/manuscript.yaml" ] || [ -d "${EXTRACTED_DIR}/Book-01" ]; then
     DEST_PARENT="${MANUSCRIPTS_BASE}"
 elif [ -d "${UNIVERSES_BASE}/Default-Universe" ]; then

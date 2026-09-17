@@ -81,9 +81,7 @@ fi
 SELECTED_WORLD=""
 
 if [ -n "${WORLD_CLI}" ]; then
-    SELECTED_WORLD="$(resolve_manuscript_dir "${WORLD_CLI}")"
-    [ -z "${SELECTED_WORLD}" ] && SELECTED_WORLD="$(resolve_world_dir "${WORLD_CLI}" "${UNIVERSE_CLI}")"
-    [ -z "${SELECTED_WORLD}" ] && SELECTED_WORLD="$(resolve_universe_dir "${WORLD_CLI}")"
+    SELECTED_WORLD="$(resolve_target_dir "${WORLD_CLI}" "${UNIVERSE_CLI}")"
     if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
         echo "Error: Target '${WORLD_CLI}' not found." >&2
         exit 2

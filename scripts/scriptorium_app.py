@@ -7,9 +7,11 @@ and seamless GTK 3 & Zenity desktop fallbacks for Linux Mint, Debian & Wayland/X
 """
 
 import sys
-import os
 import argparse
+import logging
 from pathlib import Path
+
+logger = logging.getLogger("scriptorium_app")
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -23,7 +25,7 @@ def try_launch_adw() -> bool:
         if HAS_ADW:
             return run_adw_app() == 0
     except Exception as e:
-        pass
+        logger.debug("Failed to launch Libadwaita / GTK 4 UI: %s", e)
     return False
 
 
@@ -34,7 +36,7 @@ def try_launch_gtk3() -> bool:
         if HAS_GTK:
             return run_gtk3_app()
     except Exception as e:
-        pass
+        logger.debug("Failed to launch GTK 3 UI: %s", e)
     return False
 
 
@@ -63,13 +65,13 @@ def main():
         try:
             from lib.ui_adw import HAS_ADW
             has_adw = HAS_ADW
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Libadwaita probe failed: %s", e)
         try:
             from lib.ui_gtk3 import HAS_GTK
             has_gtk3 = HAS_GTK
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("GTK 3 probe failed: %s", e)
         print(f"Libadwaita / GTK 4: {'AVAILABLE' if has_adw else 'NOT AVAILABLE'}")
         print(f"GTK 3 (PyGObject): {'AVAILABLE' if has_gtk3 else 'NOT AVAILABLE'}")
         sys.exit(0)

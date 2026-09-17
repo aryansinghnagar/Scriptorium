@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
@@ -52,6 +54,20 @@ jobs:
           typst --version
           shellcheck --version
           desktop-file-validate --version
+
+      - name: Gitleaks secret scanning
+        uses: gitleaks/gitleaks-action@7ef8627b5e406aa84360e290f6797a14e9f5b6f3 # v2.3.8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Python security & static analysis (ruff)
+        run: |
+          pip install ruff
+          ruff check .
+
+      - name: Run Python unit tests
+        run: |
+          python3 -m unittest discover -s tests -p "test_*.py" -v
 
       - name: Bash syntax validation (bash -n)
         run: |

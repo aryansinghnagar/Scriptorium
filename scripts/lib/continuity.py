@@ -11,11 +11,13 @@ Zero external runtime dependencies; operates 100% offline.
 """
 
 import sys
-import os
 import re
 import json
 import argparse
+import logging
 from pathlib import Path
+
+logger = logging.getLogger("scriptorium.continuity")
 
 TRAIT_PATTERNS = {
     "eye_color": [
@@ -42,23 +44,38 @@ FRONTMATTER_REGEX = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 def normalize_trait(trait_type: str, raw_val: str) -> str:
     v = raw_val.lower().strip()
     if trait_type == "eye_color":
-        if "blue" in v or "sapphire" in v: return "blue"
-        if "green" in v or "emerald" in v: return "green"
-        if "brown" in v or "dark" in v: return "brown"
-        if "hazel" in v: return "hazel"
-        if "grey" in v or "gray" in v: return "grey"
-        if "black" in v: return "black"
-        if "amber" in v or "golden" in v: return "amber"
+        if "blue" in v or "sapphire" in v:
+            return "blue"
+        if "green" in v or "emerald" in v:
+            return "green"
+        if "brown" in v or "dark" in v:
+            return "brown"
+        if "hazel" in v:
+            return "hazel"
+        if "grey" in v or "gray" in v:
+            return "grey"
+        if "black" in v:
+            return "black"
+        if "amber" in v or "golden" in v:
+            return "amber"
     elif trait_type == "hair_color":
-        if "black" in v or "raven" in v: return "black"
-        if "blonde" in v or "blond" in v or "golden" in v: return "blonde"
-        if "brown" in v or "brunette" in v: return "brown"
-        if "red" in v or "auburn" in v or "ginger" in v: return "red"
-        if "silver" in v or "white" in v: return "silver/white"
-        if "grey" in v or "gray" in v: return "grey"
+        if "black" in v or "raven" in v:
+            return "black"
+        if "blonde" in v or "blond" in v or "golden" in v:
+            return "blonde"
+        if "brown" in v or "brunette" in v:
+            return "brown"
+        if "red" in v or "auburn" in v or "ginger" in v:
+            return "red"
+        if "silver" in v or "white" in v:
+            return "silver/white"
+        if "grey" in v or "gray" in v:
+            return "grey"
     elif trait_type == "status":
-        if "dead" in v or "deceased" in v: return "deceased"
-        if "alive" in v: return "alive"
+        if "dead" in v or "deceased" in v:
+            return "deceased"
+        if "alive" in v:
+            return "alive"
     return v
 
 
@@ -104,8 +121,8 @@ def extract_lore_profiles(world_dir: Path) -> dict:
                     "file": str(md_file.relative_to(world_dir)).replace("\\", "/"),
                     "traits": traits
                 }
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to read lore profile from %s: %s", md_file, e)
     return profiles
 
 
@@ -148,7 +165,9 @@ def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
                 line_traits = extract_traits_from_text(line)
                 for trait_type, vals in line_traits.items():
                     for val in vals:
-                        for char_name in scene_chars:
+                        matched_chars = [c for c in scene_chars if re.search(r'\b' + re.escape(c) + r'\b', line, re.IGNORECASE)]
+                        target_chars = matched_chars if matched_chars else scene_chars
+                        for char_name in target_chars:
                             if char_name not in scene_mentions:
                                 scene_mentions[char_name] = []
                             scene_mentions[char_name].append((rel_path, line_idx, trait_type, val))
@@ -168,23 +187,23 @@ def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
                                         "line": line_idx,
                                         "message": f"Character '{char_name}' has lore {trait_type} '{'/'.join(bible_traits)}' in World Bible, but scene asserts '{val}'."
                                     })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Failed to scan scene file %s: %s", md_file, e)
 
     # Compare inter-scene trait consistency (e.g. Book 1 vs Book 2)
     for char_name, mentions in scene_mentions.items():
         by_trait = {}
-        for f, l, t_type, val in mentions:
+        for file_path, line_no, t_type, val in mentions:
             if t_type not in by_trait:
                 by_trait[t_type] = []
-            by_trait[t_type].append((f, l, val))
+            by_trait[t_type].append((file_path, line_no, val))
 
         for t_type, occurrences in by_trait.items():
             distinct_vals = set(val for _, _, val in occurrences)
             if len(distinct_vals) > 1:
                 # Contradiction across scenes!
                 first_f, first_l, first_v = occurrences[0]
-                for f, l, v in occurrences[1:]:
+                for file_path, line_no, v in occurrences[1:]:
                     if v != first_v:
                         findings.append({
                             "id": "CNT-102",
@@ -193,9 +212,9 @@ def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
                             "trait": t_type,
                             "expected": first_v,
                             "found": v,
-                            "file": f,
-                            "line": l,
-                            "message": f"Character '{char_name}' has conflicting {t_type} assertions across scenes: '{first_v}' in {first_f}:{first_l} vs '{v}' in {f}:{l}."
+                            "file": file_path,
+                            "line": line_no,
+                            "message": f"Character '{char_name}' has conflicting {t_type} assertions across scenes: '{first_v}' in {first_f}:{first_l} vs '{v}' in {file_path}:{line_no}."
                         })
                         break
 
@@ -229,7 +248,6 @@ def main():
     args = parser.parse_args()
 
     # Discover world / manuscript if not provided
-    script_dir = Path(__file__).resolve().parent.parent
     world_dir = args.world
     manuscript_dir = args.manuscript
 
@@ -258,7 +276,7 @@ def main():
     if args.json:
         print(json.dumps(report, indent=2))
     else:
-        print(f"=== Scriptorium Narrative Continuity Report ===")
+        print("=== Scriptorium Narrative Continuity Report ===")
         print(f"World: {report['world']} | Manuscript: {report['manuscript'] or 'N/A'}")
         print(f"Profiled Entities: {report['entities_profiled']}")
         print(f"Continuity Findings: {report['total_findings']}\n")

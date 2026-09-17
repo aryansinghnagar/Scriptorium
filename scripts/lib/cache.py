@@ -10,7 +10,10 @@ import sys
 import json
 import re
 import argparse
+import logging
 from pathlib import Path
+
+logger = logging.getLogger("scriptorium.cache")
 
 CACHE_VERSION = 1
 CACHE_FILENAME = ".scriptorium_cache.json"
@@ -41,8 +44,8 @@ def load_cache(project_dir: str) -> dict:
             data = json.load(f)
             if data.get("version") == CACHE_VERSION and isinstance(data.get("files"), dict):
                 return data
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("Failed to load or parse cache at %s: %s", cache_path, e)
     return {"version": CACHE_VERSION, "files": {}}
 
 
@@ -50,16 +53,24 @@ def save_cache(project_dir: str, cache_data: dict) -> bool:
     cache_path = get_cache_path(project_dir)
     tmp_path = cache_path.with_suffix(".tmp")
     try:
-        with open(tmp_path, "w", encoding="utf-8") as f:
+        # Create with restrictive 0o600 permissions at fd creation level
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        fd = os.open(tmp_path, flags, 0o600)
+        with open(fd, "w", encoding="utf-8") as f:
             json.dump(cache_data, f, indent=2, ensure_ascii=False)
+        try:
+            os.chmod(tmp_path, 0o600)
+        except OSError as e:
+            logger.debug("os.chmod 0o600 failed on %s: %s", tmp_path, e)
         tmp_path.replace(cache_path)
         return True
     except Exception as e:
+        logger.error("Failed to save cache to %s: %s", cache_path, e)
         if tmp_path.exists():
             try:
                 tmp_path.unlink()
-            except Exception:
-                pass
+            except Exception as unl_err:
+                logger.debug("Failed to clean up temporary cache file %s: %s", tmp_path, unl_err)
         return False
 
 
@@ -120,6 +131,7 @@ def parse_markdown_file(file_path: Path) -> dict:
             "frontmatter": frontmatter,
         }
     except Exception as e:
+        logger.warning("Error reading or parsing markdown file %s: %s", file_path, e)
         return {
             "mtime": 0,
             "size": 0,
@@ -133,6 +145,8 @@ def parse_markdown_file(file_path: Path) -> dict:
 
 def scan_project(project_dir: str, force: bool = False) -> dict:
     pdir = Path(project_dir).resolve()
+    if not pdir.is_dir():
+        return {"version": CACHE_VERSION, "files": {}}
     cache = {"version": CACHE_VERSION, "files": {}} if force else load_cache(str(pdir))
     files_cache = cache.get("files", {})
     updated = False
@@ -154,7 +168,8 @@ def scan_project(project_dir: str, force: bool = False) -> dict:
             ):
                 files_cache[rel_path] = parse_markdown_file(md_path)
                 updated = True
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to inspect %s: %s", md_path, e)
             continue
 
     # Remove deleted files from cache

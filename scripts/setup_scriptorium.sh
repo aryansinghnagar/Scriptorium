@@ -20,6 +20,7 @@ Usage:
 Options:
   --dry-run          Simulate and log all planned system and user mutations
                      without making changes or invoking sudo
+  --no-sudo          Run in user-space only mode without requiring root/sudo privileges
   -f, --force        Bypass OS distribution / version support gating
   -h, --help         Show this help and exit
 
@@ -31,11 +32,14 @@ USAGE
 
 DRY_RUN=0
 FORCE_OS=0
+USE_SUDO=1
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --dry-run)
             DRY_RUN=1; shift ;;
+        --no-sudo)
+            USE_SUDO=0; shift ;;
         -f|--force)
             FORCE_OS=1; shift ;;
         -h|--help)
@@ -45,12 +49,31 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+# Initialize installer audit logging
+LOG_DIR="${TMPDIR:-/tmp}"
+LOG_FILE="${LOG_DIR}/scriptorium-install-$(date +%Y%m%d-%H%M%S).log"
+if mkdir -p "${LOG_DIR}" 2>/dev/null && touch "${LOG_FILE}" 2>/dev/null; then
+    exec > >(tee -a "${LOG_FILE}") 2>&1
+fi
+
 echo "============================================================"
 echo "  Scriptorium — Automated Setup for Linux Writing System"
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [MODE: DRY-RUN SIMULATION — No system changes will be made]"
 fi
+if [ "${USE_SUDO}" -eq 0 ]; then
+    echo "  [MODE: USER-SPACE ONLY (--no-sudo) — APT & system packages bypassed]"
+fi
+if [ -f "${LOG_FILE:-}" ]; then
+    echo "  [AUDIT LOG: ${LOG_FILE}]"
+fi
 echo "============================================================"
+
+# Reference lockfile if present
+LOCKFILE="${PROJECT_ROOT}/dependencies.lock"
+if [ -f "${LOCKFILE}" ]; then
+    echo "[i] Referenced dependency lockfile: ${LOCKFILE}"
+fi
 
 # 1. OS & Distribution Detection (SEC-01)
 OS_ID="unknown"
@@ -95,10 +118,14 @@ else
     echo "[✓] Verified platform compatibility: ${OS_PRETTY}"
 fi
 
-# 2. Check sudo availability (unless dry-run)
-if [ "${DRY_RUN}" -eq 0 ]; then
+# 2. Check sudo availability and authorization early (unless dry-run or --no-sudo)
+if [ "${DRY_RUN}" -eq 0 ] && [ "${USE_SUDO}" -eq 1 ]; then
     if ! command -v sudo &> /dev/null; then
-        echo "[!] Error: sudo is not installed or not in PATH. Please run as root or install sudo." >&2
+        echo "[!] Error: sudo is not installed or not in PATH. Please run with --no-sudo for user-space installation or install sudo." >&2
+        exit 2
+    fi
+    if ! sudo -v; then
+        echo "[!] Error: sudo authorization failed. Please run with valid sudo privileges or use --no-sudo." >&2
         exit 2
     fi
 fi
@@ -146,29 +173,36 @@ FLATPAK_APPS=(
 )
 
 # 3. APT Package Installation Phase
-echo "[1/6] Updating package repositories..."
-if [ "${DRY_RUN}" -eq 1 ]; then
-    echo "  [DRY-RUN] Would run: sudo apt-get update -y"
+if [ "${USE_SUDO}" -eq 0 ]; then
+    echo "[1/6] Skipping APT system package updates (--no-sudo mode)..."
+    echo "  [i] Ensure core utilities (git, pandoc, flatpak, python3-gi, fonts) are present."
+    echo "[2/6] Skipping APT package installation (--no-sudo mode)..."
+    echo "[2b/6] Skipping APT font package installation (--no-sudo mode)..."
 else
-    sudo apt-get update -y
-fi
+    echo "[1/6] Updating package repositories..."
+    if [ "${DRY_RUN}" -eq 1 ]; then
+        echo "  [DRY-RUN] Would run: sudo apt-get update -y"
+    else
+        sudo apt-get update -y
+    fi
 
-echo "[2/6] Installing required & recommended APT packages..."
-ALL_APT_CORE=("${REQUIRED_APT_PACKAGES[@]}" "${RECOMMENDED_APT_PACKAGES[@]}")
-if [ "${DRY_RUN}" -eq 1 ]; then
-    echo "  [DRY-RUN] Would install core packages: ${ALL_APT_CORE[*]}"
-else
-    sudo apt-get install -y "${ALL_APT_CORE[@]}"
-fi
+    echo "[2/6] Installing required & recommended APT packages..."
+    ALL_APT_CORE=("${REQUIRED_APT_PACKAGES[@]}" "${RECOMMENDED_APT_PACKAGES[@]}")
+    if [ "${DRY_RUN}" -eq 1 ]; then
+        echo "  [DRY-RUN] Would install core packages: ${ALL_APT_CORE[*]}"
+    else
+        sudo apt-get install -y "${ALL_APT_CORE[@]}"
+    fi
 
-echo "[2b/6] Installing book typography fonts..."
-if [ "${DRY_RUN}" -eq 1 ]; then
-    echo "  [DRY-RUN] Would install fonts: ${TYPOGRAPHY_FONTS[*]}"
-else
-    if ! sudo apt-get install -y "${TYPOGRAPHY_FONTS[@]}"; then
-        echo "[!] Warning: Some primary font packages unavailable. Attempting Libertinus fallback..." >&2
-        if ! sudo apt-get install -y fonts-libertinus; then
-            echo "[!] Notice: Libertinus fallback unavailable via APT. System will use DejaVu Serif fallback." >&2
+    echo "[2b/6] Installing book typography fonts..."
+    if [ "${DRY_RUN}" -eq 1 ]; then
+        echo "  [DRY-RUN] Would install fonts: ${TYPOGRAPHY_FONTS[*]}"
+    else
+        if ! sudo apt-get install -y "${TYPOGRAPHY_FONTS[@]}"; then
+            echo "[!] Warning: Some primary font packages unavailable. Attempting Libertinus fallback..." >&2
+            if ! sudo apt-get install -y fonts-libertinus; then
+                echo "[!] Notice: Libertinus fallback unavailable via APT. System will use DejaVu Serif fallback." >&2
+            fi
         fi
     fi
 fi
@@ -178,8 +212,14 @@ echo "[3/6] Configuring Flathub repository..."
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [DRY-RUN] Would add Flathub remote repository if missing"
 else
-    if ! flatpak remotes --system 2>/dev/null | grep -q "flathub"; then
-        sudo flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    if [ "${USE_SUDO}" -eq 1 ]; then
+        if ! flatpak remotes --system 2>/dev/null | grep -q "flathub"; then
+            sudo flatpak remote-add --if-not-exists --system flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+        fi
+    else
+        if ! flatpak remotes --user 2>/dev/null | grep -q "flathub"; then
+            flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+        fi
     fi
 fi
 
@@ -190,11 +230,13 @@ flatpak_install() {
         echo "  [DRY-RUN] Would install Flatpak: ${app_id}"
         return 0
     fi
-    if sudo flatpak install -y --noninteractive --system "flathub" "$app_id" 2>/dev/null; then
-        echo "  [✓] Installed ${app_id} (system scope)"
-        return 0
+    if [ "${USE_SUDO}" -eq 1 ]; then
+        if sudo flatpak install -y --noninteractive --system "flathub" "$app_id" 2>/dev/null; then
+            echo "  [✓] Installed ${app_id} (system scope)"
+            return 0
+        fi
     fi
-    echo "  [i] System flatpak install failed for ${app_id}, trying --user scope..."
+    echo "  [i] Trying --user scope flatpak install for ${app_id}..."
     if flatpak install -y --noninteractive --user "flathub" "$app_id" 2>/dev/null; then
         echo "  [✓] Installed ${app_id} (user scope)"
         return 0
@@ -207,59 +249,65 @@ for app in "${FLATPAK_APPS[@]}"; do
     flatpak_install "$app"
 done
 
-# 5. Typst Installation Phase (with SHA-256 Digest Verification)
+# 5. Typst Installation Phase (with Hardcoded SHA-256 Digest Verification)
 echo "[5/6] Checking Typst installation..."
+TYPST_PINNED_VERSION="0.13.0"
+TYPST_SHA256_X86_64="a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c"
+TYPST_SHA256_AARCH64="5aa8d74a3d906e60ea12a66ac2f37f8eef1b14cbad7182a745e393a10c23dcee"
+
 ARCH="$(uname -m)"
+EXPECTED_DIGEST=""
 case "${ARCH}" in
-    x86_64|amd64) TYPST_ARCH="x86_64-unknown-linux-musl" ;;
-    aarch64|arm64) TYPST_ARCH="aarch64-unknown-linux-musl" ;;
-    *) echo "[!] Unsupported arch '${ARCH}' for precompiled Typst. Install via cargo: cargo install --locked typst-cli"; TYPST_ARCH="" ;;
+    x86_64|amd64)
+        TYPST_ARCH="x86_64-unknown-linux-musl"
+        EXPECTED_DIGEST="${TYPST_SHA256_X86_64}"
+        ;;
+    aarch64|arm64)
+        TYPST_ARCH="aarch64-unknown-linux-musl"
+        EXPECTED_DIGEST="${TYPST_SHA256_AARCH64}"
+        ;;
+    *)
+        echo "[!] Unsupported arch '${ARCH}' for precompiled Typst. Install via cargo: cargo install --locked typst-cli"
+        TYPST_ARCH=""
+        ;;
 esac
 
 if [ "${DRY_RUN}" -eq 1 ]; then
-    echo "  [DRY-RUN] Would download latest Typst musl binary (${TYPST_ARCH}), verify SHA-256 digest, and install to /usr/local/bin/typst"
+    echo "  [DRY-RUN] Would download pinned Typst v${TYPST_PINNED_VERSION} musl binary (${TYPST_ARCH:-unknown}), verify SHA-256 digest, and install to $([ "${USE_SUDO}" -eq 1 ] && echo "/usr/local/bin/typst" || echo "${HOME}/.local/bin/typst")"
 else
     if ! command -v typst &> /dev/null; then
         if [ -n "${TYPST_ARCH}" ]; then
             TEMP_DIR=$(mktemp -d)
             trap 'rm -rf "${TEMP_DIR:-}"' EXIT
-            echo "  Fetching latest Typst release metadata from GitHub API..."
-            TYPST_URL="https://github.com/typst/typst/releases/latest/download/typst-${TYPST_ARCH}.tar.xz"
+            echo "  Downloading pinned Typst v${TYPST_PINNED_VERSION} (${TYPST_ARCH})..."
+            TYPST_URL="https://github.com/typst/typst/releases/download/v${TYPST_PINNED_VERSION}/typst-${TYPST_ARCH}.tar.xz"
             if curl -L -f -sS -o "${TEMP_DIR}/typst.tar.xz" "${TYPST_URL}"; then
-                TYPST_TAG=$(curl -sS -f "https://api.github.com/repos/typst/typst/releases/latest" 2>/dev/null | jq -r '.tag_name // empty' 2>/dev/null || true)
                 TYPST_OK=0
-                if [ -n "${TYPST_TAG}" ]; then
-                    EXPECTED=$(curl -sS -f "https://api.github.com/repos/typst/typst/releases/tags/${TYPST_TAG}" 2>/dev/null \
-                        | jq -r --arg asset "typst-${TYPST_ARCH}.tar.xz" \
-                            '.assets[] | select(.name == $asset) | .digest // empty' 2>/dev/null || true)
-                    if [ -n "${EXPECTED}" ]; then
-                        EXPECTED=${EXPECTED#sha256:}
-                    else
-                        EXPECTED=$(curl -sS -f "https://github.com/typst/typst/releases/download/${TYPST_TAG}/typst-${TYPST_ARCH}.tar.xz.sha256" 2>/dev/null | cut -d' ' -f1 || true)
-                    fi
-                    ACTUAL=$(sha256sum "${TEMP_DIR}/typst.tar.xz" | cut -d' ' -f1)
-                    if [ -n "${EXPECTED}" ]; then
-                        if [ "${EXPECTED}" = "${ACTUAL}" ]; then
-                            TYPST_OK=1
-                            echo "  [✓] Typst tarball digest verified (sha256 ${ACTUAL:0:16}...)"
-                        else
-                            echo "  [!] Typst digest mismatch: expected ${EXPECTED}, got ${ACTUAL}. Aborting binary install." >&2
-                        fi
-                    else
-                        TYPST_OK=0
-                        echo "  [!] Refusing to install unverified binary: upstream SHA-256 digest unavailable." >&2
-                        echo "      Install manually or via cargo: cargo install --locked typst-cli" >&2
-                    fi
+                ACTUAL=$(sha256sum "${TEMP_DIR}/typst.tar.xz" | cut -d' ' -f1)
+                if [ -z "${EXPECTED_DIGEST}" ]; then
+                    TYPST_OK=0
+                    echo "  [!] Refusing to install unverified binary: upstream SHA-256 digest unavailable." >&2
+                    echo "      Install manually or via cargo: cargo install --locked typst-cli" >&2
+                elif [ "${EXPECTED_DIGEST}" = "${ACTUAL}" ]; then
+                    TYPST_OK=1
+                    echo "  [✓] Typst tarball digest verified (sha256 ${ACTUAL:0:16}...)"
                 else
-                    echo "  [!] Warning: GitHub API unreachable or rate-limited; Typst not installed." >&2
-                    echo "      Re-run setup later, or install manually: cargo install --locked typst-cli" >&2
+                    TYPST_OK=0
+                    echo "  [!] Typst digest mismatch: expected ${EXPECTED_DIGEST}, got ${ACTUAL}. Aborting binary install." >&2
                 fi
+
                 if [ "${TYPST_OK}" -eq 1 ]; then
                     tar -xf "${TEMP_DIR}/typst.tar.xz" -C "${TEMP_DIR}"
                     TYPST_BIN=$(find "${TEMP_DIR}" -type f -name "typst" | head -n 1)
                     if [ -n "${TYPST_BIN}" ]; then
-                        sudo install -m 755 "${TYPST_BIN}" /usr/local/bin/typst
-                        echo "  [✓] Typst installed successfully to /usr/local/bin/typst"
+                        if [ "${USE_SUDO}" -eq 1 ]; then
+                            sudo install -m 755 "${TYPST_BIN}" /usr/local/bin/typst
+                            echo "  [✓] Typst installed successfully to /usr/local/bin/typst"
+                        else
+                            mkdir -p "${HOME}/.local/bin"
+                            install -m 755 "${TYPST_BIN}" "${HOME}/.local/bin/typst"
+                            echo "  [✓] Typst installed successfully to ${HOME}/.local/bin/typst"
+                        fi
                     fi
                 fi
             else
@@ -335,6 +383,9 @@ else
     echo "4. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_scriptorium_rules.json"
     echo "5. Connect an external drive and configure Déjà Dup for 3-2-1 backups."
     echo "============================================================"
+    if [ -f "${LOG_FILE:-}" ]; then
+        echo "Setup Audit Log: ${LOG_FILE}"
+    fi
 
     if command -v notify-send &> /dev/null; then
         notify-send "Scriptorium Setup Complete" "All tools, fonts, Typst, and desktop launchers are ready!" -i accessories-text-editor 2>/dev/null || true

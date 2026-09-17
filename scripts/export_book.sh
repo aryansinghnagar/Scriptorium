@@ -115,10 +115,7 @@ if [ -z "${TARGET_DIR}" ]; then
 fi
 
 if [ -n "${TARGET_DIR}" ] && [ ! -d "${TARGET_DIR}" ]; then
-    RESOLVED="$(resolve_manuscript_dir "${TARGET_DIR}")"
-    if [ -z "${RESOLVED}" ]; then
-        RESOLVED="$(resolve_world_dir "${TARGET_DIR}")"
-    fi
+    RESOLVED="$(resolve_target_dir "${TARGET_DIR}")"
     if [ -n "${RESOLVED}" ]; then
         TARGET_DIR="${RESOLVED}"
     fi
@@ -200,11 +197,18 @@ SELECTED_VOLUME=""
 if [ -n "${BOOK_VOLUME_CLI}" ]; then
     if [ "${BOOK_VOLUME_CLI}" = "all" ] || [ "${BOOK_VOLUME_CLI}" = "ALL" ] || [ "${BOOK_VOLUME_CLI}" = "omnibus" ]; then
         SELECTED_VOLUME="all"
-    elif [ -d "${MANUSCRIPT_DIR}/${BOOK_VOLUME_CLI}" ]; then
-        SELECTED_VOLUME="${BOOK_VOLUME_CLI}"
     else
-        echo "Error: Requested book volume '${BOOK_VOLUME_CLI}' not found in ${MANUSCRIPT_DIR}." >&2
-        exit 2
+        # Reject path traversal components (Issue 5)
+        if [[ "${BOOK_VOLUME_CLI}" == *".."* ]] || [[ "${BOOK_VOLUME_CLI}" == *"/"* ]] || [[ "${BOOK_VOLUME_CLI}" == *"\\"* ]]; then
+            echo "Error: Invalid volume name '${BOOK_VOLUME_CLI}'. Volume name cannot contain path traversal components ('..') or slashes." >&2
+            exit 2
+        fi
+        if [ -d "${MANUSCRIPT_DIR}/${BOOK_VOLUME_CLI}" ]; then
+            SELECTED_VOLUME="${BOOK_VOLUME_CLI}"
+        else
+            echo "Error: Requested book volume '${BOOK_VOLUME_CLI}' not found in ${MANUSCRIPT_DIR}." >&2
+            exit 2
+        fi
     fi
 elif [ ${#AVAILABLE_BOOKS[@]} -gt 1 ]; then
     if has_gui; then

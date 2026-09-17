@@ -34,6 +34,12 @@ if command -v python3 >/dev/null; then
             echo "  OK $py (Python syntax valid)"
         fi
     done
+    if ! python3 -m unittest discover -s tests -p "test_*.py" > "${TMP_VERIFY}/py_unit.log" 2>&1; then
+        echo "  FAIL Python unit tests (unittest discover tests/test_*.py)" >&2
+        cat "${TMP_VERIFY}/py_unit.log" >&2
+        exit 1
+    fi
+    echo "  OK Python unit tests (unittest discover tests/test_*.py)"
 fi
 
 echo "[2/7] JSON, XML & Documentation schema validation..."

@@ -5,19 +5,20 @@ Implements adaptive modern desktop views, system dark-mode synchronization,
 and responsive controls for GNOME / modern Linux desktops.
 """
 
-import os
 import sys
 import subprocess
 import threading
-import json
+import logging
 from pathlib import Path
+
+logger = logging.getLogger("scriptorium.ui_adw")
 
 HAS_ADW = False
 try:
     import gi
     gi.require_version('Gtk', '4.0')
     gi.require_version('Adw', '1')
-    from gi.repository import Gtk, Adw, GLib, Gio
+    from gi.repository import Gtk, Adw, GLib
     HAS_ADW = True
 except (ImportError, ValueError):
     HAS_ADW = False
@@ -230,6 +231,7 @@ class ScriptoriumAppAdw:
                     err = res.stderr.strip().splitlines()[-1] if res.stderr else "Operation failed"
                     GLib.idle_add(self._show_toast, f"Notice: {err}")
             except Exception as e:
+                logger.error("Error executing command %s: %s", cmd, e)
                 GLib.idle_add(self._show_toast, f"Error: {str(e)}")
 
         threading.Thread(target=worker, daemon=True).start()

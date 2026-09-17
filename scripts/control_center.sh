@@ -31,7 +31,8 @@ if ! has_gui; then
 fi
 
 mkdir -p "${UNIVERSES_BASE}"
-mkdir -p "${WORLDS_BASE}"
+mkdir -p "${MANUSCRIPTS_BASE}"
+mkdir -p "${LEGACY_WORLDS_BASE}"
 
 # Discover all worlds
 discover_worlds WORLDS_PATHS

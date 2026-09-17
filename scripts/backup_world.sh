@@ -88,10 +88,7 @@ if [ -z "${TARGET_INPUT}" ]; then
     exit 3
 fi
 
-WORLD_DIR="$(resolve_world_dir "${TARGET_INPUT}" "${UNIVERSE_CLI}")"
-if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
-    WORLD_DIR="$(resolve_manuscript_dir "${TARGET_INPUT}")"
-fi
+WORLD_DIR="$(resolve_target_dir "${TARGET_INPUT}" "${UNIVERSE_CLI}")"
 
 if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
     echo "Error: Directory not found: ${TARGET_INPUT}" >&2
@@ -103,7 +100,24 @@ TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 SAFE_NAME="$(sanitize_name "${WORLD_NAME}" "project")"
 
 if [ -n "${DEST_CLI}" ]; then
-    BACKUP_DIR="${DEST_CLI}"
+    # Validate and canonicalize destination path against path traversal (Issue 4)
+    RESOLVED_DEST="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "${DEST_CLI}" 2>/dev/null || realpath -m "${DEST_CLI}" 2>/dev/null || echo "${DEST_CLI}")"
+    RESOLVED_HOME="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "${HOME}" 2>/dev/null || realpath -m "${HOME}" 2>/dev/null || echo "${HOME}")"
+    RESOLVED_TMP="$(python3 -c 'import os, tempfile; print(os.path.abspath(tempfile.gettempdir()))' 2>/dev/null || echo "/tmp")"
+
+    ALLOWED=0
+    if [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}" ]] || [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}/"* ]] || \
+       [[ "${RESOLVED_DEST}" == "${RESOLVED_TMP}" ]] || [[ "${RESOLVED_DEST}" == "${RESOLVED_TMP}/"* ]] || \
+       [[ "${RESOLVED_DEST}" == "/tmp" ]] || [[ "${RESOLVED_DEST}" == "/tmp/"* ]] || \
+       [[ "${RESOLVED_DEST}" == "/var/tmp" ]] || [[ "${RESOLVED_DEST}" == "/var/tmp/"* ]]; then
+        ALLOWED=1
+    fi
+
+    if [ "${ALLOWED}" -eq 0 ]; then
+        echo "Error: Backup destination '${DEST_CLI}' is outside allowed directory roots (must reside within \$HOME or temporary directories)." >&2
+        exit 2
+    fi
+    BACKUP_DIR="${RESOLVED_DEST}"
 elif [ -d "${WORLD_DIR}/05-Backups" ]; then
     BACKUP_DIR="${WORLD_DIR}/05-Backups"
 else

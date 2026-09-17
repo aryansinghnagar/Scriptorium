@@ -19,6 +19,8 @@
 #                               -> absolute world lore vault path (or empty)
 #   resolve_manuscript_dir TARGET
 #                               -> absolute manuscript project path (or empty)
+#   resolve_target_dir TARGET [UNIVERSE]
+#                               -> universal absolute path resolver for target dirs
 #
 # Exported path roots:
 #   UNIVERSES_BASE    (${HOME}/Universes)
@@ -238,6 +240,37 @@ resolve_manuscript_dir() {
                     break
                 fi
             done < <(find "${m_base}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null | sort -z)
+        fi
+    fi
+
+    printf '%s' "${resolved}"
+}
+
+# resolve_target_dir TARGET [UNIVERSE] -> universal absolute path resolver
+# Resolves a target name or path into an absolute path for a world lore vault,
+# manuscript project, or universe directory.
+resolve_target_dir() {
+    local target="${1:-}"
+    local universe="${2:-}"
+    local resolved=""
+
+    if [ -n "${target}" ]; then
+        if [ -d "${target}" ]; then
+            resolved="$(cd "${target}" && pwd)"
+        else
+            if [ -n "${universe}" ]; then
+                resolved="$(resolve_world_dir "${target}" "${universe}")"
+                [ -z "${resolved}" ] && resolved="$(resolve_universe_dir "${target}")"
+            fi
+            if [ -z "${resolved}" ] || [ ! -d "${resolved}" ]; then
+                resolved="$(resolve_manuscript_dir "${target}")"
+            fi
+            if [ -z "${resolved}" ] || [ ! -d "${resolved}" ]; then
+                resolved="$(resolve_world_dir "${target}" "${universe}")"
+            fi
+            if [ -z "${resolved}" ] || [ ! -d "${resolved}" ]; then
+                resolved="$(resolve_universe_dir "${target}")"
+            fi
         fi
     fi
 
