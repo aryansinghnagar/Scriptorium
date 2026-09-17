@@ -1,10 +1,8 @@
 # Changelog
 
 All notable changes to Scriptorium are documented in this file. The format is
-based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Finding IDs
-(`F-xx`, `S-xx`, `Q-xx`, `C-xx`, `H-xx`, `N-xx`) reference the committed audit
-trail in [docs/audits/](docs/audits/); scope decisions behind each wave are
-recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Scope decisions
+behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
@@ -35,18 +33,6 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   - Integrated execution of all `tests/*.sh` regression test suites into GitHub Actions CI (`.github/workflows/ci.yml`).
 
 ### Added
-- **Developer Codebase Knowledge Base**: Added standardized 7-document onboarding and architecture suite in `docs/codebase/`:
-  - `docs/codebase/STACK.md`: Runtime environments, production dependencies, development toolchains, commands, and configs.
-  - `docs/codebase/STRUCTURE.md`: Top-level filesystem directory map, entry point catalog, module boundaries, and naming patterns.
-  - `docs/codebase/ARCHITECTURE.md`: Layered local-first architecture, flow diagrams, module responsibilities, and reused patterns.
-  - `docs/codebase/CONVENTIONS.md`: Coding styles, ShellCheck rules, import policies, error handling, and test conventions.
-  - `docs/codebase/INTEGRATIONS.md`: External tools (Obsidian, novelWriter, Calibre, Typst, Pandoc), data stores, and failure posture.
-  - `docs/codebase/TESTING.md`: Test frameworks, test scope matrix, sandboxing, isolation strategies, and CI matrices.
-  - `docs/codebase/CONCERNS.md`: Technical debt, security assessments, scaling analysis, fragile high-churn components, and `[ASK USER]` questions.
-- **Modernization Plan & Evolution Roadmap**:
-  - `docs/MODERNIZATION_PLAN.md`: Comprehensive 3-phase evolution plan covering Debian/Flatpak packaging, accelerated doctor caching, GTK 4 / Libadwaita modernization, and hazard red-teaming (H1–H8).
-- **Agentic & Developer Governance Instructions**:
-  - `.github/copilot-instructions.md`: Canonical quality gates, 4-value exit-code contract, subprocess threading rules, and invariant guidelines.
 - **Centralized User Guides**: Unified all reference and setup documentation under `docs/guides/`:
   - `docs/guides/SOFTWARE_CATALOG.md`: Direct download URLs, APT/Flatpak package IDs, and installation instructions.
   - `docs/guides/TYPOGRAPHY_AND_FONTS.md`: High-quality open typefaces, installation commands, and Typst novel formatting rules.
@@ -84,9 +70,6 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - CI hardening: least-privilege `permissions: contents: read`, Typst toolchain
   pinned to `0.13` with a documented bump policy, weekly drift run, and
   `tests/*.sh` joined to the ShellCheck scope (C-01, C-02, C-03).
-- Audit trail committed under `docs/audits/`: the line-by-line external audit
-  (22 findings) and the independent re-audit that verified the remediation
-  (grade A, 9.0/10, zero regressions).
 - Regression coverage: hostile-filename injection probe, archive
   traversal/hook-planting refusal, empty-manuscript export guard, hybrid-role
   Dramatis Personae dedup, multi-world resolution, and the legacy-root
@@ -94,9 +77,7 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Changed
 - Repository root decluttered to the standard OSS entry set (README, CHANGELOG,
-  LICENSE, CONTRIBUTING, SECURITY): planning/meta documents moved to
-  `docs/meta/`, audit reports moved to date-stamped files under `docs/audits/`,
-  and all cross-links updated (ADR-021).
+  LICENSE, CONTRIBUTING, SECURITY) and all cross-links updated (ADR-021).
 - The exit-code contract is documented as the four values the code actually
   uses — 0 success, 1 runtime/diagnostic failure, 2 usage/environment error,
   3 nothing to act on — replacing the stale "0/1/3" wording (N-01).

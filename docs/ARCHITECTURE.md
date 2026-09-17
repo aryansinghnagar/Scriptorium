@@ -57,8 +57,6 @@ Scriptorium is a purpose-built, distraction-free authoring and speculative world
 ├── .github/workflows/     → CI/CD automation workflows (ci.yml)
 ├── configs/               → Distraction control and external tool config templates
 ├── docs/                  → Master technical architecture, manuals, support matrices, roadmaps
-│   ├── audits/            → Historical external audit reports and verification trails
-│   ├── codebase/          → Standard 7-document codebase knowledge base (STACK, STRUCTURE, etc.)
 │   └── guides/            → Topic-specific deep guides (Backups, Typography, Plugins, Catalog)
 ├── launchers/             → FreeDesktop .desktop launcher files for desktop integration
 ├── scripts/               → Scriptorium CLI facade, GTK 3 desktop application, workflow scripts

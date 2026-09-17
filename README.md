@@ -142,15 +142,6 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 
 - [Author's Field Manual](docs/AUTHOR_MANUAL.md) — Visual plain-English handbook for novel writing, worldbuilding, and publishing.
 - [Technical Architecture & ADRs](docs/ARCHITECTURE.md) — System blueprint, technical deep-dives, exit codes, and Architectural Decision Records (ADR-001 through ADR-023).
-- [Modernization Plan & Evolution Roadmap](docs/MODERNIZATION_PLAN.md) — Phased modernization strategy, GTK 4 roadmap, and hazard analysis.
-- [Codebase Knowledge Base](docs/codebase/) — Standardized developer guides:
-  - [Stack](docs/codebase/STACK.md) — Runtime, production dependencies, toolchain, and commands.
-  - [Structure](docs/codebase/STRUCTURE.md) — Directory map, entry points, and module boundaries.
-  - [Architecture](docs/codebase/ARCHITECTURE.md) — Architectural style, data flow, and reused patterns.
-  - [Conventions](docs/codebase/CONVENTIONS.md) — Coding styles, naming, formatting, and linting.
-  - [Integrations](docs/codebase/INTEGRATIONS.md) — External applications, data stores, and reliability.
-  - [Testing](docs/codebase/TESTING.md) — Test suites, mocking, sandboxing, and CI matrices.
-  - [Concerns](docs/codebase/CONCERNS.md) — Technical debt, risks, and high-churn analysis.
 - [Software Catalog & Download Links](docs/guides/SOFTWARE_CATALOG.md) — Exact packages, Flatpak IDs, ISOs, and commands.
 - [Optional Extras Guide](docs/guides/OPTIONAL_EXTRAS.md) — Azgaar maps, Krita, Inkscape, Gramps, PolyGlot, Sigil, Kiwix.
 - [Typography & Fonts Guide](docs/guides/TYPOGRAPHY_AND_FONTS.md) — Free literary typefaces (Linux Libertine, EB Garamond, Alegreya) and Typst formatting rules.
@@ -169,13 +160,11 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 | :--- | :--- |
 | [docs/AUTHOR_MANUAL.md](docs/AUTHOR_MANUAL.md) | Comprehensive Author's Field Manual for daily writing, lore building, and publication |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical architecture, invariants, exit codes, and full ADR catalog (ADR-001 through ADR-023) |
-| [docs/MODERNIZATION_PLAN.md](docs/MODERNIZATION_PLAN.md) | Phased modernization plan, GTK 4 evolution, and hazard red-team matrix |
-| [docs/codebase/](docs/codebase/) | Standard 7-document codebase onboarding and knowledge base |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Project charter, milestones (M0–M15), hardware baseline, and real-time status queues |
 | [CHANGELOG.md](CHANGELOG.md) | Notable changes: audit remediation series, separated architecture, and decluttering |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: ground rules, exit-code contract, quality gate, commit style, submission flow |
-| [docs/audits/](docs/audits/) | Audit trail: the line-by-line external audit (22 findings) and the independent re-audit that verified the remediation |
 | [SECURITY.md](SECURITY.md) | Security scope, installer privilege surface disclosure, and private vulnerability reporting |
 | [docs/SUPPORT_MATRIX.md](docs/SUPPORT_MATRIX.md) | Supported Linux distributions, desktop environments, architectures, and display servers |
 | [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) | Toolchain version baselines, SHA-256 binary digests, and Flatpak application IDs |
 | [scripts/verify.sh](scripts/verify.sh) | 7-stage automated health check: syntax, schema validation, Universe/World lifecycle, Git snapshots, and backup/restore drills |
+
