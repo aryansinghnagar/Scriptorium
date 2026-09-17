@@ -38,6 +38,7 @@ Usage:
 
 Options:
   -m, --manuscript NAME  Specify manuscript project for cross-validation
+  --fast                 Accelerate scans using mtime-keyed in-memory caching
   --json                 Emit a machine-readable JSON report instead of text
   -h, --help             Show this help
 
@@ -51,8 +52,10 @@ USAGE
 WORLD_DIR=""
 MANUSCRIPT_DIR_CLI=""
 OUTPUT_JSON=0
+USE_FAST_CACHE=0
 while [ $# -gt 0 ]; do
     case "$1" in
+        --fast) USE_FAST_CACHE=1; shift ;;
         --json) OUTPUT_JSON=1; shift ;;
         -m|--manuscript)
             [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 2; }
@@ -128,7 +131,7 @@ if [ -z "${MANUSCRIPT_DIR}" ]; then
     fi
 fi
 
-BIBLE_DIR="${BIBLE_DIR}" MANUSCRIPT_DIR="${MANUSCRIPT_DIR}" OUTPUT_JSON="${OUTPUT_JSON}" python3 - << 'PYEOF'
+BIBLE_DIR="${BIBLE_DIR}" MANUSCRIPT_DIR="${MANUSCRIPT_DIR}" OUTPUT_JSON="${OUTPUT_JSON}" USE_FAST_CACHE="${USE_FAST_CACHE}" SCRIPT_DIR="${SCRIPT_DIR}" python3 - << 'PYEOF'
 import json
 import os
 import re
@@ -137,7 +140,19 @@ import sys
 BIBLE = os.environ["BIBLE_DIR"]
 MANUSCRIPT = os.environ.get("MANUSCRIPT_DIR", "")
 JSON_OUT = os.environ["OUTPUT_JSON"] == "1"
+FAST_CACHE = os.environ.get("USE_FAST_CACHE", "0") == "1"
+SCRIPT_DIR = os.environ.get("SCRIPT_DIR", "")
 MAX_BYTES = 2 * 1024 * 1024  # per-file read cap
+
+if FAST_CACHE and SCRIPT_DIR:
+    try:
+        sys.path.insert(0, SCRIPT_DIR)
+        import lib.cache as cache_engine
+        cache_engine.scan_project(BIBLE)
+        if MANUSCRIPT:
+            cache_engine.scan_project(MANUSCRIPT)
+    except Exception:
+        pass
 
 WIKI_LINK = re.compile(r"\[\[([^\]\|#]+)(?:\|[^\]\]]*)?\]\]")
 FRONTMATTER_DELIM = "---"

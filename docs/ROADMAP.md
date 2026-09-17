@@ -78,7 +78,9 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] Automated `Universe-Index.md` cosmos hub generation in `init_universe.sh`.
 
 ### M10: Architecture Documentation & Regression Suite
-- [x] Synchronized ADRs (ADR-001 through ADR-016).
+- [x] Synchronized ADRs (ADR-001 through ADR-023 in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)).
+- [x] Standardized 7-document developer knowledge base in [`docs/codebase/`](docs/codebase/).
+- [x] Modernization plan and evolution roadmap in [`docs/MODERNIZATION_PLAN.md`](docs/MODERNIZATION_PLAN.md).
 - [x] 7-stage verification harness passing with `ALL-CHECKS-PASS`.
 
 ### M11: Unified GTK 3 Desktop Control Center & Author's Field Manual
@@ -121,15 +123,18 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 ### Momentum Queues
 
 #### `now` (Immediate Focus)
-- [x] Declutter repository structure (centralize `docs/guides/`, consolidate `docs/ARCHITECTURE.md` and `docs/ROADMAP.md`, modernize `launchers/` and `tests/fixtures/`).
-- [x] Pass all automated test suites.
+- [x] Modernize and synchronize all repository documentation, C4 architecture diagrams, and complete ADR-001 through ADR-023 catalog.
+- [x] Establish standardized developer onboarding documentation in `docs/codebase/`.
+- [x] Pass all automated test suites and quality gates.
 
 #### `next` (Ready to Execute)
+- [ ] Implement native `.deb` and Flatpak packaging per Phase 1 of [`docs/MODERNIZATION_PLAN.md`](docs/MODERNIZATION_PLAN.md).
 - [ ] Physical machine deployment and first-flight testing on Linux Mint 22 (XFCE) / Debian 13 (XFCE).
 
 #### `improve` (Post-GA Enhancements)
+- [ ] Implement mtime-based live wordcount caching in `scripts/scriptorium_app.py` for massive omnibus manuscripts.
 - [ ] Add optional local semantic continuity checking.
-- [ ] Add offline documentation browser packaging.
+- [ ] Port Desktop Control Center to GTK 4 / Libadwaita per Phase 3 of Modernization Plan.
 
 #### `recurring` (Continuous Health)
 - [ ] Run `bash scripts/verify.sh` on every change and pull request.

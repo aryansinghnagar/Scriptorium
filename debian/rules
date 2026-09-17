@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+# debian/rules for Scriptorium
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	# Create target directories
+	mkdir -p debian/scriptorium/usr/share/scriptorium/scripts/lib
+	mkdir -p debian/scriptorium/usr/share/scriptorium/templates
+	mkdir -p debian/scriptorium/usr/share/scriptorium/configs
+	mkdir -p debian/scriptorium/usr/share/applications
+	mkdir -p debian/scriptorium/usr/bin
+
+	# Install scripts and library helpers
+	cp -r scripts/* debian/scriptorium/usr/share/scriptorium/scripts/
+	chmod +x debian/scriptorium/usr/share/scriptorium/scripts/*.sh
+	chmod +x debian/scriptorium/usr/share/scriptorium/scripts/scriptorium
+	chmod +x debian/scriptorium/usr/share/scriptorium/scripts/scriptorium_app.py
+
+	# Install templates and configs
+	cp -r templates/* debian/scriptorium/usr/share/scriptorium/templates/
+	cp -r configs/* debian/scriptorium/usr/share/scriptorium/configs/
+
+	# Install desktop launchers
+	cp launchers/*.desktop debian/scriptorium/usr/share/applications/
+
+	# Create symlink for global CLI
+	ln -s /usr/share/scriptorium/scripts/scriptorium debian/scriptorium/usr/bin/scriptorium

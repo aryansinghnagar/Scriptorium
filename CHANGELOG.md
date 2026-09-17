@@ -35,6 +35,18 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   - Integrated execution of all `tests/*.sh` regression test suites into GitHub Actions CI (`.github/workflows/ci.yml`).
 
 ### Added
+- **Developer Codebase Knowledge Base**: Added standardized 7-document onboarding and architecture suite in `docs/codebase/`:
+  - `docs/codebase/STACK.md`: Runtime environments, production dependencies, development toolchains, commands, and configs.
+  - `docs/codebase/STRUCTURE.md`: Top-level filesystem directory map, entry point catalog, module boundaries, and naming patterns.
+  - `docs/codebase/ARCHITECTURE.md`: Layered local-first architecture, flow diagrams, module responsibilities, and reused patterns.
+  - `docs/codebase/CONVENTIONS.md`: Coding styles, ShellCheck rules, import policies, error handling, and test conventions.
+  - `docs/codebase/INTEGRATIONS.md`: External tools (Obsidian, novelWriter, Calibre, Typst, Pandoc), data stores, and failure posture.
+  - `docs/codebase/TESTING.md`: Test frameworks, test scope matrix, sandboxing, isolation strategies, and CI matrices.
+  - `docs/codebase/CONCERNS.md`: Technical debt, security assessments, scaling analysis, fragile high-churn components, and `[ASK USER]` questions.
+- **Modernization Plan & Evolution Roadmap**:
+  - `docs/MODERNIZATION_PLAN.md`: Comprehensive 3-phase evolution plan covering Debian/Flatpak packaging, accelerated doctor caching, GTK 4 / Libadwaita modernization, and hazard red-teaming (H1–H8).
+- **Agentic & Developer Governance Instructions**:
+  - `.github/copilot-instructions.md`: Canonical quality gates, 4-value exit-code contract, subprocess threading rules, and invariant guidelines.
 - **Centralized User Guides**: Unified all reference and setup documentation under `docs/guides/`:
   - `docs/guides/SOFTWARE_CATALOG.md`: Direct download URLs, APT/Flatpak package IDs, and installation instructions.
   - `docs/guides/TYPOGRAPHY_AND_FONTS.md`: High-quality open typefaces, installation commands, and Typst novel formatting rules.
@@ -43,7 +55,7 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   - `docs/guides/BACKUP_SETUP.md`: 3-2-1 backup implementation guide with Déjà Dup.
   - `docs/guides/DISTRACTION_CONTROL.md`: XFCE Do Not Disturb configuration and FocusWriter sprint tips.
 - **Consolidated System Architecture & Roadmap**:
-  - `docs/ARCHITECTURE.md`: Complete Architectural Decision Records (ADR-001 through ADR-022), system design invariants, exit-code contract, and multi-tier Git repository doctrine.
+  - `docs/ARCHITECTURE.md`: Complete Architectural Decision Records (ADR-001 through ADR-023), system design invariants, C4 Mermaid architecture diagrams, subsystem deep dives, confidence assessment table, and local file citations.
   - `docs/ROADMAP.md`: Project charter, hardware baselines, milestones (M0–M15), and real-time operational status queues.
 - **Modernized Desktop Launcher Suite**:
   - Added `launchers/init-manuscript.desktop` for 1-click Standalone Manuscript creation.

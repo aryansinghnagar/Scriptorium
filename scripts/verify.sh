@@ -25,11 +25,15 @@ for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium; do
     fi
 done
 if command -v python3 >/dev/null; then
-    if ! python3 -m py_compile scripts/scriptorium_app.py; then
-        echo "  FAIL scripts/scriptorium_app.py (Python compilation)" >&2
-        exit 1
-    fi
-    echo "  OK scripts/scriptorium_app.py (Python syntax valid)"
+    for py in scripts/scriptorium_app.py scripts/lib/*.py; do
+        if [ -f "$py" ]; then
+            if ! python3 -m py_compile "$py"; then
+                echo "  FAIL $py (Python compilation)" >&2
+                exit 1
+            fi
+            echo "  OK $py (Python syntax valid)"
+        fi
+    done
 fi
 
 echo "[2/7] JSON, XML & Documentation schema validation..."
@@ -469,7 +473,16 @@ set -e
 [ -s "${TMP_VERIFY}/doc.log" ] || { echo "  FAIL scriptorium_doctor produced no output"; exit 1; }
 echo "  OK scriptorium_doctor diagnostics (exit ${DOC_RC})"
 
-# 6l. Dry-run simulation tests
+# 6l. Performance Cache & Continuity Engine Regression Tests
+bash tests/test_performance_cache.sh > "${TMP_VERIFY}/cache_test.log" 2>&1 \
+    || { echo "  FAIL test_performance_cache.sh:"; tail -n 5 "${TMP_VERIFY}/cache_test.log"; exit 1; }
+echo "  OK performance cache & mtime invalidation tests"
+
+bash tests/test_continuity_engine.sh > "${TMP_VERIFY}/continuity_test.log" 2>&1 \
+    || { echo "  FAIL test_continuity_engine.sh:"; tail -n 5 "${TMP_VERIFY}/continuity_test.log"; exit 1; }
+echo "  OK narrative continuity & trait contradiction tests"
+
+# 6m. Dry-run simulation tests
 bash scripts/setup_scriptorium.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \
     || { echo "  FAIL setup_scriptorium --dry-run:"; tail -n 5 "${TMP_VERIFY}/setup_dryrun.log"; exit 1; }
 bash scripts/uninstall_scriptorium.sh --dry-run --force > "${TMP_VERIFY}/uninstall_dryrun.log" 2>&1 \
@@ -491,6 +504,7 @@ bash scripts/scriptorium restore --help >/dev/null
 bash scripts/scriptorium report --help >/dev/null
 bash scripts/scriptorium doctor --help >/dev/null
 bash scripts/scriptorium world-doctor --help >/dev/null
+bash scripts/scriptorium check-continuity --help >/dev/null
 echo "  OK scriptorium CLI entrypoints and subcommands"
 
 echo "ALL-CHECKS-PASS"

@@ -1,9 +1,8 @@
 # Contributing to Scriptorium
 
-Thank you for considering a contribution. Scriptorium is a solo-maintained,
-work-in-progress project ("Untested / Experimental" in places — the badges in
-the [README](README.md) are honest), so this guide is deliberately short and
-practical.
+Thank you for considering a contribution. Scriptorium is an open-source,
+audit-verified project with strict quality gates and a standardized exit-code
+contract. This guide is deliberately short and practical.
 
 ## Ground rules
 

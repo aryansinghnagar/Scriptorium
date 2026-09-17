@@ -1,0 +1,34 @@
+Source: scriptorium
+Section: text
+Priority: optional
+Maintainer: Scriptorium Maintainers <maintainers@scriptorium.local>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/aryansinghnagar/Scriptorium
+Vcs-Browser: https://github.com/aryansinghnagar/Scriptorium
+Vcs-Git: https://github.com/aryansinghnagar/Scriptorium.git
+Rules-Requires-Root: no
+
+Package: scriptorium
+Architecture: all
+Depends: ${misc:Depends},
+         bash (>= 4.3),
+         python3 (>= 3.10),
+         python3-gi,
+         gir1.2-gtk-3.0,
+         git (>= 2.34),
+         tar,
+         coreutils
+Recommends: typst (>= 0.11),
+            pandoc (>= 2.19),
+            gir1.2-adw-1,
+            zenity,
+            wl-clipboard | xclip
+Suggests: calibre,
+          ghostscript
+Description: Local-first speculative fiction authoring and worldbuilding platform
+ Scriptorium provides a privacy-first, offline-capable authoring, lore bible,
+ and manuscript typesetting environment. It orchestrates plain Markdown prose,
+ multi-tier Git repository snapshots, visual scene metadata inspection,
+ multi-era timeline diagnostics, automated dramatatis personae concordances,
+ and sub-second PDF/EPUB book compilation.

@@ -1,0 +1,239 @@
+#!/usr/bin/env python3
+"""
+Scriptorium Cache Engine (scripts/lib/cache.py)
+High-performance mtime-keyed in-memory & on-disk cache layer for World Bibles and Manuscripts.
+Ensures sub-millisecond treeview rendering and accelerated diagnostic passes.
+"""
+
+import os
+import sys
+import json
+import re
+import argparse
+from pathlib import Path
+
+CACHE_VERSION = 1
+CACHE_FILENAME = ".scriptorium_cache.json"
+
+TAG_REGEXES = {
+    "pov": re.compile(r"^@pov:\s*(.+)$", re.IGNORECASE | re.MULTILINE),
+    "characters": re.compile(r"^@(?:chars?|characters?):\s*(.+)$", re.IGNORECASE | re.MULTILINE),
+    "location": re.compile(r"^@(?:location|loc|setting):\s*(.+)$", re.IGNORECASE | re.MULTILINE),
+    "thread": re.compile(r"^@(?:thread|subplot|plot):\s*(.+)$", re.IGNORECASE | re.MULTILINE),
+    "status": re.compile(r"^@(?:status|state):\s*(.+)$", re.IGNORECASE | re.MULTILINE),
+    "time": re.compile(r"^@(?:time|date|era):\s*(.+)$", re.IGNORECASE | re.MULTILINE),
+}
+
+WIKILINK_REGEX = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
+FRONTMATTER_REGEX = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+
+
+def get_cache_path(project_dir: str) -> Path:
+    return Path(project_dir) / CACHE_FILENAME
+
+
+def load_cache(project_dir: str) -> dict:
+    cache_path = get_cache_path(project_dir)
+    if not cache_path.is_file():
+        return {"version": CACHE_VERSION, "files": {}}
+    try:
+        with open(cache_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if data.get("version") == CACHE_VERSION and isinstance(data.get("files"), dict):
+                return data
+    except Exception:
+        pass
+    return {"version": CACHE_VERSION, "files": {}}
+
+
+def save_cache(project_dir: str, cache_data: dict) -> bool:
+    cache_path = get_cache_path(project_dir)
+    tmp_path = cache_path.with_suffix(".tmp")
+    try:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(cache_data, f, indent=2, ensure_ascii=False)
+        tmp_path.replace(cache_path)
+        return True
+    except Exception as e:
+        if tmp_path.exists():
+            try:
+                tmp_path.unlink()
+            except Exception:
+                pass
+        return False
+
+
+def parse_frontmatter(content: str) -> dict:
+    match = FRONTMATTER_REGEX.match(content)
+    if not match:
+        return {}
+    raw_yaml = match.group(1)
+    meta = {}
+    for line in raw_yaml.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ":" in line:
+            key, val = line.split(":", 1)
+            key = key.strip()
+            val = val.strip().strip("\"'")
+            if val.startswith("[") and val.endswith("]"):
+                items = [x.strip().strip("\"'") for x in val[1:-1].split(",") if x.strip()]
+                meta[key] = items
+            else:
+                meta[key] = val
+    return meta
+
+
+def parse_markdown_file(file_path: Path) -> dict:
+    try:
+        stat = file_path.stat()
+        mtime = stat.st_mtime
+        size = stat.st_size
+        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read()
+
+        # Word count (strip frontmatter and codeblocks for accurate count)
+        clean_prose = FRONTMATTER_REGEX.sub("", content)
+        clean_prose = re.sub(r"```.*?```", "", clean_prose, flags=re.DOTALL)
+        words = len(re.findall(r"\b\w+\b", clean_prose))
+
+        # Extract tags
+        tags = {}
+        for tag_name, rx in TAG_REGEXES.items():
+            matches = rx.findall(content)
+            if matches:
+                tags[tag_name] = [m.strip() for m in matches]
+
+        # Extract wikilinks
+        wikilinks = sorted(list(set(WIKILINK_REGEX.findall(content))))
+
+        # Frontmatter
+        frontmatter = parse_frontmatter(content)
+
+        return {
+            "mtime": mtime,
+            "size": size,
+            "word_count": words,
+            "tags": tags,
+            "wikilinks": wikilinks,
+            "frontmatter": frontmatter,
+        }
+    except Exception as e:
+        return {
+            "mtime": 0,
+            "size": 0,
+            "word_count": 0,
+            "tags": {},
+            "wikilinks": [],
+            "frontmatter": {},
+            "error": str(e),
+        }
+
+
+def scan_project(project_dir: str, force: bool = False) -> dict:
+    pdir = Path(project_dir).resolve()
+    cache = {"version": CACHE_VERSION, "files": {}} if force else load_cache(str(pdir))
+    files_cache = cache.get("files", {})
+    updated = False
+
+    current_files = set()
+    for md_path in pdir.rglob("*.md"):
+        if ".obsidian" in md_path.parts or ".git" in md_path.parts or md_path.name.startswith("."):
+            continue
+        rel_path = str(md_path.relative_to(pdir)).replace("\\", "/")
+        current_files.add(rel_path)
+
+        try:
+            stat = md_path.stat()
+            cached_entry = files_cache.get(rel_path)
+            if (
+                not cached_entry
+                or cached_entry.get("mtime") != stat.st_mtime
+                or cached_entry.get("size") != stat.st_size
+            ):
+                files_cache[rel_path] = parse_markdown_file(md_path)
+                updated = True
+        except Exception:
+            continue
+
+    # Remove deleted files from cache
+    stale_keys = [k for k in files_cache if k not in current_files]
+    if stale_keys:
+        for k in stale_keys:
+            del files_cache[k]
+        updated = True
+
+    cache["files"] = files_cache
+    if updated or force or not get_cache_path(str(pdir)).exists():
+        save_cache(str(pdir), cache)
+
+    return cache
+
+
+def compute_wordcounts(project_dir: str) -> dict:
+    cache = scan_project(project_dir)
+    total_words = 0
+    by_folder = {}
+
+    for rel_path, data in cache.get("files", {}).items():
+        wc = data.get("word_count", 0)
+        total_words += wc
+        folder = os.path.dirname(rel_path) or "(root)"
+        by_folder[folder] = by_folder.get(folder, 0) + wc
+
+    return {
+        "project": os.path.basename(project_dir),
+        "total_words": total_words,
+        "total_files": len(cache.get("files", {})),
+        "by_folder": by_folder,
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Scriptorium Fast Cache Engine")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    scan_cmd = subparsers.add_parser("scan", help="Scan and update project cache")
+    scan_cmd.add_argument("path", help="Project directory path")
+    scan_cmd.add_argument("--force", action="store_true", help="Force full rescan")
+
+    wc_cmd = subparsers.add_parser("wordcounts", help="Get aggregated word counts")
+    wc_cmd.add_argument("path", help="Project directory path")
+    wc_cmd.add_argument("--json", action="store_true", help="Output JSON format")
+
+    clear_cmd = subparsers.add_parser("clear", help="Clear cache file")
+    clear_cmd.add_argument("path", help="Project directory path")
+
+    args = parser.parse_args()
+
+    if args.command == "scan":
+        res = scan_project(args.path, force=args.force)
+        count = len(res.get("files", {}))
+        print(f"[CACHE] Indexed {count} Markdown files in {args.path}")
+        sys.exit(0)
+
+    elif args.command == "wordcounts":
+        res = compute_wordcounts(args.path)
+        if args.json:
+            print(json.dumps(res, indent=2))
+        else:
+            print(f"Project: {res['project']}")
+            print(f"Total Word Count: {res['total_words']:,} words across {res['total_files']} files\n")
+            print("Breakdown by folder:")
+            for folder, count in sorted(res["by_folder"].items()):
+                print(f"  - {folder}: {count:,} words")
+        sys.exit(0)
+
+    elif args.command == "clear":
+        cp = get_cache_path(args.path)
+        if cp.exists():
+            cp.unlink()
+            print(f"[CACHE] Cleared {cp}")
+        else:
+            print(f"[CACHE] No cache found at {cp}")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

@@ -41,7 +41,8 @@ Data Protection & Version Control:
 
 System Health & Maintenance:
   doctor [options]             Run unified health and toolchain diagnostics (-w WORLD, -m MS)
-  world-doctor <world> [opts]  Run deep World Bible lore consistency diagnostics (-m MS, --json)
+  world-doctor <world> [opts]  Run deep World Bible lore consistency diagnostics (-m MS, --fast, --json)
+  check-continuity [options]   Run local offline narrative continuity & character trait checks (-w WORLD, -m MS)
   verify                       Run complete 7-stage test harness
   setup [--dry-run]            Install core packages, fonts, and desktop launchers
   uninstall [--dry-run]        Revert desktop launchers and system components
@@ -79,6 +80,9 @@ case "${COMMAND}" in
     world-doctor|lore-doctor)
         exec bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$@"
         ;;
+    check-continuity|continuity)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/continuity.py" "$@"
+        ;;
     doctor|check)
         exec bash "${PROJECT_ROOT}/scripts/scriptorium_doctor.sh" "$@"
         ;;
@@ -107,7 +111,11 @@ case "${COMMAND}" in
         exec bash "${PROJECT_ROOT}/scripts/uninstall_scriptorium.sh" "$@"
         ;;
     control-center|dashboard|gui|app)
-        exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
+        if [ -f "${PROJECT_ROOT}/scripts/scriptorium_app.py" ]; then
+            exec python3 "${PROJECT_ROOT}/scripts/scriptorium_app.py" "$@"
+        else
+            exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
+        fi
         ;;
     -v|--version|version)
         echo "Scriptorium v${VERSION}"
