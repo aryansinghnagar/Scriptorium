@@ -49,11 +49,25 @@ Thumbs.db:encryptable
 [Dd]esktop.ini
 $RECYCLE.BIN/
 
+# Secrets and credential protection (SEC-02): never commit these even by
+# accident. Scriptorium itself is offline, but contributors/CI/packaging
+# experiments may create them (API keys, signing keys, .env files).
+.env
+.env.*
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+*.secret
+
 # Python and virtual environments
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 .venv/
 venv/
 env/

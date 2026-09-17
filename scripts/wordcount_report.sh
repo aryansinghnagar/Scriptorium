@@ -104,17 +104,35 @@ else
 fi
 command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit 2; }
 
-MANUSCRIPT_DIR="${MANUSCRIPT_DIR}" MARKDOWN="${MARKDOWN}" JSON_OUT="${JSON_OUT}" python3 - << 'PYEOF'
+# ANA-01: delegate to the canonical counter in scripts/lib/cache.py so the
+# report, the cache engine, and the GTK dashboard can never diverge.
+SCRIPT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib"
+MANUSCRIPT_DIR="${MANUSCRIPT_DIR}" MARKDOWN="${MARKDOWN}" JSON_OUT="${JSON_OUT}" SCRIPT_LIB_DIR="${SCRIPT_LIB_DIR}" python3 - << 'PYEOF'
 import os
 import re
 import sys
 import json
 
+sys.path.insert(0, os.environ.get("SCRIPT_LIB_DIR", ""))
+try:
+    from cache import count_words, MAX_BYTES as CACHE_MAX_BYTES
+    MAX_BYTES = CACHE_MAX_BYTES * 2  # reports allow larger single files than the index
+    def canonical_count(text: str) -> int:
+        return count_words(text)
+except Exception:
+    # Fallback mirrors the canonical policy if the lib is unavailable.
+    MAX_BYTES = 8 * 1024 * 1024
+    _FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+    def canonical_count(text: str) -> int:
+        clean = _FM.sub("", text)
+        clean = re.sub(r"```.*?```", "", clean, flags=re.DOTALL)
+        kept = [ln for ln in clean.splitlines()
+                if ln.strip() and not (ln.strip().startswith("@") and re.match(r"^@[A-Za-z0-9_-]+:", ln.strip())) and not ln.strip().startswith("%")]
+        return len(re.findall(r"\b\w+\b", "\n".join(kept), flags=re.UNICODE))
+
 MS = os.environ["MANUSCRIPT_DIR"]
 MD = os.environ["MARKDOWN"] == "1"
 IS_JSON = os.environ["JSON_OUT"] == "1"
-MAX_BYTES = 8 * 1024 * 1024
-WORD = re.compile(r"\S+")
 
 rows = []  # (book, act, chapter, words, status)
 for root, dirs, files in os.walk(MS):
@@ -137,10 +155,8 @@ for root, dirs, files in os.walk(MS):
             # F-08: surface silent truncation instead of under-counting.
             print(f"[!] Warning: {path} exceeds the {MAX_BYTES // (1024 * 1024)} MB read cap; word counts truncated at the cap.", file=sys.stderr)
             data = data[:MAX_BYTES]
-        text = data.decode("utf-8", "ignore")
-        body = re.sub(r"^@[A-Za-z0-9_-]+:.*$", "", text, flags=re.M)
-        body = re.sub(r"^%.*$", "", body, flags=re.M)
-        words = len(WORD.findall(body))
+        text = data.decode("utf-8", "replace")
+        words = canonical_count(text)
         m = re.search(r"^@status:\s*(.+)$", text, re.M)
         status = m.group(1).strip() if m else "Draft"
         rows.append((book, act, stem, words, status))

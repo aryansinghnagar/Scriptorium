@@ -113,6 +113,18 @@ else
         if [ ${#ALL_TARGETS[@]} -eq 1 ]; then
             SELECTED_WORLD="${ALL_TARGETS[0]}"
         else
+            # TST-03: never block on `select` without a TTY (CI/headless
+            # hangs forever). Fail closed with an actionable listing.
+            if [ ! -t 0 ]; then
+                {
+                    echo "Error: Multiple projects discovered — specify one (non-interactive shell, no --world given):"
+                    for t in "${ALL_TARGETS[@]}"; do
+                        echo "  - ${t}"
+                    done
+                    echo "Usage: save_snapshot.sh --world <NAME|PATH> [-m note]"
+                } >&2
+                exit 2
+            fi
             echo "Select project to snapshot:"
             select w in "${ALL_TARGETS[@]}"; do
                 if [ -n "${w:-}" ]; then
@@ -166,6 +178,9 @@ EOF
 fi
 
 # Also snapshot discrete volume repositories if present
+# TST-03: nullglob so a non-matching pattern expands to nothing instead of
+# the literal string "Book-*/".
+shopt -s nullglob
 for ms_repo in Book-*/ 01-Manuscript/*/; do
     if [ -d "${ms_repo}.git" ]; then
         (

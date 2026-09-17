@@ -141,14 +141,20 @@
   // Enable running headers/footers from here on. Front matter above stays
   // clean regardless of dedication/epigraph length (M4). Uses `context` +
   // page counter (M2: `locate` is deprecated in Typst >= 0.12).
+  // PRF-01: the previous header/footer ran a full-document query over
+  // `par` (the largest element set) twice per page — O(pages x elements),
+  // which stalls 300+ page omnibuses. Blank filler pages inserted by
+  // `pagebreak(to: "odd")` carry no block landmarks, so querying only
+  // block-level elements (heading/image/table/raw/block) detects them
+  // exactly while skipping the paragraph index entirely.
   set page(
     header: context {
       let page-num = counter(page).get().first()
       // Suppress running header on page 1, on pages where a chapter begins (level-1 heading),
       // and on blank verso filler pages generated before a new chapter.
       let chapter-starts = query(heading.where(level: 1)).filter(h => h.location().page() == page-num)
-      let on-this-page = query(selector(par).or(heading).or(line).or(image).or(block).or(list.item).or(enum.item).or(table).or(raw)).filter(el => el.location().page() == page-num)
-      let is-blank-verso = calc.even(page-num) and on-this-page.len() == 0
+      let landmarks = query(selector(heading).or(image).or(table).or(raw).or(block)).filter(el => el.location().page() == page-num)
+      let is-blank-verso = calc.even(page-num) and landmarks.len() == 0
       if page-num > 1 and chapter-starts.len() == 0 and not is-blank-verso {
         // Alternating headers: Left (Verso) shows Author, Right (Recto) shows Title
         if calc.even(page-num) {
@@ -160,8 +166,8 @@
     },
     footer: context {
       let page-num = counter(page).get().first()
-      let on-this-page = query(selector(par).or(heading).or(line).or(image).or(block).or(list.item).or(enum.item).or(table).or(raw)).filter(el => el.location().page() == page-num)
-      let is-blank-verso = calc.even(page-num) and on-this-page.len() == 0
+      let landmarks = query(selector(heading).or(image).or(table).or(raw).or(block)).filter(el => el.location().page() == page-num)
+      let is-blank-verso = calc.even(page-num) and landmarks.len() == 0
       if not is-blank-verso {
         align(center)[#text(size: 9pt, str(page-num))]
       }

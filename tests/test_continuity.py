@@ -182,6 +182,37 @@ Renée smiled, her emerald eyes glowing softly.
         findings = scan_manuscript_scenes(self.manuscript_dir, profiles)
         self.assertEqual(len(findings), 0)
 
+    def test_multi_character_possessive_no_false_positive_cnt101(self):
+        # CNT-01: "Bob looked into Alice's green eyes" must attribute green
+        # eyes to Alice only — Bob (brown eyes in lore) must not be flagged.
+        chars_dir = self.world_dir / "Characters"
+        chars_dir.mkdir(parents=True)
+        (chars_dir / "Alice.md").write_text("""---
+name: "Alice"
+type: character
+eyes: green
+---
+Alice of the realm.
+""", encoding="utf-8")
+        (chars_dir / "Bob.md").write_text("""---
+name: "Bob"
+type: character
+eyes: brown
+---
+Bob the wanderer.
+""", encoding="utf-8")
+
+        scene = self.manuscript_dir / "01_Chapter_01.md"
+        scene.write_text("""# Chapter 1
+
+Alice and Bob stood by the gate. Bob looked into Alice's green eyes.
+""", encoding="utf-8")
+
+        profiles = extract_lore_profiles(self.world_dir)
+        findings = scan_manuscript_scenes(self.manuscript_dir, profiles)
+        bob_findings = [f for f in findings if f["entity"] == "Bob"]
+        self.assertEqual(bob_findings, [])
+
     def test_run_continuity_audit(self):
         chars_dir = self.world_dir / "Characters"
         chars_dir.mkdir(parents=True)

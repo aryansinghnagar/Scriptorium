@@ -92,7 +92,20 @@ echo "=== Test 4: world_doctor.sh --fast parity ==="
 OUT_STD="$(bash "${SCRIPT_DIR}/scripts/world_doctor.sh" "${WORLD_DIR}" -m "${MS_DIR}" --json)"
 OUT_FAST="$(bash "${SCRIPT_DIR}/scripts/world_doctor.sh" "${WORLD_DIR}" -m "${MS_DIR}" --fast --json)"
 
-if [ "${OUT_STD}" != "${OUT_FAST}" ]; then
+# DOC-01: --fast reports its own cache observability fields; strip them and
+# require the diagnostic payload itself to be identical. --fast must also
+# positively report that the cache was used on this small healthy vault.
+echo "${OUT_FAST}" | python3 -c "import sys, json; d = json.load(sys.stdin); assert d.get('fast_cache_used') is True, 'fast cache not used'"
+if ! python3 - "$OUT_STD" "$OUT_FAST" << 'PYEOF'
+import json, sys
+std = json.loads(sys.argv[1])
+fast = json.loads(sys.argv[2])
+for key in ("fast_cache_requested", "fast_cache_used"):
+    std.pop(key, None)
+    fast.pop(key, None)
+assert std == fast, "Discrepancy between standard and fast doctor outputs"
+PYEOF
+then
     echo "FAIL: Discrepancy between standard and fast doctor outputs" >&2
     exit 1
 fi

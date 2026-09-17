@@ -17,7 +17,7 @@ Scriptorium is a purpose-built, distraction-free authoring and speculative world
 | **Fallback Graphical Dialogs** | Zenity (GTK dialog utility) | [`scripts/control_center.sh#L1-L30`](file:///scripts/control_center.sh#L1-L30), [`scripts/lib/worlds.sh#L40-L45`](file:///scripts/lib/worlds.sh#L40-L45) |
 | **CLI Dispatcher & Tooling** | POSIX Shell / Bash 4+ | [`scripts/scriptorium#L1-L20`](file:///scripts/scriptorium#L1-L20), [`scripts/setup_scriptorium.sh#L1-L30`](file:///scripts/setup_scriptorium.sh#L1-L30) |
 | **Shared Discovery Engine** | Modular Shell Library (`scripts/lib/worlds.sh`) | [`scripts/lib/worlds.sh#L1-L45`](file:///scripts/lib/worlds.sh#L1-L45) |
-| **Typesetting & PDF Engine** | Typst `0.15.1` (musl static binary) | [`docs/COMPATIBILITY.md#L9-L21`](file:///docs/COMPATIBILITY.md#L9-L21), [`scripts/export_book.sh#L340-L420`](file:///scripts/export_book.sh#L340-L420) |
+| **Typesetting & PDF Engine** | Typst `0.13.0` pinned (musl static binary) | [`docs/COMPATIBILITY.md#L9-L21`](file:///docs/COMPATIBILITY.md#L9-L21), [`scripts/export_book.sh#L340-L420`](file:///scripts/export_book.sh#L340-L420) |
 | **Document AST Converter** | Pandoc (`3.1.x` / `2.19.x`) | [`scripts/export_book.sh#L190-L330`](file:///scripts/export_book.sh#L190-L330), [`docs/COMPATIBILITY.md#L9-L16`](file:///docs/COMPATIBILITY.md#L9-L16) |
 | **World Bible Vault** | Obsidian (`md.obsidian.Obsidian` via Flathub) | [`docs/COMPATIBILITY.md#L28-L32`](file:///docs/COMPATIBILITY.md#L28-L32), [`templates/world-bible/.obsidian/`](file:///templates/world-bible/.obsidian/community-plugins.json#L1-L15) |
 | **Manuscript Outlining & Drafting** | novelWriter (`io.gitlab.novelwriter.novelWriter` via Flathub) | [`docs/COMPATIBILITY.md#L28-L32`](file:///docs/COMPATIBILITY.md#L28-L32), [`templates/manuscript/nwProject.nwx#L1-L15`](file:///templates/manuscript/nwProject.nwx#L1-L15) |
@@ -78,7 +78,7 @@ Scriptorium is a purpose-built, distraction-free authoring and speculative world
 | **Linux Distribution** | Linux Mint `21.x` / `22.x` (Wilma), Debian `12` / `13` (Trixie) | Host Operating System | [`docs/SUPPORT_MATRIX.md#L9-L18`](file:///docs/SUPPORT_MATRIX.md#L9-L18) |
 | **Python Runtime** | `3.10+` (tested on `3.12.x`) | Host APT (`python3`, `python3-gi`) | [`docs/COMPATIBILITY.md#L9-L16`](file:///docs/COMPATIBILITY.md#L9-L16) |
 | **GTK 3 Toolkit** | `3.24+` (`gir1.2-gtk-3.0`) | Host Desktop UI | [`scripts/scriptorium_app.py#L20-L30`](file:///scripts/scriptorium_app.py#L20-L30) |
-| **Typst Typesetter** | `0.15.1` (`x86_64`/`aarch64-unknown-linux-musl`) | Binary in `/usr/local/bin/typst` (SHA-256 verified) | [`docs/COMPATIBILITY.md#L9-L21`](file:///docs/COMPATIBILITY.md#L9-L21) |
+| **Typst Typesetter** | `0.13.0` pinned (`x86_64`/`aarch64-unknown-linux-musl`) | Binary in `/usr/local/bin/typst` (SHA-256 verified) | [`docs/COMPATIBILITY.md#L9-L21`](file:///docs/COMPATIBILITY.md#L9-L21) |
 | **Pandoc Converter** | `>= 2.16.0` (`3.1.x` / `2.19.x`) | Host APT (`pandoc`) | [`docs/COMPATIBILITY.md#L9-L16`](file:///docs/COMPATIBILITY.md#L9-L16) |
 | **Obsidian Vault App** | `md.obsidian.Obsidian` (Flathub stable) | Flatpak container | [`docs/COMPATIBILITY.md#L28-L32`](file:///docs/COMPATIBILITY.md#L28-L32) |
 | **novelWriter Editor** | `io.gitlab.novelwriter.novelWriter` (Flathub stable) | Flatpak container | [`docs/COMPATIBILITY.md#L28-L32`](file:///docs/COMPATIBILITY.md#L28-L32) |

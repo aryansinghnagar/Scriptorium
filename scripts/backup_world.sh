@@ -131,12 +131,26 @@ CHECKSUM_FILE="${BACKUP_DIR}/${ARCHIVE_BASE}.sha256"
 META_FILE="${BACKUP_DIR}/${ARCHIVE_BASE}.meta.json"
 
 echo "Creating verified backup archive for: ${WORLD_NAME} ..."
+echo "[i] Policy: .git history IS included (disaster-recovery restores keep version history)."
 
 PARENT_DIR="$(dirname "${WORLD_DIR}")"
 DIR_BASENAME="$(basename "${WORLD_DIR}")"
 
+# BAK-01: pre-flight free-space check — refuse before writing a partial archive.
+SRC_BYTES="$(du -sb "${WORLD_DIR}" 2>/dev/null | cut -f1 || echo 0)"
+AVAIL_BYTES="$(df -B1 "${BACKUP_DIR}" 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)"
+if [ "${SRC_BYTES}" -gt 0 ] && [ "${AVAIL_BYTES}" -gt 0 ] && [ "${AVAIL_BYTES}" -lt "${SRC_BYTES}" ]; then
+    echo "Error: insufficient disk space in '${BACKUP_DIR}' (need ~${SRC_BYTES} B, have ${AVAIL_BYTES} B)." >&2
+    exit 1
+fi
+
+# BAK-01: deterministic member order + numeric ownership so identical trees
+# produce identical byte streams (modulo file mtimes, which are preserved
+# deliberately — the cache engine keys on mtime/size).
 tar -czf "${ARCHIVE_TAR}" \
     -C "${PARENT_DIR}" \
+    --sort=name \
+    --owner=0 --group=0 --numeric-owner \
     --exclude="${DIR_BASENAME}/05-Backups" \
     --exclude="${DIR_BASENAME}/Backups" \
     --exclude="${DIR_BASENAME}/Exports" \

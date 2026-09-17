@@ -328,4 +328,66 @@ echo "$DRIFT_OUT" | grep -q "WLD-108" || {
 rm -rf "$MS_TMP"
 echo "  OK Test 17 passed: Manuscript outline wikilinks and lore drift detection verified"
 
+echo "[Test 18] Restore rejects punctuation-only target names (SEC-01)..."
+bash scripts/scriptorium manuscript RestoreVictim --universe TestUni --world TestWorld >/dev/null
+bash scripts/backup_world.sh --manuscript RestoreVictim --dest "${TMP_DIR}" >/dev/null
+ARCHIVE="$(ls -t "${TMP_DIR}"/RestoreVictim-backup-*.tar.gz | head -n 1)"
+set +e
+bash scripts/restore_world.sh "${ARCHIVE}" --target '!!!' --force >"${TMP_DIR}/sec01.log" 2>&1
+SEC01_RC=$?
+set -e
+[ "${SEC01_RC}" -ne 0 ] || { echo "  FAIL: restore accepted empty sanitized target '!!!'"; exit 1; }
+grep -qi "invalid target name" "${TMP_DIR}/sec01.log" || { echo "  FAIL: missing validation message"; cat "${TMP_DIR}/sec01.log"; exit 1; }
+[ -d "${HOME}/Manuscripts/RestoreVictim" ] || { echo "  FAIL: valid project missing after rejected restore"; exit 1; }
+for bad in '///' '...' '   '; do
+    set +e
+    bash scripts/restore_world.sh "${ARCHIVE}" --target "${bad}" --force >/dev/null 2>&1
+    [ $? -ne 0 ] || { echo "  FAIL: restore accepted target '${bad}'"; exit 1; }
+    set -e
+done
+echo "  OK Test 18 passed: punctuation-only restore targets rejected without mutation"
+
+echo "[Test 19] Restore requires checksum sidecar by default (REL-03)..."
+NOMETADIR="$(mktemp -d)"
+cp "${ARCHIVE}" "${NOMETADIR}/nocheck.tar.gz"
+set +e
+bash scripts/restore_world.sh "${NOMETADIR}/nocheck.tar.gz" --target NoCheckRestore >"${TMP_DIR}/rel03.log" 2>&1
+REL03_RC=$?
+set -e
+[ "${REL03_RC}" -ne 0 ] || { echo "  FAIL: restore proceeded without .sha256"; exit 1; }
+set +e
+bash scripts/restore_world.sh "${NOMETADIR}/nocheck.tar.gz" --target NoCheckRestore --skip-checksum --dest "${TMP_DIR}/restore-dest" >/dev/null 2>&1
+REL03B_RC=$?
+set -e
+[ "${REL03B_RC}" -eq 0 ] || { echo "  FAIL: --skip-checksum did not permit explicitly-acknowledged restore"; exit 1; }
+[ -d "${TMP_DIR}/restore-dest/NoCheckRestore" ] || { echo "  FAIL: --skip-checksum restore missing"; exit 1; }
+rm -rf "${NOMETADIR}" "${TMP_DIR}/restore-dest"
+echo "  OK Test 19 passed: missing checksum fails closed, --skip-checksum opts out explicitly"
+
+echo "[Test 20] Ambiguous world names fail closed (RES-01)..."
+bash scripts/scriptorium universe AmbigU1 >/dev/null
+bash scripts/scriptorium universe AmbigU2 >/dev/null
+bash scripts/scriptorium world Shared --universe AmbigU1 >/dev/null
+bash scripts/scriptorium world Shared --universe AmbigU2 >/dev/null
+set +e
+AMBIG_OUT="$(bash scripts/save_snapshot.sh Shared -m x 2>&1)"
+AMBIG_RC=$?
+set -e
+[ "${AMBIG_RC}" -eq 2 ] || { echo "  FAIL: ambiguous world did not exit 2 (rc=${AMBIG_RC}): ${AMBIG_OUT}"; exit 1; }
+echo "${AMBIG_OUT}" | grep -qi "ambiguous" || { echo "  FAIL: missing ambiguity message: ${AMBIG_OUT}"; exit 1; }
+bash scripts/save_snapshot.sh Shared --universe AmbigU1 -m "unambiguous snapshot" >/dev/null
+echo "  OK Test 20 passed: duplicate world names require --universe"
+
+echo "[Test 21] Manuscript XML escapes special characters (DAT-02)..."
+bash scripts/scriptorium manuscript "XMLTest" --universe TestUni --world TestWorld --author 'A & B <Draft> "Quoted"' >/dev/null
+python3 -c "import xml.etree.ElementTree as ET; ET.parse('${HOME}/Manuscripts/XMLTest/nwProject.nwx'); print('  OK Test 21 passed: nwProject.nwx parses with special chars')"
+grep -q '&amp;' "${HOME}/Manuscripts/XMLTest/nwProject.nwx" || { echo "  FAIL: expected XML entity escaping"; exit 1; }
+
+echo "[Test 22] Packaged CLI dispatches via symlink (PKG-01)..."
+mkdir -p "${TMP_DIR}/pkg/share/scriptorium" "${TMP_DIR}/pkg/bin"
+cp -r scripts "${TMP_DIR}/pkg/share/scriptorium/scripts"
+ln -sf "${TMP_DIR}/pkg/share/scriptorium/scripts/scriptorium" "${TMP_DIR}/pkg/bin/scriptorium"
+"${TMP_DIR}/pkg/bin/scriptorium" --version | grep -q "Scriptorium" || { echo "  FAIL: symlinked CLI --version failed"; exit 1; }
+echo "  OK Test 22 passed: symlink dispatch works"
+
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

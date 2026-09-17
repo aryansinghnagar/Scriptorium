@@ -11,6 +11,11 @@ Rules-Requires-Root: no
 
 Package: scriptorium
 Architecture: all
+# PKG-04: pandoc/jq/zenity are hard runtime requirements (export_book.sh
+# fails without pandoc/jq; 11 scripts branch on zenity via has_gui), so
+# they belong in Depends — a --no-install-recommends install must still
+# export. Typst stays in Recommends (installed as a pinned musl binary by
+# setup_scriptorium.sh, not via APT).
 Depends: ${misc:Depends},
          bash (>= 4.3),
          python3 (>= 3.10),
@@ -18,11 +23,14 @@ Depends: ${misc:Depends},
          gir1.2-gtk-3.0,
          git (>= 2.34),
          tar,
-         coreutils
+         coreutils,
+         pandoc (>= 2.19),
+         jq,
+         zenity,
+         curl,
+         xz-utils
 Recommends: typst (>= 0.11),
-            pandoc (>= 2.19),
             gir1.2-adw-1,
-            zenity,
             wl-clipboard | xclip
 Suggests: calibre,
           ghostscript

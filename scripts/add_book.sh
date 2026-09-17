@@ -198,27 +198,43 @@ cat << 'EOF' > "${TARGET_VOL_DIR}/03_Act_III/01_Chapter_03.md"
 In the crucible of the climax, what had been hidden was laid bare.
 EOF
 
-# Initialize discrete Git repository for the new volume
+# Initialize discrete Git repository for the new volume (REL-04)
+GIT_HISTORY="ok"
 if command -v git &> /dev/null; then
-    (
+    if ! (
         cd "${TARGET_VOL_DIR}"
         git init -q
         git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial manuscript drafting repository for ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null || true
-    )
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial manuscript drafting repository for ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
+    ); then
+        echo "[!] Warning: volume initial Git commit failed. Volume created without initial history." >&2
+        GIT_HISTORY="failed"
+    fi
 
     # Track in Manuscript Git repo if present
     if [ -d "${MANUSCRIPT_DIR}/.git" ]; then
-        (
+        if ! (
             cd "${MANUSCRIPT_DIR}"
             git config advice.addEmbeddedRepo false
-            git -c advice.addEmbeddedRepo=false add "${TARGET_VOL_DIR#"${MANUSCRIPT_DIR}/"}" 2>/dev/null || true
-            git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null || true
-        )
+            git -c advice.addEmbeddedRepo=false add "${TARGET_VOL_DIR#"${MANUSCRIPT_DIR}/"}" 2>/dev/null
+            git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
+        ); then
+            echo "[!] Warning: manuscript tracking commit failed for '${VOLUME_NAME}'. Volume itself is intact." >&2
+            [ "${GIT_HISTORY}" = "ok" ] && GIT_HISTORY="failed"
+        fi
     fi
+else
+    GIT_HISTORY="missing"
 fi
 
-MSG="Manuscript volume '${VOLUME_NAME}' scaffolded successfully in '${MANUSCRIPT_NAME}'!\n\nPath:\n${TARGET_VOL_DIR}\n\n• 3 Acts initialized (01_Act_I, 02_Act_II, 03_Act_III)\n• Starter chapters created\n• Discrete Git repository initialized!"
+if [ "${GIT_HISTORY}" = "ok" ]; then
+    GIT_LINE="• Discrete Git repository initialized!"
+elif [ "${GIT_HISTORY}" = "missing" ]; then
+    GIT_LINE="• Created WITHOUT version history (git not installed)."
+else
+    GIT_LINE="• Created WITHOUT initial commit history (see warnings above)."
+fi
+MSG="Manuscript volume '${VOLUME_NAME}' scaffolded successfully in '${MANUSCRIPT_NAME}'!\n\nPath:\n${TARGET_VOL_DIR}\n\n• 3 Acts initialized (01_Act_I, 02_Act_II, 03_Act_III)\n• Starter chapters created\n${GIT_LINE}"
 
 if has_gui; then
     zenity --info --title="Volume Created" --text="${MSG}" --width=450

@@ -12,8 +12,10 @@ override_dh_auto_install:
 	mkdir -p debian/scriptorium/usr/share/applications
 	mkdir -p debian/scriptorium/usr/bin
 
-	# Install scripts and library helpers
+	# Install scripts and library helpers (PKG-03: never ship bytecode)
 	cp -r scripts/* debian/scriptorium/usr/share/scriptorium/scripts/
+	find debian/scriptorium/usr/share/scriptorium -type d -name '__pycache__' -prune -exec rm -rf {} +
+	find debian/scriptorium/usr/share/scriptorium -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 	chmod +x debian/scriptorium/usr/share/scriptorium/scripts/*.sh
 	chmod +x debian/scriptorium/usr/share/scriptorium/scripts/scriptorium
 	chmod +x debian/scriptorium/usr/share/scriptorium/scripts/scriptorium_app.py
@@ -22,8 +24,27 @@ override_dh_auto_install:
 	cp -r templates/* debian/scriptorium/usr/share/scriptorium/templates/
 	cp -r configs/* debian/scriptorium/usr/share/scriptorium/configs/
 
-	# Install desktop launchers
-	cp launchers/*.desktop debian/scriptorium/usr/share/applications/
+	# Install desktop launchers (PKG-02): generate package-native entries
+	# calling /usr/bin/scriptorium so installed launchers never ship the
+	# literal __PROJECT_ROOT__ source-tree placeholder.
+	for f in launchers/*.desktop; do \
+	    base=$$(basename "$$f"); \
+	    case "$$base" in \
+	        scriptorium-control-center.desktop) sub="control-center";; \
+	        init-world.desktop) sub="world";; \
+	        init-manuscript.desktop) sub="manuscript";; \
+	        export-book.desktop) sub="export";; \
+	        save-snapshot.desktop) sub="snapshot";; \
+	        *) sub="";; \
+	    esac; \
+	    if [ -n "$$sub" ]; then \
+	        sed -e 's|^Exec=.*|Exec=/usr/bin/scriptorium '"$$sub"'|' -e 's|^TryExec=.*|TryExec=/usr/bin/scriptorium|' "$$f" > "debian/scriptorium/usr/share/applications/$$base"; \
+	    else \
+	        sed -e 's|__PROJECT_ROOT__|/usr/share/scriptorium|g' "$$f" > "debian/scriptorium/usr/share/applications/$$base"; \
+	    fi; \
+	done
+	# Fail the build if any placeholder survived substitution.
+	! grep -r "__PROJECT_ROOT__" debian/scriptorium/usr/share/applications/ || (echo "ERROR: __PROJECT_ROOT__ survived launcher substitution" >&2; exit 1)
 
 	# Create symlink for global CLI
 	ln -s /usr/share/scriptorium/scripts/scriptorium debian/scriptorium/usr/bin/scriptorium

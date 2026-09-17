@@ -17,7 +17,7 @@ Scriptorium is an established, production-grade, local-first authoring and specu
 ### 2.1 Tech Stack Inventory
 - **Desktop UI**: Python 3.10+ / PyGObject (`GTK 3.24+`) implementing a 5-tab authoring control center ([`scripts/scriptorium_app.py`](file:///scripts/scriptorium_app.py#L1-L80)).
 - **CLI & Automation**: Modular POSIX Bash 4.3+ scripts adhering to strict 4-value exit codes, sourced centralized discovery ([`scripts/lib/worlds.sh`](file:///scripts/lib/worlds.sh#L1-L60)), and transactional temporary directory staging.
-- **Publishing & Typesetting**: Typst `0.15.1` (native binary with SHA-256 integrity checks) for sub-second PDF generation ([`scripts/export_book.sh`](file:///scripts/export_book.sh#L1-L80)) + Pandoc `3.1.x` / `2.19.x` for EPUB/DOCX/HTML formatting.
+- **Publishing & Typesetting**: Typst `0.13.0` pinned (native binary with SHA-256 integrity checks) for sub-second PDF generation ([`scripts/export_book.sh`](file:///scripts/export_book.sh#L1-L80)) + Pandoc `3.1.x` / `2.19.x` for EPUB/DOCX/HTML formatting.
 - **Ecosystem Integration**: Flatpak desktop integration for external authoring tools (Obsidian `md.obsidian.Obsidian`, novelWriter `io.gitlab.novelwriter.novelWriter`, Calibre `com.calibre_ebook.calibre`).
 - **Testing & Quality Assurance**: 5 automated test harnesses executing in headless, sandboxed environments (`scripts/verify.sh`, `tests/test_audit_fixes.sh`, `tests/test_deep_audit.sh`, `tests/test_concordance_edge_cases.sh`, `tests/test_audit_claude_improvements.sh`).
 
@@ -43,7 +43,7 @@ Scriptorium is an established, production-grade, local-first authoring and specu
 | Component / Subsystem | Lockfile / Manifest | Toolchain Build | Boot / Execution | Test Suite Status | Regime |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **CLI & Discovery Engine (`scripts/lib/worlds.sh`)** | POSIX Shell | Native Bash 4.3+ | Instantaneous (<10ms) | 100% Green (`scripts/verify.sh`) | **Lit (Post-Testability)** |
-| **Typesetting Bridge (`scripts/export_book.sh`)** | Typst 0.15.1 + Pandoc | Native precompiled | Sub-second (<100ms) | 100% Green (`tests/test_audit_fixes.sh`) | **Lit (Post-Testability)** |
+| **Typesetting Bridge (`scripts/export_book.sh`)** | Typst 0.13.0 + Pandoc | Native precompiled | Sub-second (<100ms) | 100% Green (`tests/test_audit_fixes.sh`) | **Lit (Post-Testability)** |
 | **Visual Scene Inspector & GUI (`scriptorium_app.py`)** | PyGObject / GTK 3.24 | Native Python 3.10+ | Fast (<300ms) | 100% Bytecode verified (`py_compile`) | **Lit (Post-Testability)** |
 | **Doctor & Concordance Engines** | Shell / Python 3 | Native Bash/Python | <1.2s on standard vault | 100% Green (17 date unit tests) | **Lit (Post-Testability)** |
 | **Git & Disaster Recovery Pipeline** | Shell / tar / sha256sum | Native GNU tools | <500ms backup/restore | 100% Green (traversal tests pass) | **Lit (Post-Testability)** |
@@ -74,7 +74,7 @@ All core subsystems in Scriptorium have crossed their **Testability Milestone** 
   - Plain Markdown (`.md`) storage invariant for all prose, lore, and outlines.
   - Multi-tier isolated Git hierarchy (`~/Universes/<Universe>/`, `~/Universes/<Universe>/<World>/`, `~/Manuscripts/<Manuscript>/`).
   - Standard 4-value exit code contract (`0`, `1`, `2`, `3`).
-  - Typst `0.15.1` native typesetting pipeline for sub-second PDF generation.
+  - Typst `0.13.0` pinned native typesetting pipeline for sub-second PDF generation.
 - ⬆️ **Upgrade in Place (Level 1 - Near-Term Enhancements)**:
   - Packaging: Author Debian control files (`debian/`) and Flatpak manifests (`org.scriptorium.Scriptorium.yaml`).
   - Diagnostic Indexing: Add optional Python-accelerated indexing to `world_doctor.sh` and mtime caching to `scriptorium_app.py`.
@@ -136,7 +136,7 @@ All core subsystems in Scriptorium have crossed their **Testability Milestone** 
 - **Current Implementation:** Multi-format export pipeline ([`scripts/export_book.sh`](file:///scripts/export_book.sh#L1-L100)), Typst template ([`templates/typst/book_template.typ`](file:///templates/typst/book_template.typ#L1-L50)), and novelWriter compiler bridge.
 - **Migration Strategy:** Strategy A (Freeze-then-lift) / Incremental Enhancement.
 - **Testability Status:** Post-Testability ("Lit") / **Safety Rung: L4 (Full automated gate)**.
-- **Dependencies & Coupling:** Relies on Typst `0.15.1` binary and Pandoc `3.1.x`/`2.19.x`.
+- **Dependencies & Coupling:** Relies on Typst `0.13.0` pinned binary and Pandoc `3.1.x`/`2.19.x`.
 - **Effort Estimate:** S (3–5 days).
 - **Risk Assessment:** Typst template syntax evolution across minor/major version upgrades.
 - **Acceptance Criteria:** Sample manuscripts compile to PDF, EPUB, DOCX, and HTML within <500ms with zero visual layout regressions.

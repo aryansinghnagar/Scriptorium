@@ -286,15 +286,22 @@ EOF
 [ -d "${STAGING_DIR}/Locations" ] || { echo "Validation error: Locations directory missing" >&2; exit 1; }
 [ -f "${STAGING_DIR}/world.yaml" ] || { echo "Validation error: world.yaml manifest missing" >&2; exit 1; }
 
-# 4. Git Repository Initialization
+# 4. Git Repository Initialization (REL-04: honest history reporting)
+GIT_HISTORY="ok"
 if command -v git &> /dev/null; then
-    (
+    if ! (
         cd "${STAGING_DIR}"
         git init -q
         git config advice.addEmbeddedRepo false
-        git -c advice.addEmbeddedRepo=false add . 2>/dev/null || true
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium world lore repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]" 2>/dev/null || true
-    )
+        git -c advice.addEmbeddedRepo=false add . 2>/dev/null
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium world lore repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]" 2>/dev/null
+    ); then
+        echo "[!] Warning: world initial Git commit failed. World created without initial history." >&2
+        echo "    Repair with: git -C \"\$HOME/Universes/<Universe>/${WORLD_NAME}\" commit -m 'Initial commit'" >&2
+        GIT_HISTORY="failed"
+    fi
+else
+    GIT_HISTORY="missing"
 fi
 
 # 5. Atomic Move into Destination
@@ -304,15 +311,25 @@ SUCCESS=1
 
 # 6. Track new world in Universe Git repo if applicable
 if [ "${USE_LEGACY_DIR}" -eq 0 ] && [ -d "${UNIVERSE_DIR}/.git" ] && command -v git &> /dev/null; then
-    (
+    if ! (
         cd "${UNIVERSE_DIR}"
-        git add "${WORLD_NAME}" 2>/dev/null || true
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'" 2>/dev/null || true
-    )
+        git add "${WORLD_NAME}" 2>/dev/null
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'" 2>/dev/null
+    ); then
+        echo "[!] Warning: universe tracking commit failed for '${WORLD_NAME}'. World itself is intact." >&2
+        [ "${GIT_HISTORY}" = "ok" ] && GIT_HISTORY="failed"
+    fi
 fi
 
-# 7. Notify completion
-MSG="World Lore Vault '${WORLD_NAME}' successfully created in Universe '${UNIVERSE_NAME}'!\n\nLocation:\n${TARGET_DIR}\n\n• Open Obsidian -> 'Open folder as vault' -> Select '${WORLD_NAME}'\n• Out-of-the-box plugins enabled: Storyline, Longform, Dataview, Metadata Menu, Calendarium, Storyteller Suite, Novel Word Count, Obsidian Git\n• Discrete Git version control initialized!"
+# 7. Notify completion (REL-04)
+if [ "${GIT_HISTORY:-ok}" = "ok" ]; then
+    GIT_LINE="• Discrete Git version control initialized!"
+elif [ "${GIT_HISTORY}" = "missing" ]; then
+    GIT_LINE="• Created WITHOUT version history (git not installed)."
+else
+    GIT_LINE="• Created WITHOUT initial commit history (see warnings above for repair commands)."
+fi
+MSG="World Lore Vault '${WORLD_NAME}' successfully created in Universe '${UNIVERSE_NAME}'!\n\nLocation:\n${TARGET_DIR}\n\n• Open Obsidian -> 'Open folder as vault' -> Select '${WORLD_NAME}'\n• Out-of-the-box plugins enabled: Storyline, Longform, Dataview, Metadata Menu, Calendarium, Storyteller Suite, Novel Word Count, Obsidian Git\n${GIT_LINE}"
 
 if has_gui; then
     zenity --info --title="World Lore Vault Created" --text="${MSG}" --width=480

@@ -49,11 +49,17 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-# Initialize installer audit logging
+# Initialize installer audit logging (DEP-01: --dry-run must not create
+# files — a dry run promises zero mutations, including log files).
 LOG_DIR="${TMPDIR:-/tmp}"
-LOG_FILE="${LOG_DIR}/scriptorium-install-$(date +%Y%m%d-%H%M%S).log"
-if mkdir -p "${LOG_DIR}" 2>/dev/null && touch "${LOG_FILE}" 2>/dev/null; then
-    exec > >(tee -a "${LOG_FILE}") 2>&1
+LOG_FILE=""
+if [ "${DRY_RUN}" -eq 0 ]; then
+    LOG_FILE="${LOG_DIR}/scriptorium-install-$(date +%Y%m%d-%H%M%S).log"
+    if mkdir -p "${LOG_DIR}" 2>/dev/null && touch "${LOG_FILE}" 2>/dev/null; then
+        exec > >(tee -a "${LOG_FILE}") 2>&1
+    else
+        LOG_FILE=""
+    fi
 fi
 
 echo "============================================================"
@@ -224,10 +230,18 @@ else
 fi
 
 echo "[4/6] Installing Flatpak applications (Obsidian, novelWriter, Calibre)..."
+# REL-05: track per-application state explicitly. Returns 0 only when the
+# app is present afterwards; callers aggregate failures instead of
+# printing a false [SUCCESS] summary.
+FLATPAK_FAILED=()
 flatpak_install() {
     local app_id="$1"
     if [ "${DRY_RUN}" -eq 1 ]; then
         echo "  [DRY-RUN] Would install Flatpak: ${app_id}"
+        return 0
+    fi
+    if flatpak info "$app_id" &>/dev/null; then
+        echo "  [✓] ${app_id} already present"
         return 0
     fi
     if [ "${USE_SUDO}" -eq 1 ]; then
@@ -241,13 +255,23 @@ flatpak_install() {
         echo "  [✓] Installed ${app_id} (user scope)"
         return 0
     fi
-    echo "  [!] Notice: ${app_id} install skipped (already present or network unavailable)."
-    return 0
+    if flatpak info "$app_id" &>/dev/null; then
+        echo "  [✓] ${app_id} present after install attempt"
+        return 0
+    fi
+    echo "  [X] FAILED to install ${app_id} (network unavailable or Flathub error)." >&2
+    return 1
 }
 
 for app in "${FLATPAK_APPS[@]}"; do
-    flatpak_install "$app"
+    if ! flatpak_install "$app"; then
+        FLATPAK_FAILED+=("$app")
+    fi
 done
+if [ ${#FLATPAK_FAILED[@]} -gt 0 ]; then
+    echo "[!] Warning: ${#FLATPAK_FAILED[@]} Flatpak application(s) failed to install: ${FLATPAK_FAILED[*]}" >&2
+    echo "    Re-run setup when network is available, or install manually: flatpak install flathub <app-id>" >&2
+fi
 
 # 5. Typst Installation Phase (with Hardcoded SHA-256 Digest Verification)
 echo "[5/6] Checking Typst installation..."
@@ -281,7 +305,8 @@ else
             trap 'rm -rf "${TEMP_DIR:-}"' EXIT
             echo "  Downloading pinned Typst v${TYPST_PINNED_VERSION} (${TYPST_ARCH})..."
             TYPST_URL="https://github.com/typst/typst/releases/download/v${TYPST_PINNED_VERSION}/typst-${TYPST_ARCH}.tar.xz"
-            if curl -L -f -sS -o "${TEMP_DIR}/typst.tar.xz" "${TYPST_URL}"; then
+            # DEP-01: resilient download — hotel/cafe Wi-Fi must not hang setup forever.
+            if curl -L -f -sS --retry 3 --connect-timeout 10 --max-time 60 -o "${TEMP_DIR}/typst.tar.xz" "${TYPST_URL}"; then
                 TYPST_OK=0
                 ACTUAL=$(sha256sum "${TEMP_DIR}/typst.tar.xz" | cut -d' ' -f1)
                 if [ -z "${EXPECTED_DIGEST}" ]; then
@@ -373,6 +398,17 @@ echo ""
 echo "============================================================"
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [DRY-RUN COMPLETE] All simulated checks passed without errors."
+elif [ "${#FLATPAK_FAILED[@]}" -gt 0 ]; then
+    echo "  [PARTIAL] Scriptorium setup finished WITH WARNINGS — Flatpak failures: ${FLATPAK_FAILED[*]}"
+    echo "============================================================"
+    echo "Next Steps:"
+    echo "1. Re-run setup when network is available, or: flatpak install flathub ${FLATPAK_FAILED[0]}"
+    echo "2. Double-click 'New World Vault Creator' (or run ./scripts/init_world.sh) to start a lore vault"
+    echo "3. Double-click 'New Manuscript Creator' (or run ./scripts/init_manuscript.sh) to start a novel"
+    echo "4. Open Control Center on your desktop (or run ./scripts/scriptorium control-center)"
+    echo "5. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_scriptorium_rules.json"
+    echo "6. Connect an external drive and configure Déjà Dup for 3-2-1 backups."
+    echo "============================================================"
 else
     echo "  [SUCCESS] Scriptorium Writing Setup Installed Successfully!"
     echo "============================================================"

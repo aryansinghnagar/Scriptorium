@@ -251,15 +251,21 @@ for wdir in target_worlds:
         continue
 
     # Run world_doctor if this is a world lore vault
+    # DOC-01: 60s budget for large vaults (was 15s); timeouts surface as
+    # actionable warnings instead of a silent {"error": ...} blob.
     wdoctor_report = {}
     if os.path.isfile(world_doctor_bin) and (os.path.isdir(os.path.join(wdir, "Characters")) or os.path.isdir(os.path.join(wdir, "00-World-Bible"))):
         try:
-            cmd = ["bash", world_doctor_bin, wdir, "--json"]
+            cmd = ["bash", world_doctor_bin, wdir, "--json", "--fast"]
             if MANUSCRIPT_FILTER:
                 cmd.extend(["-m", MANUSCRIPT_FILTER])
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
             if res.stdout:
                 wdoctor_report = json.loads(res.stdout)
+            if res.stderr and "falling back to full scan" in res.stderr:
+                wdoctor_report["_note"] = "fast cache unavailable; full scan used"
+        except subprocess.TimeoutExpired:
+            wdoctor_report = {"error": "world_doctor timed out after 60s — vault is very large; re-run 'world_doctor <world> --fast' directly or split the vault"}
         except Exception as e:
             wdoctor_report = {"error": str(e)}
 

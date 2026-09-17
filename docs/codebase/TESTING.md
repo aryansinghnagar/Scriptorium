@@ -9,12 +9,15 @@
 - **Commands**:
 
 ```bash
-# 1. Run all test suites in sequence
+# 1. Run all test suites in sequence (TST-02: 6 shell suites + 2 Python suites)
 bash scripts/verify.sh
 bash tests/test_audit_fixes.sh
 bash tests/test_deep_audit.sh
 bash tests/test_concordance_edge_cases.sh
 bash tests/test_audit_claude_improvements.sh
+bash tests/test_continuity_engine.sh
+bash tests/test_performance_cache.sh
+python3 -m unittest discover -s tests -p "test_*.py" -v
 
 # 2. Run core 7-stage quality and regression harness
 bash scripts/verify.sh
@@ -23,16 +26,16 @@ bash scripts/verify.sh
 bash tests/test_concordance_edge_cases.sh
 bash tests/test_audit_fixes.sh
 
-# 4. Run static syntax & linting checks
-bash -n scripts/*.sh scripts/lib/*.sh scripts/scriptorium
-shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium
+# 4. Run static syntax & linting checks (same file set as CI)
+bash -n scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh
+shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh
 python3 -m py_compile scripts/scriptorium_app.py
 ```
 
 ### 2) Test Layout
 
 - **Test file placement pattern**: Dedicated `tests/` directory at the repository root containing test scripts and mock data fixtures.
-- **Naming convention**: `test_<focus_area>.sh` (e.g. `test_audit_fixes.sh`, `test_deep_audit.sh`, `test_concordance_edge_cases.sh`, `test_audit_claude_improvements.sh`).
+- **Naming convention**: `test_<focus_area>.sh` (e.g. `test_audit_fixes.sh`, `test_deep_audit.sh`, `test_concordance_edge_cases.sh`, `test_audit_claude_improvements.sh`, `test_continuity_engine.sh`, `test_performance_cache.sh`) plus Python unit suites `test_cache.py` / `test_continuity.py` (run via `python3 -m unittest discover -s tests`).
 - **Setup files and where they run**:
   - `tests/fixtures/sample_universe/`: Mock universe with `universe.yaml` and `Universe-Index.md`.
   - `tests/fixtures/sample_world/`: Mock world lore vault with `world.yaml`, character notes, and locations.
@@ -62,7 +65,7 @@ python3 -m py_compile scripts/scriptorium_app.py
 
 ### 5) Coverage and Quality Signals
 
-- **Coverage tool + threshold**: 100% test pass rate across all 5 test scripts (`verify.sh`, `test_audit_fixes.sh`, `test_deep_audit.sh`, `test_concordance_edge_cases.sh`, `test_audit_claude_improvements.sh`). Zero ShellCheck warnings allowed (`-S warning`).
+- **Coverage tool + threshold**: 100% test pass rate across all 8 suites (`verify.sh`, 6× `tests/*.sh`, Python `unittest discover`). Zero ShellCheck warnings allowed (`-S warning`).
 - **Current reported coverage**: 100% pass across all test suites in local execution and GitHub Actions CI.
 - **Known gaps/flaky areas**: Full Typst/Pandoc binary compilation is skipped in environments where `typst` or `pandoc` are not installed locally on the runner host (gracefully skipped via `SKIP` markers).
 
@@ -84,4 +87,4 @@ GitHub Actions workflow [`.github/workflows/ci.yml`](file:///.github/workflows/c
 2. Installs pinned Typst binary (`v0.13.0` / latest musl).
 3. Executes syntax & linting checks (`shellcheck`, `python3 -m py_compile`, `bash -n`).
 4. Executes `scripts/verify.sh` quality harness.
-5. Executes all four targeted regression test suites in `tests/`.
+5. Executes all six targeted regression test suites in `tests/*.sh` plus Python unit tests.

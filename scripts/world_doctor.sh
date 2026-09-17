@@ -144,15 +144,29 @@ FAST_CACHE = os.environ.get("USE_FAST_CACHE", "0") == "1"
 SCRIPT_DIR = os.environ.get("SCRIPT_DIR", "")
 MAX_BYTES = 2 * 1024 * 1024  # per-file read cap
 
+# DOC-01: --fast consumes the mtime-keyed cache instead of re-walking.
+# scan_project() warms/updates the index; CACHED_FILES below (rel -> entry
+# with frontmatter/wikilinks/tags) lets Pass 1 skip disk reads for fresh
+# entries. Unhealthy or incomplete caches fall back to full scan openly.
+CACHED_FILES = {}
+CACHE_HEALTHY = False
+CACHE_USED = False
 if FAST_CACHE and SCRIPT_DIR:
     try:
         sys.path.insert(0, SCRIPT_DIR)
         import lib.cache as cache_engine
-        cache_engine.scan_project(BIBLE)
+        _bible_cache = cache_engine.scan_project(BIBLE)
         if MANUSCRIPT:
             cache_engine.scan_project(MANUSCRIPT)
-    except Exception:
-        pass
+        _files = (_bible_cache or {}).get("files", {})
+        if _files and (_bible_cache.get("healthy", True) and not any(
+                (v or {}).get("error") for v in _files.values())):
+            CACHED_FILES = _files
+            CACHE_HEALTHY = True
+        else:
+            print("[!] Warning: cache incomplete or unhealthy; --fast falling back to full scan.", file=sys.stderr)
+    except Exception as e:
+        print(f"[!] Warning: cache warm failed ({e}); --fast falling back to full scan.", file=sys.stderr)
 
 WIKI_LINK = re.compile(r"\[\[([^\]\|#]+)(?:\|[^\]\]]*)?\]\]")
 FRONTMATTER_DELIM = "---"
@@ -335,6 +349,61 @@ fm_errors = []
 required_errors = []
 timeline_errors = []
 
+def _cached_note(rel, entry):
+    """Build a (rel, fm, text, cached_links) note from a cache entry.
+
+    Returns None when the entry cannot stand in for a disk read.
+    """
+    fm = entry.get("frontmatter") or {}
+    # Cache frontmatter parser is lenient; normalise list-vs-scalar shapes
+    # to what Pass 2 expects.
+    links = list(entry.get("wikilinks") or [])
+    # Reconstruct minimal text carrying wikilinks so downstream regex
+    # passes behave identically without a disk read.
+    pseudo = "\n".join(f"[[{t}]]" for t in links)
+    return (rel, fm, pseudo, links, True)
+
+
+_cached_rels = set()
+if CACHE_HEALTHY:
+    for rel, entry in sorted(CACHED_FILES.items()):
+        if not rel.endswith(".md"):
+            continue
+        base = os.path.basename(rel)
+        if base.startswith("."):
+            continue
+        note = _cached_note(rel, entry)
+        if note is None:
+            continue
+        rel, fm, pseudo, links, _ = note
+        stem = os.path.splitext(base)[0]
+        rel_no_ext = os.path.splitext(rel)[0]
+        index.setdefault(norm(stem), rel)
+        index.setdefault(norm(rel_no_ext), rel)
+        index.setdefault(norm(rel_no_ext.replace('\\', '/')), rel)
+        if fm.get("name") and isinstance(fm["name"], str) and fm["name"].strip():
+            index.setdefault(norm(fm["name"]), rel)
+        for alias in (fm.get("aliases") or []):
+            if isinstance(alias, str) and alias.strip():
+                aliases.setdefault(norm(alias), rel)
+        etype = fm.get("type", "")
+        for req in REQUIRED_BY_TYPE.get(etype, ()):
+            if not fm.get(req):
+                required_errors.append((rel, etype, req))
+        for (b_key, d_key, label) in [("birth_year", "death_year", "Death year ({d}) precedes birth year ({b})"),
+                                      ("birth_date", "death_date", "Death date ({d}) precedes birth date ({b})"),
+                                      ("start_year", "end_year", "End year ({e}) precedes start year ({s})"),
+                                      ("start_date", "end_date", "End date ({e}) precedes start date ({s})")]:
+            if b_key in fm and d_key in fm:
+                cmp = compare_timeline_dates(fm[b_key], fm[d_key])
+                if cmp is not None and cmp > 0:
+                    msg = label.replace("{b}", str(fm[b_key])).replace("{d}", str(fm[d_key])).replace("{s}", str(fm[b_key])).replace("{e}", str(fm[d_key]))
+                    timeline_errors.append((rel, msg))
+        notes.append((rel, fm, pseudo))
+        _cached_rels.add(rel)
+    if notes:
+        CACHE_USED = True
+
 for root, dirs, files in os.walk(BIBLE):
     dirs[:] = [d for d in dirs if d not in (".obsidian", ".git")]
     for fname in sorted(files):
@@ -342,6 +411,8 @@ for root, dirs, files in os.walk(BIBLE):
             continue
         path = os.path.join(root, fname)
         rel = os.path.relpath(path, BIBLE)
+        if rel in _cached_rels:
+            continue
         stem = os.path.splitext(fname)[0]
         try:
             text = read_capped(path)
@@ -537,6 +608,8 @@ findings = {
     "world": BIBLE,
     "notes": len(notes),
     "manuscript_files": ms_files_scanned,
+    "fast_cache_requested": bool(FAST_CACHE),
+    "fast_cache_used": bool(CACHE_USED),
     "broken_links": [{"code": "WLD-101", "from": s, "missing": t} for s, t in broken_links],
     "dangling_frontmatter_refs": [{"code": "WLD-102", "from": s, "field": f, "missing": t} for s, f, t in dangling_refs],
     "unrenamed_templates": sorted(rel for rel, fm, _ in notes if is_template(rel, fm)),
@@ -553,7 +626,7 @@ if JSON_OUT:
     print(json.dumps(findings, indent=2))
 else:
     print(f"Scriptorium World Doctor — {BIBLE}")
-    print(f"Notes scanned: {len(notes)}")
+    print(f"Notes scanned: {len(notes)}" + (" (fast cache)" if CACHE_USED else ""))
     if ms_files_scanned > 0:
         print(f"Manuscript scenes scanned: {ms_files_scanned}")
     print()

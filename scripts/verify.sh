@@ -9,13 +9,20 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 TMP_VERIFY="$(mktemp -d)"
+# TST-02: save/restore HOME around the sandboxed lifecycle stage.
+ORIG_HOME="${HOME:-}"
 cleanup() {
     rm -rf "${TMP_VERIFY:-}"
+    if [ -n "${ORIG_HOME:-}" ]; then
+        HOME="${ORIG_HOME}"
+        export HOME
+    fi
 }
 trap cleanup EXIT
 
 echo "[1/7] Script syntax & Python compilation validation..."
-for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium; do
+# TST-02: same bash -n file set as CI (ci.yml) — scripts + lib + facade + tests.
+for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh; do
     if [ -f "$f" ]; then
         if ! bash -n "$f"; then
             echo "  FAIL $f (bash syntax)" >&2
@@ -316,7 +323,17 @@ end_year: "-400 IE"
 An ancient cataclysm reshaping the realms.
 EOF
 
-DOCTOR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)"
+# TST-03: explicit exit-code handling — 0/1 are valid doctor outcomes
+# (clean/findings); 2+ is a harness failure and must abort loudly.
+set +e
+DOCTOR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json 2>"${TMP_VERIFY}/doctor1.err")"
+DOCTOR_RC=$?
+set -e
+if [ "${DOCTOR_RC}" -gt 1 ]; then
+    echo "  FAIL world_doctor valid-timeline run exited ${DOCTOR_RC}" >&2
+    cat "${TMP_VERIFY}/doctor1.err" >&2
+    exit 1
+fi
 printf '%s' "${DOCTOR_JSON}" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)
@@ -337,7 +354,15 @@ death_year: "Age of Fire 410"
 A chronologically inverted paradox lord.
 EOF
 
-DOCTOR_ERR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)"
+set +e
+DOCTOR_ERR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json 2>"${TMP_VERIFY}/doctor2.err")"
+DOCTOR_RC=$?
+set -e
+if [ "${DOCTOR_RC}" -gt 1 ]; then
+    echo "  FAIL world_doctor paradox run exited ${DOCTOR_RC}" >&2
+    cat "${TMP_VERIFY}/doctor2.err" >&2
+    exit 1
+fi
 printf '%s' "${DOCTOR_ERR_JSON}" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)
@@ -355,7 +380,15 @@ cat > "${MS_PATH}/Book-01/01_Act_I/02_Drift_Scene.md" << 'EOF'
 A scene referencing unindexed lore entities.
 EOF
 
-DOCTOR_DRIFT_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --manuscript "${MS_PATH}" --json || true)"
+set +e
+DOCTOR_DRIFT_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --manuscript "${MS_PATH}" --json 2>"${TMP_VERIFY}/doctor3.err")"
+DOCTOR_RC=$?
+set -e
+if [ "${DOCTOR_RC}" -gt 1 ]; then
+    echo "  FAIL world_doctor drift run exited ${DOCTOR_RC}" >&2
+    cat "${TMP_VERIFY}/doctor3.err" >&2
+    exit 1
+fi
 printf '%s' "${DOCTOR_DRIFT_JSON}" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)

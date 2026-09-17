@@ -20,7 +20,8 @@ Options:
   -f, --force        Proceed without interactive confirmation
   -h, --help         Show this help and exit
 
-Note: Your user writing projects in ~/Worlds are NEVER deleted by this script.
+Note: Your user writing projects in ~/Universes, ~/Manuscripts, and legacy
+~/Worlds are NEVER deleted by this script.
 USAGE
 }
 
@@ -132,6 +133,6 @@ if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [DRY-RUN COMPLETE] Rollback simulation finished successfully."
 else
     echo "  [SUCCESS] Scriptorium uninstallation complete."
-    echo "  User world data in ~/Worlds remains intact and preserved."
+    echo "  User writing data in ~/Universes, ~/Manuscripts, and legacy ~/Worlds remains intact and preserved."
 fi
 echo "============================================================"

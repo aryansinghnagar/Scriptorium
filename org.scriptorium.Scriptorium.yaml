@@ -8,8 +8,10 @@ finish-args:
   - --socket=fallback-x11
   - --socket=wayland
   - --socket=x11
-  - --filesystem=~/Universes:create
-  - --filesystem=~/Manuscripts:create
+  # PKG-03: `~/...` tilde forms are deprecated; Scriptorium manages whole
+  # author trees (~/Universes, ~/Manuscripts, ~/Worlds legacy) plus Git
+  # metadata, so a scoped `home` grant replaces the two tilde grants.
+  - --filesystem=home
   - --filesystem=xdg-desktop:ro
   - --talk-name=org.freedesktop.Notifications
 
@@ -23,12 +25,33 @@ modules:
       - mkdir -p /app/share/applications
       - mkdir -p /app/bin
       - cp -r scripts/* /app/share/scriptorium/scripts/
+      # PKG-03: strip bytecode for reproducible packages.
+      - find /app/share/scriptorium -type d -name '__pycache__' -prune -exec rm -rf {} + ; find /app/share/scriptorium -type f -name '*.py[co]' -delete
       - chmod +x /app/share/scriptorium/scripts/*.sh
       - chmod +x /app/share/scriptorium/scripts/scriptorium
       - chmod +x /app/share/scriptorium/scripts/scriptorium_app.py
       - cp -r templates/* /app/share/scriptorium/templates/
       - cp -r configs/* /app/share/scriptorium/configs/
-      - cp launchers/*.desktop /app/share/applications/
+      # PKG-02: generate Flatpak-native launchers calling /app/bin/scriptorium
+      # so the installed .desktop files never contain __PROJECT_ROOT__.
+      - |
+        for f in launchers/*.desktop; do
+          base=$(basename "$f")
+          case "$base" in
+            scriptorium-control-center.desktop) sub="control-center";;
+            init-world.desktop) sub="world";;
+            init-manuscript.desktop) sub="manuscript";;
+            export-book.desktop) sub="export";;
+            save-snapshot.desktop) sub="snapshot";;
+            *) sub="";;
+          esac
+          if [ -n "$sub" ]; then
+            sed -e "s|^Exec=.*|Exec=/app/bin/scriptorium $sub|" -e "s|^TryExec=.*|TryExec=/app/bin/scriptorium|" "$f" > "/app/share/applications/$base"
+          else
+            sed -e "s|__PROJECT_ROOT__|/app/share/scriptorium|g" "$f" > "/app/share/applications/$base"
+          fi
+        done
+        ! grep -r "__PROJECT_ROOT__" /app/share/applications/ || (echo "ERROR: __PROJECT_ROOT__ survived Flatpak launcher substitution" >&2; exit 1)
       - ln -s /app/share/scriptorium/scripts/scriptorium /app/bin/scriptorium
     sources:
       - type: dir

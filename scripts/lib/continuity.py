@@ -122,14 +122,71 @@ def extract_lore_profiles(world_dir: Path) -> dict:
                     "traits": traits
                 }
             except Exception as e:
-                logger.debug("Failed to read lore profile from %s: %s", md_file, e)
+                logger.warning("Failed to read lore profile from %s: %s", md_file, e)
     return profiles
+
+
+SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+
+# CNT-01: possessive binding — "<Name>'s <trait>" attributes the trait to
+# <Name> only, even when other characters share the sentence.
+_POSSESSIVE_TMPL = r"\b{0}(?:'s|'|’s)\b"
+
+
+def _chars_mentioned(text: str, candidates: list) -> list:
+    return [c for c in candidates if re.search(r"\b" + re.escape(c) + r"\b", text, re.IGNORECASE)]
+
+
+def attribute_sentence_trait(sentence: str, scene_chars: list, profiles: dict) -> list:
+    """CNT-01 sentence-level attribution.
+
+    Returns [(char_name, confidence)] where confidence is 'high' (possessive
+    binding or single explicit mention) or 'medium' (single @pov/@char
+    context with no competing mention). Ambiguous multi-character
+    sentences without possessive binding return [] — no contradiction is
+    emitted when ownership is unclear. Pronouns are never resolved.
+    """
+    mentioned = _chars_mentioned(sentence, list(profiles.keys()) + scene_chars)
+    # De-duplicate preserving order.
+    seen = set()
+    ordered = []
+    for c in mentioned:
+        key = c.lower()
+        if key not in seen:
+            seen.add(key)
+            ordered.append(c)
+    # Canonicalise to profile names when case differs.
+    canon = []
+    lower_profiles = {p.lower(): p for p in profiles}
+    for c in ordered:
+        canon.append(lower_profiles.get(c.lower(), c))
+
+    # 1. Possessive binding wins: "Alice's green eyes" -> Alice only.
+    for c in canon:
+        if re.search(_POSSESSIVE_TMPL.format(re.escape(c)), sentence, re.IGNORECASE):
+            return [(c, "high")]
+
+    # 2. Exactly one known character in the sentence -> that character.
+    profile_mentions = [c for c in canon if c in profiles]
+    if len(profile_mentions) == 1:
+        return [(profile_mentions[0], "high")]
+    if len(profile_mentions) > 1:
+        return []
+
+    # 3. No explicit mention: fall back to scene context only when it is
+    # unambiguous (exactly one active character).
+    ctx = [c for c in scene_chars]
+    if len(ctx) == 1:
+        owner = lower_profiles.get(ctx[0].lower(), ctx[0])
+        return [(owner, "medium")]
+    return []
 
 
 def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
     """Scans manuscript scene files and detects narrative trait contradictions."""
     findings = []
-    
+    warnings: list = []
+
     # Store scene-level character trait mentions across chapters
     scene_mentions = {}  # {entity_name: [(file, line_no, trait_type, trait_val)]}
 
@@ -138,7 +195,13 @@ def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
             continue
         try:
             rel_path = str(md_file.relative_to(manuscript_dir)).replace("\\", "/")
-            lines = md_file.read_text(encoding="utf-8", errors="replace").splitlines()
+            try:
+                lines = md_file.read_text(encoding="utf-8", errors="strict").splitlines()
+            except (OSError, UnicodeError) as e:
+                # CNT-02: surface unreadable files instead of silently skipping.
+                warnings.append({"file": rel_path, "error": f"unreadable scene file: {e}"})
+                logger.warning("Skipping unreadable scene file %s: %s", md_file, e)
+                continue
 
             # Find active POV / Characters in scene
             scene_chars = []
@@ -154,41 +217,63 @@ def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
             if not scene_chars:
                 full_text = "\n".join(lines)
                 for entity in profiles:
-                    if entity in full_text:
+                    if re.search(r"\b" + re.escape(entity) + r"\b", full_text):
                         scene_chars.append(entity)
 
-            # Analyze text for trait assertions
+            # Analyze text for trait assertions (sentence-level, CNT-01)
             for line_idx, line in enumerate(lines, 1):
                 if line.startswith("@") or line.startswith("#") or not line.strip():
                     continue
-                
-                line_traits = extract_traits_from_text(line)
-                for trait_type, vals in line_traits.items():
-                    for val in vals:
-                        matched_chars = [c for c in scene_chars if re.search(r'\b' + re.escape(c) + r'\b', line, re.IGNORECASE)]
-                        target_chars = matched_chars if matched_chars else scene_chars
-                        for char_name in target_chars:
-                            if char_name not in scene_mentions:
-                                scene_mentions[char_name] = []
-                            scene_mentions[char_name].append((rel_path, line_idx, trait_type, val))
 
-                            # Compare against World Bible truth
-                            if char_name in profiles:
-                                bible_traits = profiles[char_name]["traits"].get(trait_type, [])
-                                if bible_traits and val not in bible_traits:
-                                    findings.append({
-                                        "id": "CNT-101",
-                                        "severity": "WARNING",
-                                        "entity": char_name,
-                                        "trait": trait_type,
-                                        "expected": "/".join(bible_traits),
-                                        "found": val,
-                                        "file": rel_path,
-                                        "line": line_idx,
-                                        "message": f"Character '{char_name}' has lore {trait_type} '{'/'.join(bible_traits)}' in World Bible, but scene asserts '{val}'."
-                                    })
+                for sentence in SENTENCE_SPLIT.split(line):
+                    if not sentence.strip():
+                        continue
+                    sent_traits = extract_traits_from_text(sentence)
+                    if not sent_traits:
+                        continue
+                    targets = attribute_sentence_trait(sentence, scene_chars, profiles)
+                    if not targets:
+                        continue
+                    for trait_type, vals in sent_traits.items():
+                        for val in vals:
+                            for char_name, confidence in targets:
+                                if char_name not in scene_mentions:
+                                    scene_mentions[char_name] = []
+                                scene_mentions[char_name].append((rel_path, line_idx, trait_type, val))
+
+                                # Compare against World Bible truth
+                                if char_name in profiles:
+                                    bible_traits = profiles[char_name]["traits"].get(trait_type, [])
+                                    if bible_traits and val not in bible_traits:
+                                        if confidence == "high":
+                                            findings.append({
+                                                "id": "CNT-101",
+                                                "severity": "WARNING",
+                                                "entity": char_name,
+                                                "trait": trait_type,
+                                                "expected": "/".join(bible_traits),
+                                                "found": val,
+                                                "file": rel_path,
+                                                "line": line_idx,
+                                                "confidence": confidence,
+                                                "message": f"Character '{char_name}' has lore {trait_type} '{'/'.join(bible_traits)}' in World Bible, but scene asserts '{val}'."
+                                            })
+                                        else:
+                                            findings.append({
+                                                "id": "CNT-101",
+                                                "severity": "ADVISORY",
+                                                "entity": char_name,
+                                                "trait": trait_type,
+                                                "expected": "/".join(bible_traits),
+                                                "found": val,
+                                                "file": rel_path,
+                                                "line": line_idx,
+                                                "confidence": confidence,
+                                                "message": f"Character '{char_name}' has lore {trait_type} '{'/'.join(bible_traits)}' in World Bible, but scene (single-character context) asserts '{val}'."
+                                            })
         except Exception as e:
-            logger.debug("Failed to scan scene file %s: %s", md_file, e)
+            warnings.append({"file": str(md_file), "error": str(e)})
+            logger.warning("Failed to scan scene file %s: %s", md_file, e)
 
     # Compare inter-scene trait consistency (e.g. Book 1 vs Book 2)
     for char_name, mentions in scene_mentions.items():
@@ -218,6 +303,8 @@ def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
                         })
                         break
 
+    # Attach warnings for callers that surface them (CNT-02).
+    scan_manuscript_scenes.last_warnings = warnings  # type: ignore[attr-defined]
     return findings
 
 
@@ -227,16 +314,19 @@ def run_continuity_audit(world_dir: str, manuscript_dir: str) -> dict:
 
     profiles = extract_lore_profiles(wpath)
     findings = []
+    warnings: list = []
 
     if mpath and mpath.is_dir():
         findings = scan_manuscript_scenes(mpath, profiles)
+        warnings = list(getattr(scan_manuscript_scenes, "last_warnings", []))
 
     return {
         "world": wpath.name,
         "manuscript": mpath.name if mpath else None,
         "entities_profiled": len(profiles),
         "total_findings": len(findings),
-        "findings": findings
+        "findings": findings,
+        "warnings": warnings,
     }
 
 
@@ -247,19 +337,33 @@ def main():
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     args = parser.parse_args()
 
-    # Discover world / manuscript if not provided
+    # Discover world / manuscript if not provided (CNT-02: deterministic,
+    # ambiguity-failing — never silently pick universes[0] / mss[0]).
     world_dir = args.world
     manuscript_dir = args.manuscript
 
     if not world_dir:
         home = Path.home()
-        universes = list((home / "Universes").glob("*/*"))
-        if universes:
+        universes = sorted((home / "Universes").glob("*/*"), key=lambda p: str(p))
+        # Filter out non-world dirs (files named Worlds, dotfiles already excluded by glob).
+        universes = [p for p in universes if p.is_dir() and p.name not in ("Worlds", ".git")]
+        if len(universes) == 1:
             world_dir = str(universes[0])
+        elif len(universes) > 1:
+            print("Error: Multiple worlds discovered — specify one with -w/--world:", file=sys.stderr)
+            for p in universes:
+                print(f"  - {p.name}  [{p.parent.name}]  {p}", file=sys.stderr)
+            sys.exit(2)
         else:
-            worlds = list((home / "Worlds").glob("*"))
-            if worlds:
+            worlds = sorted((home / "Worlds").glob("*"), key=lambda p: str(p))
+            worlds = [p for p in worlds if p.is_dir()]
+            if len(worlds) == 1:
                 world_dir = str(worlds[0])
+            elif len(worlds) > 1:
+                print("Error: Multiple legacy worlds discovered — specify one with -w/--world:", file=sys.stderr)
+                for p in worlds:
+                    print(f"  - {p}", file=sys.stderr)
+                sys.exit(2)
 
     if not world_dir or not Path(world_dir).is_dir():
         print("Error: No valid World Bible directory specified or discovered.", file=sys.stderr)
@@ -267,9 +371,16 @@ def main():
 
     if not manuscript_dir:
         home = Path.home()
-        mss = list((home / "Manuscripts").glob("*"))
-        if mss:
+        mss = sorted((home / "Manuscripts").glob("*"), key=lambda p: str(p))
+        mss = [p for p in mss if p.is_dir()]
+        if len(mss) == 1:
             manuscript_dir = str(mss[0])
+        elif len(mss) > 1:
+            print("Note: Multiple manuscripts discovered; auditing without manuscript cross-check.", file=sys.stderr)
+            print("Re-run with -m/--manuscript to select one:", file=sys.stderr)
+            for p in mss:
+                print(f"  - {p.name}  {p}", file=sys.stderr)
+            manuscript_dir = ""
 
     report = run_continuity_audit(world_dir, manuscript_dir or "")
 
@@ -279,7 +390,10 @@ def main():
         print("=== Scriptorium Narrative Continuity Report ===")
         print(f"World: {report['world']} | Manuscript: {report['manuscript'] or 'N/A'}")
         print(f"Profiled Entities: {report['entities_profiled']}")
-        print(f"Continuity Findings: {report['total_findings']}\n")
+        print(f"Continuity Findings: {report['total_findings']}")
+        if report.get("warnings"):
+            print(f"File Warnings: {len(report['warnings'])}")
+        print()
 
         if not report["findings"]:
             print("[OK] Narrative continuity clean. No contradictory traits or entity paradoxes detected.")
@@ -288,6 +402,10 @@ def main():
                 badge = f"[{f['severity']}]"
                 print(f"{badge} {f['id']} ({f['entity']}): {f['message']}")
                 print(f"     Location: {f['file']}:{f['line']}\n")
+        if report.get("warnings"):
+            print("Warnings (incomplete audit — files skipped):")
+            for w in report["warnings"]:
+                print(f"  [!] {w.get('file')}: {w.get('error')}")
 
     sys.exit(1 if report["total_findings"] > 0 else 0)
 

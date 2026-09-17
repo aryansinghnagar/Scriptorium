@@ -148,20 +148,34 @@ cat << 'EOF' > "${TARGET_UNIVERSE_DIR}/.gitignore"
 .DS_Store
 EOF
 
-# Initialize Universe-level Git repository
+# Initialize Universe-level Git repository (REL-04: honest history reporting)
+GIT_HISTORY="ok"
 if command -v git &> /dev/null; then
-    (
+    if ! (
         cd "${TARGET_UNIVERSE_DIR}"
         git init -q
         git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium universe repository: ${UNIVERSE_NAME}" 2>/dev/null || true
-    )
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium universe repository: ${UNIVERSE_NAME}" 2>/dev/null
+    ); then
+        echo "[!] Warning: universe initial Git commit failed. Universe created without initial history." >&2
+        echo "    Repair with: git -C '${TARGET_UNIVERSE_DIR}' commit -m 'Initial commit'" >&2
+        GIT_HISTORY="failed"
+    fi
+else
+    GIT_HISTORY="missing"
 fi
 
 echo "[✓] Universe '${UNIVERSE_NAME}' created successfully at:"
 echo "    ${TARGET_UNIVERSE_DIR}"
 
-MSG="Universe '${UNIVERSE_NAME}' created successfully!\n\nLocation:\n${TARGET_UNIVERSE_DIR}\n\nYou can now scaffold worlds inside this universe."
+if [ "${GIT_HISTORY}" = "ok" ]; then
+    GIT_LINE="Git version control initialized."
+elif [ "${GIT_HISTORY}" = "missing" ]; then
+    GIT_LINE="Created WITHOUT version history (git not installed)."
+else
+    GIT_LINE="Created WITHOUT initial commit history (see warning above)."
+fi
+MSG="Universe '${UNIVERSE_NAME}' created successfully!\n\nLocation:\n${TARGET_UNIVERSE_DIR}\n\nYou can now scaffold worlds inside this universe.\n${GIT_LINE}"
 
 if has_gui; then
     zenity --info --title="Universe Created" --text="${MSG}" --width=450

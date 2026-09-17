@@ -160,6 +160,34 @@ A grand adventure awaits them in the citadel.
         self.assertNotIn("Act_I/ch2.md", cache3["files"])
         self.assertEqual(len(cache3["files"]), 1)
 
+    def test_canonical_count_words_ana01(self):
+        # ANA-01: frontmatter, codeblocks, @tags and % comments are not prose.
+        from lib.cache import count_words
+        text = """---
+title: Test
+---
+# Heading
+
+@pov: Kael
+% a typst comment
+```python
+ignored code words here
+```
+Real prose words here.
+"""
+        self.assertEqual(count_words(text), 5)  # Heading + Real + prose + words + here
+
+    def test_scan_excludes_generated_dirs_prf02(self):
+        # PRF-02: Exports/Backups must not pollute the index or word counts.
+        exp = self.project_dir / "Exports"
+        exp.mkdir(parents=True)
+        (exp / "compiled.md").write_text("Exported words " * 100, encoding="utf-8")
+        (self.project_dir / "real.md").write_text("Real words here", encoding="utf-8")
+        cache = scan_project(str(self.project_dir))
+        self.assertIn("real.md", cache.get("files", {}))
+        self.assertNotIn("Exports/compiled.md", cache.get("files", {}))
+        self.assertTrue(cache.get("healthy", False))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -6,10 +6,25 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# PKG-01: dereference symlinks so packaged installs
+# (/usr/bin/scriptorium -> /usr/share/scriptorium/scripts/scriptorium,
+#  /app/bin/scriptorium -> /app/share/scriptorium/scripts/scriptorium)
+# resolve to the real script directory instead of /usr/bin or /app/bin.
+_RESOLVED_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "${_RESOLVED_SCRIPT}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
 if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ]; then
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+fi
+# Packaged layout: scripts live directly under the share root
+# (/usr/share/scriptorium/scripts/, /app/share/scriptorium/scripts/).
+if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ] && [ -f "${SCRIPT_DIR}/verify.sh" ]; then
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    # SCRIPT_DIR is already .../scripts; PROJECT_ROOT is the share root.
+    # Normalise: PROJECT_ROOT/scripts must exist.
+    if [ ! -d "${PROJECT_ROOT}/scripts" ]; then
+        PROJECT_ROOT="$SCRIPT_DIR"
+    fi
 fi
 
 VERSION="1.5.0"

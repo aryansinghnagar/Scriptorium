@@ -15,8 +15,26 @@ from pathlib import Path
 
 logger = logging.getLogger("scriptorium.cache")
 
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 CACHE_FILENAME = ".scriptorium_cache.json"
+
+# ANA-01: canonical word-count definition shared by cache.py,
+# wordcount_report.sh, and ui_gtk3.py. Policy: strip YAML frontmatter and
+# fenced codeblocks, drop @metadata lines and Typst `%` comment lines,
+# then count unicode word boundaries (\b\w+\b). Hyphenated compounds
+# count as two words; isolated punctuation counts as zero.
+# PRF-02: bound per-file reads; world_doctor uses 2 MiB, wordcount 8 MiB —
+# cache sits between at 4 MiB to avoid RAM exhaustion on huge .md files.
+MAX_BYTES = 4 * 1024 * 1024
+
+# PRF-02: never index generated/published artifacts — they bloat the cache
+# and pollute word counts with compiled output.
+EXCLUDE_DIR_NAMES = frozenset({
+    ".obsidian", ".git",
+    "Exports", "04-Publishing", "04_Publishing",
+    "Backups", "05-Backups", "05_Backups",
+    "04_Back_Matter", "04-Back-Matter",
+})
 
 TAG_REGEXES = {
     "pov": re.compile(r"^@pov:\s*(.+)$", re.IGNORECASE | re.MULTILINE),
@@ -74,6 +92,24 @@ def save_cache(project_dir: str, cache_data: dict) -> bool:
         return False
 
 
+def count_words(text: str) -> int:
+    """ANA-01 canonical word count. All consumers must use this."""
+    clean = FRONTMATTER_REGEX.sub("", text)
+    clean = re.sub(r"```.*?```", "", clean, flags=re.DOTALL)
+    # Drop scene-metadata and Typst comment lines (not prose).
+    lines = []
+    for ln in clean.splitlines():
+        s = ln.strip()
+        if not s:
+            continue
+        if s.startswith("@") and re.match(r"^@[A-Za-z0-9_-]+:", s):
+            continue
+        if s.startswith("%"):
+            continue
+        lines.append(ln)
+    return len(re.findall(r"\b\w+\b", "\n".join(lines), flags=re.UNICODE))
+
+
 def parse_frontmatter(content: str) -> dict:
     match = FRONTMATTER_REGEX.match(content)
     if not match:
@@ -97,17 +133,20 @@ def parse_frontmatter(content: str) -> dict:
 
 
 def parse_markdown_file(file_path: Path) -> dict:
+    truncated = False
     try:
         stat = file_path.stat()
         mtime = stat.st_mtime
         size = stat.st_size
-        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
-            content = f.read()
+        # PRF-02: bounded read — never load a multi-GB file fully into RAM.
+        with open(file_path, "rb") as fh:
+            data = fh.read(MAX_BYTES + 1)
+        if len(data) > MAX_BYTES:
+            truncated = True
+            data = data[:MAX_BYTES]
+        content = data.decode("utf-8", errors="replace")
 
-        # Word count (strip frontmatter and codeblocks for accurate count)
-        clean_prose = FRONTMATTER_REGEX.sub("", content)
-        clean_prose = re.sub(r"```.*?```", "", clean_prose, flags=re.DOTALL)
-        words = len(re.findall(r"\b\w+\b", clean_prose))
+        words = count_words(content)
 
         # Extract tags
         tags = {}
@@ -122,7 +161,7 @@ def parse_markdown_file(file_path: Path) -> dict:
         # Frontmatter
         frontmatter = parse_frontmatter(content)
 
-        return {
+        entry = {
             "mtime": mtime,
             "size": size,
             "word_count": words,
@@ -130,6 +169,12 @@ def parse_markdown_file(file_path: Path) -> dict:
             "wikilinks": wikilinks,
             "frontmatter": frontmatter,
         }
+        if truncated:
+            # DOC-02: explicit truncation flag — callers must not mistake
+            # a capped count for a complete one.
+            entry["truncated"] = True
+            entry["error"] = f"file exceeds {MAX_BYTES // (1024 * 1024)} MiB read cap; content truncated"
+        return entry
     except Exception as e:
         logger.warning("Error reading or parsing markdown file %s: %s", file_path, e)
         return {
@@ -152,8 +197,11 @@ def scan_project(project_dir: str, force: bool = False) -> dict:
     updated = False
 
     current_files = set()
+    errors = 0
     for md_path in pdir.rglob("*.md"):
         if ".obsidian" in md_path.parts or ".git" in md_path.parts or md_path.name.startswith("."):
+            continue
+        if any(part in EXCLUDE_DIR_NAMES for part in md_path.parts):
             continue
         rel_path = str(md_path.relative_to(pdir)).replace("\\", "/")
         current_files.add(rel_path)
@@ -166,10 +214,17 @@ def scan_project(project_dir: str, force: bool = False) -> dict:
                 or cached_entry.get("mtime") != stat.st_mtime
                 or cached_entry.get("size") != stat.st_size
             ):
-                files_cache[rel_path] = parse_markdown_file(md_path)
+                parsed = parse_markdown_file(md_path)
+                files_cache[rel_path] = parsed
+                if parsed.get("error"):
+                    errors += 1
                 updated = True
+            elif cached_entry.get("error"):
+                errors += 1
         except Exception as e:
-            logger.debug("Failed to inspect %s: %s", md_path, e)
+            # DOC-02: stat failures are health signals, not silent skips.
+            logger.warning("Failed to inspect %s: %s", md_path, e)
+            errors += 1
             continue
 
     # Remove deleted files from cache
@@ -180,6 +235,10 @@ def scan_project(project_dir: str, force: bool = False) -> dict:
         updated = True
 
     cache["files"] = files_cache
+    # DOC-02: cache health travels with the payload so fast-path consumers
+    # can fail closed when the index is uncertain.
+    cache["errors"] = errors
+    cache["healthy"] = errors == 0
     if updated or force or not get_cache_path(str(pdir)).exists():
         save_cache(str(pdir), cache)
 

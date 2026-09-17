@@ -165,13 +165,23 @@ case "${ACTION}" in
         bash "${PROJECT_ROOT}/scripts/backup_world.sh" --world "${ACTIVE_WORLD}"
         ;;
     "8. Run Diagnostics")
-        REPORT=$(bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "${WORLD_DIR}" 2>&1 || true)
+        # TST-03: capture output AND exit code explicitly (no `|| true`
+        # masking) so findings (exit 1) are visible in the dialog title.
+        set +e
+        REPORT=$(bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "${WORLD_DIR}" 2>&1)
+        DOCTOR_RC=$?
+        set -e
+        [ "${DOCTOR_RC}" -ne 0 ] && REPORT="[world_doctor exit ${DOCTOR_RC}]"$'\n'"${REPORT}"
         zenity --text-info --title="World Doctor — ${ACTIVE_WORLD}" \
             --width=600 --height=450 \
             --filename=<(printf '%s\n' "${REPORT}")
         ;;
     "9. Word Count Report")
-        REPORT=$(bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "${WORLD_DIR}" 2>&1 || true)
+        set +e
+        REPORT=$(bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "${WORLD_DIR}" 2>&1)
+        REPORT_RC=$?
+        set -e
+        [ "${REPORT_RC}" -ne 0 ] && REPORT="[wordcount exit ${REPORT_RC}]"$'\n'"${REPORT}"
         zenity --text-info --title="Wordcount Report — ${ACTIVE_WORLD}" \
             --width=600 --height=450 \
             --filename=<(printf '%s\n' "${REPORT}")

@@ -1,0 +1,15 @@
+# Scriptorium code owners (GOV-01: require review on security-sensitive paths
+# once multi-maintainer workflow is active; branch protection itself is
+# enabled in GitHub Settings: main = protected, CI required, no force-push).
+# Replace @aryansinghnagar with the maintainer team handle when available.
+
+* @aryansinghnagar
+/scripts/restore_world.sh @aryansinghnagar
+/scripts/backup_world.sh @aryansinghnagar
+/scripts/setup_scriptorium.sh @aryansinghnagar
+/scripts/lib/worlds.sh @aryansinghnagar
+/scripts/lib/continuity.py @aryansinghnagar
+/scripts/lib/cache.py @aryansinghnagar
+debian/ @aryansinghnagar
+org.scriptorium.Scriptorium.yaml @aryansinghnagar
+.github/workflows/ @aryansinghnagar

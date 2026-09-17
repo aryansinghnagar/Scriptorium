@@ -39,12 +39,12 @@ jobs:
       - name: Set up Typst
         uses: typst-community/setup-typst@65c09e3962657e3f60f6d8959fbcfeecbb327e58 # v4.0.1
         with:
-          # C-02: pinned to the minor release line the book template was
-          # developed and verified against. Bump deliberately after testing
+          # DEP-01: exact pin matching dependencies.lock + setup_scriptorium.sh
+          # (0.13.0). Bump deliberately after testing
           # (templates/typst/book_template.typ + preview_sample.typ), never
-          # via 'latest' — a silent toolchain bump can break CI
-          # non-deterministically.
-          typst-version: '0.13'
+          # via 'latest' or floating minor — a silent toolchain bump can break
+          # CI non-deterministically.
+          typst-version: '0.13.0'
 
       - name: Print environment and tool versions
         run: |
@@ -93,10 +93,54 @@ jobs:
         run: |
           desktop-file-validate launchers/*.desktop
 
-      - name: Validate JSON and XML configurations
+      # TST-01 / PKG-02: packaging is inside the verification boundary —
+      # the broken-launcher class must fail CI, not just source validation.
+      - name: Validate packaged launcher substitution (no placeholders)
+        run: |
+          echo "--- source launchers use __PROJECT_ROOT__ placeholder (expected) ---"
+          grep -l "__PROJECT_ROOT__" launchers/*.desktop
+          echo "--- simulate debian/rules substitution ---"
+          mkdir -p /tmp/pkg-test/applications
+          for f in launchers/*.desktop; do
+            base=$(basename "$f")
+            case "$base" in
+              scriptorium-control-center.desktop) sub="control-center";;
+              init-world.desktop) sub="world";;
+              init-manuscript.desktop) sub="manuscript";;
+              export-book.desktop) sub="export";;
+              save-snapshot.desktop) sub="snapshot";;
+              *) sub="";;
+            esac
+            if [ -n "$sub" ]; then
+              sed -e "s|^Exec=.*|Exec=/usr/bin/scriptorium $sub|" -e "s|^TryExec=.*|TryExec=/usr/bin/scriptorium|" "$f" > "/tmp/pkg-test/applications/$base"
+            else
+              sed -e "s|__PROJECT_ROOT__|/usr/share/scriptorium|g" "$f" > "/tmp/pkg-test/applications/$base"
+            fi
+          done
+          ! grep -r "__PROJECT_ROOT__" /tmp/pkg-test/applications/ || (echo "ERROR: placeholder survived substitution" >&2; exit 1)
+          desktop-file-validate /tmp/pkg-test/applications/*.desktop
+          echo "  OK packaged launchers validate with no placeholders"
+
+      - name: Smoke test packaged CLI dispatch via symlink (PKG-01)
+        run: |
+          mkdir -p /tmp/pkg-test/share/scriptorium /tmp/pkg-test/bin
+          cp -r scripts /tmp/pkg-test/share/scriptorium/scripts
+          ln -sf /tmp/pkg-test/share/scriptorium/scripts/scriptorium /tmp/pkg-test/bin/scriptorium
+          /tmp/pkg-test/bin/scriptorium --version
+          /tmp/pkg-test/bin/scriptorium --help > /dev/null
+          echo "  OK symlinked CLI dispatches"
+
+      - name: Validate JSON, YAML and XML configurations
         run: |
           python3 -c "import json; json.load(open('configs/leechblock_scriptorium_rules.json')); print('  OK leechblock JSON')"
           python3 -c "import xml.etree.ElementTree as ET; ET.parse('templates/manuscript/nwProject.nwx'); print('  OK nwProject XML')"
+          python3 -c "import yaml" 2>/dev/null && python3 -c "import yaml; yaml.safe_load(open('org.scriptorium.Scriptorium.yaml')); print('  OK flatpak manifest YAML')" || python3 -c "
+          import re,sys
+          t=open('org.scriptorium.Scriptorium.yaml').read()
+          assert 'app-id: org.scriptorium.Scriptorium' in t, 'flatpak app-id missing'
+          assert '__PROJECT_ROOT__' not in t, 'placeholder leaked into flatpak manifest'
+          assert '/app/bin/scriptorium' in t, 'flatpak CLI symlink missing'
+          print('  OK flatpak manifest (structural check)')"
 
       - name: Run verification harness (scripts/verify.sh)
         run: |

@@ -155,13 +155,37 @@ if [ -d "${PROJECT_ROOT}/templates/manuscript" ]; then
     cp -a "${PROJECT_ROOT}/templates/manuscript/." "${STAGING_DIR}/"
 fi
 
+# DAT-02: XML-escape free-text fields before templating so ordinary input
+# like `A & B`, `<Draft>`, or `"Quotes"` cannot produce malformed XML.
+# NOTE: `\&` in the replacement is mandatory — in Bash pattern
+# substitution an unescaped `&` expands to the matched text (like sed),
+# which would corrupt every entity after the first (`&lt;` -> `<lt;`).
+xml_escape() {
+    local s="${1:-}"
+    s="${s//&/\&amp;}"
+    s="${s//</\&lt;}"
+    s="${s//>/\&gt;}"
+    s="${s//\"/\&quot;}"
+    s="${s//\'/\&apos;}"
+    printf '%s' "$s"
+}
+# YAML double-quoted scalar escape (backslash + double quote).
+yaml_escape() {
+    local s="${1:-}"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    printf '%s' "$s"
+}
+ESC_TITLE="$(xml_escape "${MANUSCRIPT_NAME}")"
+ESC_AUTHOR="$(xml_escape "${AUTHOR_NAME}")"
+
 # Generate Valid novelWriter Project Scaffolding
 cat << EOF > "${STAGING_DIR}/nwProject.nwx"
 <?xml version="1.0" encoding="UTF-8"?>
 <novelWriterXML fileVersion="1.5" appVersion="2.0">
   <project>
-    <title>${MANUSCRIPT_NAME}</title>
-    <author>${AUTHOR_NAME}</author>
+    <title>${ESC_TITLE}</title>
+    <author>${ESC_AUTHOR}</author>
     <saveCount>1</saveCount>
     <autoCount>0</autoCount>
     <editTime>0</editTime>
@@ -177,6 +201,15 @@ cat << EOF > "${STAGING_DIR}/nwProject.nwx"
   </content>
 </novelWriterXML>
 EOF
+
+# DAT-02: validate the generated XML immediately; a malformed project must
+# fail staging, never ship to the author's library.
+if command -v python3 &>/dev/null; then
+    if ! python3 -c 'import sys, xml.etree.ElementTree as ET; ET.parse(sys.argv[1])' "${STAGING_DIR}/nwProject.nwx"; then
+        echo "Error: generated nwProject.nwx failed XML validation. Aborting." >&2
+        exit 1
+    fi
+fi
 
 # Copy Typst Book Template into Exports/typst-template
 if [ -d "${PROJECT_ROOT}/templates/typst" ]; then
@@ -197,21 +230,25 @@ Exports/
 04-Publishing/
 EOF
 
+YAML_TITLE="$(yaml_escape "${MANUSCRIPT_NAME}")"
+YAML_AUTHOR="$(yaml_escape "${AUTHOR_NAME}")"
+YAML_UNIVERSE="$(yaml_escape "${UNIVERSE_NAME}")"
+YAML_WORLD="$(yaml_escape "${WORLD_NAME}")"
 cat << EOF > "${STAGING_DIR}/manuscript.yaml"
 # Scriptorium Manuscript Project Manifest
-title: "${MANUSCRIPT_NAME}"
-author: "${AUTHOR_NAME}"
-universe: "${UNIVERSE_NAME}"
-world: "${WORLD_NAME}"
+title: "${YAML_TITLE}"
+author: "${YAML_AUTHOR}"
+universe: "${YAML_UNIVERSE}"
+world: "${YAML_WORLD}"
 created_at: "$(date +%Y-%m-%d)"
 EOF
 
 cat << EOF > "${STAGING_DIR}/scriptorium.yaml"
 # Scriptorium world manifest for backwards compatibility
-title: "${MANUSCRIPT_NAME}"
-author: "${AUTHOR_NAME}"
-universe: "${UNIVERSE_NAME}"
-world: "${WORLD_NAME}"
+title: "${YAML_TITLE}"
+author: "${YAML_AUTHOR}"
+universe: "${YAML_UNIVERSE}"
+world: "${YAML_WORLD}"
 EOF
 
 # Run Validation Checks on Staged Structure
@@ -219,24 +256,35 @@ EOF
 [ -d "${STAGING_DIR}/Outlines" ] || { echo "Validation error: Outlines directory missing" >&2; exit 1; }
 [ -f "${STAGING_DIR}/manuscript.yaml" ] || { echo "Validation error: manuscript.yaml manifest missing" >&2; exit 1; }
 
-# 3. Multi-Tier Git Repository Initialization
+# 3. Multi-Tier Git Repository Initialization (REL-04: never claim history
+# that does not exist — track commit health and report it honestly).
+GIT_HISTORY="ok"
 if command -v git &> /dev/null; then
     # 3a. Initialize discrete Manuscript Git repository for Book-01
-    (
+    if ! (
         cd "${STAGING_DIR}/Book-01"
         git init -q
         git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial drafting repository for Book-01 in ${MANUSCRIPT_NAME}" 2>/dev/null || true
-    )
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial drafting repository for Book-01 in ${MANUSCRIPT_NAME}" 2>/dev/null
+    ); then
+        echo "[!] Warning: Book-01 initial Git commit failed (lock contention or identity issue). Volume created without initial history." >&2
+        GIT_HISTORY="failed"
+    fi
 
     # 3b. Initialize Manuscript Root Git repository
-    (
+    if ! (
         cd "${STAGING_DIR}"
         git init -q
         git config advice.addEmbeddedRepo false
-        git -c advice.addEmbeddedRepo=false add . 2>/dev/null || true
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium manuscript repository: ${MANUSCRIPT_NAME}" 2>/dev/null || true
-    )
+        git -c advice.addEmbeddedRepo=false add . 2>/dev/null
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium manuscript repository: ${MANUSCRIPT_NAME}" 2>/dev/null
+    ); then
+        echo "[!] Warning: manuscript root initial Git commit failed. Project created without initial history." >&2
+        echo "    Repair with: git -C '${STAGING_DIR}/Book-01' commit -m 'Initial commit' (after move: git -C \"\$HOME/Manuscripts/${MANUSCRIPT_NAME}/Book-01\" commit)" >&2
+        GIT_HISTORY="failed"
+    fi
+else
+    GIT_HISTORY="missing"
 fi
 
 # 4. Atomic Move into Destination
@@ -244,8 +292,15 @@ mkdir -p "${MANUSCRIPTS_BASE}"
 mv "${STAGING_DIR}" "${TARGET_DIR}"
 SUCCESS=1
 
-# 5. Notify completion
-MSG="Manuscript Project '${MANUSCRIPT_NAME}' successfully created!\n\nLocation:\n${TARGET_DIR}\n\n• Open novelWriter -> Open project in '${MANUSCRIPT_NAME}/nwProject.nwx'\n• Open FocusWriter / markdown editor in '${MANUSCRIPT_NAME}/Book-01'\n• Linked World Lore: '${WORLD_NAME:-None}' [Universe: '${UNIVERSE_NAME:-None}']\n• Discrete Git version control initialized!"
+# 5. Notify completion (REL-04: honest Git status)
+if [ "${GIT_HISTORY}" = "ok" ]; then
+    GIT_LINE="• Discrete Git version control initialized!"
+elif [ "${GIT_HISTORY}" = "missing" ]; then
+    GIT_LINE="• Created WITHOUT version history (git not installed — install git, then run: git -C '${TARGET_DIR}' init && git -C '${TARGET_DIR}' add -A && git -C '${TARGET_DIR}' commit -m 'Initial commit')."
+else
+    GIT_LINE="• Created WITHOUT initial commit history (Git commit failed — repair with: git -C '${TARGET_DIR}/Book-01' commit -m 'Initial commit')."
+fi
+MSG="Manuscript Project '${MANUSCRIPT_NAME}' successfully created!\n\nLocation:\n${TARGET_DIR}\n\n• Open novelWriter -> Open project in '${MANUSCRIPT_NAME}/nwProject.nwx'\n• Open FocusWriter / markdown editor in '${MANUSCRIPT_NAME}/Book-01'\n• Linked World Lore: '${WORLD_NAME:-None}' [Universe: '${UNIVERSE_NAME:-None}']\n${GIT_LINE}"
 
 if has_gui; then
     zenity --info --title="Manuscript Created Successfully!" --text="${MSG}" --width=480

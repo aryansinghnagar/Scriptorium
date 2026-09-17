@@ -118,7 +118,7 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Fixed
 - `scripts/verify.sh` stage 6d: Fixed EPUB selection race where arbitrary file order picked volume-scoped exports instead of the omnibus build; both volume-isolated and omnibus outputs are now explicitly inspected.
-- `templates/world-bible/.obsidian/plugins/obsidian-git/data.json`: Added `"basePath": ".."` so Obsidian Git targets the parent World-level git repository; removed dead settings keys (`gitLocation`, `baseSubmodule`, `autoBackupFileName`).
+- `templates/world-bible/.obsidian/plugins/obsidian-git/data.json`: Set `"basePath": ""` so Obsidian Git targets the direct vault repository root (DOC-03 correction: earlier text claimed `".."`); removed dead settings keys (`gitLocation`, `baseSubmodule`, `autoBackupFileName`).
 - Calibre installs under its real Flathub ID `com.calibre_ebook.calibre`
   (the previous ID never existed, so setup could never install Calibre)
   across setup, doctor, uninstaller, app, and both compatibility docs (F-01).

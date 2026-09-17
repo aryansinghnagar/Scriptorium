@@ -842,6 +842,23 @@ class ScriptoriumApp(Gtk.Window):
         if not target:
             return
 
+        # ANA-01: canonical counter shared with cache.py / wordcount_report.sh.
+        try:
+            from lib.cache import count_words as _canonical_count
+        except Exception:
+            try:
+                from cache import count_words as _canonical_count  # type: ignore
+            except Exception:
+                import re as _re
+                _FM = _re.compile(r"^---\s*\n(.*?)\n---\s*\n", _re.DOTALL)
+
+                def _canonical_count(text: str) -> int:  # type: ignore
+                    clean = _FM.sub("", text)
+                    clean = _re.sub(r"```.*?```", "", clean, flags=_re.DOTALL)
+                    kept = [ln for ln in clean.splitlines()
+                            if ln.strip() and not (ln.strip().startswith("@") and _re.match(r"^@[A-Za-z0-9_-]+:", ln.strip())) and not ln.strip().startswith("%")]
+                    return len(_re.findall(r"\b\w+\b", "\n".join(kept), flags=_re.UNICODE))
+
         tpath = Path(target)
         ms_dir = tpath / "01-Manuscript" if (tpath / "01-Manuscript").is_dir() else tpath
         total_words = 0
@@ -859,14 +876,13 @@ class ScriptoriumApp(Gtk.Window):
                             for ch_file in sorted(act_dir.glob("*.md")):
                                 if ch_file.is_file():
                                     try:
-                                        content = ch_file.read_text(encoding="utf-8", errors="ignore")
-                                        lines = [line_str for line_str in content.splitlines() if not line_str.startswith("@") and not line_str.startswith("%")]
-                                        wc = len(" ".join(lines).split())
+                                        content = ch_file.read_text(encoding="utf-8", errors="replace")
+                                        wc = _canonical_count(content)
                                         act_words += wc
                                         total_chapters += 1
                                         self.manuscript_store.append(a_iter, [ch_file.name, "Scene / Chapter", f"{wc:,} words", str(ch_file)])
                                     except Exception as e:
-                                        logger.debug("Error calculating scene word count for %s: %s", ch_file, e)
+                                        logger.warning("Error calculating scene word count for %s: %s", ch_file, e)
                             self.manuscript_store.set_value(a_iter, 2, f"{act_words:,} words")
                             book_words += act_words
                     self.manuscript_store.set_value(b_iter, 2, f"{book_words:,} words")
@@ -886,7 +902,7 @@ class ScriptoriumApp(Gtk.Window):
             try:
                 res = subprocess.run(
                     ["git", "-C", str(wpath), "log", "-n", "15", "--pretty=format:%h|%ad|%s", "--date=short"],
-                    capture_output=True, text=True, check=True
+                    capture_output=True, text=True, check=True, timeout=15
                 )
                 for line in res.stdout.splitlines():
                     parts = line.split("|", 2)
@@ -1002,7 +1018,16 @@ class ScriptoriumApp(Gtk.Window):
                     frontmatter_lines.append(lines[i])
                     i += 1
 
-            # After frontmatter (if present), find optional heading and strip existing @tags
+            # After frontmatter (if present), find optional heading and strip
+            # only MANAGED @tags. DAT-01: all other `@` lines (custom tags
+            # like @tag:/@theme:/@object:, aliases like @character:/@focus:/
+            # @plot:, and comments) are preserved byte-for-byte in their
+            # original order so saving metadata can never delete author data.
+            MANAGED_PREFIXES = (
+                "@pov:", "@char:", "@location:",
+                "@thread:", "@time:", "@status:",
+            )
+            preserved_custom_tags = []
             seen_heading = False
             while i < n:
                 line = lines[i]
@@ -1012,17 +1037,19 @@ class ScriptoriumApp(Gtk.Window):
                     seen_heading = True
                     i += 1
                     continue
-                if (stripped.startswith("@pov:") or stripped.startswith("@char:") or
-                    stripped.startswith("@character:") or stripped.startswith("@location:") or
-                    stripped.startswith("@focus:") or stripped.startswith("@thread:") or
-                    stripped.startswith("@plot:") or stripped.startswith("@time:") or
-                    stripped.startswith("@status:") or stripped.startswith("@tag:")):
+                lowered = stripped.lower()
+                if any(lowered.startswith(p) for p in MANAGED_PREFIXES):
+                    i += 1
+                    continue
+                if stripped.startswith("@"):
+                    preserved_custom_tags.append(line)
                     i += 1
                     continue
                 body_lines.append(line)
                 i += 1
 
-            # Build clean metadata tag header
+            # Build clean metadata tag header (managed fields first, then
+            # preserved custom tags in original order).
             tag_lines = []
             if pov:
                 tag_lines.append(f"@pov: {pov}")
@@ -1036,6 +1063,7 @@ class ScriptoriumApp(Gtk.Window):
                 tag_lines.append(f"@time: {t_marker}")
             if status:
                 tag_lines.append(f"@status: {status}")
+            tag_lines.extend(preserved_custom_tags)
 
             new_body = "\n".join(body_lines).lstrip("\n")
             parts = []
@@ -1052,7 +1080,25 @@ class ScriptoriumApp(Gtk.Window):
                 parts.append(new_body)
 
             final_text = "\n".join(parts).rstrip() + "\n"
-            file_path.write_text(final_text, encoding="utf-8")
+            # DAT-01: atomic write with pre-save backup so a crash or
+            # encoding error can never truncate the author's scene file.
+            import tempfile as _tf
+            backup_path = file_path.with_name(file_path.name + ".pre-tag-save.bak")
+            try:
+                backup_path.write_text(content, encoding="utf-8")
+            except Exception:
+                pass
+            fd, tmp_name = _tf.mkstemp(dir=str(file_path.parent), prefix=file_path.name + ".", suffix=".tmp")
+            try:
+                with open(fd, "w", encoding="utf-8", newline="\n") as _fh:
+                    _fh.write(final_text)
+                os.replace(tmp_name, file_path)
+            except Exception:
+                try:
+                    os.unlink(tmp_name)
+                except OSError:
+                    pass
+                raise
             self.set_status(f"Saved metadata header for '{file_path.name}'.")
         except Exception as e:
             self.show_error(f"Failed to update scene tags: {e}")
@@ -1278,8 +1324,7 @@ class ScriptoriumApp(Gtk.Window):
 
         def _worker():
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in proc.stdout:
-                GLib.idle_add(self._append_log, self.pub_log_buffer, line)
+            self._stream_process_to_log(proc, self.pub_log_buffer, self._append_log)
             proc.wait()
             GLib.idle_add(self._on_compile_done, proc.returncode)
 
@@ -1307,7 +1352,7 @@ class ScriptoriumApp(Gtk.Window):
             pdfs = list(pub_dir.glob("*.pdf"))
             if pdfs:
                 latest = max(pdfs, key=os.path.getmtime)
-                subprocess.Popen(["xdg-open", str(latest)])
+                self._launch_detached(["xdg-open", str(latest)])
 
     def on_open_epub_clicked(self, btn):
         target = self.current_manuscript_path or self.current_world_path
@@ -1317,7 +1362,7 @@ class ScriptoriumApp(Gtk.Window):
             epubs = list(pub_dir.glob("*.epub"))
             if epubs:
                 latest = max(epubs, key=os.path.getmtime)
-                subprocess.Popen(["xdg-open", str(latest)])
+                self._launch_detached(["xdg-open", str(latest)])
 
     def on_open_docx_clicked(self, btn):
         target = self.current_manuscript_path or self.current_world_path
@@ -1327,7 +1372,7 @@ class ScriptoriumApp(Gtk.Window):
             docxs = list(pub_dir.glob("*.docx"))
             if docxs:
                 latest = max(docxs, key=os.path.getmtime)
-                subprocess.Popen(["xdg-open", str(latest)])
+                self._launch_detached(["xdg-open", str(latest)])
 
     def on_add_volume_clicked(self, btn):
         target = self.current_manuscript_path or self.current_world_path
@@ -1389,8 +1434,7 @@ class ScriptoriumApp(Gtk.Window):
 
         def _worker():
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in proc.stdout:
-                GLib.idle_add(self._append_log, self.pub_log_buffer, line)
+            self._stream_process_to_log(proc, self.pub_log_buffer, self._append_log)
             proc.wait()
             if proc.returncode == 0:
                 GLib.idle_add(self.set_status, "Concordance and Dramatis Personae generated successfully!")
@@ -1408,13 +1452,20 @@ class ScriptoriumApp(Gtk.Window):
             cmd1 = ["bash", str(PROJECT_ROOT / "scripts" / "scriptorium_doctor.sh")]
             if self.current_world_path:
                 cmd1.extend(["--world", self.current_world_path])
-            res1 = subprocess.run(cmd1, capture_output=True, text=True)
-            GLib.idle_add(self._append_log, self.doc_log_buffer, res1.stdout + "\n" + res1.stderr)
+            try:
+                res1 = subprocess.run(cmd1, capture_output=True, text=True, timeout=90)
+                GLib.idle_add(self._append_log, self.doc_log_buffer, res1.stdout + "\n" + res1.stderr)
+            except subprocess.TimeoutExpired:
+                GLib.idle_add(self.set_status, "Diagnostics timed out after 90s.")
+                return
 
             if self.current_world_path:
                 cmd2 = ["bash", str(PROJECT_ROOT / "scripts" / "world_doctor.sh"), self.current_world_path]
-                res2 = subprocess.run(cmd2, capture_output=True, text=True)
-                GLib.idle_add(self._append_log, self.doc_log_buffer, res2.stdout + "\n" + res2.stderr)
+                try:
+                    res2 = subprocess.run(cmd2, capture_output=True, text=True, timeout=120)
+                    GLib.idle_add(self._append_log, self.doc_log_buffer, res2.stdout + "\n" + res2.stderr)
+                except subprocess.TimeoutExpired:
+                    GLib.idle_add(self._append_log, self.doc_log_buffer, "[!] world_doctor timed out after 120s; try --fast.\n")
             GLib.idle_add(self.set_status, "Diagnostics complete.")
 
         self._start_worker(_worker)
@@ -1426,8 +1477,7 @@ class ScriptoriumApp(Gtk.Window):
         def _worker():
             cmd = ["bash", str(PROJECT_ROOT / "scripts" / "verify.sh")]
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in proc.stdout:
-                GLib.idle_add(self._append_log, self.doc_log_buffer, line)
+            self._stream_process_to_log(proc, self.doc_log_buffer, self._append_log)
             proc.wait()
             GLib.idle_add(self.set_status, "Verification run complete.")
 
@@ -1440,9 +1490,9 @@ class ScriptoriumApp(Gtk.Window):
         self.set_status("Scaffolding demo cosmos and manuscript...")
 
         def _worker():
-            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_universe.sh"), demo_uni], capture_output=True)
-            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_world.sh"), demo_world, "--universe", demo_uni], capture_output=True)
-            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_manuscript.sh"), demo_ms, "--universe", demo_uni, "--world", demo_world], capture_output=True)
+            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_universe.sh"), demo_uni], capture_output=True, timeout=120)
+            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_world.sh"), demo_world, "--universe", demo_uni], capture_output=True, timeout=120)
+            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_manuscript.sh"), demo_ms, "--universe", demo_uni, "--world", demo_world], capture_output=True, timeout=120)
             GLib.idle_add(self.refresh_all_discovery)
             GLib.idle_add(self.set_status, "Demo Cosmos & Manuscript created successfully!")
 
@@ -1450,7 +1500,7 @@ class ScriptoriumApp(Gtk.Window):
 
     def _is_flatpak_installed(self, app_id):
         try:
-            res = subprocess.run(["flatpak", "info", app_id], capture_output=True)
+            res = subprocess.run(["flatpak", "info", app_id], capture_output=True, timeout=10)
             return res.returncode == 0
         except Exception as e:
             logger.debug("Flatpak info probe failed for %s: %s", app_id, e)
@@ -1466,11 +1516,11 @@ class ScriptoriumApp(Gtk.Window):
 
         def _launch():
             if self._is_flatpak_installed("md.obsidian.Obsidian"):
-                subprocess.Popen(["flatpak", "run", "md.obsidian.Obsidian", str(bible)])
+                self._launch_detached(["flatpak", "run", "md.obsidian.Obsidian", str(bible)])
             elif shutil.which("obsidian"):
-                subprocess.Popen(["obsidian", str(bible)])
+                self._launch_detached(["obsidian", str(bible)])
             else:
-                subprocess.Popen(["xdg-open", str(bible)])
+                self._launch_detached(["xdg-open", str(bible)])
 
         self._launch_in_background(_launch)
 
@@ -1486,11 +1536,11 @@ class ScriptoriumApp(Gtk.Window):
 
         def _launch():
             if self._is_flatpak_installed("io.gitlab.novelwriter.novelWriter"):
-                subprocess.Popen(["flatpak", "run", "io.gitlab.novelwriter.novelWriter", target_str])
+                self._launch_detached(["flatpak", "run", "io.gitlab.novelwriter.novelWriter", target_str])
             elif shutil.which("novelwriter"):
-                subprocess.Popen(["novelwriter", target_str])
+                self._launch_detached(["novelwriter", target_str])
             else:
-                subprocess.Popen(["xdg-open", str(tpath)])
+                self._launch_detached(["xdg-open", str(tpath)])
 
         self._launch_in_background(_launch)
 
@@ -1505,20 +1555,20 @@ class ScriptoriumApp(Gtk.Window):
 
         def _launch():
             if shutil.which("focuswriter"):
-                subprocess.Popen(["focuswriter", str(ms)])
+                self._launch_detached(["focuswriter", str(ms)])
             else:
-                subprocess.Popen(["xdg-open", str(ms)])
+                self._launch_detached(["xdg-open", str(ms)])
 
         self._launch_in_background(_launch)
 
     def on_open_world_folder_clicked(self, btn):
         if self.current_world_path:
-            subprocess.Popen(["xdg-open", str(self.current_world_path)])
+            self._launch_detached(["xdg-open", str(self.current_world_path)])
 
     def on_open_manual_clicked(self, btn):
         manual_path = PROJECT_ROOT / "docs" / "AUTHOR_MANUAL.md"
         if manual_path.is_file():
-            subprocess.Popen(["xdg-open", str(manual_path)])
+            self._launch_detached(["xdg-open", str(manual_path)])
         else:
             self.show_error("Author's Field Manual not found.")
 
@@ -1562,8 +1612,55 @@ class ScriptoriumApp(Gtk.Window):
     def _start_worker(self, target, args=()):
         threading.Thread(target=target, args=args, daemon=True).start()
 
-    def _run_async_command(self, cmd, success_msg, callback=None):
-        res = subprocess.run(cmd, capture_output=True, text=True)
+    # UI-01: batched log streaming — one idle_add per 50-line chunk instead
+    # of one per line, so `verify.sh` output cannot flood the GTK main loop.
+    @staticmethod
+    def _stream_process_to_log(proc, buffer_obj, append_fn, chunk_lines=50):
+        buf = []
+        try:
+            for line in proc.stdout or []:
+                buf.append(line)
+                if len(buf) >= chunk_lines:
+                    GLib.idle_add(append_fn, buffer_obj, "".join(buf))
+                    buf = []
+        finally:
+            if buf:
+                GLib.idle_add(append_fn, buffer_obj, "".join(buf))
+
+    # UI-01: detached launcher — DEVNULL stdio + new session + reaper
+    # thread, so xdg-open / flatpak / editor children never become zombies
+    # and failures are logged instead of silent.
+    @staticmethod
+    def _launch_detached(argv):
+        try:
+            proc = subprocess.Popen(
+                list(argv),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+        except Exception as e:
+            logger.warning("Failed to launch %s: %s", argv, e)
+            return None
+
+        def _reap():
+            try:
+                rc = proc.wait(timeout=30)
+                if rc != 0:
+                    logger.warning("Launcher %s exited with code %s", argv, rc)
+            except Exception as e:
+                logger.warning("Launcher %s wait failed: %s", argv, e)
+
+        threading.Thread(target=_reap, daemon=True).start()
+        return proc
+
+    def _run_async_command(self, cmd, success_msg, callback=None, timeout=120):
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            GLib.idle_add(self.set_status, "Error: command timed out.")
+            return
         if res.returncode == 0:
             GLib.idle_add(self.set_status, success_msg)
         else:
