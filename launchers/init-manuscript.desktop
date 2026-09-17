@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=New Manuscript Creator
+GenericName=Scriptorium Manuscript Initializer
+Comment=Scaffold a new standalone prose manuscript project with novelWriter and 3-act chapters
+Exec=bash "__PROJECT_ROOT__/scripts/init_manuscript.sh"
+TryExec=bash
+Icon=document-new
+Terminal=false
+Categories=Office;Utility;Writing;
+Keywords=Writing;Novel;Manuscript;novelWriter;Drafting;
+StartupNotify=true

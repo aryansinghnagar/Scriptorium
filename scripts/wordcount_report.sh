@@ -47,34 +47,43 @@ done
 # one exists) instead of defaulting to ~/Worlds, which is a container of
 # worlds and never itself a world.
 if [ -z "${WORLD_DIR}" ]; then
+    discover_manuscripts FOUND_MS
     discover_worlds FOUND_WORLDS
-    if [ ${#FOUND_WORLDS[@]} -eq 1 ]; then
+    if [ ${#FOUND_MS[@]} -eq 1 ]; then
+        WORLD_DIR="${FOUND_MS[0]}"
+    elif [ ${#FOUND_WORLDS[@]} -eq 1 ]; then
         WORLD_DIR="${FOUND_WORLDS[0]}"
-        # N-03: auto-selected legacy worlds get the same nudge as by-name ones
         warn_if_legacy_root "${WORLD_DIR}"
-    elif [ ${#FOUND_WORLDS[@]} -gt 1 ]; then
+    elif [ $(( ${#FOUND_MS[@]} + ${#FOUND_WORLDS[@]} )) -gt 1 ]; then
         {
-            echo "Multiple worlds discovered — specify one:"
+            echo "Multiple projects discovered — specify one:"
+            for m in "${FOUND_MS[@]}"; do
+                echo "  - $(basename "$m")  [Manuscript]  ${m}"
+            done
             for w in "${FOUND_WORLDS[@]}"; do
                 echo "  - $(basename "$w")  [$(universe_label "$w")]  ${w}"
             done
-            echo "Usage: wordcount_report.sh <WORLD_DIR|WORLD_NAME> [--markdown|--json]"
+            echo "Usage: wordcount_report.sh <PROJECT_DIR|PROJECT_NAME> [--markdown|--json]"
         } >&2
         exit 2
     else
-        echo "Error: no worlds found under ~/Universes or ~/Worlds. Create one first (scriptorium init <name>)." >&2
+        echo "Error: no manuscripts or worlds found. Create one first (scriptorium manuscript <name>)." >&2
         exit 2
     fi
 else
-    RESOLVED="$(resolve_world_dir "${WORLD_DIR}")"
+    RESOLVED="$(resolve_manuscript_dir "${WORLD_DIR}")"
+    [ -z "${RESOLVED}" ] && RESOLVED="$(resolve_world_dir "${WORLD_DIR}")"
     if [ -n "${RESOLVED}" ]; then
         WORLD_DIR="${RESOLVED}"
     fi
 fi
 
-[ -d "${WORLD_DIR}" ] || { echo "Error: world directory not found: ${WORLD_DIR}" >&2; exit 2; }
-MANUSCRIPT_DIR="${WORLD_DIR}/01-Manuscript"
-[ -d "${MANUSCRIPT_DIR}" ] || { echo "Error: no 01-Manuscript folder in ${WORLD_DIR}" >&2; exit 2; }
+[ -d "${WORLD_DIR}" ] || { echo "Error: directory not found: ${WORLD_DIR}" >&2; exit 2; }
+if [ -d "${WORLD_DIR}/01-Manuscript" ]; then
+    MANUSCRIPT_DIR="${WORLD_DIR}/01-Manuscript"
+else
+    MANUSCRIPT_DIR="${WORLD_DIR}"
+fi
 command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit 2; }
 
 MANUSCRIPT_DIR="${MANUSCRIPT_DIR}" MARKDOWN="${MARKDOWN}" JSON_OUT="${JSON_OUT}" python3 - << 'PYEOF'

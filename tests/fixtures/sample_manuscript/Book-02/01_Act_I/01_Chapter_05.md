@@ -3,6 +3,7 @@
 The journey continued into the deep ravines beneath the mountains.
 
 @pov: Renée
+@location: Sanctuaire_des_Étoiles
 @status: Finished
 @time: 1422-08-01
 @plot: Crossing the Shadowed Gap

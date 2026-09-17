@@ -166,19 +166,24 @@ DEST_PARENT=""
 if [ -n "${DEST_PARENT_CLI}" ]; then
     DEST_PARENT="${DEST_PARENT_CLI}"
 elif [ -n "${UNIVERSE_CLI}" ]; then
-    DEST_PARENT="${UNIVERSES_BASE}/${UNIVERSE_CLI}/Worlds"
+    DEST_PARENT="${UNIVERSES_BASE}/${UNIVERSE_CLI}"
+elif [ -f "${EXTRACTED_DIR}/manuscript.yaml" ] || [ -d "${EXTRACTED_DIR}/Book-01" ]; then
+    DEST_PARENT="${MANUSCRIPTS_BASE}"
 elif [ -d "${UNIVERSES_BASE}/Default-Universe" ]; then
-    DEST_PARENT="${UNIVERSES_BASE}/Default-Universe/Worlds"
+    DEST_PARENT="${UNIVERSES_BASE}/Default-Universe"
 else
-    DEST_PARENT="${WORLDS_BASE}"
+    DEST_PARENT="${UNIVERSES_BASE}/Default-Universe"
 fi
 
 TARGET_FINAL_DIR="${DEST_PARENT}/${FINAL_WORLD_NAME}"
 
-[ -d "${EXTRACTED_DIR}/00-World-Bible" ] || [ -d "${EXTRACTED_DIR}/01-Manuscript" ] || {
-    echo "Error: Archive contents do not appear to be a valid Scriptorium world." >&2
+if [ ! -d "${EXTRACTED_DIR}/Characters" ] && [ ! -d "${EXTRACTED_DIR}/00-World-Bible" ] && \
+   [ ! -d "${EXTRACTED_DIR}/01-Manuscript" ] && [ ! -d "${EXTRACTED_DIR}/Book-01" ] && \
+   [ ! -f "${EXTRACTED_DIR}/world.yaml" ] && [ ! -f "${EXTRACTED_DIR}/manuscript.yaml" ] && \
+   [ ! -f "${EXTRACTED_DIR}/scriptorium.yaml" ]; then
+    echo "Error: Archive contents do not appear to be a valid Scriptorium project." >&2
     exit 1
-}
+fi
 
 if [ -d "${TARGET_FINAL_DIR}" ]; then
     if [ "${FORCE_OVERWRITE}" -eq 1 ]; then

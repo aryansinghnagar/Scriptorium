@@ -11,7 +11,8 @@ Welcome to your central worldbuilding hub. Every note created in this vault is i
 ---
 
 ## 🏛️ Quick Navigation Links
-- 👤 **[[Characters/Character-Template|Character Vault]]**
+- 🚀 **[[00_START_HERE|Getting Started Guide (Minimum Viable World Bible)]]**
+- 👤 **[[Characters/Character-Template|Character Vault (Detailed)]]** · **[[Characters/Character-Quickstart-Template|Quickstart Character Card]]**
 - 🗺️ **[[Locations/Location-Template|World Atlas & Geography]]**
 - ⚔️ **[[Factions/Faction-Template|Factions & Guilds]]**
 - ⚡ **[[Magic-Technology/Magic-Tech-System-Template|Magic & Tech Systems]]**

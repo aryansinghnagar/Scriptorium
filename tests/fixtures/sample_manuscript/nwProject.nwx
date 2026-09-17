@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<novelWriterXML fileVersion="1.5" appVersion="2.0">
+  <project>
+    <title>The Glass Horizon</title>
+    <author>Renée d'Anjou</author>
+  </project>
+  <content>
+    <item id="0001" name="Book-01" type="folder"/>
+    <item id="0002" name="Book-02" type="folder"/>
+  </content>
+</novelWriterXML>

@@ -1,7 +1,7 @@
 # Chapter 3: The Sanctuary of Whispers
 
 @pov: Protagonist
-@focus: Mountain Fortress
+@location: Mountain Fortress
 @status: Draft
 @tag: Midpoint Shift
 

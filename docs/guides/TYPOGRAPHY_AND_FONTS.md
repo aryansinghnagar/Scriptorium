@@ -51,10 +51,11 @@ sudo apt install -y \
 
 ## 3. Typst Typographic Standards for Novels
 - **Standard Novel Trim Sizes**:
-  - `5.5in x 8.5in` (Trade Paperback)
-  - `6in x 9in` (Standard US Trade)
-  - `5in x 8in` (Mass Market / Pocket)
+  - `5.5in x 8.5in` (`trade` - Trade Paperback)
+  - `6in x 9in` (`us-trade` - Standard US Trade)
+  - `5in x 8in` (`pocket` - Mass Market / Pocket)
 - **Body Font Size**: 10.5pt to 11pt with `14pt` to `15pt` line leading.
 - **First-Line Indent**: `1.25em` to `1.5em` (with `0pt` paragraph spacing).
-- **First Paragraph of Chapter / Section Break**: `0pt` indent (flush left), optionally featuring a Drop Cap.
+- **First Paragraph of Chapter / Section Break**: `0pt` indent (flush left), optionally featuring an opening ornament or drop cap.
 - **Margins**: Alternating inner (gutter) `0.75in` - `0.85in` and outer `0.65in` - `0.75in`.
+- **Ornamental Scene Breaks**: Three centered asterisks (`* * *` or `show line: it => scene-break()`) with 1.5em vertical margins.

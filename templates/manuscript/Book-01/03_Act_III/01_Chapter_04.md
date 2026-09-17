@@ -1,7 +1,7 @@
 # Chapter 4: The Final Reckoning
 
 @pov: Protagonist
-@focus: The High Spire
+@location: The High Spire
 @status: Draft
 @tag: Climax
 

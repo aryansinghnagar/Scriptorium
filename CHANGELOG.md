@@ -4,11 +4,36 @@ All notable changes to Scriptorium are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Finding IDs
 (`F-xx`, `S-xx`, `Q-xx`, `C-xx`, `H-xx`, `N-xx`) reference the committed audit
 trail in [docs/audits/](docs/audits/); scope decisions behind each wave are
-recorded as ADR-020 and ADR-021 in [docs/meta/decisions.md](docs/meta/decisions.md).
+recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
 ### Added
+- **Centralized User Guides**: Unified all reference and setup documentation under `docs/guides/`:
+  - `docs/guides/SOFTWARE_CATALOG.md`: Direct download URLs, APT/Flatpak package IDs, and installation instructions.
+  - `docs/guides/TYPOGRAPHY_AND_FONTS.md`: High-quality open typefaces, installation commands, and Typst novel formatting rules.
+  - `docs/guides/OBSIDIAN_PLUGINS.md`: Out-of-the-box Obsidian plugin suite and metadata schemas guide.
+  - `docs/guides/OPTIONAL_EXTRAS.md`: Specialized cartography and lore tooling (Azgaar, Krita, Inkscape, Gramps, PolyGlot, Sigil, Kiwix).
+  - `docs/guides/BACKUP_SETUP.md`: 3-2-1 backup implementation guide with Déjà Dup.
+  - `docs/guides/DISTRACTION_CONTROL.md`: XFCE Do Not Disturb configuration and FocusWriter sprint tips.
+- **Consolidated System Architecture & Roadmap**:
+  - `docs/ARCHITECTURE.md`: Complete Architectural Decision Records (ADR-001 through ADR-022), system design invariants, exit-code contract, and multi-tier Git repository doctrine.
+  - `docs/ROADMAP.md`: Project charter, hardware baselines, milestones (M0–M15), and real-time operational status queues.
+- **Modernized Desktop Launcher Suite**:
+  - Added `launchers/init-manuscript.desktop` for 1-click Standalone Manuscript creation.
+  - Standardized all launchers in `launchers/` with `TryExec=bash` and valid desktop categories.
+  - Updated `scripts/setup_scriptorium.sh`, `scripts/uninstall_scriptorium.sh`, and `scripts/scriptorium_doctor.sh` to install, check, and purge `init-manuscript.desktop`.
+- **Modernized Test Fixtures**: Restructured `tests/fixtures/` into `sample_universe/`, `sample_world/`, and `sample_manuscript/` reflecting separated lore and manuscript architecture.
+- **Separated Pure World Lore & Manuscript Architecture**:
+  - `~/Universes/<UniverseName>/<WorldName>/`: World Lore Vaults are now pure, direct Obsidian vaults without nested `00-World-Bible` wrappers or mixed manuscript folders.
+  - `~/Manuscripts/<ManuscriptName>/`: Independent Prose Manuscript Projects containing multi-volume 3-act drafting hierarchies (`Book-01/`, `Book-02/`), `Outlines/`, `Exports/`, `Backups/`, `nwProject.nwx`, and `manuscript.yaml` linking to universes and lore vaults.
+- **Visual Scene Metadata Inspector in GTK Studio (Tab 2)**: Non-technical GUI control panel allowing authors to view and modify `@pov:`, `@char:`, `@location:`, `@thread:`, `@time:`, and `@status:` scene tags with safe in-place header rewrites.
+- **Standardized Scene Tagging Protocol**: Promoted `@location:` as the standard tag across chapter templates, scene generators, novelWriter manifests, and diagnostic tooling (deprecating `@focus:`).
+- **Expanded CLI Facade Subcommands**: `scriptorium manuscript`, `scriptorium world`, `scriptorium universe`, `scriptorium add-volume` with full listing flags (`--list`), discovery, and backwards compatibility.
+- Standard Manuscript Submission Format (`.docx`): Pandoc export bridge in `scripts/export_book.sh`, `scriptorium export`, and Control Center GUI (Publishing Studio) supporting `--format submission` / `--docx` / `--format all` for agent and editorial submissions.
+- `templates/world-bible/00_START_HERE.md` and `templates/world-bible/Characters/Character-Quickstart-Template.md`: Minimum Viable World Bible guide and streamlined 5-field character starter card for beginners.
+- Manuscript-to-Lore Name Drift Detection (`WLD-108`) in `scripts/world_doctor.sh`: Cross-validates `@pov:`, `@char:`, `@location:`, `@faction:`, `@item:`, and wikilink entity references in manuscript draft scenes against World Bible dossiers and aliases.
+- `tests/test_audit_claude_improvements.sh`: Comprehensive automated test suite verifying `obsidian-git` config, `WLD-108` name drift, beginner templates, standard submission `.docx` export, and deterministic multi-volume EPUB selection.
 - `scripts/lib/worlds.sh` — shared world-discovery library (discover, resolve,
   universe labels, name sanitization, GUI detection), sourced by 11 entry-point
   scripts; removes ~300 lines of copy-pasted discovery logic and the
@@ -54,6 +79,8 @@ recorded as ADR-020 and ADR-021 in [docs/meta/decisions.md](docs/meta/decisions.
   surfaces git index-lock contention instead of dropping commits silently (Q-04).
 
 ### Fixed
+- `scripts/verify.sh` stage 6d: Fixed EPUB selection race where arbitrary file order picked volume-scoped exports instead of the omnibus build; both volume-isolated and omnibus outputs are now explicitly inspected.
+- `templates/world-bible/.obsidian/plugins/obsidian-git/data.json`: Added `"basePath": ".."` so Obsidian Git targets the parent World-level git repository; removed dead settings keys (`gitLocation`, `baseSubmodule`, `autoBackupFileName`).
 - Calibre installs under its real Flathub ID `com.calibre_ebook.calibre`
   (the previous ID never existed, so setup could never install Calibre)
   across setup, doctor, uninstaller, app, and both compatibility docs (F-01).

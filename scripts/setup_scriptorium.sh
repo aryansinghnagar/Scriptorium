@@ -322,10 +322,11 @@ else
     echo "  [SUCCESS] Scriptorium Writing Setup Installed Successfully!"
     echo "============================================================"
     echo "Next Steps:"
-    echo "1. Double-click 'New World Creator' on your desktop (or run ./scripts/init_world.sh)"
-    echo "2. Open Control Center on your desktop (or run ./scripts/scriptorium control-center)"
-    echo "3. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_scriptorium_rules.json"
-    echo "4. Connect an external drive and configure Déjà Dup for 3-2-1 backups."
+    echo "1. Double-click 'New World Vault Creator' (or run ./scripts/init_world.sh) to start a lore vault"
+    echo "2. Double-click 'New Manuscript Creator' (or run ./scripts/init_manuscript.sh) to start a novel"
+    echo "3. Open Control Center on your desktop (or run ./scripts/scriptorium control-center)"
+    echo "4. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_scriptorium_rules.json"
+    echo "5. Connect an external drive and configure Déjà Dup for 3-2-1 backups."
     echo "============================================================"
 
     if command -v notify-send &> /dev/null; then

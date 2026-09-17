@@ -25,32 +25,33 @@ Scriptorium provides everything an author needs to brainstorm lore, outline stor
 
 ```
 ~/Universes/<UniverseName>/
-├── universe.yaml              → Universe manifest & overarching continuity repository
+├── universe.yaml              → Overarching Universe manifest & continuity Git repository
 ├── Universe-Index.md          → Narrative cosmos hub & cross-world index
-└── Worlds/<WorldName>/        → World repository (with Obsidian Git auto-commit)
-    ├── 00-World-Bible/        → Pre-configured Obsidian Vault (Dataview, Longform, Metadata Menu, etc.)
-    │   ├── .obsidian/         → Out-of-the-box plugin configs & fileClasses schemas
-    │   ├── Characters/        → Character profiles with Dataview metadata & relationship maps
-    │   ├── Locations/         → Sensory regional palettes, cities, and landmarks
-    │   ├── Factions/          → Guilds, empires, ideologies, and member rosters
-    │   ├── Magic-Technology/ → Hard/soft magic rules, limitations, and costs
-    │   ├── Bestiary/          → Creatures, apex predators, flora, and monster ecologies
-    │   ├── Artifacts/         → Legendary relics, magical weapons, and focal items
-    │   ├── Cosmology/         → Pantheons, deities, astral planes, and mythos
-    │   ├── History/           → Historical eras, timelines, and catalytic events
-    │   ├── Languages/         → Conlangs, phonetic rules, and world glossaries
-    │   └── Templates/         → fileClasses schemas, writing logs, scene cards, and central index
-    ├── 01-Manuscript/         → Manuscript drafting volume storage
-    │   ├── Book-01/           → Discrete Git repository for Book-01 (Acts, Chapters, Scenes)
-    │   │   ├── 01_Act_I/
-    │   │   ├── 02_Act_II/
-    │   │   └── 03_Act_III/
-    │   ├── Outlines/          → Three-act structural beats & scene goals
-    │   └── nwProject.nwx      → novelWriter project manifest (fileVersion 1.5)
-    ├── 02-Maps/               → Cartography assets (Azgaar exports, Krita paintings, Inkscape vectors)
-    ├── 03-Art/                → Visual references, character sketches, cover mockups
-    ├── 04-Publishing/         → Exported print PDFs (Typst) and distribution EPUBs (Pandoc)
-    └── 05-Backups/            → Standalone timestamped .tar.gz archives with SHA-256 digests
+└── <WorldName>/               → Pure World Lore Vault (Direct Obsidian Vault with Git repository)
+    ├── world.yaml             → World Lore manifest
+    ├── Characters/            → Character profiles with Dataview metadata & relationship maps
+    ├── Locations/             → Sensory regional palettes, cities, and landmarks
+    ├── Factions/              → Guilds, empires, ideologies, and member rosters
+    ├── Magic-Technology/     → Hard/soft magic rules, limitations, and costs
+    ├── Bestiary/              → Creatures, apex predators, flora, and monster ecologies
+    ├── Artifacts/             → Legendary relics, magical weapons, and focal items
+    ├── Cosmology/             → Pantheons, deities, astral planes, and mythos
+    ├── History/               → Historical eras, timelines, and catalytic events
+    ├── Languages/             → Conlangs, phonetic rules, and world glossaries
+    ├── Templates/             → fileClasses schemas, writing logs, scene cards, and central index
+    └── .obsidian/             → Out-of-the-box plugin configs & fileClasses schemas
+
+~/Manuscripts/<ManuscriptName>/
+├── manuscript.yaml            → Project manifest linking Universe and World Lore Vault
+├── nwProject.nwx              → novelWriter project manifest (fileVersion 1.5)
+├── Book-01/                   → Discrete Git repository for Book-01 (Acts, Chapters, Scenes)
+│   ├── 01_Act_I/
+│   ├── 02_Act_II/
+│   ├── 03_Act_III/
+│   └── 04_Back_Matter/        → Automatically generated Dramatis Personae & Glossary
+├── Outlines/                  → Three-act structural beats & Subplot-Thread-Matrix.md
+├── Exports/                   → Exported print PDFs (Typst), EPUBs, and submission DOCXs (Pandoc)
+└── Backups/                   → Standalone timestamped .tar.gz archives with SHA-256 digests
 ```
 
 ---
@@ -71,7 +72,7 @@ If you have booted into Linux Mint XFCE or Debian:
    ```
    *This single command tests your OS environment, installs Git, PyGObject, Zenity, LibreOffice, FocusWriter, Calibre, Obsidian, novelWriter, Typst, Pandoc, literary typography fonts, and installs desktop launchers.*
 
-3. **Double-click "Scriptorium Control Center" on your Desktop** (or run `scriptorium gui`). On first launch, the welcoming wizard offers a 1-click starter cosmos (*"The Chronicles of Eldoria"*) with pre-configured lore and starter chapters!
+3. **Double-click "Scriptorium Control Center" on your Desktop** (or run `scriptorium control-center`). On first launch, the welcoming wizard offers a 1-click starter cosmos (*"Cosmere / Scadrial / Mistborn-Era1"*) with pre-configured lore and starter chapters!
 
 ---
 
@@ -79,9 +80,9 @@ If you have booted into Linux Mint XFCE or Debian:
 
 | Creative Phase | Tool | Format | Role & Setup |
 | :--- | :--- | :--- | :--- |
-| **Desktop Control Center** | **Scriptorium App** | Native GTK 3 / Zenity | 5-tab author dashboard for Cosmos management, live word count analytics, 1-click Typst/Pandoc publishing, Git version snapshots, and Doctor diagnostics. |
-| **World Bible & Wiki** | **Obsidian** | Markdown (`.md`) | Open `00-World-Bible` as Vault. Comes pre-configured with **Longform**, **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git** (10-min auto-commits). (See [Plugin Guide](docs/OBSIDIAN_PLUGINS_GUIDE.md)) |
-| **Outlining & Drafting** | **novelWriter** / **Longform** | Markdown (`.md`) + `nwProject.nwx` | In novelWriter choose `New Project` inside `01-Manuscript` or draft natively in Obsidian with Longform atomic scenes. In novelWriter, import `Book-01/*/*.md` starters with `@pov:` and `@tag:` annotations. Use full-screen Focus Mode. |
+| **Desktop Control Center** | **Scriptorium App** | Native GTK 3 / Zenity | 5-tab author dashboard with global Universe, World Lore, and Manuscript selectors, Visual Scene Metadata Inspector, live word counts, 1-click Typst/Pandoc publishing, Git version snapshots, and Doctor diagnostics. |
+| **World Bible & Wiki** | **Obsidian** | Markdown (`.md`) | Open `<WorldName>` directly as Vault. Comes pre-configured with **Longform**, **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git** (10-min auto-commits). (See [Plugin Guide](docs/guides/OBSIDIAN_PLUGINS.md)) |
+| **Outlining & Drafting** | **novelWriter** / **Longform** | Markdown (`.md`) + `nwProject.nwx` | Open `~/Manuscripts/<Manuscript>` to draft with novelWriter's structured project tree, status badges (`Draft`, `Revision`, `Finished`), and scene annotations (`@pov:`, `@location:`, `@char:`, `@thread:`, `@time:`, `@status:`). |
 | **Deep Sprint Canvas** | **FocusWriter** | Plaintext (`.txt` / `.md`) | Minimalist full-screen distraction-free distraction sprint sessions (`F11`). |
 | **Revisions & Collaboration**| **LibreOffice Writer** | `.odt` / `.docx` | Track changes with professional editors and redlining. |
 | **Ebook Compilation** | **Calibre** | `.epub` / `.mobi` | Graphical EPUB inspection, metadata tagging, and e-reader sync. |
@@ -93,17 +94,18 @@ If you have booted into Linux Mint XFCE or Debian:
 
 Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (`scriptorium`):
 
-1. **`Scriptorium Control Center` (`scriptorium gui`)**: Native Python/GTK 3 dashboard with 5 tabs:
-   - **Cosmos & Projects**: Universe and World management, creation wizards, toolchain launchers.
-   - **Writing & Analytics**: Manuscript hierarchy tree, live word counts, act rollups, session pacing.
-   - **Publishing Studio**: 1-Click Typst PDF & Pandoc EPUB export, automated Back-Matter Concordance & Dramatis Personae generator, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
-   - **Vault Safety & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, restore drill wizard.
-   - **Doctor Diagnostics**: Scriptorium toolchain status badges, World Bible lore consistency checks (`world_doctor`), 7-stage verification trigger.
-2. **`New World Creator` (`scriptorium init <name>` / `scriptorium universe`)**: Graphical wizard to scaffold a new Universe or World with multi-tier Git repos and pre-configured Obsidian vault suites.
-3. **`Add Book Volume` (`scriptorium add-book <world> [book]`)**: Scaffolds subsequent manuscript volumes (`Book-02`, `Book-03`, etc.) with three acts, sample chapters, and discrete Git repos.
-4. **`Back-Matter Concordance` (`scriptorium concordance <world> [-b Book-01|all]`)**: Automatically parses World Bible lore into publication-ready `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
-5. **`Export Book` (`scriptorium export <world> [-b Book-01|all] [-s us-trade|trade|pocket]`)**: Compiles your manuscript or specific volume into a print-ready PDF via Typst and an EPUB via Pandoc in one click (with trim size presets, auto-detected EPUB cover art in `03-Art/cover.png` or `.jpg`, and interactive volume picker when multiple books exist).
-6. **`Save Snapshot` (`scriptorium snapshot <world> [-m note]`)**: Records timestamped Git version snapshots across your world and manuscript repositories.
+1. **`Scriptorium Control Center` (`scriptorium control-center`)**: Native Python/GTK 3 dashboard with 5 tabs:
+   - **🪐 Universes & Worlds**: Universe and World Lore Vault management, creation wizards, toolchain launchers.
+   - **✍️ Manuscripts & Drafting**: Manuscript hierarchy tree, live word counts, and the **Visual Scene Metadata Inspector** for `@pov`, `@char`, `@location`, `@thread`, `@time`, `@status`.
+   - **📚 Publishing & Exports**: 1-Click Typst PDF, Pandoc EPUB, and submission DOCX export, automated Back-Matter Concordance & Dramatis Personae generator, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
+   - **🔒 Snapshots & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, restore drill wizard.
+   - **🩺 Diagnostics & Doctor**: Scriptorium toolchain status badges, World Bible lore consistency checks (`world-doctor`), 7-stage verification trigger.
+2. **`Universe & World Scaffolder` (`scriptorium universe <name>` / `scriptorium world <name> -u <universe>`)**: Scaffolds Universes and pure World Lore Vaults directly opened in Obsidian.
+3. **`Manuscript Scaffolder` (`scriptorium manuscript <name> -u <universe> -w <world>`)**: Scaffolds independent manuscript projects linked to lore vaults.
+4. **`Add Volume` (`scriptorium add-volume <manuscript> [book]`)**: Scaffolds subsequent manuscript volumes (`Book-02`, `Book-03`, etc.) with three acts, sample chapters, and discrete Git repos.
+5. **`Back-Matter Concordance` (`scriptorium concordance <world> --manuscript <manuscript>`)**: Automatically parses World Bible lore into publication-ready `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
+6. **`Export Book` (`scriptorium export <manuscript> [-b Book-01|all] [-s us-trade|trade|pocket] [--format book|submission|all]`)**: Compiles your manuscript or specific volume into a print-ready PDF via Typst, an EPUB via Pandoc, and a submission DOCX in one click.
+7. **`Save Snapshot` (`scriptorium snapshot <target> [-m note]`)**: Records timestamped Git version snapshots across your world and manuscript repositories.
 
 ---
 
@@ -116,7 +118,7 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
    - Blocks YouTube, Reddit, Twitter/X, TikTok, and social media during your writing hours (09:00–13:00 and 14:00–17:00).
 2. **OS Notification Muting**:
    - Click the Notification Bell icon in the Linux Mint panel and toggle **Do Not Disturb**.
-   - See [XFCE DND Guide](configs/xfce_dnd_setup.md) for custom keyboard shortcut setup.
+   - See [XFCE DND Guide](docs/guides/DISTRACTION_CONTROL.md) for custom keyboard shortcut setup.
 
 ---
 
@@ -131,19 +133,23 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
    - Test full system recovery with `scriptorium restore`.
 3. **Full-Disk Encryption & Automated External Backups**:
    - During Linux Mint installation, tick *"Encrypt the new Linux Mint installation"* (LUKS).
-   - Use **Déjà Dup** for automated offsite/USB backups (see [Déjà Dup Backup Guide](configs/deja_dup_backup_guide.md)).
+   - Use **Déjà Dup** for automated offsite/USB backups (see [Déjà Dup Backup Guide](docs/guides/BACKUP_SETUP.md)).
 
 ---
 
 ## 📚 Complete Resource Index
 
 - [Author's Field Manual](docs/AUTHOR_MANUAL.md) — Visual plain-English handbook for novel writing, worldbuilding, and publishing.
-- [Software Catalog & Download Links](resources/software_catalog.md) — Exact packages, Flatpak IDs, ISOs, and commands.
-- [Optional Extras Guide](resources/optional_extras_guide.md) — Azgaar maps, Krita, Inkscape, Gramps, PolyGlot, Sigil, Kiwix.
-- [Typography & Fonts Guide](resources/typography_and_fonts_guide.md) — Free literary typefaces (Linux Libertine, EB Garamond, Alegreya) and Typst formatting rules.
+- [Software Catalog & Download Links](docs/guides/SOFTWARE_CATALOG.md) — Exact packages, Flatpak IDs, ISOs, and commands.
+- [Optional Extras Guide](docs/guides/OPTIONAL_EXTRAS.md) — Azgaar maps, Krita, Inkscape, Gramps, PolyGlot, Sigil, Kiwix.
+- [Typography & Fonts Guide](docs/guides/TYPOGRAPHY_AND_FONTS.md) — Free literary typefaces (Linux Libertine, EB Garamond, Alegreya) and Typst formatting rules.
+- [Obsidian Plugin Suite Guide](docs/guides/OBSIDIAN_PLUGINS.md) — Pre-configured Obsidian writing and worldbuilding suite.
+- [Distraction Control Guide](docs/guides/DISTRACTION_CONTROL.md) — XFCE notification muting and FocusWriter tips.
+- [Automated Backup Guide](docs/guides/BACKUP_SETUP.md) — 3-2-1 backup strategy with Déjà Dup.
 - [Typst Book Template](templates/typst/book_template.typ) — Reusable novel layout engine.
 - [Obsidian World Bible Index Dashboard](templates/world-bible/Templates/World-Bible-Index.md) — Dataview queries and lore hub.
-- [Architecture Decision Records](docs/meta/decisions.md) — ADRs covering OS selection, Markdown storage, Typst typesetting, Multi-tier Git, Obsidian plugin architecture, and GTK Control Center.
+- [Architecture & ADRs](docs/ARCHITECTURE.md) — System invariants, exit codes, and Architectural Decision Records (ADR-001 through ADR-022).
+- [Roadmap & Milestones](docs/ROADMAP.md) — Project charter, hardware baselines, milestones (M0–M15), and operational status.
 
 ---
 
@@ -152,15 +158,13 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 | Doc | What it is |
 | :--- | :--- |
 | [docs/AUTHOR_MANUAL.md](docs/AUTHOR_MANUAL.md) | Comprehensive Author's Field Manual for daily writing, lore building, and publication |
-| [CHANGELOG.md](CHANGELOG.md) | Notable changes: the audit remediation series, re-audit follow-ups, and documentation reorganization |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical architecture, invariants, exit codes, and full ADR catalog (ADR-001–ADR-022) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Project charter, milestones (M0–M15), hardware baseline, and real-time status queues |
+| [CHANGELOG.md](CHANGELOG.md) | Notable changes: audit remediation series, separated architecture, and decluttering |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: ground rules, exit-code contract, quality gate, commit style, submission flow |
 | [docs/audits/](docs/audits/) | Audit trail: the line-by-line external audit (22 findings) and the independent re-audit that verified the remediation |
 | [SECURITY.md](SECURITY.md) | Security scope, installer privilege surface disclosure, and private vulnerability reporting |
-| [docs/meta/project.md](docs/meta/project.md) | Charter: goals, design invariants, hardware baseline, non-goals |
-| [docs/meta/plan.md](docs/meta/plan.md) | Build phases and what is done vs pending live verification |
-| [docs/meta/tasks.md](docs/meta/tasks.md) | Checklist of every deliverable |
-| [docs/meta/decisions.md](docs/meta/decisions.md) | Architecture decision records (why Mint, Markdown, Typst, Multi-tier Git, Obsidian plugins, GTK App) |
-| [docs/meta/knowledge.md](docs/meta/knowledge.md) | Tool ecosystem facts, multi-tier Git invariants, and script safety standards |
-| [docs/meta/status.md](docs/meta/status.md) | Current state + momentum queues (now / next / blocked / improve / recurring) |
+| [docs/SUPPORT_MATRIX.md](docs/SUPPORT_MATRIX.md) | Supported Linux distributions, desktop environments, architectures, and display servers |
+| [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) | Toolchain version baselines, SHA-256 binary digests, and Flatpak application IDs |
 | [scripts/verify.sh](scripts/verify.sh) | 7-stage automated health check: syntax, schema validation, Universe/World lifecycle, Git snapshots, and backup/restore drills |
 

@@ -57,4 +57,5 @@ All Flatpak packages are sourced from the official Flathub remote repository (`h
 | :--- | :--- | :--- | :--- |
 | **Site Blocker** | LeechBlock NG (Firefox) | `1.5.2` (BlockSets Schema v1) | `configs/leechblock_scriptorium_rules.json` |
 | **Manuscript Scaffold** | novelWriter | `fileVersion 1.5` | `templates/manuscript/nwProject.nwx` |
-| **World Manifest** | Scriptorium Manifest | `schema v1` (flat key-value) | `~/Worlds/<WorldName>/scriptorium.yaml` |
+| **World Manifest** | World Lore Manifest | `schema v1` (flat key-value) | `~/Universes/<UniverseName>/<WorldName>/world.yaml` |
+| **Manuscript Manifest** | Manuscript Manifest | `schema v1` (flat key-value) | `~/Manuscripts/<ManuscriptName>/manuscript.yaml` |

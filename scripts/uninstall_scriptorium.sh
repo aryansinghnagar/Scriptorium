@@ -65,6 +65,7 @@ APP_DIR="${HOME}/.local/share/applications"
 
 LAUNCHER_FILES=(
     "init-world.desktop"
+    "init-manuscript.desktop"
     "export-book.desktop"
     "save-snapshot.desktop"
     "scriptorium-control-center.desktop"

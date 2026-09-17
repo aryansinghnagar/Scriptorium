@@ -1,7 +1,7 @@
 # Chapter 1: The Ash and the Ink
 
 @pov: Protagonist
-@focus: Capital City
+@location: Capital City
 @status: Draft
 @tag: Inciting Incident
 

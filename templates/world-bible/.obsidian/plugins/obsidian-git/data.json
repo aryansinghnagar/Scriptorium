@@ -1,4 +1,5 @@
 {
+  "basePath": "",
   "autoCommitMessage": "Vault backup: {{date}}",
   "autoSaveInterval": 10,
   "autoPullInterval": 0,
@@ -6,7 +7,6 @@
   "autoBackupAfterFileChange": true,
   "treeStructure": false,
   "refreshSourceControl": true,
-  "baseSubmodule": false,
   "lineAuthor": {
     "show": false,
     "followMovement": "inactive",
@@ -17,11 +17,10 @@
   },
   "gitPath": "",
   "customMessageOnAutoBackup": false,
-  "autoBackupFileName": false,
   "syncMethod": "merge",
   "disablePush": true,
   "pullBeforePush": false,
   "showStatusBar": true,
-  "updateSubmodules": false,
-  "gitLocation": "root"
+  "updateSubmodules": false
 }
+

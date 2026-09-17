@@ -2,7 +2,7 @@
 # ==============================================================================
 # Scriptorium Add Manuscript Volume Engine
 # Purpose: Scaffolds a new manuscript volume (Book-02, Book-03, etc.) within
-#          an existing world with 3-act structure, starter chapters, and a
+#          a manuscript project with 3-act structure, starter chapters, and a
 #          discrete Git repository.
 # ==============================================================================
 
@@ -16,39 +16,41 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Add Book — scaffold a new manuscript volume in an existing world.
+Scriptorium Add Volume — scaffold a new manuscript volume in a manuscript project.
 
 Usage:
-  add_book.sh [WORLD_NAME|WORLD_DIR] [VOLUME_NAME] [OPTIONS]
+  add_book.sh [MANUSCRIPT_NAME|MANUSCRIPT_DIR] [VOLUME_NAME] [OPTIONS]
 
 Options:
-  -w, --world NAME     World name or directory path
-  -u, --universe NAME  Universe name (optional)
-  -b, --book VOLUME    Volume name to create (e.g. Book-02, Book-03; auto-detected if omitted)
-  -h, --help           Show this help and exit
+  -m, --manuscript NAME    Manuscript project name or directory path
+  -w, --world NAME         Alias for --manuscript (backwards compatibility)
+  -u, --universe NAME      Universe name (optional)
+  -b, --book VOLUME        Volume name to create (e.g. Book-02, Book-03; auto-detected if omitted)
+  -v, --volume VOLUME      Alias for --book
+  -h, --help               Show this help and exit
 
 Exit codes:
   0  book volume created successfully
-  1  error (world not found, volume already exists, invalid name)
-  3  user abort (no world selected)
+  1  error (manuscript not found, volume already exists, invalid name)
+  3  user abort (no manuscript selected)
 USAGE
 }
 
-WORLD_CLI=""
+MANUSCRIPT_CLI=""
 UNIVERSE_CLI=""
 BOOK_CLI=""
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        -w|--world)
-            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
-            WORLD_CLI="$2"; shift 2 ;;
+        -m|--manuscript|-w|--world)
+            [ $# -ge 2 ] || { echo "Error: $1 requires a value." >&2; exit 1; }
+            MANUSCRIPT_CLI="$2"; shift 2 ;;
         -u|--universe)
             [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
             UNIVERSE_CLI="$2"; shift 2 ;;
-        -b|--book)
-            [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 1; }
+        -b|--book|-v|--volume)
+            [ $# -ge 2 ] || { echo "Error: $1 requires a value." >&2; exit 1; }
             BOOK_CLI="$2"; shift 2 ;;
         -h|--help)
             usage; exit 0 ;;
@@ -61,57 +63,63 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-TARGET_WORLD="${WORLD_CLI:-${POSITIONAL[0]:-}}"
+TARGET_INPUT="${MANUSCRIPT_CLI:-${POSITIONAL[0]:-}}"
 VOLUME_NAME="${BOOK_CLI:-${POSITIONAL[1]:-}}"
 
-# Discover worlds if not provided
-discover_worlds WORLDS
+# Discover manuscripts
+discover_manuscripts MANUSCRIPTS
 
-if [ -z "${TARGET_WORLD}" ]; then
-    if [ ${#WORLDS[@]} -eq 1 ]; then
-        TARGET_WORLD="${WORLDS[0]}"
-        # N-03: auto-selected legacy worlds get the same nudge as by-name ones
-        warn_if_legacy_root "${TARGET_WORLD}"
-    elif has_gui && [ ${#WORLDS[@]} -gt 1 ]; then
+if [ -z "${TARGET_INPUT}" ]; then
+    if [ ${#MANUSCRIPTS[@]} -eq 1 ]; then
+        TARGET_INPUT="${MANUSCRIPTS[0]}"
+    elif has_gui && [ ${#MANUSCRIPTS[@]} -gt 1 ]; then
         CHOICES=()
-        for w in "${WORLDS[@]}"; do
-            CHOICES+=("$(basename "$w")" "[Universe: $(universe_label "$w")] $w")
+        for m in "${MANUSCRIPTS[@]}"; do
+            CHOICES+=("$(basename "$m")" "$m")
         done
-        PICKED=$(zenity --list --title="Scriptorium — Select World for New Volume" \
-            --text="Select the world to add a new manuscript volume to:" \
-            --column="World Name" --column="Universe & Path" \
+        PICKED=$(zenity --list --title="Scriptorium — Select Manuscript for New Volume" \
+            --text="Select the manuscript project to add a new volume to:" \
+            --column="Manuscript Name" --column="Path" \
             --width=520 --height=320 \
             "${CHOICES[@]}" || true)
-        [ -n "$PICKED" ] && TARGET_WORLD="$PICKED"
-    elif [ -t 0 ] && [ ${#WORLDS[@]} -gt 1 ]; then
-        echo "Select world to add book to:"
-        select w in "${WORLDS[@]}"; do
-            [ -n "${w:-}" ] && TARGET_WORLD="$w"
+        [ -n "$PICKED" ] && TARGET_INPUT="$PICKED"
+    elif [ -t 0 ] && [ ${#MANUSCRIPTS[@]} -gt 1 ]; then
+        echo "Select manuscript to add volume to:"
+        select m in "${MANUSCRIPTS[@]}"; do
+            [ -n "${m:-}" ] && TARGET_INPUT="$m"
             break
         done
     fi
 fi
 
-if [ -z "${TARGET_WORLD}" ]; then
-    echo "No world specified. Aborting." >&2
+if [ -z "${TARGET_INPUT}" ]; then
+    echo "No manuscript specified. Aborting." >&2
     exit 3
 fi
 
-WORLD_DIR="$(resolve_world_dir "${TARGET_WORLD}" "${UNIVERSE_CLI}")"
+MANUSCRIPT_DIR="$(resolve_manuscript_dir "${TARGET_INPUT}")"
+if [ -z "${MANUSCRIPT_DIR}" ] || [ ! -d "${MANUSCRIPT_DIR}" ]; then
+    # Fallback to world resolution if legacy world directory was passed
+    MANUSCRIPT_DIR="$(resolve_world_dir "${TARGET_INPUT}" "${UNIVERSE_CLI}")"
+fi
 
-if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
-    echo "Error: World directory '${TARGET_WORLD}' not found." >&2
+if [ -z "${MANUSCRIPT_DIR}" ] || [ ! -d "${MANUSCRIPT_DIR}" ]; then
+    echo "Error: Manuscript directory '${TARGET_INPUT}' not found." >&2
     exit 1
 fi
 
-WORLD_NAME="$(basename "${WORLD_DIR}")"
-MANUSCRIPT_DIR="${WORLD_DIR}/01-Manuscript"
-mkdir -p "${MANUSCRIPT_DIR}"
+MANUSCRIPT_NAME="$(basename "${MANUSCRIPT_DIR}")"
+
+# If legacy world with 01-Manuscript subfolder:
+VOLUMES_PARENT="${MANUSCRIPT_DIR}"
+if [ -d "${MANUSCRIPT_DIR}/01-Manuscript" ]; then
+    VOLUMES_PARENT="${MANUSCRIPT_DIR}/01-Manuscript"
+fi
 
 # Determine next volume name if not provided
 if [ -z "${VOLUME_NAME}" ]; then
     MAX_NUM=0
-    for bdir in "${MANUSCRIPT_DIR}"/Book-*; do
+    for bdir in "${VOLUMES_PARENT}"/Book-*; do
         if [ -d "$bdir" ]; then
             bname="$(basename "$bdir")"
             num="${bname#Book-}"
@@ -127,7 +135,7 @@ if [ -z "${VOLUME_NAME}" ]; then
     if has_gui; then
         VOLUME_NAME=$(zenity --entry \
             --title="Scriptorium — Add Manuscript Volume" \
-            --text="Enter the volume name for '${WORLD_NAME}':" \
+            --text="Enter the volume name for '${MANUSCRIPT_NAME}':" \
             --entry-text="${DEFAULT_VOL}" || true)
     else
         VOLUME_NAME="${DEFAULT_VOL}"
@@ -142,14 +150,14 @@ fi
 # Sanitize volume name
 VOLUME_NAME="$(printf '%s' "${VOLUME_NAME}" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr ' ' '-' | tr -cd 'A-Za-z0-9_-' | cut -c1-64)"
 
-TARGET_VOL_DIR="${MANUSCRIPT_DIR}/${VOLUME_NAME}"
+TARGET_VOL_DIR="${VOLUMES_PARENT}/${VOLUME_NAME}"
 
 if [ -d "${TARGET_VOL_DIR}" ]; then
-    echo "Error: Volume '${VOLUME_NAME}' already exists in ${WORLD_DIR}." >&2
+    echo "Error: Volume '${VOLUME_NAME}' already exists in ${MANUSCRIPT_DIR}." >&2
     exit 1
 fi
 
-echo "Scaffolding new manuscript volume '${VOLUME_NAME}' in ${WORLD_NAME}..."
+echo "Scaffolding new manuscript volume '${VOLUME_NAME}' in ${MANUSCRIPT_NAME}..."
 
 # Create 3-act structure
 mkdir -p "${TARGET_VOL_DIR}/01_Act_I"
@@ -173,6 +181,7 @@ cat << 'EOF' > "${TARGET_VOL_DIR}/02_Act_II/01_Chapter_02.md"
 
 @pov: Protagonist
 @char: Protagonist
+@location: Crossroads
 @status: Draft
 
 The crossroads loomed ahead, each path demanding a price too steep to pay in coin alone.
@@ -183,6 +192,7 @@ cat << 'EOF' > "${TARGET_VOL_DIR}/03_Act_III/01_Chapter_03.md"
 
 @pov: Protagonist
 @char: Protagonist
+@location: Citadel
 @status: Draft
 
 In the crucible of the climax, what had been hidden was laid bare.
@@ -194,21 +204,21 @@ if command -v git &> /dev/null; then
         cd "${TARGET_VOL_DIR}"
         git init -q
         git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial manuscript drafting repository for ${VOLUME_NAME} in ${WORLD_NAME}" 2>/dev/null || true
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial manuscript drafting repository for ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null || true
     )
 
-    # Track in World Git repo if present
-    if [ -d "${WORLD_DIR}/.git" ]; then
+    # Track in Manuscript Git repo if present
+    if [ -d "${MANUSCRIPT_DIR}/.git" ]; then
         (
-            cd "${WORLD_DIR}"
+            cd "${MANUSCRIPT_DIR}"
             git config advice.addEmbeddedRepo false
-            git -c advice.addEmbeddedRepo=false add "01-Manuscript/${VOLUME_NAME}" 2>/dev/null || true
-            git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Scaffold manuscript volume ${VOLUME_NAME} in ${WORLD_NAME}" 2>/dev/null || true
+            git -c advice.addEmbeddedRepo=false add "${TARGET_VOL_DIR#"${MANUSCRIPT_DIR}/"}" 2>/dev/null || true
+            git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null || true
         )
     fi
 fi
 
-MSG="Manuscript volume '${VOLUME_NAME}' scaffolded successfully in '${WORLD_NAME}'!\n\nPath:\n${TARGET_VOL_DIR}\n\n• 3 Acts initialized (01_Act_I, 02_Act_II, 03_Act_III)\n• Starter chapters created\n• Discrete Git repository initialized!"
+MSG="Manuscript volume '${VOLUME_NAME}' scaffolded successfully in '${MANUSCRIPT_NAME}'!\n\nPath:\n${TARGET_VOL_DIR}\n\n• 3 Acts initialized (01_Act_I, 02_Act_II, 03_Act_III)\n• Starter chapters created\n• Discrete Git repository initialized!"
 
 if has_gui; then
     zenity --info --title="Volume Created" --text="${MSG}" --width=450

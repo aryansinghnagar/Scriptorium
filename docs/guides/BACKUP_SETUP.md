@@ -19,8 +19,8 @@ Your writing represents years of intellectual effort. Scriptorium adheres to the
 
 ### Folders to Save
 1. In the **Folders to save** tab, click `+` (Add).
-2. Select your `~/Worlds` folder (or your entire Home directory `/home/<username>`).
-3. Under **Folders to ignore**, ensure temporary build folders or caches are listed (e.g., `Downloads`, `Trash`).
+2. Select your `~/Universes` and `~/Manuscripts` folders (or your entire Home directory `/home/<username>`).
+3. Under **Folders to ignore**, ensure temporary build folders or caches are listed (e.g., `Downloads`, `Trash`, `04-Publishing`).
 
 ### Storage Location
 1. In the **Storage location** tab:

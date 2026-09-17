@@ -41,7 +41,7 @@ This catalog provides official download links, package names (APT / Flatpak / Ap
   - *Excalidraw*: `https://github.com/zsviczian/obsidian-excalidraw-plugin`
 
 ### 2. novelWriter (Outlining & Manuscript Drafting)
-- **Role**: Project-level manuscript drafting, chapter/scene tree, POV/tag filtering, focus mode.
+- **Role**: Project-level manuscript drafting, chapter/scene tree, POV/location/tag filtering, focus mode.
 - **Website**: [https://novelwriter.io/](https://novelwriter.io/)
 - **Documentation**: [https://novelwriter.readthedocs.io/](https://novelwriter.readthedocs.io/)
 - **Flatpak App ID**: `io.gitlab.novelwriter.novelWriter` (Flathub: [https://flathub.org/apps/io.gitlab.novelwriter.novelWriter](https://flathub.org/apps/io.gitlab.novelwriter.novelWriter))
@@ -100,7 +100,7 @@ This catalog provides official download links, package names (APT / Flatpak / Ap
   ```
 
 ### 7. Pandoc (Universal Markup Bridge)
-- **Role**: Converts novelWriter Markdown exports into Typst files or EPUB inputs.
+- **Role**: Converts novelWriter / Markdown exports into Typst files, Standard Manuscript Submission `.docx`, or EPUB inputs.
 - **Website**: [https://pandoc.org/](https://pandoc.org/)
 - **Installation**:
   ```bash

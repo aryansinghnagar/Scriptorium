@@ -36,7 +36,7 @@ safe_filename() {
 usage() {
     cat << 'USAGE'
 Scriptorium Book Exporter — compile a Markdown/novelWriter manuscript into
-print-ready PDF (Typst) and distribution EPUB (Pandoc).
+print-ready PDF (Typst), distribution EPUB (Pandoc), or submission DOCX (Pandoc).
 
 Usage:
   export_book.sh [WORLD_DIR] [OPTIONS]
@@ -46,6 +46,8 @@ Options:
   -a, --author NAME        Author name (default: world manifest or "Author Name")
   -b, --book VOLUME        Book volume to export (e.g., Book-01, Book-02, or "all")
   -s, --paper-size SIZE    Paper trim size (us-trade, trade, pocket; default: us-trade)
+  -f, --format FORMAT      Output format: book (PDF+EPUB), submission (DOCX), all (default: book)
+  --submission, --docx     Shortcut for --format submission
   -h, --help               Show this help and exit
 
 Exit codes:
@@ -63,6 +65,7 @@ BOOK_TITLE_CLI=""
 AUTHOR_NAME_CLI=""
 BOOK_VOLUME_CLI=""
 PAPER_SIZE_CLI=""
+EXPORT_FORMAT_CLI="book"
 POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -78,6 +81,11 @@ while [ $# -gt 0 ]; do
         -s|--paper-size)
             [ $# -ge 2 ] || { echo "Error: --paper-size requires a value." >&2; exit 1; }
             PAPER_SIZE_CLI="$2"; shift 2 ;;
+        -f|--format)
+            [ $# -ge 2 ] || { echo "Error: --format requires a value." >&2; exit 1; }
+            EXPORT_FORMAT_CLI="$2"; shift 2 ;;
+        --submission|--docx)
+            EXPORT_FORMAT_CLI="submission"; shift ;;
         -h|--help)
             usage; exit 0 ;;
         --)
@@ -89,50 +97,61 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-WORLD_DIR="${POSITIONAL[0]:-}"
+TARGET_DIR="${POSITIONAL[0]:-}"
 
-if [ -z "${WORLD_DIR}" ]; then
+if [ -z "${TARGET_DIR}" ]; then
     if has_gui; then
-        # F-06: pickers default to the canonical ~/Universes root, falling
-        # back to the legacy ~/Worlds root when it does not exist yet.
-        PICKER_ROOT="${UNIVERSES_BASE}"
-        [ -d "${PICKER_ROOT}" ] || PICKER_ROOT="${WORLDS_BASE}"
-        WORLD_DIR=$(zenity --file-selection --directory \
-            --title="Scriptorium — Select World Directory to Export" \
+        PICKER_ROOT="${MANUSCRIPTS_BASE}"
+        [ -d "${PICKER_ROOT}" ] || PICKER_ROOT="${UNIVERSES_BASE}"
+        TARGET_DIR=$(zenity --file-selection --directory \
+            --title="Scriptorium — Select Manuscript Directory to Export" \
             --filename="${PICKER_ROOT}/" || true)
     fi
 fi
 
-if [ -z "${WORLD_DIR}" ]; then
-    echo "No world directory selected. Aborting."
+if [ -z "${TARGET_DIR}" ]; then
+    echo "No manuscript directory selected. Aborting."
     exit 3
 fi
 
-if [ -n "${WORLD_DIR}" ] && [ ! -d "${WORLD_DIR}" ]; then
-    RESOLVED="$(resolve_world_dir "${WORLD_DIR}")"
+if [ -n "${TARGET_DIR}" ] && [ ! -d "${TARGET_DIR}" ]; then
+    RESOLVED="$(resolve_manuscript_dir "${TARGET_DIR}")"
+    if [ -z "${RESOLVED}" ]; then
+        RESOLVED="$(resolve_world_dir "${TARGET_DIR}")"
+    fi
     if [ -n "${RESOLVED}" ]; then
-        WORLD_DIR="${RESOLVED}"
+        TARGET_DIR="${RESOLVED}"
     fi
 fi
 
-if [ ! -d "${WORLD_DIR}" ]; then
-    echo "Error: Directory '${WORLD_DIR}' does not exist." >&2
+if [ ! -d "${TARGET_DIR}" ]; then
+    echo "Error: Directory '${TARGET_DIR}' does not exist." >&2
     exit 1
 fi
 
-WORLD_NAME=$(basename "${WORLD_DIR}")
-MANUSCRIPT_DIR="${WORLD_DIR}/01-Manuscript"
-PUBLISHING_DIR="${WORLD_DIR}/04-Publishing"
+PROJECT_NAME=$(basename "${TARGET_DIR}")
+if [ -d "${TARGET_DIR}/01-Manuscript" ]; then
+    MANUSCRIPT_DIR="${TARGET_DIR}/01-Manuscript"
+    PUBLISHING_DIR="${TARGET_DIR}/04-Publishing"
+else
+    MANUSCRIPT_DIR="${TARGET_DIR}"
+    if [ -d "${TARGET_DIR}/04-Publishing" ]; then
+        PUBLISHING_DIR="${TARGET_DIR}/04-Publishing"
+    else
+        PUBLISHING_DIR="${TARGET_DIR}/Exports"
+    fi
+fi
 mkdir -p "${PUBLISHING_DIR}"
 
-echo "Compiling publication files for: ${WORLD_NAME} ..."
+echo "Compiling publication files for: ${PROJECT_NAME} ..."
 
-# 2. Extract title & author: CLI flags > world manifest (D-02) > GUI prompt > defaults
+# 2. Extract title & author: CLI flags > manuscript/world manifest > GUI prompt > defaults
 BOOK_TITLE="${BOOK_TITLE_CLI:-}"
 AUTHOR_NAME="${AUTHOR_NAME_CLI:-}"
 
-# Read world manifest (scriptorium.yaml) if present — flat `key: value` pairs only
-MANIFEST="${WORLD_DIR}/scriptorium.yaml"
+# Read manifest (manuscript.yaml or scriptorium.yaml) if present — flat `key: value` pairs only
+MANIFEST="${TARGET_DIR}/manuscript.yaml"
+[ -f "${MANIFEST}" ] || MANIFEST="${TARGET_DIR}/scriptorium.yaml"
 if [ -f "${MANIFEST}" ]; then
     if [ -z "${BOOK_TITLE}" ]; then
         BOOK_TITLE=$(sed -n -E 's/^title:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -160,7 +179,7 @@ if has_gui && { [ -z "${BOOK_TITLE}" ] || [ -z "${AUTHOR_NAME}" ]; }; then
     fi
 fi
 
-[ -z "${BOOK_TITLE}" ] && BOOK_TITLE="${WORLD_NAME}"
+[ -z "${BOOK_TITLE}" ] && BOOK_TITLE="${PROJECT_NAME}"
 [ -z "${AUTHOR_NAME}" ] && AUTHOR_NAME="Author Name"
 
 TEMP_WORK_DIR=$(mktemp -d)
@@ -357,7 +376,23 @@ else
     sed -E -e 's/^#### +(.*)/==== \1/' -e 's/^### +(.*)/=== \1/' -e 's/^## +(.*)/== \1/' -e 's/^# +(.*)/= \1/' -e 's/^@([A-Za-z0-9_-]+):/\1:/' "${COMBINED_MD}" >> "${TYPST_SRC}"
 fi
 
-# 5. Compile PDF with Typst (H3: safe filenames, D3: collision-safe)
+BUILD_PDF=0
+BUILD_EPUB=0
+BUILD_DOCX=0
+
+case "${EXPORT_FORMAT_CLI}" in
+    book)
+        BUILD_PDF=1; BUILD_EPUB=1 ;;
+    submission|docx|standard)
+        BUILD_DOCX=1 ;;
+    all)
+        BUILD_PDF=1; BUILD_EPUB=1; BUILD_DOCX=1 ;;
+    *)
+        echo "[!] Warning: Unknown export format '${EXPORT_FORMAT_CLI}', defaulting to 'book'." >&2
+        BUILD_PDF=1; BUILD_EPUB=1 ;;
+esac
+
+# 5. Output Filename Stems (H3: safe filenames, D3: collision-safe)
 if [ "${SELECTED_VOLUME}" != "all" ] && [ "${SELECTED_VOLUME}" != "single" ] && [ -n "${SELECTED_VOLUME}" ]; then
     SAFE_STEM="$(safe_filename "${BOOK_TITLE}_${SELECTED_VOLUME}")"
 else
@@ -365,89 +400,132 @@ else
 fi
 PDF_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}.pdf"
 EPUB_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}.epub"
-if [ -e "${PDF_OUTPUT}" ] || [ -e "${EPUB_OUTPUT}" ]; then
+DOCX_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}_Submission.docx"
+if [ -e "${PDF_OUTPUT}" ] || [ -e "${EPUB_OUTPUT}" ] || [ -e "${DOCX_OUTPUT}" ]; then
     SAFE_STEM="${SAFE_STEM}_$(date +%Y%m%d-%H%M%S)"
     PDF_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}.pdf"
     EPUB_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}.epub"
+    DOCX_OUTPUT="${PUBLISHING_DIR}/${SAFE_STEM}_Submission.docx"
     echo "[i] Output collision detected, using timestamped stem: ${SAFE_STEM}"
 fi
 
 EXIT_STATUS=0
 
-echo "Rendering print PDF with Typst..."
-if command -v typst &> /dev/null; then
-    if (cd "${TEMP_WORK_DIR}" && typst compile "${TYPST_SRC}" "${PDF_OUTPUT}"); then
-        if [ -s "${PDF_OUTPUT}" ]; then
-            echo "[✓] PDF generated at: ${PDF_OUTPUT}"
+# 6. Compile PDF with Typst
+if [ "${BUILD_PDF}" -eq 1 ]; then
+    echo "Rendering print PDF with Typst..."
+    if command -v typst &> /dev/null; then
+        if (cd "${TEMP_WORK_DIR}" && typst compile "${TYPST_SRC}" "${PDF_OUTPUT}"); then
+            if [ -s "${PDF_OUTPUT}" ]; then
+                echo "[✓] PDF generated at: ${PDF_OUTPUT}"
+            else
+                echo "[!] Typst compile finished but PDF artifact is empty (0 bytes)." >&2
+                EXIT_STATUS=1
+            fi
         else
-            echo "[!] Typst compile finished but PDF artifact is empty (0 bytes)." >&2
+            echo "[!] Typst compile failed. See ${TYPST_SRC} and ${TEMP_WORK_DIR}/book_template.typ for details." >&2
             EXIT_STATUS=1
         fi
     else
-        echo "[!] Typst compile failed. See ${TYPST_SRC} and ${TEMP_WORK_DIR}/book_template.typ for details." >&2
+        echo "[!] Typst not found. Skipping PDF generation." >&2
         EXIT_STATUS=1
     fi
-else
-    echo "[!] Typst not found. Skipping PDF generation." >&2
-    EXIT_STATUS=1
 fi
 
-# 6. Compile EPUB with Pandoc (AUD-02: Dedicated error trap & Cover auto-detection)
-echo "Generating EPUB with Pandoc..."
-if command -v pandoc &> /dev/null; then
-    PANDOC_ARGS=(
-        "${COMBINED_MD}"
-        -o "${EPUB_OUTPUT}"
-        --metadata title="${BOOK_TITLE}"
-        --metadata author="${AUTHOR_NAME}"
-        --toc
-        --toc-depth=2
-    )
+# 7. Compile EPUB with Pandoc (AUD-02: Dedicated error trap & Cover auto-detection)
+if [ "${BUILD_EPUB}" -eq 1 ]; then
+    echo "Generating EPUB with Pandoc..."
+    if command -v pandoc &> /dev/null; then
+        PANDOC_ARGS=(
+            "${COMBINED_MD}"
+            -o "${EPUB_OUTPUT}"
+            --metadata title="${BOOK_TITLE}"
+            --metadata author="${AUTHOR_NAME}"
+            --toc
+            --toc-depth=2
+        )
 
-    COVER_IMAGE=""
-    if [ -f "${WORLD_DIR}/03-Art/cover.png" ]; then
-        COVER_IMAGE="${WORLD_DIR}/03-Art/cover.png"
-    elif [ -f "${WORLD_DIR}/03-Art/cover.jpg" ]; then
-        COVER_IMAGE="${WORLD_DIR}/03-Art/cover.jpg"
-    elif [ -f "${WORLD_DIR}/03-Art/cover.jpeg" ]; then
-        COVER_IMAGE="${WORLD_DIR}/03-Art/cover.jpeg"
-    fi
+        COVER_IMAGE=""
+        for cdir in "${PUBLISHING_DIR}" "${TARGET_DIR}/03-Art" "${TARGET_DIR}/Art" "${TARGET_DIR}"; do
+            for ext in png jpg jpeg PNG JPG JPEG; do
+                if [ -f "${cdir}/cover.${ext}" ]; then
+                    COVER_IMAGE="${cdir}/cover.${ext}"
+                    break 2
+                fi
+            done
+        done
 
-    if [ -n "${COVER_IMAGE}" ]; then
-        echo "[i] Auto-detected EPUB cover image: ${COVER_IMAGE}"
-        PANDOC_ARGS+=(--epub-cover-image="${COVER_IMAGE}")
-    fi
+        if [ -n "${COVER_IMAGE}" ]; then
+            echo "[i] Auto-detected EPUB cover image: ${COVER_IMAGE}"
+            PANDOC_ARGS+=(--epub-cover-image="${COVER_IMAGE}")
+        fi
 
-    if pandoc "${PANDOC_ARGS[@]}" 2>"${TEMP_WORK_DIR}/pandoc_err.log"; then
-        if [ -s "${EPUB_OUTPUT}" ]; then
-            echo "[✓] EPUB generated at: ${EPUB_OUTPUT}"
+        if pandoc "${PANDOC_ARGS[@]}" 2>"${TEMP_WORK_DIR}/pandoc_err.log"; then
+            if [ -s "${EPUB_OUTPUT}" ]; then
+                echo "[✓] EPUB generated at: ${EPUB_OUTPUT}"
+            else
+                echo "[!] Pandoc completed but EPUB artifact is empty (0 bytes)." >&2
+                EXIT_STATUS=1
+            fi
         else
-            echo "[!] Pandoc completed but EPUB artifact is empty (0 bytes)." >&2
+            echo "[!] Pandoc EPUB export failed." >&2
+            if [ -s "${TEMP_WORK_DIR}/pandoc_err.log" ]; then
+                cat "${TEMP_WORK_DIR}/pandoc_err.log" >&2
+            fi
             EXIT_STATUS=1
         fi
     else
-        echo "[!] Pandoc EPUB export failed." >&2
-        if [ -s "${TEMP_WORK_DIR}/pandoc_err.log" ]; then
-            cat "${TEMP_WORK_DIR}/pandoc_err.log" >&2
-        fi
+        echo "[!] Pandoc not found. Skipping EPUB generation." >&2
         EXIT_STATUS=1
     fi
-else
-    echo "[!] Pandoc not found. Skipping EPUB generation." >&2
-    EXIT_STATUS=1
 fi
 
-# Temp cleanup handled by EXIT trap (H4)
+# 8. Compile Standard Manuscript Submission Format (.docx) with Pandoc
+if [ "${BUILD_DOCX}" -eq 1 ]; then
+    echo "Generating Standard Manuscript Submission document (.docx) with Pandoc..."
+    if command -v pandoc &> /dev/null; then
+        PANDOC_DOCX_ARGS=(
+            -f markdown-citations
+            "${COMBINED_MD}"
+            -t docx
+            -o "${DOCX_OUTPUT}"
+            --metadata title="${BOOK_TITLE}"
+            --metadata author="${AUTHOR_NAME}"
+            --metadata date="$(date +%Y-%m-%d)"
+        )
 
-# 7. Notify user
+        if pandoc "${PANDOC_DOCX_ARGS[@]}" 2>"${TEMP_WORK_DIR}/pandoc_docx_err.log"; then
+            if [ -s "${DOCX_OUTPUT}" ]; then
+                echo "[✓] Submission manuscript generated at: ${DOCX_OUTPUT}"
+            else
+                echo "[!] Pandoc completed but DOCX artifact is empty (0 bytes)." >&2
+                EXIT_STATUS=1
+            fi
+        else
+            echo "[!] Pandoc DOCX export failed." >&2
+            if [ -s "${TEMP_WORK_DIR}/pandoc_docx_err.log" ]; then
+                cat "${TEMP_WORK_DIR}/pandoc_docx_err.log" >&2
+            fi
+            EXIT_STATUS=1
+        fi
+    else
+        echo "[!] Pandoc not found. Skipping DOCX generation." >&2
+        EXIT_STATUS=1
+    fi
+fi
+
+# 9. Notify user
 MSG="Export Summary for: ${BOOK_TITLE}\n"
-[ -f "${PDF_OUTPUT}" ] && MSG="${MSG}\n• Print PDF: ${PDF_OUTPUT}"
-[ -f "${EPUB_OUTPUT}" ] && MSG="${MSG}\n• EPUB Ebook: ${EPUB_OUTPUT}"
+[ "${BUILD_PDF}" -eq 1 ] && [ -f "${PDF_OUTPUT}" ] && MSG="${MSG}\n• Print PDF: ${PDF_OUTPUT}"
+[ "${BUILD_EPUB}" -eq 1 ] && [ -f "${EPUB_OUTPUT}" ] && MSG="${MSG}\n• EPUB Ebook: ${EPUB_OUTPUT}"
+[ "${BUILD_DOCX}" -eq 1 ] && [ -f "${DOCX_OUTPUT}" ] && MSG="${MSG}\n• Standard Submission (.docx): ${DOCX_OUTPUT}"
 [ "${EXIT_STATUS}" -ne 0 ] && MSG="${MSG}\n\n[!] Note: One or more formats had compilation warnings or errors."
 
 if has_gui; then
     if [ -f "${PDF_OUTPUT}" ] && zenity --question --title="Export Summary" --text="${MSG}\n\nWould you like to open the PDF now?" --width=450; then
         xdg-open "${PDF_OUTPUT}" &
+    elif [ -f "${DOCX_OUTPUT}" ] && [ "${BUILD_PDF}" -eq 0 ] && zenity --question --title="Export Summary" --text="${MSG}\n\nWould you like to open the Submission document now?" --width=450; then
+        xdg-open "${DOCX_OUTPUT}" &
     else
         zenity --info --title="Export Summary" --text="${MSG}" --width=450
     fi

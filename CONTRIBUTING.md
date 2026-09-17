@@ -9,13 +9,13 @@ practical.
 
 - **Target platforms**: Linux Mint 21/22 (XFCE) and Debian 12/13. Everything
   else must degrade gracefully, not crash.
-- **Design invariants** live in [project.md](docs/meta/project.md) and
-  [knowledge.md](docs/meta/knowledge.md) — read both before changing scripts. In
+- **Design invariants** live in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
+  [docs/ROADMAP.md](docs/ROADMAP.md) — read both before changing scripts. In
   particular: NUL-delimited filename handling, transactional directory
   scaffolding, the exit-code contract below, and "safe handling of arbitrary
   filenames" are non-negotiable.
 - **Architecture history** is recorded as ADRs in
-  [decisions.md](docs/meta/decisions.md).
+  [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   If your change reverses or extends a recorded decision, add a new ADR rather
   than editing an old one.
 - **No secrets, no personal paths**: never hardcode usernames, absolute home
@@ -58,6 +58,7 @@ bash scripts/verify.sh                                       # 7-stage harness
 bash tests/test_audit_fixes.sh
 bash tests/test_deep_audit.sh
 bash tests/test_concordance_edge_cases.sh
+bash tests/test_audit_claude_improvements.sh
 ```
 
 `verify.sh` is the project's core quality gate — it must be able to *fail*

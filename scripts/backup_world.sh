@@ -35,6 +35,8 @@ USAGE
 }
 
 WORLD_CLI=""
+MANUSCRIPT_CLI=""
+PROJECT_CLI=""
 UNIVERSE_CLI=""
 DEST_CLI=""
 NOTE_CLI=""
@@ -45,6 +47,12 @@ while [ $# -gt 0 ]; do
         -w|--world)
             [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
             WORLD_CLI="$2"; shift 2 ;;
+        -m|--manuscript)
+            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 1; }
+            MANUSCRIPT_CLI="$2"; shift 2 ;;
+        -p|--project)
+            [ $# -ge 2 ] || { echo "Error: --project requires a value." >&2; exit 1; }
+            PROJECT_CLI="$2"; shift 2 ;;
         -u|--universe)
             [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
             UNIVERSE_CLI="$2"; shift 2 ;;
@@ -65,7 +73,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-TARGET_INPUT="${WORLD_CLI:-${POSITIONAL[0]:-}}"
+TARGET_INPUT="${MANUSCRIPT_CLI:-${WORLD_CLI:-${PROJECT_CLI:-${POSITIONAL[0]:-}}}}"
 
 if [ -z "${TARGET_INPUT}" ]; then
     if has_gui; then
@@ -81,17 +89,26 @@ if [ -z "${TARGET_INPUT}" ]; then
 fi
 
 WORLD_DIR="$(resolve_world_dir "${TARGET_INPUT}" "${UNIVERSE_CLI}")"
+if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
+    WORLD_DIR="$(resolve_manuscript_dir "${TARGET_INPUT}")"
+fi
 
 if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
-    echo "Error: World directory not found: ${TARGET_INPUT}" >&2
+    echo "Error: Directory not found: ${TARGET_INPUT}" >&2
     exit 1
 fi
 
 WORLD_NAME="$(basename "${WORLD_DIR}")"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-SAFE_NAME="$(sanitize_name "${WORLD_NAME}" "world")"
+SAFE_NAME="$(sanitize_name "${WORLD_NAME}" "project")"
 
-BACKUP_DIR="${DEST_CLI:-${WORLD_DIR}/05-Backups}"
+if [ -n "${DEST_CLI}" ]; then
+    BACKUP_DIR="${DEST_CLI}"
+elif [ -d "${WORLD_DIR}/05-Backups" ]; then
+    BACKUP_DIR="${WORLD_DIR}/05-Backups"
+else
+    BACKUP_DIR="${WORLD_DIR}/Backups"
+fi
 mkdir -p "${BACKUP_DIR}"
 
 ARCHIVE_BASE="${SAFE_NAME}-backup-${TIMESTAMP}"
@@ -107,6 +124,9 @@ DIR_BASENAME="$(basename "${WORLD_DIR}")"
 tar -czf "${ARCHIVE_TAR}" \
     -C "${PARENT_DIR}" \
     --exclude="${DIR_BASENAME}/05-Backups" \
+    --exclude="${DIR_BASENAME}/Backups" \
+    --exclude="${DIR_BASENAME}/Exports" \
+    --exclude="${DIR_BASENAME}/04-Publishing" \
     --exclude="${DIR_BASENAME}/.obsidian/workspace.json" \
     --exclude="${DIR_BASENAME}/.obsidian/cache" \
     --exclude="*.bak" \

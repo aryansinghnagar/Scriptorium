@@ -169,7 +169,7 @@ for label, app_id in flatpak_apps.items():
 desktop_dir = os.path.expanduser("~/Desktop")
 app_dir = os.path.expanduser("~/.local/share/applications")
 
-launchers = ["init-world.desktop", "export-book.desktop", "save-snapshot.desktop", "scriptorium-control-center.desktop"]
+launchers = ["init-world.desktop", "init-manuscript.desktop", "export-book.desktop", "save-snapshot.desktop", "scriptorium-control-center.desktop"]
 installed_launchers = [lf for lf in launchers if os.path.isfile(os.path.join(app_dir, lf)) or os.path.isfile(os.path.join(desktop_dir, lf))]
 
 leechblock_json = os.path.join(PROJECT_ROOT, "configs", "leechblock_scriptorium_rules.json")
@@ -189,17 +189,32 @@ findings["workspace"] = {
     "templates_present": os.path.isdir(os.path.join(PROJECT_ROOT, "templates")),
 }
 
-# 4. WORLDS & BACKUPS DIAGNOSTICS
+# 4. WORLDS & MANUSCRIPTS & BACKUPS DIAGNOSTICS
 discovered_worlds = []
 universes_base = os.path.expanduser("~/Universes")
 if os.path.isdir(universes_base):
     for u in sorted(os.listdir(universes_base)):
-        u_worlds = os.path.join(universes_base, u, "Worlds")
-        if os.path.isdir(u_worlds):
-            for w in sorted(os.listdir(u_worlds)):
-                full = os.path.join(u_worlds, w)
-                if os.path.isdir(full) and not w.startswith("."):
+        u_dir = os.path.join(universes_base, u)
+        if os.path.isdir(u_dir) and not u.startswith("."):
+            # Check direct worlds under ~/Universes/<Universe>/<World>
+            for w in sorted(os.listdir(u_dir)):
+                full = os.path.join(u_dir, w)
+                if os.path.isdir(full) and not w.startswith(".") and w not in ("Worlds", ".git"):
                     discovered_worlds.append(full)
+            # Check legacy ~/Universes/<Universe>/Worlds/<World>
+            u_worlds = os.path.join(u_dir, "Worlds")
+            if os.path.isdir(u_worlds):
+                for w in sorted(os.listdir(u_worlds)):
+                    full = os.path.join(u_worlds, w)
+                    if os.path.isdir(full) and not w.startswith(".") and full not in discovered_worlds:
+                        discovered_worlds.append(full)
+
+manuscripts_base = os.path.expanduser("~/Manuscripts")
+if os.path.isdir(manuscripts_base):
+    for m in sorted(os.listdir(manuscripts_base)):
+        full = os.path.join(manuscripts_base, m)
+        if os.path.isdir(full) and not m.startswith(".") and full not in discovered_worlds:
+            discovered_worlds.append(full)
 
 if os.path.isdir(WORLDS_BASE):
     for d in sorted(os.listdir(WORLDS_BASE)):
@@ -228,9 +243,9 @@ for wdir in target_worlds:
         findings["summary"]["errors"] += 1
         continue
 
-    # Run world_doctor on this world
+    # Run world_doctor if this is a world lore vault
     wdoctor_report = {}
-    if os.path.isfile(world_doctor_bin):
+    if os.path.isfile(world_doctor_bin) and (os.path.isdir(os.path.join(wdir, "Characters")) or os.path.isdir(os.path.join(wdir, "00-World-Bible"))):
         try:
             res = subprocess.run(["bash", world_doctor_bin, wdir, "--json"], capture_output=True, text=True, timeout=15)
             if res.stdout:
@@ -249,8 +264,10 @@ for wdir in target_worlds:
         except Exception:
             pass
 
-    # Check backups in 05-Backups
-    backup_dir = os.path.join(wdir, "05-Backups")
+    # Check backups in Backups or 05-Backups
+    backup_dir = os.path.join(wdir, "Backups")
+    if not os.path.isdir(backup_dir):
+        backup_dir = os.path.join(wdir, "05-Backups")
     backups_list = []
     if os.path.isdir(backup_dir):
         for bf in sorted(os.listdir(backup_dir)):
@@ -264,11 +281,14 @@ for wdir in target_worlds:
                     "has_sha256": has_sha
                 })
 
+    has_bible = os.path.isdir(os.path.join(wdir, "00-World-Bible")) or os.path.isdir(os.path.join(wdir, "Characters"))
+    has_ms = os.path.isdir(os.path.join(wdir, "01-Manuscript")) or os.path.isdir(os.path.join(wdir, "Book-01"))
+
     world_info = {
         "world": wname,
         "path": wdir,
-        "has_world_bible": os.path.isdir(os.path.join(wdir, "00-World-Bible")),
-        "has_manuscript": os.path.isdir(os.path.join(wdir, "01-Manuscript")),
+        "has_world_bible": has_bible,
+        "has_manuscript": has_ms,
         "git_initialized": os.path.isdir(os.path.join(wdir, ".git")),
         "git_snapshots_count": git_commits,
         "git_clean": git_clean,
@@ -316,7 +336,8 @@ else:
                 broken = len(w["doctor"].get("broken_links", []))
                 dangling = len(w["doctor"].get("dangling_frontmatter_refs", []))
                 orphans = len(w["doctor"].get("orphans", []))
-                print(f"    - Lore Consistency: {broken} broken links, {dangling} dangling refs, {orphans} orphans")
+                ms_drift = len(w["doctor"].get("manuscript_name_drift", []))
+                print(f"    - Lore & Manuscript Consistency: {broken} broken links, {dangling} dangling refs, {orphans} orphans, {ms_drift} manuscript drift")
 
     print("\n============================================================")
     print(f"Diagnostic Result: {findings['summary']['status'].upper()} ({findings['summary']['errors']} errors, {findings['summary']['warnings']} warnings)")

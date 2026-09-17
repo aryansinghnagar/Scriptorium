@@ -1,0 +1,5 @@
+world:
+  name: "sample_world"
+  universe: "SampleUniverse"
+  created: "2026-09-17"
+  type: "lore_vault"

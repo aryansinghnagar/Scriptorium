@@ -1,0 +1,5 @@
+universe:
+  name: "SampleUniverse"
+  created: "2026-09-17"
+  worlds:
+    - "sample_world"

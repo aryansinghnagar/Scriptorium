@@ -61,10 +61,10 @@ if [ "${LIST_MODE}" -eq 1 ]; then
     COUNT=0
     while IFS= read -r -d '' d; do
         UNAME="$(basename "$d")"
-        WORLDS_COUNT=$(find "${d}/Worlds" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l || echo 0)
+        WORLDS_COUNT=$(find "${d}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' ! -name '.git' 2>/dev/null | wc -l || echo 0)
         echo "  • ${UNAME} (${WORLDS_COUNT} worlds) -> ${d}"
         COUNT=$((COUNT + 1))
-    done < <(find "${UNIVERSES_BASE}" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+    done < <(find "${UNIVERSES_BASE}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null)
     if [ "${COUNT}" -eq 0 ]; then
         echo "  (No Universes found yet. Create one with: scriptorium universe <name>)"
     fi
@@ -108,7 +108,7 @@ fi
 
 echo "Scaffolding Narrative Universe: ${UNIVERSE_NAME} ..."
 
-mkdir -p "${TARGET_UNIVERSE_DIR}/Worlds"
+mkdir -p "${TARGET_UNIVERSE_DIR}"
 
 # Create universe manifest & index note
 cat << EOF > "${TARGET_UNIVERSE_DIR}/universe.yaml"
@@ -137,8 +137,7 @@ This central index coordinates all interconnected worlds, overarching continuity
 ---
 
 ## 🪐 Worlds in this Universe
-All world bibles and manuscript repositories belonging to this universe reside in \`Worlds/\`:
-- Open individual world folders under \`Worlds/<WorldName>/00-World-Bible\` as separate Obsidian vaults, or open this root \`${UNIVERSE_NAME}\` directory as an overarching cosmic vault.
+All world lore bibles belonging to this universe reside directly in this directory (e.g., \`${UNIVERSE_NAME}/<WorldName>/\`). Open any individual world folder as a dedicated Obsidian vault, or open this root \`${UNIVERSE_NAME}\` directory as an overarching cosmic vault.
 EOF
 
 # Create .gitignore for universe root

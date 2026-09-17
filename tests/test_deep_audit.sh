@@ -10,37 +10,41 @@ export HOME="${TMP_TEST}/home"
 mkdir -p "${HOME}"
 unset DISPLAY WAYLAND_DISPLAY 2>/dev/null || true
 
-echo "=== 1. Testing Universe & World Creation ==="
+echo "=== 1. Testing Universe, World & Manuscript Creation ==="
 bash scripts/init_universe.sh TestCosmos >/dev/null
 bash scripts/init_world.sh NovelOne -u TestCosmos >/dev/null
-WORLD_DIR="${HOME}/Universes/TestCosmos/Worlds/NovelOne"
+bash scripts/init_manuscript.sh NovelOne -u TestCosmos -w NovelOne >/dev/null
 
-[ -d "${WORLD_DIR}/00-World-Bible" ] || { echo "FAIL: World Bible missing"; exit 1; }
-[ -d "${WORLD_DIR}/01-Manuscript/Book-01" ] || { echo "FAIL: Book-01 missing"; exit 1; }
-[ -f "${WORLD_DIR}/01-Manuscript/nwProject.nwx" ] || { echo "FAIL: nwProject.nwx missing"; exit 1; }
-[ ! -f "${WORLD_DIR}/00-World-Bible/.obsidian-recommended-plugins.md" ] || { echo "FAIL: Vault template polluted with plugin guide"; exit 1; }
-[ -f "docs/OBSIDIAN_PLUGINS_GUIDE.md" ] || { echo "FAIL: OBSIDIAN_PLUGINS_GUIDE.md missing in docs"; exit 1; }
+WORLD_DIR="${HOME}/Universes/TestCosmos/NovelOne"
+MS_DIR="${HOME}/Manuscripts/NovelOne"
+
+[ -d "${WORLD_DIR}/Characters" ] || { echo "FAIL: World Lore Characters missing"; exit 1; }
+[ -f "${WORLD_DIR}/world.yaml" ] || { echo "FAIL: world.yaml manifest missing"; exit 1; }
+[ -d "${MS_DIR}/Book-01" ] || { echo "FAIL: Book-01 missing"; exit 1; }
+[ -f "${MS_DIR}/nwProject.nwx" ] || { echo "FAIL: nwProject.nwx missing"; exit 1; }
+[ ! -f "${WORLD_DIR}/.obsidian-recommended-plugins.md" ] || { echo "FAIL: Vault template polluted with plugin guide"; exit 1; }
+[ -f "docs/guides/OBSIDIAN_PLUGINS.md" ] || { echo "FAIL: OBSIDIAN_PLUGINS.md missing in docs/guides"; exit 1; }
 
 echo "=== 2. Testing add_book.sh Scaffolding & Flags ==="
 # Explicit volume
 bash scripts/add_book.sh NovelOne Book-02 >/dev/null
-[ -d "${WORLD_DIR}/01-Manuscript/Book-02/01_Act_I" ] || { echo "FAIL: Book-02 Act I missing"; exit 1; }
-[ -d "${WORLD_DIR}/01-Manuscript/Book-02/02_Act_II" ] || { echo "FAIL: Book-02 Act II missing"; exit 1; }
-[ -d "${WORLD_DIR}/01-Manuscript/Book-02/03_Act_III" ] || { echo "FAIL: Book-02 Act III missing"; exit 1; }
-[ -d "${WORLD_DIR}/01-Manuscript/Book-02/.git" ] || { echo "FAIL: Book-02 git missing"; exit 1; }
+[ -d "${MS_DIR}/Book-02/01_Act_I" ] || { echo "FAIL: Book-02 Act I missing"; exit 1; }
+[ -d "${MS_DIR}/Book-02/02_Act_II" ] || { echo "FAIL: Book-02 Act II missing"; exit 1; }
+[ -d "${MS_DIR}/Book-02/03_Act_III" ] || { echo "FAIL: Book-02 Act III missing"; exit 1; }
+[ -d "${MS_DIR}/Book-02/.git" ] || { echo "FAIL: Book-02 git missing"; exit 1; }
 
 # Auto-increment to Book-03
 bash scripts/add_book.sh NovelOne >/dev/null
-[ -d "${WORLD_DIR}/01-Manuscript/Book-03/01_Act_I" ] || { echo "FAIL: Book-03 Act I missing"; exit 1; }
-[ -d "${WORLD_DIR}/01-Manuscript/Book-03/.git" ] || { echo "FAIL: Book-03 git missing"; exit 1; }
+[ -d "${MS_DIR}/Book-03/01_Act_I" ] || { echo "FAIL: Book-03 Act I missing"; exit 1; }
+[ -d "${MS_DIR}/Book-03/.git" ] || { echo "FAIL: Book-03 git missing"; exit 1; }
 
 # Auto-increment via path
-bash scripts/add_book.sh "${WORLD_DIR}" >/dev/null
-[ -d "${WORLD_DIR}/01-Manuscript/Book-04/01_Act_I" ] || { echo "FAIL: Book-04 Act I missing"; exit 1; }
+bash scripts/add_book.sh "${MS_DIR}" >/dev/null
+[ -d "${MS_DIR}/Book-04/01_Act_I" ] || { echo "FAIL: Book-04 Act I missing"; exit 1; }
 
-# Flags -w and -b
-bash scripts/add_book.sh -w NovelOne -b Book-05 >/dev/null
-[ -d "${WORLD_DIR}/01-Manuscript/Book-05/01_Act_I" ] || { echo "FAIL: Book-05 Act I missing"; exit 1; }
+# Flags -m and -b
+bash scripts/add_book.sh -m NovelOne -b Book-05 >/dev/null
+[ -d "${MS_DIR}/Book-05/01_Act_I" ] || { echo "FAIL: Book-05 Act I missing"; exit 1; }
 
 # Duplicate volume must error
 set +e
@@ -51,29 +55,29 @@ set -e
 
 echo "=== 3. Testing save_snapshot.sh Variations ==="
 # Positional syntax
-echo "Chapter 1 text" >> "${WORLD_DIR}/01-Manuscript/Book-01/01_Act_I/01_Chapter_01.md"
+echo "Chapter 1 text" >> "${MS_DIR}/Book-01/01_Act_I/01_Chapter_01.md"
 bash scripts/save_snapshot.sh NovelOne -m "Positional note test" >/dev/null
-git -C "${WORLD_DIR}" log -n 1 --oneline | grep -q "Positional note test" || { echo "FAIL: Positional snapshot note missing"; exit 1; }
+git -C "${MS_DIR}" log -n 1 --oneline | grep -q "Positional note test" || { echo "FAIL: Positional snapshot note missing"; exit 1; }
 
 # Flag before positional
-echo "Chapter 2 text" >> "${WORLD_DIR}/01-Manuscript/Book-02/01_Act_I/01_Chapter_01.md"
+echo "Chapter 2 text" >> "${MS_DIR}/Book-02/01_Act_I/01_Chapter_01.md"
 bash scripts/save_snapshot.sh -m "Flag before positional note" NovelOne >/dev/null
-git -C "${WORLD_DIR}" log -n 1 --oneline | grep -q "Flag before positional note" || { echo "FAIL: Flag-first snapshot note missing"; exit 1; }
+git -C "${MS_DIR}" log -n 1 --oneline | grep -q "Flag before positional note" || { echo "FAIL: Flag-first snapshot note missing"; exit 1; }
 
 # Full path syntax
-echo "Chapter 3 text" >> "${WORLD_DIR}/01-Manuscript/Book-03/01_Act_I/01_Chapter_01.md"
-bash scripts/save_snapshot.sh "${WORLD_DIR}" -m "Full path note" >/dev/null
-git -C "${WORLD_DIR}" log -n 1 --oneline | grep -q "Full path note" || { echo "FAIL: Full path snapshot note missing"; exit 1; }
+echo "Chapter 3 text" >> "${MS_DIR}/Book-03/01_Act_I/01_Chapter_01.md"
+bash scripts/save_snapshot.sh "${MS_DIR}" -m "Full path note" >/dev/null
+git -C "${MS_DIR}" log -n 1 --oneline | grep -q "Full path note" || { echo "FAIL: Full path snapshot note missing"; exit 1; }
 
 echo "=== 4. Testing export_book.sh Options ==="
 # Custom trim size
-bash scripts/export_book.sh "${WORLD_DIR}" --book Book-01 --paper-size pocket --title "Pocket Novel" > "${TMP_TEST}/exp_pocket.log" 2>&1 || true
+bash scripts/export_book.sh "${MS_DIR}" --book Book-01 --paper-size pocket --title "Pocket Novel" > "${TMP_TEST}/exp_pocket.log" 2>&1 || true
 # Check cover image auto-detection
-mkdir -p "${WORLD_DIR}/03-Art"
-touch "${WORLD_DIR}/03-Art/cover.png"
-bash scripts/export_book.sh "${WORLD_DIR}" --book Book-02 --paper-size trade > "${TMP_TEST}/exp_trade.log" 2>&1 || true
-touch "${WORLD_DIR}/03-Art/cover.jpg"
-bash scripts/export_book.sh "${WORLD_DIR}" --book all --paper-size us-trade > "${TMP_TEST}/exp_ustrade.log" 2>&1 || true
+mkdir -p "${MS_DIR}/03-Art"
+touch "${MS_DIR}/03-Art/cover.png"
+bash scripts/export_book.sh "${MS_DIR}" --book Book-02 --paper-size trade > "${TMP_TEST}/exp_trade.log" 2>&1 || true
+touch "${MS_DIR}/03-Art/cover.jpg"
+bash scripts/export_book.sh "${MS_DIR}" --book all --paper-size us-trade > "${TMP_TEST}/exp_ustrade.log" 2>&1 || true
 
 echo "=== 5. Testing Schema & Frontmatter Integrity with Python ==="
 python3 - << 'PYEOF'

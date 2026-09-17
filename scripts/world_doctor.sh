@@ -30,24 +30,24 @@ usage() {
 }
 
 WORLD_DIR=""
+MANUSCRIPT_DIR_CLI=""
 OUTPUT_JSON=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --json) OUTPUT_JSON=1; shift ;;
+        -m|--manuscript)
+            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 2; }
+            MANUSCRIPT_DIR_CLI="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *) WORLD_DIR="$1"; shift ;;
     esac
 done
 
-# F-05: a bare invocation now discovers worlds (auto-selecting when exactly
-# one exists) instead of defaulting to ~/Worlds, which is a container of
-# worlds and never itself a world.
 if [ -z "${WORLD_DIR}" ]; then
     discover_worlds FOUND_WORLDS
     if [ ${#FOUND_WORLDS[@]} -eq 1 ]; then
         WORLD_DIR="${FOUND_WORLDS[0]}"
-        # N-03: auto-selected legacy worlds get the same nudge as by-name ones
         warn_if_legacy_root "${WORLD_DIR}"
     elif [ ${#FOUND_WORLDS[@]} -gt 1 ]; then
         {
@@ -74,21 +74,49 @@ if [ ! -d "${WORLD_DIR}" ]; then
     exit 2
 fi
 
-BIBLE_DIR="${WORLD_DIR}/00-World-Bible"
-if [ ! -d "${BIBLE_DIR}" ]; then
-    echo "Error: no 00-World-Bible folder in ${WORLD_DIR} (is this a Scriptorium world?)" >&2
+if [ -d "${WORLD_DIR}/00-World-Bible" ]; then
+    BIBLE_DIR="${WORLD_DIR}/00-World-Bible"
+elif [ -d "${WORLD_DIR}/Characters" ] || [ -f "${WORLD_DIR}/world.yaml" ] || [ -d "${WORLD_DIR}/.obsidian" ]; then
+    BIBLE_DIR="${WORLD_DIR}"
+else
+    echo "Error: no World Bible lore found in ${WORLD_DIR} (is this a Scriptorium world?)" >&2
     exit 2
 fi
 
-command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit 2; }
+MANUSCRIPT_DIR=""
+if [ -n "${MANUSCRIPT_DIR_CLI}" ]; then
+    RESOLVED_MS="$(resolve_manuscript_dir "${MANUSCRIPT_DIR_CLI}")"
+    [ -n "${RESOLVED_MS}" ] && MANUSCRIPT_DIR="${RESOLVED_MS}"
+fi
 
-BIBLE_DIR="${BIBLE_DIR}" OUTPUT_JSON="${OUTPUT_JSON}" python3 - << 'PYEOF'
+if [ -z "${MANUSCRIPT_DIR}" ]; then
+    if [ -d "${WORLD_DIR}/01-Manuscript" ]; then
+        MANUSCRIPT_DIR="${WORLD_DIR}/01-Manuscript"
+    else
+        WNAME="$(basename "${WORLD_DIR}")"
+        discover_manuscripts FOUND_MS
+        for m in "${FOUND_MS[@]}"; do
+            m_manifest="${m}/manuscript.yaml"
+            [ -f "${m_manifest}" ] || m_manifest="${m}/scriptorium.yaml"
+            if [ -f "${m_manifest}" ]; then
+                mw=$(sed -n -E 's/^world:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${m_manifest}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                if [ "$mw" = "$WNAME" ]; then
+                    MANUSCRIPT_DIR="$m"
+                    break
+                fi
+            fi
+        done
+    fi
+fi
+
+BIBLE_DIR="${BIBLE_DIR}" MANUSCRIPT_DIR="${MANUSCRIPT_DIR}" OUTPUT_JSON="${OUTPUT_JSON}" python3 - << 'PYEOF'
 import json
 import os
 import re
 import sys
 
 BIBLE = os.environ["BIBLE_DIR"]
+MANUSCRIPT = os.environ.get("MANUSCRIPT_DIR", "")
 JSON_OUT = os.environ["OUTPUT_JSON"] == "1"
 MAX_BYTES = 2 * 1024 * 1024  # per-file read cap
 
@@ -165,7 +193,7 @@ def parse_frontmatter(text):
     return fm, True
 
 def norm(name):
-    return name.strip().lower()
+    return re.sub(r'[\s_]+', ' ', str(name).strip().lower())
 
 # ---- Multi-Era Chronological Parser (WLD-104) ----
 ERA_ORDER = {
@@ -278,7 +306,12 @@ for root, dirs, files in os.walk(BIBLE):
         fm, ok = parse_frontmatter(text)
         if not ok:
             fm_errors.append(rel)
+        rel_no_ext = os.path.splitext(rel)[0]
         index.setdefault(norm(stem), rel)
+        index.setdefault(norm(rel_no_ext), rel)
+        index.setdefault(norm(rel_no_ext.replace('\\', '/')), rel)
+        if fm.get("name") and isinstance(fm["name"], str) and fm["name"].strip():
+            index.setdefault(norm(fm["name"]), rel)
         for alias in (fm.get("aliases") or []):
             if isinstance(alias, str) and alias.strip():
                 aliases.setdefault(norm(alias), rel)
@@ -312,7 +345,7 @@ def resolve(target):
 
 def is_template(rel, fm):
     name = fm.get("name", "")
-    return "Template" in rel or "<%" in str(name)
+    return "Template" in rel or "START_HERE" in rel or "<%" in str(name) or fm.get("type") in ("guide", "template")
 
 # ---- Pass 2: Link & Reference Integrity ----
 broken_links = []
@@ -366,9 +399,60 @@ for rel, fm, _ in notes:
         claimed.setdefault(norm(n), set()).add(rel)
 duplicates = {n: sorted(rs) for n, rs in claimed.items() if len(rs) > 1}
 
+# ---- Pass 3: Manuscript-to-Lore Name Drift Detection (WLD-108) ----
+manuscript_errors = []
+ms_files_scanned = 0
+PLACEHOLDER_NAMES = {
+    "protagonist", "antagonist", "capital", "capital city",
+    "river crossing", "mountain fortress", "the high spire",
+    "location-name", "faction-name", "character-name", "magic-tech-system",
+    "character-a", "character-b", "character-c", "unknown", "none"
+}
+
+if MANUSCRIPT and os.path.isdir(MANUSCRIPT):
+    for root, dirs, files in os.walk(MANUSCRIPT):
+        dirs[:] = [d for d in dirs if d not in (".git", "Outlines", ".obsidian")]
+        for fname in sorted(files):
+            if not fname.endswith(".md") or fname.startswith("."):
+                continue
+            path = os.path.join(root, fname)
+            rel = os.path.relpath(path, MANUSCRIPT)
+            try:
+                text = read_capped(path)
+            except OSError:
+                continue
+            ms_files_scanned += 1
+
+            for line in text.splitlines():
+                stripped = line.strip()
+                m_tag = re.match(r"^@(pov|char|character|location|focus|faction|item|artifact):\s*(.+)$", stripped, re.IGNORECASE)
+                if m_tag:
+                    tag_type = m_tag.group(1).lower()
+                    raw_val = m_tag.group(2).strip()
+                    items = [v.strip().strip('"').strip("'") for v in raw_val.split(",") if v.strip()]
+                    for item in items:
+                        if not item or norm(item) in PLACEHOLDER_NAMES:
+                            continue
+                        wl_m = WIKI_LINK.match(item)
+                        target = wl_m.group(1).split("#")[0].strip() if wl_m else item
+                        if not target or norm(target) in PLACEHOLDER_NAMES:
+                            continue
+                        if resolve(target) is None:
+                            manuscript_errors.append((rel, f"@{tag_type}", target))
+                elif stripped.startswith("@"):
+                    continue
+                else:
+                    for m_wl in WIKI_LINK.finditer(stripped):
+                        target = m_wl.group(1).split("#")[0].strip()
+                        if not target or norm(target) in PLACEHOLDER_NAMES:
+                            continue
+                        if resolve(target) is None:
+                            manuscript_errors.append((rel, "[[link]]", target))
+
 findings = {
     "world": BIBLE,
     "notes": len(notes),
+    "manuscript_files": ms_files_scanned,
     "broken_links": [{"code": "WLD-101", "from": s, "missing": t} for s, t in broken_links],
     "dangling_frontmatter_refs": [{"code": "WLD-102", "from": s, "field": f, "missing": t} for s, f, t in dangling_refs],
     "unrenamed_templates": sorted(rel for rel, fm, _ in notes if is_template(rel, fm)),
@@ -378,13 +462,17 @@ findings = {
     "frontmatter_parse_errors": [{"code": "WLD-106", "file": f} for f in fm_errors],
     "missing_required_fields": [{"code": "WLD-103", "file": s, "type": t, "field": f} for s, t, f in required_errors],
     "timeline_errors": [{"code": "WLD-104", "file": s, "issue": iss} for s, iss in timeline_errors],
+    "manuscript_name_drift": [{"code": "WLD-108", "file": s, "ref_type": r, "missing": t} for s, r, t in manuscript_errors],
 }
 
 if JSON_OUT:
     print(json.dumps(findings, indent=2))
 else:
     print(f"Scriptorium World Doctor — {BIBLE}")
-    print(f"Notes scanned: {len(notes)}\n")
+    print(f"Notes scanned: {len(notes)}")
+    if ms_files_scanned > 0:
+        print(f"Manuscript scenes scanned: {ms_files_scanned}")
+    print()
 
     def section(title, items):
         if not items:
@@ -397,6 +485,8 @@ else:
     section("Broken wiki-links [WLD-101]", [f"{s} -> [[{t}]]" for s, t in broken_links])
     section("Dangling frontmatter references [WLD-102]",
             [f"{s}: {f} -> [[{t}]]" for s, f, t in dangling_refs])
+    section("Dangling manuscript entity references [WLD-108]",
+            [f"{s} ({r}): entity '{t}' not found in World Bible" for s, r, t in manuscript_errors])
     section("Missing required fields [WLD-103]",
             [f"{s} ({t}) lacks '{f}'" for s, t, f in required_errors])
     section("Timeline chronological errors [WLD-104]",
@@ -408,11 +498,11 @@ else:
     section("Unrenamed templates (placeholders still active)",
             sorted(rel for rel, fm, _ in notes if is_template(rel, fm)))
 
-    if not any([broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors, timeline_errors]):
-        print("No findings. World Bible is internally consistent.")
+    if not any([broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors, timeline_errors, manuscript_errors]):
+        print("No findings. World Bible and manuscript are internally consistent.")
 
 has_findings = any([
-    broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors, timeline_errors,
+    broken_links, dangling_refs, orphans, duplicates, fm_errors, required_errors, timeline_errors, manuscript_errors,
 ])
 sys.exit(1 if has_findings else 0)
 PYEOF

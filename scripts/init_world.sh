@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium World Initializer (Multi-Tier Universe & Git Architecture)
-# Purpose: Atomically creates a brand new world folder structure within a Universe:
-#          ~/Universes/<UniverseName>/Worlds/<WorldName>
-#          with Obsidian World Bible (pre-configured plugin suite), valid novelWriter
-#          manuscript scaffolding, discrete Manuscript Git repository, World Git
-#          repository, and Universe tracking.
+# Scriptorium World Initializer (Pure World Lore Vault Architecture)
+# Purpose: Atomically creates a brand new World Lore Vault within a Universe:
+#          ~/Universes/<UniverseName>/<WorldName>
+#          Direct Obsidian vault with pre-configured plugin suite,
+#          structured world taxonomy, world.yaml manifest, and Git repository.
 # ==============================================================================
 
 set -euo pipefail
@@ -21,7 +20,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium World Initializer — atomically scaffold a world within a Universe.
+Scriptorium World Initializer — atomically scaffold a World Lore Vault in a Universe.
 
 Usage:
   init_world.sh [WORLD_NAME] [OPTIONS]
@@ -29,7 +28,8 @@ Usage:
 Options:
   -n, --name NAME        World name (same as positional argument)
   -u, --universe NAME    Universe name (default: Default-Universe or interactive selection)
-  --legacy-worlds-dir    Scaffold directly in ~/Worlds/ instead of ~/Universes/<Universe>/Worlds/
+  -l, --list             List discovered World Lore Vaults
+  --legacy-worlds-dir    Scaffold directly in ~/Worlds/ instead of ~/Universes/<Universe>/
   -h, --help             Show this help and exit
 
 Exit codes:
@@ -44,6 +44,7 @@ USAGE
 WORLD_NAME_CLI=""
 UNIVERSE_NAME_CLI=""
 USE_LEGACY_DIR=0
+LIST_MODE=0
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
@@ -54,6 +55,8 @@ while [ $# -gt 0 ]; do
         -u|--universe)
             [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
             UNIVERSE_NAME_CLI="$2"; shift 2 ;;
+        -l|--list)
+            LIST_MODE=1; shift ;;
         --legacy-worlds-dir)
             USE_LEGACY_DIR=1; shift ;;
         -h|--help) usage; exit 0 ;;
@@ -63,11 +66,23 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+if [ "${LIST_MODE}" -eq 1 ]; then
+    echo "Discovered World Lore Vaults:"
+    discover_worlds WORLDS
+    if [ ${#WORLDS[@]} -eq 0 ]; then
+        echo "  (No World Lore Vaults found yet. Create one with: scriptorium world <name>)"
+    else
+        for w in "${WORLDS[@]}"; do
+            echo "  • $(basename "$w") -> $w"
+        done
+    fi
+    exit 0
+fi
+
 WORLD_NAME="${WORLD_NAME_CLI:-${POSITIONAL[0]:-}}"
 UNIVERSE_NAME="${UNIVERSE_NAME_CLI:-}"
 
 mkdir -p "${UNIVERSES_BASE}"
-mkdir -p "${LEGACY_WORLDS_BASE}"
 
 # 1. Resolve Universe Name (if not using legacy dir)
 if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
@@ -75,7 +90,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
         EXISTING_UNIS=()
         while IFS= read -r -d '' d; do
             EXISTING_UNIS+=("$(basename "$d")")
-        done < <(find "${UNIVERSES_BASE}" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+        done < <(find "${UNIVERSES_BASE}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null)
 
         if has_gui; then
             if [ ${#EXISTING_UNIS[@]} -gt 0 ]; then
@@ -85,7 +100,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
                 done
                 CHOICES+=("+ Create New Universe" "New Universe Container")
                 SELECTED_UNI=$(zenity --list --title="Scriptorium — Select Universe" \
-                    --text="Which Universe does this world belong to?" \
+                    --text="Which Universe does this world lore vault belong to?" \
                     --column="Universe" --column="Type" \
                     --hide-column=2 \
                     --width=400 --height=300 \
@@ -97,7 +112,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
                 fi
             else
                 UNIVERSE_NAME=$(zenity --entry --title="Scriptorium — Universe Context" \
-                    --text="Enter the Universe for this world (e.g., 'Cosmere', 'Solaris-Prime'):" \
+                    --text="Enter the Universe for this world lore vault (e.g., 'Cosmere', 'Solaris-Prime'):" \
                     --entry-text="Default-Universe" || true)
             fi
         fi
@@ -117,15 +132,36 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
     [ -z "${UNIVERSE_NAME}" ] && UNIVERSE_NAME="Default-Universe"
 
     UNIVERSE_DIR="${UNIVERSES_BASE}/${UNIVERSE_NAME}"
-    WORLDS_BASE="${UNIVERSE_DIR}/Worlds"
+    WORLDS_BASE="${UNIVERSE_DIR}"
 
     # Initialize Universe if new
     if [ ! -d "${UNIVERSE_DIR}" ]; then
-        mkdir -p "${WORLDS_BASE}"
+        mkdir -p "${UNIVERSE_DIR}"
         cat << EOF > "${UNIVERSE_DIR}/universe.yaml"
 name: "${UNIVERSE_NAME}"
 created_at: "$(date +%Y-%m-%d)"
 description: "Narrative Universe housing interconnected worlds."
+EOF
+        cat << EOF > "${UNIVERSE_DIR}/Universe-Index.md"
+---
+type: universe_index
+universe: "${UNIVERSE_NAME}"
+created: "$(date +%Y-%m-%d)"
+tags:
+  - meta/universe
+---
+
+# 🌌 ${UNIVERSE_NAME} — Narrative Universe Hub
+
+**Universe**: \`${UNIVERSE_NAME}\`  
+**Created**: $(date +%Y-%m-%d)  
+
+This central index coordinates all interconnected worlds, overarching continuity, shared celestial mechanics, and cross-world lore across the **${UNIVERSE_NAME}** cosmos.
+
+---
+
+## 🪐 Worlds in this Universe
+All world lore bibles belonging to this universe reside directly in this directory (e.g., \`${UNIVERSE_NAME}/<WorldName>/\`). Open any individual world folder as a dedicated Obsidian vault, or open this root \`${UNIVERSE_NAME}\` directory as an overarching cosmic vault.
 EOF
         cat << 'EOF' > "${UNIVERSE_DIR}/.gitignore"
 *.bak
@@ -144,6 +180,7 @@ EOF
     fi
 else
     WORLDS_BASE="${LEGACY_WORLDS_BASE}"
+    mkdir -p "${LEGACY_WORLDS_BASE}"
     UNIVERSE_NAME="Standalone"
 fi
 
@@ -151,15 +188,15 @@ fi
 if [ -z "${WORLD_NAME}" ]; then
     if has_gui; then
         WORLD_NAME=$(zenity --entry \
-            --title="Scriptorium — New World Creator" \
-            --text="Enter the name for your new World or Novel Project:\n(e.g., 'Eldoria', 'Cyberpunk-2099', 'The-Last-Archon')" \
+            --title="Scriptorium — New World Lore Creator" \
+            --text="Enter the name for your new World Lore Vault:\n(e.g., 'Eldoria', 'Cyberpunk-2099', 'The-Last-Archon')" \
             --entry-text="My-New-World" || true)
     fi
 fi
 
 if [ -z "${WORLD_NAME}" ]; then
     if [ -t 0 ]; then
-        read -rp "Enter World / Novel Name: " WORLD_NAME
+        read -rp "Enter World Name: " WORLD_NAME
     else
         echo "No world name provided (no argument, no GUI, no TTY). Aborting." >&2
         exit 3
@@ -185,7 +222,7 @@ if [ -d "${TARGET_DIR}" ]; then
     exit 1
 fi
 
-echo "Scaffolding Scriptorium World: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}] ..."
+echo "Scaffolding Scriptorium World Lore Vault: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}] ..."
 
 # 3. Transactional Staging Architecture (REL-01)
 SUCCESS=0
@@ -198,66 +235,24 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# Create canonical directory structure in staging
-mkdir -p "${STAGING_DIR}/00-World-Bible/Characters"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Locations"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Factions"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Magic-Technology"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Bestiary"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Artifacts"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Cosmology"
-mkdir -p "${STAGING_DIR}/00-World-Bible/History"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Languages"
-mkdir -p "${STAGING_DIR}/00-World-Bible/Templates/fileClasses"
-mkdir -p "${STAGING_DIR}/01-Manuscript/Book-01/01_Act_I"
-mkdir -p "${STAGING_DIR}/01-Manuscript/Book-01/02_Act_II"
-mkdir -p "${STAGING_DIR}/01-Manuscript/Book-01/03_Act_III"
-mkdir -p "${STAGING_DIR}/01-Manuscript/Outlines"
-mkdir -p "${STAGING_DIR}/02-Maps"
-mkdir -p "${STAGING_DIR}/03-Art"
-mkdir -p "${STAGING_DIR}/04-Publishing"
-mkdir -p "${STAGING_DIR}/05-Backups"
+# Create canonical taxonomy directories in staging
+mkdir -p "${STAGING_DIR}/Characters"
+mkdir -p "${STAGING_DIR}/Locations"
+mkdir -p "${STAGING_DIR}/Factions"
+mkdir -p "${STAGING_DIR}/Magic-Technology"
+mkdir -p "${STAGING_DIR}/Bestiary"
+mkdir -p "${STAGING_DIR}/Artifacts"
+mkdir -p "${STAGING_DIR}/Cosmology"
+mkdir -p "${STAGING_DIR}/History"
+mkdir -p "${STAGING_DIR}/Languages"
+mkdir -p "${STAGING_DIR}/Templates/fileClasses"
 
-# Copy World Bible Templates
+# Copy World Bible Templates directly into staging root (direct Obsidian Vault)
 if [ -d "${PROJECT_ROOT}/templates/world-bible" ]; then
-    cp -a "${PROJECT_ROOT}/templates/world-bible/." "${STAGING_DIR}/00-World-Bible/"
+    cp -a "${PROJECT_ROOT}/templates/world-bible/." "${STAGING_DIR}/"
 fi
 
-# Copy Manuscript Templates
-if [ -d "${PROJECT_ROOT}/templates/manuscript" ]; then
-    cp -a "${PROJECT_ROOT}/templates/manuscript/." "${STAGING_DIR}/01-Manuscript/"
-fi
-
-# Generate Valid novelWriter Project Scaffolding (UX-01)
-cat << EOF > "${STAGING_DIR}/01-Manuscript/nwProject.nwx"
-<?xml version="1.0" encoding="UTF-8"?>
-<novelWriterXML fileVersion="1.5" appVersion="2.0">
-  <project>
-    <title>${WORLD_NAME}</title>
-    <author>Author Name</author>
-    <saveCount>1</saveCount>
-    <autoCount>0</autoCount>
-    <editTime>0</editTime>
-  </project>
-  <settings>
-    <spellChecking>true</spellChecking>
-    <autoSave>true</autoSave>
-  </settings>
-  <content>
-    <item id="root" parent="None" root="None" type="Root" handle="root">
-      <name>Novel Root</name>
-    </item>
-  </content>
-</novelWriterXML>
-EOF
-
-# Copy Typst Book Template into 04-Publishing
-if [ -d "${PROJECT_ROOT}/templates/typst" ]; then
-    mkdir -p "${STAGING_DIR}/04-Publishing/typst-template"
-    cp -a "${PROJECT_ROOT}/templates/typst/." "${STAGING_DIR}/04-Publishing/typst-template/"
-fi
-
-# Create .gitignore and world manifest (D-02)
+# Create .gitignore and world manifest (world.yaml & scriptorium.yaml for compatibility)
 cat << 'EOF' > "${STAGING_DIR}/.gitignore"
 # Scriptorium World Git Ignore
 .obsidian/workspace.json
@@ -266,44 +261,39 @@ cat << 'EOF' > "${STAGING_DIR}/.gitignore"
 *.tmp
 *.log
 .DS_Store
+Backups/
 05-Backups/
-# F-09: compiled artifacts are outputs, not source; committing them bloats
-# every snapshot with multi-megabyte binaries on each re-export.
-04-Publishing/
+EOF
+
+cat << EOF > "${STAGING_DIR}/world.yaml"
+# Scriptorium World Lore Vault Manifest
+name: "${WORLD_NAME}"
+universe: "${UNIVERSE_NAME}"
+created_at: "$(date +%Y-%m-%d)"
+description: "World Lore Vault for ${WORLD_NAME}"
 EOF
 
 cat << EOF > "${STAGING_DIR}/scriptorium.yaml"
-# Scriptorium world manifest — read by export_book.sh (flat key: value)
+# Scriptorium world manifest
 title: "${WORLD_NAME}"
 author: "Author Name"
 universe: "${UNIVERSE_NAME}"
-# Add one volume per line under 01-Manuscript/ (Book-01, Book-02, ...);
-# export_book.sh auto-discovers Book-* directories in natural order.
 EOF
 
 # Run Validation Checks on Staged Structure
-[ -d "${STAGING_DIR}/00-World-Bible/Characters" ] || { echo "Validation error: World Bible missing" >&2; exit 1; }
-[ -d "${STAGING_DIR}/00-World-Bible/Bestiary" ] || { echo "Validation error: Bestiary directory missing" >&2; exit 1; }
-[ -d "${STAGING_DIR}/01-Manuscript/Book-01" ] || { echo "Validation error: Manuscript directory missing" >&2; exit 1; }
-[ -f "${STAGING_DIR}/scriptorium.yaml" ] || { echo "Validation error: scriptorium.yaml manifest missing" >&2; exit 1; }
+[ -d "${STAGING_DIR}/Characters" ] || { echo "Validation error: Characters directory missing" >&2; exit 1; }
+[ -d "${STAGING_DIR}/Bestiary" ] || { echo "Validation error: Bestiary directory missing" >&2; exit 1; }
+[ -d "${STAGING_DIR}/Locations" ] || { echo "Validation error: Locations directory missing" >&2; exit 1; }
+[ -f "${STAGING_DIR}/world.yaml" ] || { echo "Validation error: world.yaml manifest missing" >&2; exit 1; }
 
-# 4. Multi-Tier Git Repository Initialization
+# 4. Git Repository Initialization
 if command -v git &> /dev/null; then
-    # 4a. Initialize discrete Manuscript Git repository for Book-01
-    (
-        cd "${STAGING_DIR}/01-Manuscript/Book-01"
-        git init -q
-        git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial manuscript drafting repository for Book-01 in ${WORLD_NAME}" 2>/dev/null || true
-    )
-
-    # 4b. Initialize World Git repository
     (
         cd "${STAGING_DIR}"
         git init -q
         git config advice.addEmbeddedRepo false
         git -c advice.addEmbeddedRepo=false add . 2>/dev/null || true
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium world repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]" 2>/dev/null || true
+        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium world lore repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]" 2>/dev/null || true
     )
 fi
 
@@ -316,18 +306,20 @@ SUCCESS=1
 if [ "${USE_LEGACY_DIR}" -eq 0 ] && [ -d "${UNIVERSE_DIR}/.git" ] && command -v git &> /dev/null; then
     (
         cd "${UNIVERSE_DIR}"
-        git add "Worlds/${WORLD_NAME}" 2>/dev/null || true
+        git add "${WORLD_NAME}" 2>/dev/null || true
         git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'" 2>/dev/null || true
     )
 fi
 
 # 7. Notify completion
-MSG="World '${WORLD_NAME}' successfully created in Universe '${UNIVERSE_NAME}'!\n\nLocation:\n${TARGET_DIR}\n\n• Open Obsidian -> 'Open folder as vault' -> Select '00-World-Bible'\n• Out-of-the-box plugins enabled: Storyline, Longform, Dataview, Metadata Menu, Calendarium, Storyteller Suite, Novel Word Count, Obsidian Git\n• Open novelWriter -> Open project in '01-Manuscript/nwProject.nwx'\n• Discrete Git version control initialized for Universe, World, and Manuscript!"
+MSG="World Lore Vault '${WORLD_NAME}' successfully created in Universe '${UNIVERSE_NAME}'!\n\nLocation:\n${TARGET_DIR}\n\n• Open Obsidian -> 'Open folder as vault' -> Select '${WORLD_NAME}'\n• Out-of-the-box plugins enabled: Storyline, Longform, Dataview, Metadata Menu, Calendarium, Storyteller Suite, Novel Word Count, Obsidian Git\n• Discrete Git version control initialized!"
 
 if has_gui; then
-    zenity --info --title="World Created Successfully!" --text="${MSG}" --width=480
+    zenity --info --title="World Lore Vault Created" --text="${MSG}" --width=480
 else
     echo -e "\n============================================================"
     echo -e "${MSG}"
     echo "============================================================"
 fi
+
+exit 0

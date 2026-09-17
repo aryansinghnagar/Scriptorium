@@ -3,6 +3,7 @@
 The bells of the [[Sanctuaire des Étoiles]] chimed across the frozen valley.
 
 @pov: Renée
+@location: Sanctuaire_des_Étoiles
 @status: Draft
 @time: 1422-04-12
 @plot: Discovery of the Prism

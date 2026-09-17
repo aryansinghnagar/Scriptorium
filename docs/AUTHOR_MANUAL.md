@@ -44,29 +44,31 @@ Scriptorium is built on **Four Unbreakable Invariants**:
 ~/Universes/<UniverseName>/
 ├── universe.yaml              → Overarching Universe manifest & continuity Git repository
 ├── Universe-Index.md          → Narrative cosmos hub & cross-world index
-└── Worlds/<WorldName>/        → World repository (with Obsidian Git auto-commit)
-    ├── 00-World-Bible/        → Pre-configured Obsidian Vault (Lore, Characters, Maps)
-    │   ├── Characters/        → Character dossiers & psychological arcs
-    │   ├── Locations/         → Atlas, sensory palettes, and regional maps
-    │   ├── Factions/          → Guilds, empires, sects & member rosters
-    │   ├── Magic-Technology/ → Hard/soft magic rules, limitations & costs
-    │   ├── Bestiary/          → Creatures, apex predators, flora, and monster ecologies
-    │   ├── Artifacts/         → Legendary relics, magical weapons, and focal items
-    │   ├── Cosmology/         → Pantheons, deities, astral planes, and mythos
-    │   ├── History/           → Historical eras, timelines, and catalytic events
-    │   ├── Languages/         → Conlangs, phonetic rules, and world glossaries
-    │   └── Templates/         → Dropdown schema forms, writing logs, and index dashboard
-    ├── 01-Manuscript/         → Manuscript volume drafting folders
-    │   ├── Book-01/           → Discrete Git repository for Book-01 (Acts, Chapters, Scenes)
-    │   │   ├── 01_Act_I/
-    │   │   ├── 02_Act_II/
-    │   │   └── 03_Act_III/
-    │   ├── Outlines/          → Three-act structural beats & scene goals
-    │   └── nwProject.nwx      → novelWriter project manifest
-    ├── 02-Maps/               → Cartography assets & interactive Storyteller Suite maps
-    ├── 03-Art/                → Visual references, character sketches, cover mockups
-    ├── 04-Publishing/         → Exported print PDFs (Typst) and distribution EPUBs (Pandoc)
-    └── 05-Backups/            → Standalone timestamped .tar.gz archives with SHA-256 digests
+└── <WorldName>/               → Pure World Lore Vault (Direct Obsidian Vault with Git repository)
+    ├── world.yaml             → World Lore manifest
+    ├── Characters/            → Character dossiers & psychological arcs
+    ├── Locations/             → Atlas, sensory palettes, and regional maps
+    ├── Factions/              → Guilds, empires, sects & member rosters
+    ├── Magic-Technology/     → Hard/soft magic rules, limitations & costs
+    ├── Bestiary/              → Creatures, apex predators, flora, and monster ecologies
+    ├── Artifacts/             → Legendary relics, magical weapons, and focal items
+    ├── Cosmology/             → Pantheons, deities, astral planes, and mythos
+    ├── History/               → Historical eras, timelines, and catalytic events
+    ├── Languages/             → Conlangs, phonetic rules, and world glossaries
+    ├── Templates/             → Dropdown schema forms, writing logs, and index dashboard
+    └── .obsidian/             → Pre-configured plugin suite (Storyline, Longform, Dataview, etc.)
+
+~/Manuscripts/<ManuscriptName>/
+├── manuscript.yaml            → Project manifest linking Universe and World Lore Vault
+├── nwProject.nwx              → novelWriter project manifest
+├── Book-01/                   → Discrete Git repository for Book-01 (Acts, Chapters, Scenes)
+│   ├── 01_Act_I/
+│   ├── 02_Act_II/
+│   ├── 03_Act_III/
+│   └── 04_Back_Matter/        → Automatically generated Dramatis Personae & Glossary
+├── Outlines/                  → Three-act structural beats & Subplot-Thread-Matrix.md
+├── Exports/                   → Exported print PDFs (Typst), EPUBs, and submission DOCXs (Pandoc)
+└── Backups/                   → Standalone timestamped .tar.gz archives with SHA-256 digests
 ```
 
 ---
@@ -74,14 +76,17 @@ Scriptorium is built on **Four Unbreakable Invariants**:
 ## 2. Quick Start: Your First 5 Minutes
 
 ### Step 1: Open Scriptorium Control Center
-Double-click **"Scriptorium Control Center"** on your Desktop (or run `scriptorium gui` in a terminal).
+Double-click **"Scriptorium Control Center"** on your Desktop (or run `scriptorium control-center` in a terminal).
 
 ### Step 2: Create or Explore a Project
-- **Option A (Instant Exploration)**: Click **"✨ Generate Demo Cosmos"** in Tab 1. This creates *"The Chronicles of Eldoria"*, pre-loaded with characters, bestiaries, magic systems, and sample chapters.
-- **Option B (Your Own Story)**: Click **"+ New World"**, enter your novel's title (e.g. `Solaris-Rising`), choose a Universe, and click **OK**.
+- **Option A (Instant Exploration)**: Click **"✨ Generate Demo Cosmos"** in Tab 1. This creates the *"Cosmere / Scadrial"* and *"Mistborn-Era1"* projects, pre-loaded with characters, bestiaries, magic systems, and sample chapters.
+- **Option B (Your Own Story)**:
+  1. Click **"+ New Universe"** to name your cosmos (e.g. `Solaris-Verse`).
+  2. Click **"+ New World"** to create your dedicated lore vault (e.g. `Solaris-Prime`).
+  3. Click **"+ New Manuscript"** to create your book project (e.g. `Solaris-Rising`) linked to your world lore vault.
 
 ### Step 3: Start Writing!
-- Click **"📖 Open World Bible"** to view and edit lore in Obsidian.
+- Click **"📖 Open World Bible"** to view and edit lore directly in Obsidian.
 - Click **"✍️ Drafting Studio"** to write your scenes in novelWriter or Longform.
 - Click **"⚡ Sprint Canvas"** to enter full-screen distraction-free mode in FocusWriter.
 
@@ -89,38 +94,55 @@ Double-click **"Scriptorium Control Center"** on your Desktop (or run `scriptori
 
 ## 3. The Desktop Control Center Tour
 
-The Scriptorium desktop application is organized into **5 intuitive tabs**:
+The Scriptorium desktop application is organized into **5 intuitive tabs** with global project selectors across the top:
 
-### Tab 1: Cosmos & Projects
-- **Universe & World Selector**: Switch between different narrative universes and book series seamlessly.
-- **Project Creation**: Create new Universe containers (`+ New Universe`) or new worlds (`+ New World`) with automated multi-tier Git tracking.
-- **Creative Studio Launchers**: 1-click buttons to launch Obsidian, novelWriter, FocusWriter, LibreOffice, Calibre, or your project's file manager.
+### Top Selector Bar
+- **Universe Selector**: Switch between different narrative universes.
+- **World Lore Vault Selector**: Choose which direct lore bible is active for lore exploration.
+- **Manuscript Project Selector**: Choose which novel/book project is active for drafting, metrics, and exports.
+- **Quick Snapshot**: 1-click Git checkpoint across your entire active universe, world, and manuscript.
 
-### Tab 2: Writing & Analytics
-- **Live Word Count Dashboard**: Displays total manuscript word counts, scene counts, and daily pacing metrics.
-- **Manuscript Explorer**: An interactive tree view listing every Volume (`Book-01`, `Book-02`), Act, Chapter, and Scene file with individual word count tallies.
-- **Add New Volume**: 1-Click button (`📚 Add New Volume`) to scaffold subsequent manuscript books with 3-act structures and isolated Git repositories.
-- **Refresh Stats**: Instantly recalculates word counts after a writing session.
+### Tab 1: 🪐 Universes & Worlds
+- **Direct Lore Vault Management**: Open your World Lore Vault directly in Obsidian with all pre-configured plugins enabled.
+- **Cosmos Index Hub**: Open `Universe-Index.md` to manage overarching continuity across multiple planets/realms.
+- **Creative Tool Launchers**: 1-click buttons to launch Obsidian, novelWriter, FocusWriter, LibreOffice, Calibre, or your file manager.
 
-### Tab 3: Publishing Studio
-- **1-Click Typesetting**: Turn your Markdown manuscript into a print-ready vector PDF and an EPUB ebook in seconds.
+### Tab 2: ✍️ Manuscripts & Drafting
+- **Live Word Count Dashboard**: Displays total manuscript word counts, scene counts, and volume progress.
+- **Manuscript Tree Explorer**: Interactive tree view listing Volumes (`Book-01`, `Book-02`), Acts, Chapters, and Scenes.
+- **Visual Scene Metadata Inspector**: A non-technical visual control panel for inspecting and modifying scene headers:
+  - **POV Character**: Set `@pov: CharacterName`
+  - **Characters Present**: Set `@char: CharA, CharB`
+  - **Location**: Set `@location: LocationName` (standardized; replaces deprecated `@focus:`)
+  - **Narrative Thread**: Set `@thread: Main-Plot` or `@thread: Subplot-Heist`
+  - **Story Time**: Set `@time: 1899-03-14`
+  - **Scene Status**: Dropdown selector (`Draft`, `Revision`, `Finished`)
+  - **Safe Header Updater**: Click **"💾 Update Scene Tags"** to rewrite the metadata header safely in place while preserving the scene prose!
+- **Add New Volume**: 1-Click button (`📚 Add Volume`) to scaffold subsequent manuscript books with 3-act structures and isolated Git repositories.
+
+### Tab 3: 📚 Publishing & Exports
+- **1-Click Typesetting & Export**: Turn your Markdown manuscript into a print-ready vector PDF, an EPUB ebook, or a standard industry submission document (`.docx`) in seconds.
+- **Export Format Options**:
+  - `Print Book (PDF + EPUB)`: Typesets ready-to-print paperback PDFs (via Typst) and distributor-ready ebooks (via Pandoc).
+  - `Submission Manuscript (.docx)`: Formats standard manuscript format (12pt, double-spaced, clean chapter breaks) for literary agents, editors, and anthologies.
+  - `Complete Package (PDF + EPUB + DOCX)`: Builds all publication and submission formats simultaneously.
 - **Generate Concordance**: 1-Click button (`📖 Generate Concordance`) to automatically extract characters, factions, relics, bestiary creatures, and linguistics from your World Bible into publication-grade `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
 - **Volume Selector**: Choose to compile an individual volume (`Book-01`, `Book-02`) or the entire series omnibus.
 - **Trim Size Presets**:
   - `US Trade (6 × 9 in)`: Standard commercial fiction and fantasy trade paperback.
   - `Trade (5.5 × 8.5 in)`: Compact novel trim size.
   - `Pocket (5 × 8 in)`: Mass-market paperback size.
-- **Instant Preview**: Click **"📄 Open PDF"** or **"📱 Open EPUB"** immediately upon compilation.
+- **Instant Preview**: Click **"📄 Open PDF"**, **"📱 Open EPUB"**, or **"📝 Open DOCX"** immediately upon compilation.
 
-### Tab 4: Vault Safety & Backups
+### Tab 4: 🔒 Snapshots & Backups
 - **Version Milestone Snapshot (Git)**: Type a short progress note (e.g. `Finished Chapter 4 battle`) and click **"📷 Save Snapshot"**.
 - **Milestone History**: View recent Git commits across your world and manuscript repositories.
-- **Standalone Archive Backup**: Click **"📦 Create Standalone Backup Archive"** to generate a compressed `.tar.gz` bundle with an immutable SHA-256 verification manifest in `05-Backups/` or onto an external USB drive.
+- **Standalone Archive Backup**: Click **"📦 Create Standalone Backup Archive"** to generate a compressed `.tar.gz` bundle with an immutable SHA-256 verification manifest in `Backups/` or onto an external USB drive.
 - **Disaster Recovery Restore**: Click **"♻️ Restore World from Archive"** to safely unpack and verify any past backup archive.
 
-### Tab 5: Doctor Diagnostics
+### Tab 5: 🩺 Diagnostics & Doctor
 - **System Toolchain Badges**: Live indicators confirming that Git, Pandoc, Typst, and Python 3 are installed and functional.
-- **World Doctor**: Audits your Obsidian vault for broken wikilinks, dangling character/faction references, and chronological timeline anomalies (e.g. death dates before birth dates).
+- **World & Manuscript Doctor**: Audits your Obsidian vault for broken wikilinks, dangling character/faction references, chronological timeline anomalies, and manuscript-to-lore name drift (`WLD-108`).
 - **Verification Harness**: Run the automated 7-stage test suite to verify project integrity.
 
 ---
@@ -129,11 +151,17 @@ The Scriptorium desktop application is organized into **5 intuitive tabs**:
 
 Your World Bible (`00-World-Bible`) comes pre-configured with the premier worldbuilding and writing plugins enabled out of the box: **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git**.
 
+### The Minimum Viable World Bible (Zero Overwhelm)
+If you are just getting started, open **`00_START_HERE.md`** inside your World Bible. You do **not** need to populate all 9 categories at once.
+- **Step 1**: Use **`Character-Quickstart-Template.md`** for a lightweight 5-field protagonist card.
+- **Step 2**: Create 1 starting location with `Location-Template.md`.
+- **Step 3**: Start drafting in `01-Manuscript/` right away! Expand into factions, magic systems, bestiaries, and cosmology organically as your plot requires.
+
 ### The 9 Lore Categories
 
 | Category | Folder | Template | What Goes Here |
 | :--- | :--- | :--- | :--- |
-| **Characters** | `Characters/` | `Character-Template.md` | Character dossiers, physical traits, Want vs Need, The Lie, wounds, and 3-act arcs. |
+| **Characters** | `Characters/` | `Character-Template.md` / `Character-Quickstart-Template.md` | Character dossiers, physical traits, Want vs Need, The Lie, wounds, and 3-act arcs. |
 | **Locations** | `Locations/` | `Location-Template.md` | Cities, regions, landmarks, sensory regional palettes, and danger ratings. |
 | **Factions** | `Factions/` | `Faction-Template.md` | Guilds, empires, religious cults, rebel factions, leaders, and power structures. |
 | **Magic & Tech** | `Magic-Technology/` | `Magic-Tech-System-Template.md` | Hard/soft magic rules, Sanderson's 3 laws, power sources, limitations, costs, and taboos. |
@@ -207,15 +235,28 @@ Scriptorium includes an automated publishing pipeline that eliminates complex La
 ### How Compilation Works
 1. In the Control Center, open **Tab 3: Publishing Studio**.
 2. Select your book volume (`Book-01`, `Book-02`, or `All Books (Omnibus)`).
-3. Select your paper size (`US Trade 6x9 in`, `Trade 5.5x8.5 in`, or `Pocket 5x8 in`).
-4. Click **"🚀 Compile Book"**.
+3. Select your output format (`Print Book`, `Submission Manuscript (.docx)`, or `Complete Package`).
+4. Select your paper trim size (for print PDFs).
+5. Click **"🚀 Compile Book"**.
+
+### Standard Manuscript Submission Format (.docx)
+For authors pitching literary agents, submitting to short fiction anthologies, or working with editors in traditional publishing workflows:
+- Scriptorium exports industry-standard Shunn-compliant `.docx` manuscripts via Pandoc.
+- Automatically strips inline `@tag:` metadata and internal notes.
+- Applies standard double-spacing, 1-inch margins, running headers, and clean chapter demarcations.
+- Available via the Control Center dropdown or via CLI:
+  ```bash
+  scriptorium export <world> --format submission --book Book-01
+  # or shortcut:
+  scriptorium export <world> --docx -b Book-01
+  ```
 
 ### Automated Back-Matter Concordance & Dramatis Personae
 Click **"📖 Generate Concordance"** (or run `scriptorium concordance <world>`). Scriptorium's concordance engine reads all registered dossiers across your World Bible (`Characters/`, `Languages/`, `Bestiary/`, `Artifacts/`, and `Factions/`) and automatically creates:
 - `01-Manuscript/<Book>/04_Back_Matter/01_Dramatis_Personae.md`
 - `01-Manuscript/<Book>/04_Back_Matter/02_Glossary_and_Concordance.md`
 
-Because of Scriptorium's natural alphabetical collation order, `04_Back_Matter` files are seamlessly compiled at the end of your Typst print PDFs and Pandoc EPUBs with zero manual copy-pasting.
+Because of Scriptorium's natural alphabetical collation order, `04_Back_Matter` files are seamlessly compiled at the end of your Typst print PDFs, Pandoc EPUBs, and submission DOCXs with zero manual copy-pasting.
 
 ### Automated Cover Image Detection
 Place your book's cover art in `03-Art/cover.png` or `03-Art/cover.jpg`. When exporting to EPUB, Pandoc automatically detects and embeds your cover image (`--epub-cover-image`) into the ebook manifest.
@@ -265,7 +306,12 @@ If you ever switch computers or want to rollback a project:
 | **Italics** | `*whispered thoughts*` | *whispered thoughts* |
 | **Bold** | `**heavy impact**` | **heavy impact** |
 | **Wiki Link** | `[[Kaelen Vance]]` | Clickable connection to Character Note |
-| **Internal Tag** | `@pov: Kaelen` | novelWriter metadata (scrubbed on export) |
+| **POV Tag** | `@pov: Kaelen` | novelWriter metadata (scrubbed on export) |
+| **Location Tag** | `@location: SunCitadel` | Standardized scene location |
+| **Character Tag** | `@char: Vance, Scribe` | Characters present in scene |
+| **Thread Tag** | `@thread: Main-Plot` | Subplot matrix tracking |
+| **Time Tag** | `@time: 1899-03-14` | Story timeline chronological anchor |
+| **Status Tag** | `@status: Draft` | Scene drafting workflow status |
 
 ### Troubleshooting & FAQ
 
@@ -274,22 +320,28 @@ If you ever switch computers or want to rollback a project:
 ```bash
 scriptorium setup
 ```
-Or install the individual tool via your package manager (see `resources/software_catalog.md`).
+Or install the individual tool via your package manager (see `docs/guides/SOFTWARE_CATALOG.md`).
 
 #### Q: How do I share a draft with my human editor for track changes?
 **A**: Open the chapter or compiled Markdown file in **LibreOffice Writer** (Tab 1 launcher), click **Edit -> Track Changes -> Record**, and save as `.docx` or `.odt`.
 
 #### Q: Can I open Scriptorium without using the desktop app?
 **A**: Yes! Scriptorium includes a full command-line interface:
-- `scriptorium add-book <world> Book-02`
-- `scriptorium concordance <world> --book Book-01`
-- `scriptorium export <world> --book Book-01 --paper-size trade`
-- `scriptorium snapshot <world> -m "Note"`
-- `scriptorium backup <world>`
+- `scriptorium universe <name>` (or `scriptorium universe --list`)
+- `scriptorium world <name> -u <universe>` (or `scriptorium world --list`)
+- `scriptorium manuscript <name> -u <universe> -w <world>`
+- `scriptorium add-volume <manuscript> Book-02`
+- `scriptorium concordance <world> --manuscript <manuscript>`
+- `scriptorium export <manuscript> --book Book-01 --paper-size trade`
+- `scriptorium snapshot <manuscript> -m "Note"`
+- `scriptorium backup <target>`
+- `scriptorium restore <archive>`
+- `scriptorium report <manuscript>`
 - `scriptorium doctor`
+- `scriptorium world-doctor <world>`
 
 #### Q: Where are my exported books saved?
-**A**: In your world folder under `04-Publishing/` (e.g. `~/Worlds/Eldoria/04-Publishing/Eldoria_Book-01.pdf`).
+**A**: In your manuscript project folder under `Exports/` (e.g. `~/Manuscripts/Solaris-Rising/Exports/Solaris-Rising_Book-01.pdf`).
 
 ---
 

@@ -4,7 +4,7 @@
 > series (baseline `9d34fae` → `5058055`), archived as committed at the time of
 > the re-audit. The five findings it registered (N-01…N-05) were closed by the
 > follow-up commits made the same day — see [CHANGELOG.md](../../CHANGELOG.md)
-> and ADR-021 in [docs/meta/decisions.md](../meta/decisions.md). The original
+> and ADR-021 in [docs/ARCHITECTURE.md](../ARCHITECTURE.md). The original
 > audit it verifies lives at
 > [2026-09-16-external-audit.md](2026-09-16-external-audit.md).
 

@@ -80,35 +80,38 @@ fi
 SELECTED_WORLD=""
 
 if [ -n "${WORLD_CLI}" ]; then
-    SELECTED_WORLD="$(resolve_world_dir "${WORLD_CLI}" "${UNIVERSE_CLI}")"
+    SELECTED_WORLD="$(resolve_manuscript_dir "${WORLD_CLI}")"
+    [ -z "${SELECTED_WORLD}" ] && SELECTED_WORLD="$(resolve_world_dir "${WORLD_CLI}" "${UNIVERSE_CLI}")"
+    [ -z "${SELECTED_WORLD}" ] && SELECTED_WORLD="$(resolve_universe_dir "${WORLD_CLI}")"
     if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
-        echo "Error: World '${WORLD_CLI}' not found." >&2
+        echo "Error: Target '${WORLD_CLI}' not found." >&2
         exit 1
     fi
 elif [ ${#WORLDS[@]} -eq 1 ]; then
     SELECTED_WORLD="${WORLDS[0]}"
-    # N-03: auto-selected legacy worlds get the same nudge as by-name ones
     warn_if_legacy_root "${SELECTED_WORLD}"
 else
-    if has_gui; then
+    discover_manuscripts MANUSCRIPTS
+    if [ ${#MANUSCRIPTS[@]} -eq 1 ]; then
+        SELECTED_WORLD="${MANUSCRIPTS[0]}"
+    elif has_gui; then
         CHOICE_LIST=()
-        for w in "${WORLDS[@]}"; do
-            CHOICE_LIST+=("$(basename "$w")" "[Universe: $(universe_label "$w")] $w")
+        for m in "${MANUSCRIPTS[@]}"; do
+            CHOICE_LIST+=("$(basename "$m")" "[Manuscript] $m")
         done
-        SELECTED_DISPLAY=$(zenity --list --title="Select World to Snapshot" \
-            --column="World Name" --column="Universe & Path" \
+        for w in "${WORLDS[@]}"; do
+            CHOICE_LIST+=("$(basename "$w")" "[World Lore] $w")
+        done
+        SELECTED_DISPLAY=$(zenity --list --title="Select Target to Snapshot" \
+            --column="Name" --column="Type & Path" \
             --width=520 --height=320 \
             "${CHOICE_LIST[@]}" || true)
         if [ -n "${SELECTED_DISPLAY}" ]; then
-            for w in "${WORLDS[@]}"; do
-                if [ "$(basename "$w")" = "${SELECTED_DISPLAY}" ]; then
-                    SELECTED_WORLD="$w"
-                    break
-                fi
-            done
+            SELECTED_WORLD="$(resolve_manuscript_dir "${SELECTED_DISPLAY}")"
+            [ -z "${SELECTED_WORLD}" ] && SELECTED_WORLD="$(resolve_world_dir "${SELECTED_DISPLAY}")"
         fi
     else
-        echo "Select world to snapshot:"
+        echo "Select project to snapshot:"
         select w in "${WORLDS[@]}"; do
             if [ -n "${w:-}" ]; then
                 SELECTED_WORLD="$w"
@@ -119,7 +122,7 @@ else
 fi
 
 if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
-    echo "No world selected. Aborting snapshot." >&2
+    echo "No target selected. Aborting snapshot." >&2
     exit 3
 fi
 
@@ -148,7 +151,9 @@ if [ ! -d ".git" ]; then
 *.tmp
 *.log
 .DS_Store
+Backups/
 05-Backups/
+Exports/
 04-Publishing/
 EOF
     git -c advice.addEmbeddedRepo=false add .
@@ -157,27 +162,21 @@ EOF
     fi
 fi
 
-# Also snapshot discrete manuscript repositories if present under 01-Manuscript/
-if [ -d "01-Manuscript" ]; then
-    for ms_repo in 01-Manuscript/*/; do
-        if [ -d "${ms_repo}.git" ]; then
-            (
-                cd "${ms_repo}"
-                wait_for_git_lock "."
-                git add -A
-                if ! git diff --cached --quiet; then
-                    # Q-04: never drop manuscript commits silently — a
-                    # persistently locked repo previously produced no error
-                    # at all while the world-level commit recorded a stale
-                    # gitlink.
-                    if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Manuscript snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null; then
-                        echo "[!] Warning: manuscript commit skipped for '${ms_repo}' (git lock contention or identity missing); world snapshot may reference a stale state." >&2
-                    fi
+# Also snapshot discrete volume repositories if present
+for ms_repo in Book-*/ 01-Manuscript/*/; do
+    if [ -d "${ms_repo}.git" ]; then
+        (
+            cd "${ms_repo}"
+            wait_for_git_lock "."
+            git add -A
+            if ! git diff --cached --quiet; then
+                if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Volume snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null; then
+                    echo "[!] Warning: volume commit skipped for '${ms_repo}' (git lock contention or identity missing); world snapshot may reference a stale state." >&2
                 fi
-            )
-        fi
-    done
-fi
+            fi
+        )
+    fi
+done
 
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M")
 DEFAULT_MSG="Snapshot: ${TIMESTAMP}"

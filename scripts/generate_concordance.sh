@@ -21,21 +21,23 @@ usage() {
 Scriptorium Concordance Generator — generate Dramatis Personae and Glossary back-matter.
 
 Usage:
-  generate_concordance.sh [WORLD_NAME|WORLD_DIR] [OPTIONS]
+  generate_concordance.sh [MANUSCRIPT|WORLD] [OPTIONS]
 
 Options:
-  -w, --world NAME     World name or directory path
-  -b, --book VOLUME    Target book volume (e.g. Book-01, Book-02, or "all"; default: all volumes)
-  -u, --universe NAME  Universe name (optional)
-  -h, --help           Show this help and exit
+  -m, --manuscript NAME  Manuscript project name or directory path
+  -w, --world NAME       World Lore Vault name or directory path
+  -b, --book VOLUME      Target book volume (e.g. Book-01, Book-02, or "all"; default: all volumes)
+  -u, --universe NAME    Universe name (optional)
+  -h, --help             Show this help and exit
 
 Exit codes:
   0  concordance generated successfully
-  1  error (world not found, invalid parameters)
-  3  user abort (no world selected)
+  1  error (world/manuscript not found, invalid parameters)
+  3  user abort (no target selected)
 USAGE
 }
 
+MANUSCRIPT_CLI=""
 WORLD_CLI=""
 BOOK_CLI=""
 UNIVERSE_CLI=""
@@ -43,6 +45,9 @@ POSITIONAL=()
 
 while [ $# -gt 0 ]; do
     case "$1" in
+        -m|--manuscript)
+            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 1; }
+            MANUSCRIPT_CLI="$2"; shift 2 ;;
         -w|--world)
             [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
             WORLD_CLI="$2"; shift 2 ;;
@@ -63,65 +68,138 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-TARGET_WORLD="${WORLD_CLI:-${POSITIONAL[0]:-}}"
 TARGET_BOOK="${BOOK_CLI:-${POSITIONAL[1]:-}}"
 
-# Discover worlds if not provided
-discover_worlds WORLDS
+# Check explicit CLI flags or positional
+RESOLVED_MS=""
+RESOLVED_WORLD=""
 
-if [ -z "${TARGET_WORLD}" ]; then
-    if [ ${#WORLDS[@]} -eq 1 ]; then
-        TARGET_WORLD="${WORLDS[0]}"
-        # N-03: auto-selected legacy worlds get the same nudge as by-name ones
-        warn_if_legacy_root "${TARGET_WORLD}"
-    elif has_gui && [ ${#WORLDS[@]} -gt 1 ]; then
-        CHOICES=()
-        for w in "${WORLDS[@]}"; do
-            CHOICES+=("$(basename "$w")" "[Universe: $(universe_label "$w")] $w")
-        done
-        PICKED=$(zenity --list --title="Scriptorium — Select World for Concordance" \
-            --text="Select the world to generate back-matter concordance for:" \
-            --column="World Name" --column="Universe & Path" \
-            --width=520 --height=320 \
-            "${CHOICES[@]}" || true)
-        [ -n "$PICKED" ] && TARGET_WORLD="$PICKED"
-    elif [ -t 0 ] && [ ${#WORLDS[@]} -gt 1 ]; then
-        echo "Select world to generate concordance for:"
-        select w in "${WORLDS[@]}"; do
-            [ -n "${w:-}" ] && TARGET_WORLD="$w"
-            break
-        done
+if [ -n "${MANUSCRIPT_CLI}" ]; then
+    RESOLVED_MS="$(resolve_manuscript_dir "${MANUSCRIPT_CLI}")"
+fi
+
+if [ -n "${WORLD_CLI}" ]; then
+    RESOLVED_WORLD="$(resolve_world_dir "${WORLD_CLI}" "${UNIVERSE_CLI}")"
+fi
+
+# If neither flag given, check positional
+if [ -z "${RESOLVED_MS}" ] && [ -z "${RESOLVED_WORLD}" ] && [ ${#POSITIONAL[@]} -gt 0 ]; then
+    POS_INPUT="${POSITIONAL[0]}"
+    RESOLVED_MS="$(resolve_manuscript_dir "${POS_INPUT}")"
+    if [ -z "${RESOLVED_MS}" ]; then
+        RESOLVED_WORLD="$(resolve_world_dir "${POS_INPUT}" "${UNIVERSE_CLI}")"
     fi
 fi
 
-if [ -z "${TARGET_WORLD}" ]; then
-    echo "No world specified. Aborting." >&2
-    exit 3
+# Fallbacks/interactive discovery if still unresolved
+if [ -z "${RESOLVED_MS}" ] && [ -z "${RESOLVED_WORLD}" ]; then
+    discover_manuscripts MANUSCRIPTS
+    discover_worlds WORLDS
+    if [ ${#MANUSCRIPTS[@]} -eq 1 ]; then
+        RESOLVED_MS="${MANUSCRIPTS[0]}"
+    elif [ ${#WORLDS[@]} -eq 1 ]; then
+        RESOLVED_WORLD="${WORLDS[0]}"
+        warn_if_legacy_root "${RESOLVED_WORLD}"
+    elif has_gui && { [ ${#MANUSCRIPTS[@]} -gt 0 ] || [ ${#WORLDS[@]} -gt 0 ]; }; then
+        CHOICES=()
+        for m in "${MANUSCRIPTS[@]}"; do
+            CHOICES+=("$(basename "$m")" "[Manuscript] $m")
+        done
+        for w in "${WORLDS[@]}"; do
+            CHOICES+=("$(basename "$w")" "[World Lore] $w")
+        done
+        PICKED=$(zenity --list --title="Scriptorium — Select Project for Concordance" \
+            --text="Select the manuscript or world to generate back-matter concordance for:" \
+            --column="Name" --column="Type & Path" \
+            --width=520 --height=320 \
+            "${CHOICES[@]}" || true)
+        if [ -n "$PICKED" ]; then
+            RESOLVED_MS="$(resolve_manuscript_dir "$PICKED")"
+            [ -z "${RESOLVED_MS}" ] && RESOLVED_WORLD="$(resolve_world_dir "$PICKED" "${UNIVERSE_CLI}")"
+        fi
+    fi
 fi
 
-WORLD_DIR="$(resolve_world_dir "${TARGET_WORLD}" "${UNIVERSE_CLI}")"
+BIBLE_DIR=""
+MANUSCRIPT_DIR=""
 
-if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
-    echo "Error: World directory '${TARGET_WORLD}' not found." >&2
+if [ -n "${RESOLVED_MS}" ] && [ -d "${RESOLVED_MS}" ]; then
+    if [ -d "${RESOLVED_MS}/01-Manuscript" ]; then
+        MANUSCRIPT_DIR="${RESOLVED_MS}/01-Manuscript"
+    else
+        MANUSCRIPT_DIR="${RESOLVED_MS}"
+    fi
+
+    # Read linked world from manifest
+    LINKED_WORLD=""
+    LINKED_UNI=""
+    MANIFEST="${RESOLVED_MS}/manuscript.yaml"
+    [ -f "${MANIFEST}" ] || MANIFEST="${RESOLVED_MS}/scriptorium.yaml"
+    if [ -f "${MANIFEST}" ]; then
+        LINKED_WORLD=$(sed -n -E 's/^world:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        LINKED_UNI=$(sed -n -E 's/^universe:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    fi
+
+    if [ -n "${RESOLVED_WORLD}" ] && [ -d "${RESOLVED_WORLD}" ]; then
+        if [ -d "${RESOLVED_WORLD}/00-World-Bible" ]; then
+            BIBLE_DIR="${RESOLVED_WORLD}/00-World-Bible"
+        else
+            BIBLE_DIR="${RESOLVED_WORLD}"
+        fi
+    elif [ -n "${LINKED_WORLD}" ]; then
+        BIBLE_DIR="$(resolve_world_dir "${LINKED_WORLD}" "${LINKED_UNI}")"
+    fi
+
+    if [ -z "${BIBLE_DIR}" ] || [ ! -d "${BIBLE_DIR}" ]; then
+        if [ -d "${RESOLVED_MS}/00-World-Bible" ]; then
+            BIBLE_DIR="${RESOLVED_MS}/00-World-Bible"
+        elif [ -d "${RESOLVED_MS}/Characters" ]; then
+            BIBLE_DIR="${RESOLVED_MS}"
+        fi
+    fi
+elif [ -n "${RESOLVED_WORLD}" ] && [ -d "${RESOLVED_WORLD}" ]; then
+    if [ -d "${RESOLVED_WORLD}/00-World-Bible" ]; then
+        BIBLE_DIR="${RESOLVED_WORLD}/00-World-Bible"
+    else
+        BIBLE_DIR="${RESOLVED_WORLD}"
+    fi
+
+    if [ -d "${RESOLVED_WORLD}/01-Manuscript" ]; then
+        MANUSCRIPT_DIR="${RESOLVED_WORLD}/01-Manuscript"
+    else
+        # Look for linked manuscript in ~/Manuscripts
+        discover_manuscripts MANUSCRIPTS
+        WNAME="$(basename "${RESOLVED_WORLD}")"
+        for m in "${MANUSCRIPTS[@]}"; do
+            m_manifest="${m}/manuscript.yaml"
+            [ -f "${m_manifest}" ] || m_manifest="${m}/scriptorium.yaml"
+            if [ -f "${m_manifest}" ]; then
+                mw=$(sed -n -E 's/^world:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${m_manifest}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+                if [ "$mw" = "$WNAME" ]; then
+                    MANUSCRIPT_DIR="$m"
+                    break
+                fi
+            fi
+        done
+        if [ -z "${MANUSCRIPT_DIR}" ]; then
+            MANUSCRIPT_DIR="${RESOLVED_WORLD}/01-Manuscript"
+            mkdir -p "${MANUSCRIPT_DIR}"
+        fi
+    fi
+fi
+
+if [ -z "${BIBLE_DIR}" ] || [ ! -d "${BIBLE_DIR}" ]; then
+    echo "Error: World Bible lore folder not found for '${TARGET_INPUT}'." >&2
     exit 1
 fi
 
-BIBLE_DIR="${WORLD_DIR}/00-World-Bible"
-MANUSCRIPT_DIR="${WORLD_DIR}/01-Manuscript"
-
-if [ ! -d "${BIBLE_DIR}" ]; then
-    echo "Error: World Bible folder missing at ${BIBLE_DIR}." >&2
-    exit 1
-fi
-
-if [ ! -d "${MANUSCRIPT_DIR}" ]; then
-    echo "Error: Manuscript folder missing at ${MANUSCRIPT_DIR}." >&2
-    exit 1
+if [ -z "${MANUSCRIPT_DIR}" ] || [ ! -d "${MANUSCRIPT_DIR}" ]; then
+    mkdir -p "${MANUSCRIPT_DIR}"
 fi
 
 command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit 1; }
 
-echo "Generating Concordance & Dramatis Personae for $(basename "${WORLD_DIR}")..."
+echo "Generating Concordance & Dramatis Personae from $(basename "${BIBLE_DIR}") for $(basename "${MANUSCRIPT_DIR}")..."
 
 BIBLE_DIR="${BIBLE_DIR}" MANUSCRIPT_DIR="${MANUSCRIPT_DIR}" TARGET_BOOK="${TARGET_BOOK}" python3 - << 'PYEOF'
 import os
@@ -565,7 +643,7 @@ for bdir in books_to_target:
 print(f"Concordance generation complete across {count} manuscript volume(s).")
 PYEOF
 
-MSG="Concordance and Dramatis Personae successfully generated for '$(basename "${WORLD_DIR}")'!\n\nFiles created under 01-Manuscript/<Book>/04_Back_Matter/:\n• 01_Dramatis_Personae.md\n• 02_Glossary_and_Concordance.md\n\nThese will be automatically compiled at the end of your Typst print PDFs and Pandoc EPUBs."
+MSG="Concordance and Dramatis Personae successfully generated for '$(basename "${BIBLE_DIR}")'!\n\nFiles created under 04_Back_Matter/:\n• 01_Dramatis_Personae.md\n• 02_Glossary_and_Concordance.md\n\nThese will be automatically compiled at the end of your Typst print PDFs and Pandoc EPUBs."
 
 if has_gui; then
     zenity --info --title="Concordance Generated" --text="${MSG}" --width=480

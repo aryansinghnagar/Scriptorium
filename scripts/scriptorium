@@ -12,7 +12,7 @@ if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ]; then
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 fi
 
-VERSION="1.4.0"
+VERSION="1.5.0"
 
 usage() {
     cat << USAGE
@@ -22,31 +22,33 @@ A reproducible, fail-safe Linux authoring and worldbuilding platform.
 Usage:
   scriptorium <command> [arguments...]
 
-Universe & World Management:
-  universe [NAME] [--list]   Create or list narrative Universes in ~/Universes/
-  init <name> [-u UNIVERSE]  Atomically scaffold a new world in a Universe
-  control-center             Launch graphical desktop control center
+Universe & World Lore Management:
+  universe [NAME] [--list]     Create or list narrative Universes in ~/Universes/
+  world <name> [-u UNIVERSE]   Atomically scaffold a World Lore Vault in a Universe
+  control-center               Launch graphical desktop control center
 
-Writing & Publishing:
-  add-book <world> [book]    Scaffold a new manuscript volume (Book-02, etc.)
-  concordance <world> [-b BK]Generate Dramatis Personae & Glossary back-matter
-  export <world> [-b BOOK]   Compile manuscript into print PDF and EPUB (--book Book-01|all)
-  report <world> [--markdown]Show word counts and manuscript progress analytics
+Manuscripts, Drafting & Publishing:
+  manuscript <name> [options]  Scaffold a new Manuscript Project in ~/Manuscripts/
+  add-volume <ms> [volume]     Scaffold a new manuscript volume (Book-02, etc.)
+  concordance <ms|world> [-b]  Generate Dramatis Personae & Glossary back-matter
+  export <manuscript> [-b BK]  Compile manuscript into PDF, EPUB, or DOCX (--format book|submission|all)
+  report <manuscript> [--md]   Show word counts and manuscript progress analytics
 
 Data Protection & Version Control:
-  snapshot <world> [-m note] Record a Git version snapshot (World & Manuscripts)
-  backup <world> [options]   Create a standalone verified .tar.gz backup archive
-  restore <archive> [opts]   Restore a world from a verified backup archive
+  snapshot <target> [-m note]  Record a Git version snapshot (World & Manuscripts)
+  backup <target> [options]    Create a standalone verified .tar.gz backup archive
+  restore <archive> [opts]     Restore a project from a verified backup archive
 
 System Health & Maintenance:
-  doctor [--world <name>]    Run unified health and lore consistency diagnostics
-  verify                     Run complete 7-stage test harness
-  setup [--dry-run]          Install core packages, fonts, and desktop launchers
-  uninstall [--dry-run]      Revert desktop launchers and system components
+  doctor [--world <name>]      Run unified health and toolchain diagnostics
+  world-doctor <world> [--json]Run deep World Bible lore consistency diagnostics
+  verify                       Run complete 7-stage test harness
+  setup [--dry-run]            Install core packages, fonts, and desktop launchers
+  uninstall [--dry-run]        Revert desktop launchers and system components
 
 Global Options:
-  -v, --version              Display Scriptorium version
-  -h, --help                 Display this help menu
+  -v, --version                Display Scriptorium version
+  -h, --help                   Display this help menu
 USAGE
 }
 
@@ -62,22 +64,28 @@ case "${COMMAND}" in
     universe|multiverse)
         exec bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$@"
         ;;
-    init)
+    world|init-world|init)
         exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
         ;;
-    add-book|new-book)
+    manuscript|init-manuscript|novel)
+        exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
+        ;;
+    add-volume|add-book|new-book)
         exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
         ;;
     concordance|glossary|dramatis-personae)
         exec bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$@"
         ;;
-    doctor)
+    world-doctor|lore-doctor)
+        exec bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$@"
+        ;;
+    doctor|check)
         exec bash "${PROJECT_ROOT}/scripts/scriptorium_doctor.sh" "$@"
         ;;
-    export)
+    export|publish)
         exec bash "${PROJECT_ROOT}/scripts/export_book.sh" "$@"
         ;;
-    snapshot)
+    snapshot|snap)
         exec bash "${PROJECT_ROOT}/scripts/save_snapshot.sh" "$@"
         ;;
     backup)
@@ -86,7 +94,7 @@ case "${COMMAND}" in
     restore)
         exec bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$@"
         ;;
-    report)
+    report|wordcount)
         exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
         ;;
     verify)
@@ -98,7 +106,7 @@ case "${COMMAND}" in
     uninstall)
         exec bash "${PROJECT_ROOT}/scripts/uninstall_scriptorium.sh" "$@"
         ;;
-    control-center|dashboard|gui)
+    control-center|dashboard|gui|app)
         exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
         ;;
     -v|--version|version)

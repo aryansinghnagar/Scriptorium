@@ -1,9 +1,9 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=New World Creator
+Name=New World Vault Creator
 GenericName=Scriptorium World Initializer
-Comment=Scaffold a new world folder with Obsidian World Bible and novelWriter manuscript templates
+Comment=Scaffold a new pure World Lore Vault with Obsidian pre-configured suite
 Exec=bash "__PROJECT_ROOT__/scripts/init_world.sh"
 TryExec=bash
 Icon=folder-new

@@ -12,11 +12,13 @@ unset DISPLAY WAYLAND_DISPLAY 2>/dev/null || true
 
 echo "=== Edge Case Test 1: Notes without explicit name key and nested subdirectories ==="
 bash scripts/scriptorium universe EdgeUniverse >/dev/null
-bash scripts/scriptorium init EdgeWorld -u EdgeUniverse >/dev/null
-WORLD="${HOME}/Universes/EdgeUniverse/Worlds/EdgeWorld"
+bash scripts/scriptorium world EdgeWorld -u EdgeUniverse >/dev/null
+bash scripts/scriptorium manuscript EdgeManuscript -u EdgeUniverse -w EdgeWorld >/dev/null
+WORLD="${HOME}/Universes/EdgeUniverse/EdgeWorld"
+MS="${HOME}/Manuscripts/EdgeManuscript"
 
-mkdir -p "${WORLD}/00-World-Bible/Characters/Order-Of-Shadows"
-cat > "${WORLD}/00-World-Bible/Characters/Order-Of-Shadows/Kaelen_Shadow.md" << 'CHAR_EOF'
+mkdir -p "${WORLD}/Characters/Order-Of-Shadows"
+cat > "${WORLD}/Characters/Order-Of-Shadows/Kaelen_Shadow.md" << 'CHAR_EOF'
 ---
 type: character
 role: Protagonist
@@ -33,7 +35,7 @@ aliases: "The Ghost, Shadow Blade"
 Kaelen is a legendary elven ranger who disappeared during the Second Siege.
 CHAR_EOF
 
-cat > "${WORLD}/00-World-Bible/Characters/Lord_Vane.md" << 'CHAR2_EOF'
+cat > "${WORLD}/Characters/Lord_Vane.md" << 'CHAR2_EOF'
 ---
 name: "Lord Vane"
 type: character
@@ -44,8 +46,8 @@ faction: "[[Iron Legion]]"
 The late warlord of the northern marches.
 CHAR2_EOF
 
-mkdir -p "${WORLD}/00-World-Bible/Magic-Technology/Arcane"
-cat > "${WORLD}/00-World-Bible/Magic-Technology/Arcane/Void_Weaving.md" << 'MAGIC_EOF'
+mkdir -p "${WORLD}/Magic-Technology/Arcane"
+cat > "${WORLD}/Magic-Technology/Arcane/Void_Weaving.md" << 'MAGIC_EOF'
 ---
 name: "Void Weaving"
 type: magic_tech_system
@@ -57,8 +59,8 @@ danger_cost: "Permanent Soul Corruption"
 The ancient discipline of manipulating negative space and astral echoes.
 MAGIC_EOF
 
-mkdir -p "${WORLD}/00-World-Bible/Factions/Underground"
-cat > "${WORLD}/00-World-Bible/Factions/Underground/Shadow_Syndicate.md" << 'FAC_EOF'
+mkdir -p "${WORLD}/Factions/Underground"
+cat > "${WORLD}/Factions/Underground/Shadow_Syndicate.md" << 'FAC_EOF'
 ---
 name: "The Shadow Syndicate"
 type: faction
@@ -69,10 +71,10 @@ motto: "In Umbra Vincimus"
 A secret network operating beneath the surface.
 FAC_EOF
 
-bash scripts/scriptorium concordance EdgeWorld >/dev/null
+bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" >/dev/null
 
-DP_FILE="${WORLD}/01-Manuscript/Book-01/04_Back_Matter/01_Dramatis_Personae.md"
-GC_FILE="${WORLD}/01-Manuscript/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md"
+DP_FILE="${MS}/Book-01/04_Back_Matter/01_Dramatis_Personae.md"
+GC_FILE="${MS}/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md"
 
 [ -f "${DP_FILE}" ] || { echo "FAIL: Dramatis Personae file missing"; exit 1; }
 [ -f "${GC_FILE}" ] || { echo "FAIL: Glossary file missing"; exit 1; }
@@ -190,9 +192,9 @@ print("  OK all 17 timeline parsing cases verified")
 PYEOF
 
 echo "=== Edge Case Test 3: CLI facade argument combinations ==="
-bash scripts/scriptorium concordance EdgeWorld --book Book-01 >/dev/null
-bash scripts/scriptorium concordance EdgeWorld -b all >/dev/null
-bash scripts/scriptorium concordance EdgeWorld Book-01 >/dev/null
+bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" --book Book-01 >/dev/null
+bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" -b all >/dev/null
+bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" Book-01 >/dev/null
 
 echo "  OK CLI argument combinations verified"
 echo "=== ALL EDGE CASE TESTS PASSED! ==="

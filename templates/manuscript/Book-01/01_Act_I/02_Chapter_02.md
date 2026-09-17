@@ -1,7 +1,7 @@
 # Chapter 2: The Crossing
 
 @pov: Protagonist
-@focus: River Crossing
+@location: River Crossing
 @status: Draft
 @tag: Crossing Threshold
 

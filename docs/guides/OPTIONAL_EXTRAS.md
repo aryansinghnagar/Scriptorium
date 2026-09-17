@@ -1,17 +1,17 @@
 # Optional Extras & Specialized Creative Tools Guide
 
-Per §5 of the Scriptorium plan, the default system is kept lean and focused. When specialized creative needs arise, the following open-source tools can be installed directly from the Linux Mint Software Manager (or via Flatpak / APT).
+The default Scriptorium environment is kept lean and focused. When specialized creative needs arise, the following open-source tools can be installed directly from the Linux Mint Software Manager (or via Flatpak / APT).
 
 ---
 
 ## 1. Fantasy Mapping & Cartography
 
 ### Azgaar's Fantasy Map Generator (Web & Offline)
-- **Use Case**: Generating procedurally generated continents, biomes, political borders, culture maps, trade routes, and relief maps.
+- **Use Case**: Procedurally generating continents, biomes, political borders, culture maps, trade routes, and relief maps.
 - **Online Access**: [https://azgaar.github.io/Fantasy-Map-Generator/](https://azgaar.github.io/Fantasy-Map-Generator/)
 - **Offline Setup**:
   1. Download the offline bundle from GitHub: [https://github.com/Azgaar/Fantasy-Map-Generator/archive/refs/heads/master.zip](https://github.com/Azgaar/Fantasy-Map-Generator/archive/refs/heads/master.zip)
-  2. Extract to `~/Worlds/<WorldName>/02-Maps/Azgaar/`
+  2. Extract to `~/Universes/<UniverseName>/<WorldName>/02-Maps/Azgaar/`
   3. Open `index.html` in Firefox without needing internet.
 
 ### Krita (Digital Painting & Sketching)
