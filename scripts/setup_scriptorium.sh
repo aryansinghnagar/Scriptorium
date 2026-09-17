@@ -246,8 +246,9 @@ else
                             echo "  [!] Typst digest mismatch: expected ${EXPECTED}, got ${ACTUAL}. Aborting binary install." >&2
                         fi
                     else
-                        TYPST_OK=1
-                        echo "  [i] Upstream digest not published; tarball sha256: ${ACTUAL}"
+                        TYPST_OK=0
+                        echo "  [!] Refusing to install unverified binary: upstream SHA-256 digest unavailable." >&2
+                        echo "      Install manually or via cargo: cargo install --locked typst-cli" >&2
                     fi
                 else
                     echo "  [!] Warning: GitHub API unreachable or rate-limited; Typst not installed." >&2

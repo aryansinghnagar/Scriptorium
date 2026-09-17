@@ -982,23 +982,41 @@ class ScriptoriumApp(Gtk.Window):
             content = file_path.read_text(encoding="utf-8", errors="ignore")
             lines = content.splitlines()
 
-            # Preserve heading line if present
+            frontmatter_lines = []
             heading = ""
-            non_tag_lines = []
-            seen_heading = False
+            body_lines = []
 
-            for line in lines:
+            i = 0
+            n = len(lines)
+            if n > 0 and lines[0].strip() == "---":
+                frontmatter_lines.append(lines[0])
+                i = 1
+                while i < n and lines[i].strip() != "---":
+                    frontmatter_lines.append(lines[i])
+                    i += 1
+                if i < n:
+                    frontmatter_lines.append(lines[i])
+                    i += 1
+
+            # After frontmatter (if present), find optional heading and strip existing @tags
+            seen_heading = False
+            while i < n:
+                line = lines[i]
                 stripped = line.strip()
                 if not seen_heading and stripped.startswith("#"):
                     heading = line
                     seen_heading = True
+                    i += 1
                     continue
-                if stripped.startswith("@pov:") or stripped.startswith("@char:") or stripped.startswith("@character:") or \
-                   stripped.startswith("@location:") or stripped.startswith("@focus:") or stripped.startswith("@thread:") or \
-                   stripped.startswith("@plot:") or stripped.startswith("@time:") or stripped.startswith("@status:") or \
-                   stripped.startswith("@tag:"):
+                if (stripped.startswith("@pov:") or stripped.startswith("@char:") or
+                    stripped.startswith("@character:") or stripped.startswith("@location:") or
+                    stripped.startswith("@focus:") or stripped.startswith("@thread:") or
+                    stripped.startswith("@plot:") or stripped.startswith("@time:") or
+                    stripped.startswith("@status:") or stripped.startswith("@tag:")):
+                    i += 1
                     continue
-                non_tag_lines.append(line)
+                body_lines.append(line)
+                i += 1
 
             # Build clean metadata tag header
             tag_lines = []
@@ -1009,15 +1027,19 @@ class ScriptoriumApp(Gtk.Window):
             if t_marker: tag_lines.append(f"@time: {t_marker}")
             if status: tag_lines.append(f"@status: {status}")
 
-            new_body = "\n".join(non_tag_lines).lstrip("\n")
+            new_body = "\n".join(body_lines).lstrip("\n")
             parts = []
+            if frontmatter_lines:
+                parts.append("\n".join(frontmatter_lines))
+                parts.append("")
             if heading:
                 parts.append(heading)
                 parts.append("")
             if tag_lines:
                 parts.extend(tag_lines)
                 parts.append("")
-            parts.append(new_body)
+            if new_body:
+                parts.append(new_body)
 
             final_text = "\n".join(parts).rstrip() + "\n"
             file_path.write_text(final_text, encoding="utf-8")
@@ -1157,7 +1179,7 @@ class ScriptoriumApp(Gtk.Window):
             note = entry.get_text().strip()
             cmd = ["bash", str(PROJECT_ROOT / "scripts" / "save_snapshot.sh"), target, "--note", note]
             self.set_status("Saving version snapshot...")
-            self._start_worker(self._run_async_command, args=(cmd, "Snapshot recorded successfully!"))
+            self._start_worker(self._run_async_command, args=(cmd, "Snapshot recorded successfully!", self.refresh_snapshot_history))
         dialog.destroy()
 
     def on_save_snapshot_clicked(self, btn):

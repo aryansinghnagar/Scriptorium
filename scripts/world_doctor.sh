@@ -225,6 +225,7 @@ ERA_ORDER = {
 
 BC_PATTERN = re.compile(r'\b(bce|bc|b\.c\.e\.|b\.c\.|before common era|before era)\b', re.IGNORECASE)
 CE_PATTERN = re.compile(r'\b(ce|ad|c\.e\.|a\.d\.|common era|anno domini)\b', re.IGNORECASE)
+ISO_DATE_PATTERN = re.compile(r'^([+-]?\d{1,6})[-/](\d{1,2})(?:[-/](\d{1,2}))?$')
 
 def parse_timeline_date(val):
     if val is None:
@@ -238,6 +239,15 @@ def parse_timeline_date(val):
         return (None, float(s), s)
     except ValueError:
         pass
+
+    # ISO 8601 Calendar Date Pattern (e.g. 1899-03-14, 1422-05, -450/01/01)
+    m_iso = ISO_DATE_PATTERN.match(s)
+    if m_iso:
+        yr = float(m_iso.group(1))
+        mo = float(m_iso.group(2))
+        dy = float(m_iso.group(3)) if m_iso.group(3) else 1.0
+        dec_val = yr + (mo - 1.0) / 12.0 + (dy - 1.0) / 365.25
+        return (None, dec_val, s)
 
     # BCE / BC pattern (e.g. 500 BCE -> -500)
     if BC_PATTERN.search(s):
@@ -367,11 +377,13 @@ def is_template(rel, fm):
     if fname == "World-Bible-Index.md":
         return False
     name = fm.get("name", "")
+    path_parts = [p.lower() for p in rel.replace('\\', '/').split('/')]
     return (
-        "Template" in fname
-        or "START_HERE" in rel
-        or "fileClasses" in rel
-        or "Daily-Writing-Log" in rel
+        "template" in fname.lower()
+        or "templates" in path_parts
+        or "start_here" in rel.lower()
+        or "fileclasses" in path_parts
+        or "daily-writing-log" in rel.lower()
         or "<%" in str(name)
         or "<%" in str(fm.get("date", ""))
         or fm.get("type") in ("guide", "template", "fileclass")
@@ -439,7 +451,34 @@ PLACEHOLDER_NAMES = {
     "character-a", "character-b", "character-c", "unknown", "none"
 }
 
+ms_index = set()
+
 if MANUSCRIPT and os.path.isdir(MANUSCRIPT):
+    # Pass 3.1: Index all manuscript markdown files (including Outlines/)
+    for root, dirs, files in os.walk(MANUSCRIPT):
+        dirs[:] = [d for d in dirs if d not in (".git", ".obsidian")]
+        for fname in sorted(files):
+            if not fname.endswith(".md") or fname.startswith("."):
+                continue
+            path = os.path.join(root, fname)
+            rel = os.path.relpath(path, MANUSCRIPT)
+            stem = os.path.splitext(fname)[0]
+            rel_no_ext = os.path.splitext(rel)[0]
+            ms_index.add(norm(stem))
+            ms_index.add(norm(rel_no_ext))
+            ms_index.add(norm(rel_no_ext.replace('\\', '/')))
+            try:
+                txt = read_capped(path)
+                fm, _ = parse_frontmatter(txt)
+                if fm.get("name") and isinstance(fm["name"], str):
+                    ms_index.add(norm(fm["name"]))
+                for al in (fm.get("aliases") or []):
+                    if isinstance(al, str):
+                        ms_index.add(norm(al))
+            except Exception:
+                pass
+
+    # Pass 3.2: Scan manuscript scenes for entity tags and prose lore links
     for root, dirs, files in os.walk(MANUSCRIPT):
         dirs[:] = [d for d in dirs if d not in (".git", "Outlines", ".obsidian")]
         for fname in sorted(files):
@@ -467,7 +506,7 @@ if MANUSCRIPT and os.path.isdir(MANUSCRIPT):
                         target = wl_m.group(1).split("#")[0].strip() if wl_m else item
                         if not target or norm(target) in PLACEHOLDER_NAMES:
                             continue
-                        if resolve(target) is None:
+                        if resolve(target) is None and norm(target) not in ms_index:
                             manuscript_errors.append((rel, f"@{tag_type}", target))
                 elif stripped.startswith("@"):
                     continue
@@ -476,7 +515,7 @@ if MANUSCRIPT and os.path.isdir(MANUSCRIPT):
                         target = m_wl.group(1).split("#")[0].strip()
                         if not target or norm(target) in PLACEHOLDER_NAMES:
                             continue
-                        if resolve(target) is None:
+                        if resolve(target) is None and norm(target) not in ms_index:
                             manuscript_errors.append((rel, "[[link]]", target))
 
 findings = {

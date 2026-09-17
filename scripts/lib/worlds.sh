@@ -33,9 +33,9 @@ if [ -n "${SCRIPTORIUM_LIB_WORLDS_SOURCED:-}" ]; then
 fi
 SCRIPTORIUM_LIB_WORLDS_SOURCED=1
 
-UNIVERSES_BASE="${HOME}/Universes"
-MANUSCRIPTS_BASE="${HOME}/Manuscripts"
-LEGACY_WORLDS_BASE="${HOME}/Worlds"
+UNIVERSES_BASE="${UNIVERSES_BASE:-${HOME}/Universes}"
+MANUSCRIPTS_BASE="${MANUSCRIPTS_BASE:-${HOME}/Manuscripts}"
+LEGACY_WORLDS_BASE="${LEGACY_WORLDS_BASE:-${HOME}/Worlds}"
 
 # GUI detection works on both X11 and Wayland
 has_gui() {
@@ -63,9 +63,13 @@ warn_if_legacy_root() {
 universe_label() {
     local w="${1:-}"
     local leg_base="${LEGACY_WORLDS_BASE:-${HOME}/Worlds}"
+    local u_base="${UNIVERSES_BASE:-${HOME}/Universes}"
     if [ -n "$w" ]; then
         if [[ "$w" == "${leg_base}"* ]]; then
             printf '%s' "Legacy"
+        elif [[ "$w" == "${u_base}"/* ]]; then
+            local rel="${w#"${u_base}/"}"
+            printf '%s' "${rel%%/*}"
         else
             printf '%s' "$(basename "$(dirname "$w")")"
         fi
@@ -84,21 +88,49 @@ discover_universes() {
 }
 
 # discover_worlds VARNAME
-# Populates VARNAME with every World Lore Vault under ~/Universes/<Universe>/<World>
-# as well as legacy ~/Worlds/<World>
+# Populates VARNAME with every World Lore Vault under ~/Universes/<Universe>/<World>,
+# legacy subfolder ~/Universes/<Universe>/Worlds/<World>, and legacy ~/Worlds/<World>
 discover_worlds() {
     local -n __w_out="$1"
     local __w
     local u_base="${UNIVERSES_BASE:-${HOME}/Universes}"
     local leg_base="${LEGACY_WORLDS_BASE:-${HOME}/Worlds}"
     __w_out=()
-    while IFS= read -r -d '' __w; do
-        [ -d "$__w" ] && __w_out+=("$__w")
-    done < <(find "${u_base}" -mindepth 2 -maxdepth 2 -type d ! -name '.*' -print0 2>/dev/null | sort -z)
 
+    if [ -d "${u_base}" ]; then
+        # 1. Direct universe worlds: ~/Universes/<Universe>/<World> (excluding Worlds and .git)
+        while IFS= read -r -d '' __w; do
+            [ -d "$__w" ] || continue
+            local bname
+            bname="$(basename "$__w")"
+            if [ "$bname" = "Worlds" ] || [ "$bname" = ".git" ]; then
+                continue
+            fi
+            __w_out+=("$__w")
+        done < <(find "${u_base}" -mindepth 2 -maxdepth 2 -type d ! -name '.*' -print0 2>/dev/null | sort -z)
+
+        # 2. Legacy subfolder worlds: ~/Universes/<Universe>/Worlds/<World>
+        while IFS= read -r -d '' __w; do
+            [ -d "$__w" ] || continue
+            local bname
+            bname="$(basename "$__w")"
+            if [ "$bname" = ".git" ]; then
+                continue
+            fi
+            __w_out+=("$__w")
+        done < <(find "${u_base}" -mindepth 3 -maxdepth 3 -type d -path '*/Worlds/*' ! -name '.*' -print0 2>/dev/null | sort -z)
+    fi
+
+    # 3. Legacy root worlds: ~/Worlds/<World>
     if [ -d "${leg_base}" ]; then
         while IFS= read -r -d '' __w; do
-            [ -d "$__w" ] && __w_out+=("$__w")
+            [ -d "$__w" ] || continue
+            local bname
+            bname="$(basename "$__w")"
+            if [ "$bname" = ".git" ]; then
+                continue
+            fi
+            __w_out+=("$__w")
         done < <(find "${leg_base}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null | sort -z)
     fi
 }
@@ -143,15 +175,40 @@ resolve_world_dir() {
             resolved="$(cd "${target}" && pwd)"
         elif [ -n "${universe}" ] && [ -d "${u_base}/${universe}/${target}" ]; then
             resolved="$(cd "${u_base}/${universe}/${target}" && pwd)"
+        elif [ -n "${universe}" ] && [ -d "${u_base}/${universe}/Worlds/${target}" ]; then
+            resolved="$(cd "${u_base}/${universe}/Worlds/${target}" && pwd)"
         else
+            # 1. Search direct ~/Universes/<Universe>/<World>
             while IFS= read -r -d '' w; do
                 [ -d "$w" ] || continue
-                if [ "$(basename "$w")" = "${target}" ]; then
+                local bname
+                bname="$(basename "$w")"
+                if [ "$bname" = "Worlds" ] || [ "$bname" = ".git" ]; then
+                    continue
+                fi
+                if [ "$bname" = "${target}" ]; then
                     resolved="$(cd "$w" && pwd)"
                     break
                 fi
             done < <(find "${u_base}" -mindepth 2 -maxdepth 2 -type d ! -name '.*' -print0 2>/dev/null | sort -z)
 
+            # 2. Search legacy subfolder ~/Universes/<Universe>/Worlds/<World>
+            if [ -z "${resolved}" ]; then
+                while IFS= read -r -d '' w; do
+                    [ -d "$w" ] || continue
+                    local bname
+                    bname="$(basename "$w")"
+                    if [ "$bname" = ".git" ]; then
+                        continue
+                    fi
+                    if [ "$bname" = "${target}" ]; then
+                        resolved="$(cd "$w" && pwd)"
+                        break
+                    fi
+                done < <(find "${u_base}" -mindepth 3 -maxdepth 3 -type d -path '*/Worlds/*' ! -name '.*' -print0 2>/dev/null | sort -z)
+            fi
+
+            # 3. Search legacy root ~/Worlds/<World>
             if [ -z "${resolved}" ] && [ -d "${leg_base}/${target}" ]; then
                 resolved="$(cd "${leg_base}/${target}" && pwd)"
             fi

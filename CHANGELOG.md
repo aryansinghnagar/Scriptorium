@@ -23,6 +23,12 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   - Scoped `is_template` in `scripts/world_doctor.sh` to validate `World-Bible-Index.md` while preventing false-positive orphan reports on `fileClasses/` and writing logs (WLD-01).
   - Initialized primary `~/Universes` and `~/Manuscripts` directory roots in `scripts/setup_scriptorium.sh` (SYS-01).
   - Modernized `docs/AUTHOR_MANUAL.md` and `templates/world-bible/00_START_HERE.md` to remove legacy single-vault path assumptions (AUT-02, AUT-03).
+- **Security & Discovery Hardening (ADR-023)**:
+  - Hardened Typst binary installer in `scripts/setup_scriptorium.sh` to fail closed (`TYPST_OK=0`) when SHA-256 digest is unavailable, preventing unverified binary installation.
+  - Enhanced `scripts/lib/worlds.sh` to discover direct depth-2 (`~/Universes/<Universe>/<World>`), legacy subfolder depth-3 (`~/Universes/<Universe>/Worlds/<World>`), and legacy root (`~/Worlds/<World>`) structures without polluting discovery with the literal `"Worlds"` directory, and fixed `universe_label` for depth-3 worlds.
+  - Expanded `world_doctor.sh` chronological paradox engine (`WLD-104`) with ISO 8601 calendar date parsing (`YYYY-MM-DD`, `YYYY-MM`, `YYYY/MM/DD`).
+  - Added manuscript and outline indexing to Pass 3 of `world_doctor.sh` to resolve intra-manuscript wikilinks (e.g. `[[Master-Outline]]`) without false-positive `WLD-108` lore drift findings.
+  - Added snapshot history reload to HeaderBar Quick Snapshot and protected YAML frontmatter during scene tag updates in `scripts/scriptorium_app.py`.
 - **Desktop & Python Ergonomics**:
   - Migrated external `which` subprocesses in `scripts/scriptorium_app.py` to standard library `shutil.which`.
   - Standardized FreeDesktop categories across `launchers/*.desktop` to `Office;WordProcessor;Publishing;` (UX-01).

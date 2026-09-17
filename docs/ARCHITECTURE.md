@@ -197,3 +197,19 @@ To balance granular revision tracking for prose against modular scaling for lore
   - Implement a Visual Scene Metadata Inspector in GTK Control Center Tab 2 allowing authors to inspect and rewrite scene metadata tags (`@pov:`, `@char:`, `@location:`, `@thread:`, `@time:`, `@status:`) in place.
   - Add Standard Manuscript Submission Format (`.docx`) export via Pandoc and integrate `WLD-108` lore cross-reference diagnostics into `world_doctor.sh`.
 - **Consequences**: Clean separation of worldbuilding lore and manuscript prose, effortless tag consistency, intuitive in-GUI scene metadata management, and industry-standard submission capability.
+
+### ADR-023: Forensic Audit Hardening — Fail-Closed Security, Depth-3 Universe Discovery, ISO 8601 Chronology, and Intra-Manuscript Link Resolution
+- **Context**: Comprehensive security and operational auditing identified key edge-case gaps:
+  1. The Typst binary installer in `scripts/setup_scriptorium.sh` had a fail-open branch (`TYPST_OK=1`) when upstream SHA-256 digests were unavailable.
+  2. The shared discovery library `scripts/lib/worlds.sh` did not cleanly discover legacy depth-3 subfolder worlds (`~/Universes/<Universe>/Worlds/<World>`) or falsely discovered the container directory `"Worlds"`, while `universe_label` extracted `"Worlds"` instead of the owning universe name.
+  3. Chronological paradox analysis in `world_doctor.sh` (`WLD-104`) was limited to era strings or raw numbers and failed on ISO 8601 calendar dates (`YYYY-MM-DD`, `YYYY-MM`, `YYYY/MM/DD`).
+  4. Manuscript diagnostics in `world_doctor.sh` (`WLD-108`) flagged intra-manuscript wikilinks (e.g. `[[Master-Outline]]`, chapter links) as missing lore entities because only World Bible notes were indexed.
+  5. The GTK Desktop GUI (`scripts/scriptorium_app.py`) did not trigger snapshot history reload after HeaderBar Quick Snapshots and risked misplacing YAML frontmatter when rewriting scene tags.
+- **Decision**:
+  - Convert `setup_scriptorium.sh` to fail closed (`TYPST_OK=0`) when SHA-256 digests cannot be verified, refusing unverified binary installation per `SECURITY.md` and S-01.
+  - Upgrade `scripts/lib/worlds.sh` to index direct depth-2, legacy subfolder depth-3, and legacy root worlds without polluting results with literal `"Worlds"` directories, and fix `universe_label` for depth-3 worlds.
+  - Implement ISO 8601 calendar date parsing (`ISO_DATE_PATTERN`) in `parse_timeline_date` to calculate decimal astronomical years for timeline paradox comparison.
+  - Index all manuscript markdown files and outlines into `ms_index` in Pass 3 of `world_doctor.sh` to resolve intra-manuscript references without false-positive `WLD-108` lore drift findings.
+  - Pass `refresh_snapshot_history` to HeaderBar Quick Snapshot in `scriptorium_app.py` and preserve YAML frontmatter at the top of markdown scene files during tag saves.
+- **Consequences**: Strict fail-closed binary installation security, flawless multi-tier universe and world vault discovery, robust ISO 8601 and fantasy era chronological validation, accurate manuscript-to-lore diagnostics without false positives, and rock-solid frontmatter preservation in the desktop GUI.
+
