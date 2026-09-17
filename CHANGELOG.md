@@ -8,6 +8,26 @@ recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
+### Fixed & Hardened (Master Forensic Audit Remediation)
+- **CLI & Diagnostics Robustness**:
+  - Added `-m, --manuscript NAME` option parsing to `scripts/scriptorium_doctor.sh` and option forwarding to `world_doctor.sh` (DEV-01).
+  - Unmasked Stage 6k in `scripts/verify.sh` to enforce real doctor exit codes without `|| true` masking (DEV-02).
+  - Fixed snapshot discovery lockout in `scripts/save_snapshot.sh` for authors with 0 world lore vaults (DEV-03).
+  - Fixed unbound variable crashes under `set -u` in `scripts/export_book.sh` (line 217) and `scripts/generate_concordance.sh` (line 192).
+  - Standardized CLI usage error exit codes to `2` across all 15 entry-point scripts per `docs/ARCHITECTURE.md` contract (CQA-01).
+- **Typography & Publishing Polish**:
+  - Suppressed running headers and page folios on blank verso pages in `templates/typst/book_template.typ` (TYP-01).
+  - Added `-f markdown-citations+smart` to Pandoc EPUB compilation in `scripts/export_book.sh` and CI for curly quotes and em-dashes (TYP-03).
+- **Template & Directory Invariants**:
+  - Restored Dataview queries in `templates/manuscript/Outlines/Subplot-Thread-Matrix.md` to `FROM ""` for ADR-022 compatibility (AUT-01).
+  - Scoped `is_template` in `scripts/world_doctor.sh` to validate `World-Bible-Index.md` while preventing false-positive orphan reports on `fileClasses/` and writing logs (WLD-01).
+  - Initialized primary `~/Universes` and `~/Manuscripts` directory roots in `scripts/setup_scriptorium.sh` (SYS-01).
+  - Modernized `docs/AUTHOR_MANUAL.md` and `templates/world-bible/00_START_HERE.md` to remove legacy single-vault path assumptions (AUT-02, AUT-03).
+- **Desktop & Python Ergonomics**:
+  - Migrated external `which` subprocesses in `scripts/scriptorium_app.py` to standard library `shutil.which`.
+  - Standardized FreeDesktop categories across `launchers/*.desktop` to `Office;WordProcessor;Publishing;` (UX-01).
+  - Integrated execution of all `tests/*.sh` regression test suites into GitHub Actions CI (`.github/workflows/ci.yml`).
+
 ### Added
 - **Centralized User Guides**: Unified all reference and setup documentation under `docs/guides/`:
   - `docs/guides/SOFTWARE_CATALOG.md`: Direct download URLs, APT/Flatpak package IDs, and installation instructions.

@@ -86,6 +86,14 @@ jobs:
         run: |
           bash scripts/verify.sh
 
+      - name: Run regression test suites (tests/*.sh)
+        run: |
+          for test_script in tests/*.sh; do
+            [ -f "$test_script" ] || continue
+            echo "Running test suite: $test_script"
+            bash "$test_script"
+          done
+
       - name: Smoke test Typst book preview compilation
         run: |
           typst compile templates/typst/preview_sample.typ /tmp/scriptorium-preview.pdf
@@ -93,5 +101,5 @@ jobs:
 
       - name: Smoke test Pandoc Markdown to Typst conversion
         run: |
-          pandoc -f markdown-citations -t typst templates/manuscript/Book-01/01_Act_I/01_Chapter_01.md -o /tmp/chapter1.typ
+          pandoc -f markdown-citations+smart -t typst templates/manuscript/Book-01/01_Act_I/01_Chapter_01.md -o /tmp/chapter1.typ
           head -n 25 /tmp/chapter1.typ

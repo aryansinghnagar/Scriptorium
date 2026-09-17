@@ -120,7 +120,7 @@ if command -v pandoc >/dev/null; then
     else
         echo "  WARN pandoc lacks native typst writer (sed fallback will be used)"
     fi
-    if ! printf '# Ch1\n\nHello *world*.\n' | pandoc -f markdown-citations -t typst -o "${TMP_VERIFY}/body.typ" 2>/dev/null; then
+    if ! printf '# Ch1\n\nHello *world*.\n' | pandoc -f markdown-citations+smart -t typst -o "${TMP_VERIFY}/body.typ" 2>/dev/null; then
         echo "  FAIL pandoc markdown->typst conversion" >&2
         exit 1
     fi
@@ -461,9 +461,13 @@ RESTORED_PATH="${HOME}/Universes/${UNIVERSE}/${RESTORE_TARGET}"
 echo "  OK restore_world (drill verified: archive -> restore -> verify content)"
 
 # 6k. Unified Scriptorium Doctor
-bash scripts/scriptorium_doctor.sh --world "${RESTORE_TARGET}" --manuscript "${MANUSCRIPT}" > "${TMP_VERIFY}/doc.log" 2>&1 || true
+set +e
+bash scripts/scriptorium_doctor.sh --world "${RESTORE_TARGET}" --manuscript "${MANUSCRIPT}" > "${TMP_VERIFY}/doc.log" 2>&1
+DOC_RC=$?
+set -e
+[ "${DOC_RC}" -eq 0 ] || [ "${DOC_RC}" -eq 1 ] || { echo "  FAIL scriptorium_doctor failed with exit code ${DOC_RC}:"; cat "${TMP_VERIFY}/doc.log"; exit 1; }
 [ -s "${TMP_VERIFY}/doc.log" ] || { echo "  FAIL scriptorium_doctor produced no output"; exit 1; }
-echo "  OK scriptorium_doctor diagnostics"
+echo "  OK scriptorium_doctor diagnostics (exit ${DOC_RC})"
 
 # 6l. Dry-run simulation tests
 bash scripts/setup_scriptorium.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \

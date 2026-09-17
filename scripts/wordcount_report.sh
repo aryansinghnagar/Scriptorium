@@ -27,7 +27,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
-    sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    cat << 'USAGE'
+Scriptorium Wordcount & Progress Report (D-03 / Workstream 3.3)
+Purpose: Single-pass manuscript analytics: word counts per chapter, act, and
+         book, plus novelWriter @status breakdown. Read-only; never touches
+         manuscript files.
+
+Usage:
+  wordcount_report.sh [WORLD_DIR] [OPTIONS]
+
+Options:
+  --markdown    Emit a Markdown table (for pasting into the Daily Writing Log)
+  --json        Emit machine-readable JSON analytics
+  -h, --help    Show this help
+
+Exit codes:
+  0  report produced (even if counts are zero)
+  1  internal error
+  2  usage/environment error (world dir missing, python3 missing)
+USAGE
 }
 
 WORLD_DIR=""

@@ -28,7 +28,7 @@ If this is your first time using Scriptorium, follow this lightweight 3-step pat
 - Fill in a quick 2-sentence description and sensory mood.
 
 ### 3. Open Your Manuscript & Write!
-- Open `01-Manuscript/` in **novelWriter** or **Obsidian**.
+- Open your manuscript in `~/Manuscripts/<ManuscriptName>` (or launch from Control Center) in **novelWriter** or **Obsidian**.
 - Open `Book-01/01_Act_I/01_Chapter_01.md`.
 - Set `@pov: YourCharacterName` and start writing prose.
 

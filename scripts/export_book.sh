@@ -70,19 +70,19 @@ POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -t|--title)
-            [ $# -ge 2 ] || { echo "Error: --title requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --title requires a value." >&2; exit 2; }
             BOOK_TITLE_CLI="$2"; shift 2 ;;
         -a|--author)
-            [ $# -ge 2 ] || { echo "Error: --author requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --author requires a value." >&2; exit 2; }
             AUTHOR_NAME_CLI="$2"; shift 2 ;;
         -b|--book)
-            [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 2; }
             BOOK_VOLUME_CLI="$2"; shift 2 ;;
         -s|--paper-size)
-            [ $# -ge 2 ] || { echo "Error: --paper-size requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --paper-size requires a value." >&2; exit 2; }
             PAPER_SIZE_CLI="$2"; shift 2 ;;
         -f|--format)
-            [ $# -ge 2 ] || { echo "Error: --format requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --format requires a value." >&2; exit 2; }
             EXPORT_FORMAT_CLI="$2"; shift 2 ;;
         --submission|--docx)
             EXPORT_FORMAT_CLI="submission"; shift ;;
@@ -91,7 +91,7 @@ while [ $# -gt 0 ]; do
         --)
             shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
         -*)
-            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *)
             POSITIONAL+=("$1"); shift ;;
     esac
@@ -126,7 +126,7 @@ fi
 
 if [ ! -d "${TARGET_DIR}" ]; then
     echo "Error: Directory '${TARGET_DIR}' does not exist." >&2
-    exit 1
+    exit 2
 fi
 
 PROJECT_NAME=$(basename "${TARGET_DIR}")
@@ -204,7 +204,7 @@ if [ -n "${BOOK_VOLUME_CLI}" ]; then
         SELECTED_VOLUME="${BOOK_VOLUME_CLI}"
     else
         echo "Error: Requested book volume '${BOOK_VOLUME_CLI}' not found in ${MANUSCRIPT_DIR}." >&2
-        exit 1
+        exit 2
     fi
 elif [ ${#AVAILABLE_BOOKS[@]} -gt 1 ]; then
     if has_gui; then
@@ -214,7 +214,7 @@ elif [ ${#AVAILABLE_BOOKS[@]} -gt 1 ]; then
         done
         CHOICES+=("All (Omnibus)" "Compile entire series omnibus")
         PICKED=$(zenity --list --title="Scriptorium — Select Volume to Export" \
-            --text="Multiple book volumes detected in '${WORLD_NAME}'.\nWhich volume would you like to export?" \
+            --text="Multiple book volumes detected in '${PROJECT_NAME}'.\nWhich volume would you like to export?" \
             --column="Volume" --column="Description" \
             --hide-column=2 \
             --width=420 --height=280 \
@@ -367,7 +367,7 @@ fi
 # P-02: `-f markdown-citations` disables pandoc's `@key` citation syntax so a
 # stray `@word` in prose can never compile into a fatal #cite(...) call.
 if command -v pandoc &> /dev/null; then
-    if pandoc -f markdown-citations "${COMBINED_MD}" -t typst -o "${TEMP_WORK_DIR}/body.typ" 2>/dev/null; then
+    if pandoc -f markdown-citations+smart "${COMBINED_MD}" -t typst -o "${TEMP_WORK_DIR}/body.typ" 2>/dev/null; then
         cat "${TEMP_WORK_DIR}/body.typ" >> "${TYPST_SRC}"
     else
         sed -E -e 's/^#### +(.*)/==== \1/' -e 's/^### +(.*)/=== \1/' -e 's/^## +(.*)/== \1/' -e 's/^# +(.*)/= \1/' -e 's/^@([A-Za-z0-9_-]+):/\1:/' "${COMBINED_MD}" >> "${TYPST_SRC}"
@@ -439,6 +439,7 @@ if [ "${BUILD_EPUB}" -eq 1 ]; then
         PANDOC_ARGS=(
             "${COMBINED_MD}"
             -o "${EPUB_OUTPUT}"
+            -f markdown-citations+smart
             --metadata title="${BOOK_TITLE}"
             --metadata author="${AUTHOR_NAME}"
             --toc
@@ -485,7 +486,7 @@ if [ "${BUILD_DOCX}" -eq 1 ]; then
     echo "Generating Standard Manuscript Submission document (.docx) with Pandoc..."
     if command -v pandoc &> /dev/null; then
         PANDOC_DOCX_ARGS=(
-            -f markdown-citations
+            -f markdown-citations+smart
             "${COMBINED_MD}"
             -t docx
             -o "${DOCX_OUTPUT}"

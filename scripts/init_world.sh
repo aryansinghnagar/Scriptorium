@@ -50,10 +50,10 @@ POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -n|--name)
-            [ $# -ge 2 ] || { echo "Error: --name requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --name requires a value." >&2; exit 2; }
             WORLD_NAME_CLI="$2"; shift 2 ;;
         -u|--universe)
-            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 2; }
             UNIVERSE_NAME_CLI="$2"; shift 2 ;;
         -l|--list)
             LIST_MODE=1; shift ;;
@@ -61,7 +61,7 @@ while [ $# -gt 0 ]; do
             USE_LEGACY_DIR=1; shift ;;
         -h|--help) usage; exit 0 ;;
         --) shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
-        -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+        -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *) POSITIONAL+=("$1"); shift ;;
     esac
 done

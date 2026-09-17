@@ -45,29 +45,29 @@ POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -w|--world)
-            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 2; }
             WORLD_CLI="$2"; shift 2 ;;
         -m|--manuscript)
-            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 2; }
             MANUSCRIPT_CLI="$2"; shift 2 ;;
         -p|--project)
-            [ $# -ge 2 ] || { echo "Error: --project requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --project requires a value." >&2; exit 2; }
             PROJECT_CLI="$2"; shift 2 ;;
         -u|--universe)
-            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 2; }
             UNIVERSE_CLI="$2"; shift 2 ;;
         -d|--dest)
-            [ $# -ge 2 ] || { echo "Error: --dest requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --dest requires a value." >&2; exit 2; }
             DEST_CLI="$2"; shift 2 ;;
         -n|--note)
-            [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 2; }
             NOTE_CLI="$2"; shift 2 ;;
         -h|--help)
             usage; exit 0 ;;
         --)
             shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
         -*)
-            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *)
             POSITIONAL+=("$1"); shift ;;
     esac
@@ -95,7 +95,7 @@ fi
 
 if [ -z "${WORLD_DIR}" ] || [ ! -d "${WORLD_DIR}" ]; then
     echo "Error: Directory not found: ${TARGET_INPUT}" >&2
-    exit 1
+    exit 2
 fi
 
 WORLD_NAME="$(basename "${WORLD_DIR}")"

@@ -8,6 +8,6 @@ Exec=bash "__PROJECT_ROOT__/scripts/init_manuscript.sh"
 TryExec=bash
 Icon=document-new
 Terminal=false
-Categories=Office;Utility;Writing;
+Categories=Office;WordProcessor;Publishing;
 Keywords=Writing;Novel;Manuscript;novelWriter;Drafting;
 StartupNotify=true

@@ -40,8 +40,8 @@ Data Protection & Version Control:
   restore <archive> [opts]     Restore a project from a verified backup archive
 
 System Health & Maintenance:
-  doctor [--world <name>]      Run unified health and toolchain diagnostics
-  world-doctor <world> [--json]Run deep World Bible lore consistency diagnostics
+  doctor [options]             Run unified health and toolchain diagnostics (-w WORLD, -m MS)
+  world-doctor <world> [opts]  Run deep World Bible lore consistency diagnostics (-m MS, --json)
   verify                       Run complete 7-stage test harness
   setup [--dry-run]            Install core packages, fonts, and desktop launchers
   uninstall [--dry-run]        Revert desktop launchers and system components
@@ -120,6 +120,6 @@ case "${COMMAND}" in
     *)
         echo "Error: Unknown command '${COMMAND}'" >&2
         echo "Run 'scriptorium --help' for available commands." >&2
-        exit 1
+        exit 2
         ;;
 esac

@@ -144,16 +144,27 @@
   set page(
     header: context {
       let page-num = counter(page).get().first()
-      // Alternating headers: Left (Verso) shows Author, Right (Recto) shows Title
-      if calc.even(page-num) {
-        align(center)[#text(size: 8.5pt, style: "italic", tracking: 0.05em, upper(author))]
-      } else {
-        align(center)[#text(size: 8.5pt, style: "italic", tracking: 0.05em, upper(title))]
+      // Suppress running header on page 1, on pages where a chapter begins (level-1 heading),
+      // and on blank verso filler pages generated before a new chapter.
+      let chapter-starts = query(heading.where(level: 1)).filter(h => h.location().page() == page-num)
+      let on-this-page = query(selector(par).or(heading).or(line).or(image).or(block).or(list.item).or(enum.item).or(table).or(raw)).filter(el => el.location().page() == page-num)
+      let is-blank-verso = calc.even(page-num) and on-this-page.len() == 0
+      if page-num > 1 and chapter-starts.len() == 0 and not is-blank-verso {
+        // Alternating headers: Left (Verso) shows Author, Right (Recto) shows Title
+        if calc.even(page-num) {
+          align(center)[#text(size: 8.5pt, style: "italic", tracking: 0.05em, upper(author))]
+        } else {
+          align(center)[#text(size: 8.5pt, style: "italic", tracking: 0.05em, upper(title))]
+        }
       }
     },
     footer: context {
       let page-num = counter(page).get().first()
-      align(center)[#text(size: 9pt, str(page-num))]
+      let on-this-page = query(selector(par).or(heading).or(line).or(image).or(block).or(list.item).or(enum.item).or(table).or(raw)).filter(el => el.location().page() == page-num)
+      let is-blank-verso = calc.even(page-num) and on-this-page.len() == 0
+      if not is-blank-verso {
+        align(center)[#text(size: 9pt, str(page-num))]
+      }
     },
   )
   // Restart body pagination at 1 so front matter does not shift numbering

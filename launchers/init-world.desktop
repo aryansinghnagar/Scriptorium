@@ -8,6 +8,6 @@ Exec=bash "__PROJECT_ROOT__/scripts/init_world.sh"
 TryExec=bash
 Icon=folder-new
 Terminal=false
-Categories=Office;Utility;Writing;
+Categories=Office;WordProcessor;Publishing;
 Keywords=Writing;Worldbuilding;Novel;Obsidian;
 StartupNotify=true

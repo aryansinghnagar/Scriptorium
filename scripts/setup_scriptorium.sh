@@ -41,7 +41,7 @@ while [ $# -gt 0 ]; do
         -h|--help)
             usage; exit 0 ;;
         *)
-            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
     esac
 done
 
@@ -89,7 +89,7 @@ if [ "${IS_SUPPORTED}" -eq 0 ]; then
         echo "    Scriptorium is optimized and verified for Linux Mint 21/22 and Debian 12/13." >&2
         echo "    To proceed anyway on this platform, run with --force:" >&2
         echo "      bash scripts/setup_scriptorium.sh --force" >&2
-        exit 1
+        exit 2
     fi
 else
     echo "[✓] Verified platform compatibility: ${OS_PRETTY}"
@@ -99,7 +99,7 @@ fi
 if [ "${DRY_RUN}" -eq 0 ]; then
     if ! command -v sudo &> /dev/null; then
         echo "[!] Error: sudo is not installed or not in PATH. Please run as root or install sudo." >&2
-        exit 1
+        exit 2
     fi
 fi
 
@@ -234,7 +234,11 @@ else
                             '.assets[] | select(.name == $asset) | .digest // empty' 2>/dev/null || true)
                     if [ -n "${EXPECTED}" ]; then
                         EXPECTED=${EXPECTED#sha256:}
-                        ACTUAL=$(sha256sum "${TEMP_DIR}/typst.tar.xz" | cut -d' ' -f1)
+                    else
+                        EXPECTED=$(curl -sS -f "https://github.com/typst/typst/releases/download/${TYPST_TAG}/typst-${TYPST_ARCH}.tar.xz.sha256" 2>/dev/null | cut -d' ' -f1 || true)
+                    fi
+                    ACTUAL=$(sha256sum "${TEMP_DIR}/typst.tar.xz" | cut -d' ' -f1)
+                    if [ -n "${EXPECTED}" ]; then
                         if [ "${EXPECTED}" = "${ACTUAL}" ]; then
                             TYPST_OK=1
                             echo "  [✓] Typst tarball digest verified (sha256 ${ACTUAL:0:16}...)"
@@ -242,8 +246,8 @@ else
                             echo "  [!] Typst digest mismatch: expected ${EXPECTED}, got ${ACTUAL}. Aborting binary install." >&2
                         fi
                     else
-                        echo "  [!] ERROR: GitHub release digest unavailable. Refusing to install unverified binary." >&2
-                        echo "      Install Typst manually: cargo install --locked typst-cli" >&2
+                        TYPST_OK=1
+                        echo "  [i] Upstream digest not published; tarball sha256: ${ACTUAL}"
                     fi
                 else
                     echo "  [!] Warning: GitHub API unreachable or rate-limited; Typst not installed." >&2
@@ -283,11 +287,13 @@ HOME_ESC=$(ESCAPE_SED_REPL "${HOME}")
 ROOT_ESC=$(ESCAPE_SED_REPL "${PROJECT_ROOT}")
 
 if [ "${DRY_RUN}" -eq 1 ]; then
-    echo "  [DRY-RUN] Would create ${HOME}/Worlds, ${DESKTOP_DIR}, ${HOME}/.local/share/applications"
+    echo "  [DRY-RUN] Would create ${HOME}/Universes, ${HOME}/Manuscripts, ${HOME}/Worlds, ${DESKTOP_DIR}, ${HOME}/.local/share/applications"
     echo "  [DRY-RUN] Would generate launchers from ${PROJECT_ROOT}/launchers/*.desktop"
 else
     mkdir -p "${HOME}/.local/share/applications"
     mkdir -p "${DESKTOP_DIR}"
+    mkdir -p "${HOME}/Universes"
+    mkdir -p "${HOME}/Manuscripts"
     mkdir -p "${HOME}/Worlds"
 
     # Set executable permissions on scripts

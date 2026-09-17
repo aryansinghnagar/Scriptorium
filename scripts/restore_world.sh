@@ -45,16 +45,16 @@ POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -a|--archive)
-            [ $# -ge 2 ] || { echo "Error: --archive requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --archive requires a value." >&2; exit 2; }
             ARCHIVE_CLI="$2"; shift 2 ;;
         -t|--target)
-            [ $# -ge 2 ] || { echo "Error: --target requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --target requires a value." >&2; exit 2; }
             TARGET_NAME_CLI="$2"; shift 2 ;;
         -u|--universe)
-            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 2; }
             UNIVERSE_CLI="$2"; shift 2 ;;
         -d|--dest)
-            [ $# -ge 2 ] || { echo "Error: --dest requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --dest requires a value." >&2; exit 2; }
             DEST_PARENT_CLI="$2"; shift 2 ;;
         -f|--force)
             FORCE_OVERWRITE=1; shift ;;
@@ -63,7 +63,7 @@ while [ $# -gt 0 ]; do
         --)
             shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
         -*)
-            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *)
             POSITIONAL+=("$1"); shift ;;
     esac
@@ -86,7 +86,7 @@ fi
 
 if [ ! -f "${ARCHIVE_PATH}" ]; then
     echo "Error: Archive file not found: ${ARCHIVE_PATH}" >&2
-    exit 1
+    exit 2
 fi
 
 ARCHIVE_DIR="$(cd "$(dirname "${ARCHIVE_PATH}")" && pwd)"

@@ -8,6 +8,6 @@ Exec=bash "__PROJECT_ROOT__/scripts/save_snapshot.sh"
 TryExec=bash
 Icon=document-save
 Terminal=false
-Categories=Office;Utility;Writing;
+Categories=Office;WordProcessor;Publishing;
 Keywords=Writing;Git;Snapshot;Backup;
 StartupNotify=true

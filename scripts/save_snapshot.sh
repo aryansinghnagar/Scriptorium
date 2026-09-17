@@ -41,18 +41,18 @@ POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -w|--world)
-            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 2; }
             WORLD_CLI="$2"; shift 2 ;;
         -u|--universe)
-            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 2; }
             UNIVERSE_CLI="$2"; shift 2 ;;
         -m|--note)
-            [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 2; }
             NOTE_CLI="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         --)
             shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
-        -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+        -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *) POSITIONAL+=("$1"); shift ;;
     esac
 done
@@ -62,17 +62,18 @@ WORLD_CLI="${TARGET_INPUT}"
 
 if ! command -v git &> /dev/null; then
     echo "Error: git is not installed or not in PATH. Install git to snapshot." >&2
-    exit 1
+    exit 2
 fi
 
-# Discover all worlds across ~/Universes/*/Worlds/* and ~/Worlds/*
+# Discover all worlds and manuscripts
 discover_worlds WORLDS
+discover_manuscripts MANUSCRIPTS
 
-if [ ${#WORLDS[@]} -eq 0 ] && [ -z "${WORLD_CLI}" ]; then
+if [ ${#WORLDS[@]} -eq 0 ] && [ ${#MANUSCRIPTS[@]} -eq 0 ] && [ -z "${WORLD_CLI}" ]; then
     if has_gui; then
-        zenity --warning --title="No Worlds Found" --text="No world folders found in ~/Universes or ~/Worlds.\nCreate one first with 'New World Creator'."
+        zenity --warning --title="No Projects Found" --text="No world or manuscript folders found in ~/Universes, ~/Worlds, or ~/Manuscripts.\nCreate one first."
     else
-        echo "No world directories found." >&2
+        echo "No world or manuscript directories found." >&2
     fi
     exit 3
 fi
@@ -85,16 +86,15 @@ if [ -n "${WORLD_CLI}" ]; then
     [ -z "${SELECTED_WORLD}" ] && SELECTED_WORLD="$(resolve_universe_dir "${WORLD_CLI}")"
     if [ -z "${SELECTED_WORLD}" ] || [ ! -d "${SELECTED_WORLD}" ]; then
         echo "Error: Target '${WORLD_CLI}' not found." >&2
-        exit 1
+        exit 2
     fi
-elif [ ${#WORLDS[@]} -eq 1 ]; then
+elif [ ${#WORLDS[@]} -eq 1 ] && [ ${#MANUSCRIPTS[@]} -eq 0 ]; then
     SELECTED_WORLD="${WORLDS[0]}"
     warn_if_legacy_root "${SELECTED_WORLD}"
+elif [ ${#WORLDS[@]} -eq 0 ] && [ ${#MANUSCRIPTS[@]} -eq 1 ]; then
+    SELECTED_WORLD="${MANUSCRIPTS[0]}"
 else
-    discover_manuscripts MANUSCRIPTS
-    if [ ${#MANUSCRIPTS[@]} -eq 1 ]; then
-        SELECTED_WORLD="${MANUSCRIPTS[0]}"
-    elif has_gui; then
+    if has_gui; then
         CHOICE_LIST=()
         for m in "${MANUSCRIPTS[@]}"; do
             CHOICE_LIST+=("$(basename "$m")" "[Manuscript] $m")
@@ -111,13 +111,18 @@ else
             [ -z "${SELECTED_WORLD}" ] && SELECTED_WORLD="$(resolve_world_dir "${SELECTED_DISPLAY}")"
         fi
     else
-        echo "Select project to snapshot:"
-        select w in "${WORLDS[@]}"; do
-            if [ -n "${w:-}" ]; then
-                SELECTED_WORLD="$w"
-            fi
-            break
-        done
+        ALL_TARGETS=("${MANUSCRIPTS[@]}" "${WORLDS[@]}")
+        if [ ${#ALL_TARGETS[@]} -eq 1 ]; then
+            SELECTED_WORLD="${ALL_TARGETS[0]}"
+        else
+            echo "Select project to snapshot:"
+            select w in "${ALL_TARGETS[@]}"; do
+                if [ -n "${w:-}" ]; then
+                    SELECTED_WORLD="$w"
+                fi
+                break
+            done
+        fi
     fi
 fi
 
@@ -134,7 +139,7 @@ wait_for_git_lock() {
     local repo_dir="${1:-.}"
     local lock_file="${repo_dir}/.git/index.lock"
     local attempts=0
-    while [ -f "${lock_file}" ] && [ $attempts -lt 6 ]; do
+    while [ -f "${lock_file}" ] && [ $attempts -lt 12 ]; do
         sleep 0.5
         attempts=$((attempts + 1))
     done

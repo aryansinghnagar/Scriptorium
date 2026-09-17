@@ -44,20 +44,20 @@ POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -m|--manuscript|-w|--world)
-            [ $# -ge 2 ] || { echo "Error: $1 requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: $1 requires a value." >&2; exit 2; }
             MANUSCRIPT_CLI="$2"; shift 2 ;;
         -u|--universe)
-            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 2; }
             UNIVERSE_CLI="$2"; shift 2 ;;
         -b|--book|-v|--volume)
-            [ $# -ge 2 ] || { echo "Error: $1 requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: $1 requires a value." >&2; exit 2; }
             BOOK_CLI="$2"; shift 2 ;;
         -h|--help)
             usage; exit 0 ;;
         --)
             shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
         -*)
-            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *)
             POSITIONAL+=("$1"); shift ;;
     esac
@@ -105,7 +105,7 @@ fi
 
 if [ -z "${MANUSCRIPT_DIR}" ] || [ ! -d "${MANUSCRIPT_DIR}" ]; then
     echo "Error: Manuscript directory '${TARGET_INPUT}' not found." >&2
-    exit 1
+    exit 2
 fi
 
 MANUSCRIPT_NAME="$(basename "${MANUSCRIPT_DIR}")"

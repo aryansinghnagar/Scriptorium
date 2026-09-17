@@ -18,10 +18,11 @@ Usage:
   scriptorium_doctor.sh [OPTIONS]
 
 Options:
-  -w, --world NAME     Run deep domain diagnostics on a specific world
-  --all-worlds         Run domain diagnostics on all discovered worlds
-  --json               Output report as machine-readable JSON
-  -h, --help           Show this help and exit
+  -w, --world NAME         Run deep domain diagnostics on a specific world
+  -m, --manuscript NAME    Specify manuscript project for cross-validation
+  --all-worlds             Run domain diagnostics on all discovered worlds
+  --json                   Output report as machine-readable JSON
+  -h, --help               Show this help and exit
 
 Exit codes:
   0  all systems and checked worlds healthy
@@ -31,6 +32,7 @@ USAGE
 }
 
 WORLD_FILTER=""
+MANUSCRIPT_FILTER=""
 ALL_WORLDS=0
 JSON_OUTPUT=0
 
@@ -39,6 +41,9 @@ while [ $# -gt 0 ]; do
         -w|--world)
             [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 2; }
             WORLD_FILTER="$2"; shift 2 ;;
+        -m|--manuscript)
+            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 2; }
+            MANUSCRIPT_FILTER="$2"; shift 2 ;;
         --all-worlds)
             ALL_WORLDS=1; shift ;;
         --json)
@@ -55,6 +60,7 @@ command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit
 PROJECT_ROOT="${PROJECT_ROOT}" \
 WORLDS_BASE="${WORLDS_BASE}" \
 WORLD_FILTER="${WORLD_FILTER}" \
+MANUSCRIPT_FILTER="${MANUSCRIPT_FILTER}" \
 ALL_WORLDS="${ALL_WORLDS}" \
 JSON_OUT="${JSON_OUTPUT}" \
 python3 - << 'PYEOF'
@@ -68,6 +74,7 @@ import platform
 PROJECT_ROOT = os.environ["PROJECT_ROOT"]
 WORLDS_BASE = os.environ["WORLDS_BASE"]
 WORLD_FILTER = os.environ["WORLD_FILTER"]
+MANUSCRIPT_FILTER = os.environ.get("MANUSCRIPT_FILTER", "")
 ALL_WORLDS = os.environ["ALL_WORLDS"] == "1"
 JSON_OUT = os.environ["JSON_OUT"] == "1"
 
@@ -247,7 +254,10 @@ for wdir in target_worlds:
     wdoctor_report = {}
     if os.path.isfile(world_doctor_bin) and (os.path.isdir(os.path.join(wdir, "Characters")) or os.path.isdir(os.path.join(wdir, "00-World-Bible"))):
         try:
-            res = subprocess.run(["bash", world_doctor_bin, wdir, "--json"], capture_output=True, text=True, timeout=15)
+            cmd = ["bash", world_doctor_bin, wdir, "--json"]
+            if MANUSCRIPT_FILTER:
+                cmd.extend(["-m", MANUSCRIPT_FILTER])
+            res = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
             if res.stdout:
                 wdoctor_report = json.loads(res.stdout)
         except Exception as e:

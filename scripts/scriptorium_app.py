@@ -11,6 +11,7 @@ Typst/Pandoc publishing, Git versioning, and standalone disaster recovery backup
 import sys
 import os
 import subprocess
+import shutil
 import threading
 import json
 import re
@@ -898,7 +899,7 @@ class ScriptoriumApp(Gtk.Window):
             ("python3", self.lbl_tool_python),
         ]
         for cmd, badge in tools:
-            path = subprocess.run(["which", cmd], capture_output=True, text=True).stdout.strip()
+            path = shutil.which(cmd)
             if path:
                 badge.status_label.set_markup("<span color='#2e7d32'><b>✓ Installed</b></span>")
             else:
@@ -1433,7 +1434,7 @@ class ScriptoriumApp(Gtk.Window):
         def _launch():
             if self._is_flatpak_installed("md.obsidian.Obsidian"):
                 subprocess.Popen(["flatpak", "run", "md.obsidian.Obsidian", str(bible)])
-            elif subprocess.run(["which", "obsidian"], capture_output=True).stdout:
+            elif shutil.which("obsidian"):
                 subprocess.Popen(["obsidian", str(bible)])
             else:
                 subprocess.Popen(["xdg-open", str(bible)])
@@ -1453,7 +1454,7 @@ class ScriptoriumApp(Gtk.Window):
         def _launch():
             if self._is_flatpak_installed("io.gitlab.novelwriter.novelWriter"):
                 subprocess.Popen(["flatpak", "run", "io.gitlab.novelwriter.novelWriter", target_str])
-            elif subprocess.run(["which", "novelwriter"], capture_output=True).stdout:
+            elif shutil.which("novelwriter"):
                 subprocess.Popen(["novelwriter", target_str])
             else:
                 subprocess.Popen(["xdg-open", str(tpath)])
@@ -1470,7 +1471,7 @@ class ScriptoriumApp(Gtk.Window):
             ms = tpath / "01-Manuscript" / "Book-01"
 
         def _launch():
-            if subprocess.run(["which", "focuswriter"], capture_output=True).stdout:
+            if shutil.which("focuswriter"):
                 subprocess.Popen(["focuswriter", str(ms)])
             else:
                 subprocess.Popen(["xdg-open", str(ms)])

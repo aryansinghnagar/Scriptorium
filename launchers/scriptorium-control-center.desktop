@@ -8,6 +8,6 @@ Exec=bash "__PROJECT_ROOT__/scripts/control_center.sh"
 TryExec=bash
 Icon=preferences-desktop-workspaces
 Terminal=false
-Categories=Office;Utility;Writing;
+Categories=Office;WordProcessor;Publishing;
 Keywords=Writing;Novel;Worldbuilding;Obsidian;Typst;Backup;
 StartupNotify=true

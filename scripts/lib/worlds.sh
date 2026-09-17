@@ -150,7 +150,7 @@ resolve_world_dir() {
                     resolved="$(cd "$w" && pwd)"
                     break
                 fi
-            done < <(find "${u_base}" -mindepth 2 -maxdepth 2 -type d ! -name '.*' -print0 2>/dev/null)
+            done < <(find "${u_base}" -mindepth 2 -maxdepth 2 -type d ! -name '.*' -print0 2>/dev/null | sort -z)
 
             if [ -z "${resolved}" ] && [ -d "${leg_base}/${target}" ]; then
                 resolved="$(cd "${leg_base}/${target}" && pwd)"
@@ -180,7 +180,7 @@ resolve_manuscript_dir() {
                     resolved="$(cd "$m" && pwd)"
                     break
                 fi
-            done < <(find "${m_base}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null)
+            done < <(find "${m_base}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null | sort -z)
         fi
     fi
 

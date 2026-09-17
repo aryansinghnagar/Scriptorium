@@ -8,6 +8,6 @@ Exec=bash "__PROJECT_ROOT__/scripts/export_book.sh"
 TryExec=bash
 Icon=document-print
 Terminal=false
-Categories=Office;Publishing;Writing;
+Categories=Office;WordProcessor;Publishing;
 Keywords=Writing;Novel;Typst;Pandoc;EPUB;PDF;
 StartupNotify=true

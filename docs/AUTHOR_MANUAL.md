@@ -149,13 +149,13 @@ The Scriptorium desktop application is organized into **5 intuitive tabs** with 
 
 ## 4. Worldbuilding in Obsidian (The 9 Core Lore Vaults)
 
-Your World Bible (`00-World-Bible`) comes pre-configured with the premier worldbuilding and writing plugins enabled out of the box: **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git**.
+Your World Lore Vault (`~/Universes/<Universe>/<World>`) comes pre-configured with the premier worldbuilding and writing plugins enabled out of the box: **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git**.
 
 ### The Minimum Viable World Bible (Zero Overwhelm)
 If you are just getting started, open **`00_START_HERE.md`** inside your World Bible. You do **not** need to populate all 9 categories at once.
 - **Step 1**: Use **`Character-Quickstart-Template.md`** for a lightweight 5-field protagonist card.
 - **Step 2**: Create 1 starting location with `Location-Template.md`.
-- **Step 3**: Start drafting in `01-Manuscript/` right away! Expand into factions, magic systems, bestiaries, and cosmology organically as your plot requires.
+- **Step 3**: Start drafting in your manuscript project (`~/Manuscripts/<Manuscript>`) right away! Expand into factions, magic systems, bestiaries, and cosmology organically as your plot requires.
 
 ### The 9 Lore Categories
 
@@ -185,24 +185,24 @@ The central dashboard in `Templates/World-Bible-Index.md` automatically updates.
 ## 5. Drafting & Sprint Sessions
 
 ### Three-Act Manuscript Hierarchy
-Your manuscript in `01-Manuscript/Book-01/` is structured for long-form narrative pacing:
+Your manuscript in `~/Manuscripts/<Manuscript>/Book-01/` is structured for long-form narrative pacing:
 - `01_Act_I/`: Setup, status quo, inciting incident, and Plot Point 1.
 - `02_Act_II/`: Rising action, trials, midpoint escalation, and Dark Night of the Soul.
 - `03_Act_III/`: Climax, final confrontation, and resolution.
 
 ### Drafting with Longform or novelWriter
 - **Longform (Obsidian)**: Organize atomic Markdown scenes in your left sidebar, drag-and-drop to reorder chapters, and draft directly in your vault.
-- **novelWriter**: Open `01-Manuscript` to use novelWriter's structured project tree, status badges (`Draft`, `Revision`, `Finished`), and POV annotations (`@pov: CharacterName`).
+- **novelWriter**: Open your manuscript project (`~/Manuscripts/<Manuscript>`) to use novelWriter's structured project tree, status badges (`Draft`, `Revision`, `Finished`), and POV annotations (`@pov: CharacterName`).
 
 ### Multi-Volume Series Scaffolding (`add-book`)
 When writing sequels, trilogies, or serials, you can scaffold subsequent volumes in your world with 1 click or a single command:
 ```bash
-scriptorium add-book My-World Book-02
+scriptorium add-book My-Manuscript Book-02
 ```
 This automatically scaffolds:
-- `01-Manuscript/Book-02/01_Act_I`
-- `01-Manuscript/Book-02/02_Act_II`
-- `01-Manuscript/Book-02/03_Act_III`
+- `Book-02/01_Act_I`
+- `Book-02/02_Act_II`
+- `Book-02/03_Act_III`
 - Starter chapters for each act
 - A discrete, isolated Git repository for granular drafting commits in `Book-02`!
 
@@ -216,7 +216,7 @@ The castle gates slammed shut behind them.
 Morning brought no comfort to the besieged city.
 ```
 ### Subplot & Narrative Thread Pacing (`Subplot-Thread-Matrix.md`)
-For complex speculative narratives with multiple intertwining plotlines, consult `01-Manuscript/Outlines/Subplot-Thread-Matrix.md`.
+For complex speculative narratives with multiple intertwining plotlines, consult `Outlines/Subplot-Thread-Matrix.md` in your manuscript project.
 - Annotate your scenes with `@thread: Main-Plot`, `@thread: Subplot-Romance`, or `@thread: Subplot-Heist`.
 - Dynamic Dataview queries provide a live matrix showing which subplots advance in each act and ensure that minor threads never vanish mid-book.
 - All `@thread:` tags are completely scrubbed during export.
@@ -246,15 +246,15 @@ For authors pitching literary agents, submitting to short fiction anthologies, o
 - Applies standard double-spacing, 1-inch margins, running headers, and clean chapter demarcations.
 - Available via the Control Center dropdown or via CLI:
   ```bash
-  scriptorium export <world> --format submission --book Book-01
+  scriptorium export <manuscript> --format submission --book Book-01
   # or shortcut:
-  scriptorium export <world> --docx -b Book-01
+  scriptorium export <manuscript> --docx -b Book-01
   ```
 
 ### Automated Back-Matter Concordance & Dramatis Personae
 Click **"📖 Generate Concordance"** (or run `scriptorium concordance <world>`). Scriptorium's concordance engine reads all registered dossiers across your World Bible (`Characters/`, `Languages/`, `Bestiary/`, `Artifacts/`, and `Factions/`) and automatically creates:
-- `01-Manuscript/<Book>/04_Back_Matter/01_Dramatis_Personae.md`
-- `01-Manuscript/<Book>/04_Back_Matter/02_Glossary_and_Concordance.md`
+- `<Manuscript>/<Book>/04_Back_Matter/01_Dramatis_Personae.md`
+- `<Manuscript>/<Book>/04_Back_Matter/02_Glossary_and_Concordance.md`
 
 Because of Scriptorium's natural alphabetical collation order, `04_Back_Matter` files are seamlessly compiled at the end of your Typst print PDFs, Pandoc EPUBs, and submission DOCXs with zero manual copy-pasting.
 

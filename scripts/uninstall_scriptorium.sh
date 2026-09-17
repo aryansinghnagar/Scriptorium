@@ -39,7 +39,7 @@ while [ $# -gt 0 ]; do
         -h|--help)
             usage; exit 0 ;;
         *)
-            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
     esac
 done
 

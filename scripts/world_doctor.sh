@@ -9,8 +9,9 @@
 #   world_doctor.sh [WORLD_DIR] [OPTIONS]
 #
 # Options:
-#   --json        Emit a machine-readable JSON report instead of text
-#   -h, --help    Show this help
+#   -m, --manuscript NAME  Specify manuscript project for cross-validation
+#   --json                 Emit a machine-readable JSON report instead of text
+#   -h, --help             Show this help
 #
 # Exit codes:
 #   0  no findings / consistent world
@@ -26,7 +27,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
-    sed -n '2,19p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    cat << 'USAGE'
+Scriptorium World Doctor (D-01 / Workstream 3.2)
+Purpose: Consistency checker for the Obsidian World Bible. Verifies wiki-link
+         integrity, typed frontmatter references, orphaned entities,
+         duplicate identities, and timeline chronology.
+
+Usage:
+  world_doctor.sh [WORLD_DIR] [OPTIONS]
+
+Options:
+  -m, --manuscript NAME  Specify manuscript project for cross-validation
+  --json                 Emit a machine-readable JSON report instead of text
+  -h, --help             Show this help
+
+Exit codes:
+  0  no findings / consistent world
+  1  findings reported (broken links, orphans, dangling references, etc.)
+  2  usage or environment error (world dir missing, python3 missing)
+USAGE
 }
 
 WORLD_DIR=""
@@ -292,7 +311,7 @@ required_errors = []
 timeline_errors = []
 
 for root, dirs, files in os.walk(BIBLE):
-    dirs[:] = [d for d in dirs if d not in (".obsidian", ".git", "Templates")]
+    dirs[:] = [d for d in dirs if d not in (".obsidian", ".git")]
     for fname in sorted(files):
         if not fname.endswith(".md") or fname.startswith("."):
             continue
@@ -344,8 +363,19 @@ def resolve(target):
     return None
 
 def is_template(rel, fm):
+    fname = os.path.basename(rel)
+    if fname == "World-Bible-Index.md":
+        return False
     name = fm.get("name", "")
-    return "Template" in rel or "START_HERE" in rel or "<%" in str(name) or fm.get("type") in ("guide", "template")
+    return (
+        "Template" in fname
+        or "START_HERE" in rel
+        or "fileClasses" in rel
+        or "Daily-Writing-Log" in rel
+        or "<%" in str(name)
+        or "<%" in str(fm.get("date", ""))
+        or fm.get("type") in ("guide", "template", "fileclass")
+    )
 
 # ---- Pass 2: Link & Reference Integrity ----
 broken_links = []

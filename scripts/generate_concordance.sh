@@ -46,23 +46,23 @@ POSITIONAL=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -m|--manuscript)
-            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --manuscript requires a value." >&2; exit 2; }
             MANUSCRIPT_CLI="$2"; shift 2 ;;
         -w|--world)
-            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --world requires a value." >&2; exit 2; }
             WORLD_CLI="$2"; shift 2 ;;
         -b|--book)
-            [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 2; }
             BOOK_CLI="$2"; shift 2 ;;
         -u|--universe)
-            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 1; }
+            [ $# -ge 2 ] || { echo "Error: --universe requires a value." >&2; exit 2; }
             UNIVERSE_CLI="$2"; shift 2 ;;
         -h|--help)
             usage; exit 0 ;;
         --)
             shift; while [ $# -gt 0 ]; do POSITIONAL+=("$1"); shift; done ;;
         -*)
-            echo "Error: unknown option: $1 (see --help)" >&2; exit 1 ;;
+            echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *)
             POSITIONAL+=("$1"); shift ;;
     esac
@@ -189,15 +189,15 @@ elif [ -n "${RESOLVED_WORLD}" ] && [ -d "${RESOLVED_WORLD}" ]; then
 fi
 
 if [ -z "${BIBLE_DIR}" ] || [ ! -d "${BIBLE_DIR}" ]; then
-    echo "Error: World Bible lore folder not found for '${TARGET_INPUT}'." >&2
-    exit 1
+    echo "Error: World Bible lore folder not found for '${POS_INPUT:-${RESOLVED_WORLD:-${RESOLVED_MS:-unknown}}}'." >&2
+    exit 2
 fi
 
 if [ -z "${MANUSCRIPT_DIR}" ] || [ ! -d "${MANUSCRIPT_DIR}" ]; then
     mkdir -p "${MANUSCRIPT_DIR}"
 fi
 
-command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit 1; }
+command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit 2; }
 
 echo "Generating Concordance & Dramatis Personae from $(basename "${BIBLE_DIR}") for $(basename "${MANUSCRIPT_DIR}")..."
 

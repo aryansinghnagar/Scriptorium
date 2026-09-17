@@ -14,7 +14,7 @@ Modern speculative fiction and complex novels weave multiple concurrent narrativ
 
 ## 2. Tagging Conventions (`@thread:` & Metadata)
 
-When drafting scene markdown files in `01-Manuscript/<Book>/...`, use novelWriter metadata tags at the top of each scene file. Scriptorium's publication export engine automatically strips these tags during compilation so they remain strictly for internal planning and Dataview tracking.
+When drafting scene markdown files in `<Book>/...` (e.g. `Book-01/01_Act_I/01_Chapter_01.md`), use novelWriter metadata tags at the top of each scene file. Scriptorium's publication export engine automatically strips these tags during compilation so they remain strictly for internal planning and Dataview tracking.
 
 ### Core Scene Metadata Headers
 ```markdown
@@ -51,8 +51,8 @@ TABLE
   location as "Location",
   pacing as "Pacing Beat",
   status as "Status"
-FROM "01-Manuscript"
-WHERE file.name != "nwProject.nwx" AND !contains(file.path, "Outlines")
+FROM ""
+WHERE !contains(file.path, "Outlines") AND file.name != "nwProject.nwx"
 SORT file.path ASC
 ```
 
@@ -65,8 +65,8 @@ TABLE
   pov as "POV",
   location as "Location",
   status as "Draft Status"
-FROM "01-Manuscript"
-WHERE contains(thread, "Subplot-Romance") OR contains(file.tags, "#thread/romance")
+FROM ""
+WHERE (contains(thread, "Subplot-Romance") OR contains(file.tags, "#thread/romance")) AND !contains(file.path, "Outlines") AND file.name != "nwProject.nwx"
 SORT file.path ASC
 ```
 
@@ -75,8 +75,8 @@ SORT file.path ASC
 ### C. POV Scene Distribution & Thread Balance
 ```dataview
 TABLE count(file.link) as "Total Scenes", rows.file.link as "Scene Files"
-FROM "01-Manuscript"
-WHERE file.name != "nwProject.nwx" AND !contains(file.path, "Outlines")
+FROM ""
+WHERE !contains(file.path, "Outlines") AND file.name != "nwProject.nwx"
 GROUP BY pov
 ```
 

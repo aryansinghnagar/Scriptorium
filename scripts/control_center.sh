@@ -27,7 +27,7 @@ fi
 if ! has_gui; then
     echo "Scriptorium Control Center requires a graphical display and Zenity (or PyGObject)."
     echo "Use the 'scriptorium' command line interface in terminal environments."
-    exit 1
+    exit 2
 fi
 
 mkdir -p "${UNIVERSES_BASE}"
@@ -117,22 +117,35 @@ ACTION=$(zenity --list --title="Scriptorium Control Center — [${ACTIVE_WORLD} 
 
 case "${ACTION}" in
     "1. Write: Obsidian")
+        OBS_TARGET="${WORLD_DIR}"
+        [ -d "${WORLD_DIR}/00-World-Bible" ] && OBS_TARGET="${WORLD_DIR}/00-World-Bible"
         if command -v flatpak &>/dev/null && flatpak info md.obsidian.Obsidian &>/dev/null; then
-            flatpak run md.obsidian.Obsidian "${WORLD_DIR}/00-World-Bible" &
+            flatpak run md.obsidian.Obsidian "${OBS_TARGET}" &
         elif command -v obsidian &>/dev/null; then
-            obsidian "${WORLD_DIR}/00-World-Bible" &
+            obsidian "${OBS_TARGET}" &
         else
-            xdg-open "${WORLD_DIR}/00-World-Bible" &
+            xdg-open "${OBS_TARGET}" &
         fi
         ;;
     "2. Write: novelWriter")
-        NW_PROJ="${WORLD_DIR}/01-Manuscript/nwProject.nwx"
-        if command -v flatpak &>/dev/null && flatpak info io.gitlab.novelwriter.novelWriter &>/dev/null; then
-            flatpak run io.gitlab.novelwriter.novelWriter "${NW_PROJ}" &
-        elif command -v novelwriter &>/dev/null; then
-            novelwriter "${NW_PROJ}" &
+        NW_PROJ=""
+        if [ -f "${WORLD_DIR}/01-Manuscript/nwProject.nwx" ]; then
+            NW_PROJ="${WORLD_DIR}/01-Manuscript/nwProject.nwx"
+        elif [ -f "${WORLD_DIR}/nwProject.nwx" ]; then
+            NW_PROJ="${WORLD_DIR}/nwProject.nwx"
+        elif [ -d "${MANUSCRIPTS_BASE}/${ACTIVE_WORLD}" ] && [ -f "${MANUSCRIPTS_BASE}/${ACTIVE_WORLD}/nwProject.nwx" ]; then
+            NW_PROJ="${MANUSCRIPTS_BASE}/${ACTIVE_WORLD}/nwProject.nwx"
+        fi
+        if [ -n "${NW_PROJ}" ]; then
+            if command -v flatpak &>/dev/null && flatpak info io.gitlab.novelwriter.novelWriter &>/dev/null; then
+                flatpak run io.gitlab.novelwriter.novelWriter "${NW_PROJ}" &
+            elif command -v novelwriter &>/dev/null; then
+                novelwriter "${NW_PROJ}" &
+            else
+                xdg-open "$(dirname "${NW_PROJ}")" &
+            fi
         else
-            xdg-open "${WORLD_DIR}/01-Manuscript" &
+            zenity --info --title="Manuscript Project" --text="No novelWriter project found for '${ACTIVE_WORLD}'.\nCreate one with 'scriptorium manuscript <name>'." --width=400
         fi
         ;;
     "3. Export Book")
