@@ -16,6 +16,11 @@
 #                                  worlds under the legacy ~/Worlds root
 #                                  (structural detection: path prefix, never
 #                                  identity-based)
+#   warn_if_legacy_root PATH     -> one-line deprecation nudge on stderr when
+#                                  PATH sits under the legacy ~/Worlds root;
+#                                  used by resolve_world_dir and by callers
+#                                  after auto-selecting a discovered world
+#                                  so the nudge fires on every path (N-03)
 #   discover_worlds VARNAME     -> populates VARNAME (array) with every world
 #                                  under ~/Universes/*/Worlds/* followed by
 #                                  ~/Worlds/* (legacy)
@@ -74,6 +79,19 @@ universe_label() {
     esac
 }
 
+# warn_if_legacy_root WORLD_PATH -> deprecation nudge on stderr (Q-03)
+# Single site for the legacy-root message. resolve_world_dir calls it after
+# by-name resolution, and every caller that auto-selects a discovered world
+# calls it after selection, so a bare invocation that lands on a legacy world
+# is nudged too — previously only by-name resolution warned (N-03).
+warn_if_legacy_root() {
+    case "${1:-}" in
+        "${WORLDS_BASE}"|"${WORLDS_BASE}/"*)
+            echo "[i] Note: '${1}' uses the legacy ~/Worlds root; the canonical layout is ~/Universes/<Universe>/Worlds." >&2
+            ;;
+    esac
+}
+
 # discover_worlds VARNAME
 # Populates VARNAME (an array) with every world directory found under the
 # canonical ~/Universes/*/Worlds/* layout, followed by the legacy ~/Worlds/*
@@ -120,11 +138,7 @@ resolve_world_dir() {
     fi
 
     # Q-03: gentle deprecation nudge when resolution went through ~/Worlds
-    case "${resolved}" in
-        "${WORLDS_BASE}"|"${WORLDS_BASE}/"*)
-            echo "[i] Note: '${resolved}' uses the legacy ~/Worlds root; the canonical layout is ~/Universes/<Universe>/Worlds." >&2
-            ;;
-    esac
+    warn_if_legacy_root "${resolved}"
 
     printf '%s' "${resolved}"
 }

@@ -143,7 +143,7 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 - [Typography & Fonts Guide](resources/typography_and_fonts_guide.md) — Free literary typefaces (Linux Libertine, EB Garamond, Alegreya) and Typst formatting rules.
 - [Typst Book Template](templates/typst/book_template.typ) — Reusable novel layout engine.
 - [Obsidian World Bible Index Dashboard](templates/world-bible/Templates/World-Bible-Index.md) — Dataview queries and lore hub.
-- [Architecture Decision Records](decisions.md) — ADRs covering OS selection, Markdown storage, Typst typesetting, Multi-tier Git, Obsidian plugin architecture, and GTK Control Center.
+- [Architecture Decision Records](docs/meta/decisions.md) — ADRs covering OS selection, Markdown storage, Typst typesetting, Multi-tier Git, Obsidian plugin architecture, and GTK Control Center.
 
 ---
 
@@ -152,14 +152,15 @@ Scriptorium provides both intuitive GUI launchers and a unified CLI dispatcher (
 | Doc | What it is |
 | :--- | :--- |
 | [docs/AUTHOR_MANUAL.md](docs/AUTHOR_MANUAL.md) | Comprehensive Author's Field Manual for daily writing, lore building, and publication |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: ground rules, quality gate, commit style, submission flow |
-| [AUDIT.md](AUDIT.md) | Line-by-line external repository audit (22 findings) and the remediation roadmap behind the current hardening |
+| [CHANGELOG.md](CHANGELOG.md) | Notable changes: the audit remediation series, re-audit follow-ups, and documentation reorganization |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: ground rules, exit-code contract, quality gate, commit style, submission flow |
+| [docs/audits/](docs/audits/) | Audit trail: the line-by-line external audit (22 findings) and the independent re-audit that verified the remediation |
 | [SECURITY.md](SECURITY.md) | Security scope, installer privilege surface disclosure, and private vulnerability reporting |
-| [project.md](project.md) | Charter: goals, design invariants, hardware baseline, non-goals |
-| [plan.md](plan.md) | Build phases and what is done vs pending live verification |
-| [tasks.md](tasks.md) | Checklist of every deliverable |
-| [decisions.md](decisions.md) | Architecture decision records (why Mint, Markdown, Typst, Multi-tier Git, Obsidian plugins, GTK App) |
-| [knowledge.md](knowledge.md) | Tool ecosystem facts, multi-tier Git invariants, and script safety standards |
-| [status.md](status.md) | Current state + momentum queues (now / next / blocked / improve / recurring) |
+| [docs/meta/project.md](docs/meta/project.md) | Charter: goals, design invariants, hardware baseline, non-goals |
+| [docs/meta/plan.md](docs/meta/plan.md) | Build phases and what is done vs pending live verification |
+| [docs/meta/tasks.md](docs/meta/tasks.md) | Checklist of every deliverable |
+| [docs/meta/decisions.md](docs/meta/decisions.md) | Architecture decision records (why Mint, Markdown, Typst, Multi-tier Git, Obsidian plugins, GTK App) |
+| [docs/meta/knowledge.md](docs/meta/knowledge.md) | Tool ecosystem facts, multi-tier Git invariants, and script safety standards |
+| [docs/meta/status.md](docs/meta/status.md) | Current state + momentum queues (now / next / blocked / improve / recurring) |
 | [scripts/verify.sh](scripts/verify.sh) | 7-stage automated health check: syntax, schema validation, Universe/World lifecycle, Git snapshots, and backup/restore drills |
 

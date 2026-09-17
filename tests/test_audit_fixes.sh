@@ -85,4 +85,20 @@ DOC_MULTI_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json || true)"
 printf '%s' "${DOC_MULTI_JSON}" | python3 -c "import json, sys; d = json.load(sys.stdin); assert len(d['timeline_errors']) == 0"
 echo "  OK Test 6 passed: Concordance generated & multi-era dates validated"
 
+echo "[Test 7] Legacy-root deprecation nudge on auto-selected worlds (N-03)..."
+# Exactly one world, living under the legacy ~/Worlds root: a bare doctor
+# invocation auto-selects it and MUST print the deprecation nudge.
+LEGACY_HOME="${TMP_DIR}/legacy-home"
+mkdir -p "${LEGACY_HOME}"
+HOME="${LEGACY_HOME}" bash scripts/init_world.sh OnlyWorld --legacy-worlds-dir >/dev/null
+LEGACY_ERR="$(HOME="${LEGACY_HOME}" bash scripts/world_doctor.sh 2>&1 >/dev/null || true)"
+[[ "${LEGACY_ERR}" == *"legacy ~/Worlds root"* ]] || { echo "  FAIL: auto-selected legacy world was not nudged" >&2; exit 1; }
+# Control: exactly one canonical world — auto-select must stay silent.
+CANON_HOME="${TMP_DIR}/canon-home"
+mkdir -p "${CANON_HOME}"
+HOME="${CANON_HOME}" bash scripts/init_world.sh OnlyWorld --universe SoloUni >/dev/null
+CANON_ERR="$(HOME="${CANON_HOME}" bash scripts/world_doctor.sh 2>&1 >/dev/null || true)"
+[[ "${CANON_ERR}" != *"legacy ~/Worlds root"* ]] || { echo "  FAIL: canonical world was wrongly nudged" >&2; exit 1; }
+echo "  OK Test 7 passed: nudge fires for legacy auto-select only"
+
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

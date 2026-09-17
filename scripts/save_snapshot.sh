@@ -87,6 +87,8 @@ if [ -n "${WORLD_CLI}" ]; then
     fi
 elif [ ${#WORLDS[@]} -eq 1 ]; then
     SELECTED_WORLD="${WORLDS[0]}"
+    # N-03: auto-selected legacy worlds get the same nudge as by-name ones
+    warn_if_legacy_root "${SELECTED_WORLD}"
 else
     if has_gui; then
         CHOICE_LIST=()

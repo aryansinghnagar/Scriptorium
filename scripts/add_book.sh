@@ -70,6 +70,8 @@ discover_worlds WORLDS
 if [ -z "${TARGET_WORLD}" ]; then
     if [ ${#WORLDS[@]} -eq 1 ]; then
         TARGET_WORLD="${WORLDS[0]}"
+        # N-03: auto-selected legacy worlds get the same nudge as by-name ones
+        warn_if_legacy_root "${TARGET_WORLD}"
     elif has_gui && [ ${#WORLDS[@]} -gt 1 ]; then
         CHOICES=()
         for w in "${WORLDS[@]}"; do

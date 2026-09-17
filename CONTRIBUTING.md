@@ -9,17 +9,32 @@ practical.
 
 - **Target platforms**: Linux Mint 21/22 (XFCE) and Debian 12/13. Everything
   else must degrade gracefully, not crash.
-- **Design invariants** live in [project.md](project.md) and
-  [knowledge.md](knowledge.md) — read both before changing scripts. In
+- **Design invariants** live in [project.md](docs/meta/project.md) and
+  [knowledge.md](docs/meta/knowledge.md) — read both before changing scripts. In
   particular: NUL-delimited filename handling, transactional directory
-  scaffolding, the 0/1/3 exit-code contract, and "safe handling of arbitrary
+  scaffolding, the exit-code contract below, and "safe handling of arbitrary
   filenames" are non-negotiable.
-- **Architecture history** is recorded as ADRs in [decisions.md](decisions.md).
+- **Architecture history** is recorded as ADRs in
+  [decisions.md](docs/meta/decisions.md).
   If your change reverses or extends a recorded decision, add a new ADR rather
   than editing an old one.
 - **No secrets, no personal paths**: never hardcode usernames, absolute home
   paths, or credentials. Standalone-world detection must stay structural
   (path prefix), not identity-based.
+
+### Exit-code contract (N-01)
+
+Scripts exit `0` on success and non-zero otherwise, with four documented
+meanings. Each script's header comment remains the authoritative per-script
+contract; when you add a script, document its codes there and keep them
+within this table:
+
+| Code | Meaning |
+| :--- | :--- |
+| `0` | success |
+| `1` | runtime or diagnostic failure — the operation ran and failed, or reported findings |
+| `2` | usage or environment error — bad option, unknown world, ambiguous world selection, missing dependency |
+| `3` | nothing to act on — required argument absent with no GUI/TTY fallback, or the user aborted an interactive selection |
 
 ## Development setup
 

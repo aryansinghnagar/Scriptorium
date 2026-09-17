@@ -50,6 +50,8 @@ if [ -z "${WORLD_DIR}" ]; then
     discover_worlds FOUND_WORLDS
     if [ ${#FOUND_WORLDS[@]} -eq 1 ]; then
         WORLD_DIR="${FOUND_WORLDS[0]}"
+        # N-03: auto-selected legacy worlds get the same nudge as by-name ones
+        warn_if_legacy_root "${WORLD_DIR}"
     elif [ ${#FOUND_WORLDS[@]} -gt 1 ]; then
         {
             echo "Multiple worlds discovered — specify one:"

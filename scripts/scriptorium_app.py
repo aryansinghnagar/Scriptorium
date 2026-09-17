@@ -14,6 +14,7 @@ import subprocess
 import threading
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 
 # Check GTK 3 availability
@@ -768,10 +769,10 @@ class ScriptoriumApp(Gtk.Window):
                     self.current_universe = name
                     self.refresh_universe_and_worlds()
 
-                threading.Thread(
-                    target=self._run_async_command,
+                self._start_worker(
+                    self._run_async_command,
                     args=(cmd, f"Universe '{name}' created successfully!", on_universe_created),
-                ).start()
+                )
         dialog.destroy()
 
     def on_new_world_clicked(self, btn):
@@ -805,10 +806,10 @@ class ScriptoriumApp(Gtk.Window):
                             self.combo_world.set_active_id(path)
                             break
 
-                threading.Thread(
-                    target=self._run_async_command,
+                self._start_worker(
+                    self._run_async_command,
                     args=(cmd, f"World '{wname}' created successfully!", on_world_created),
-                ).start()
+                )
         dialog.destroy()
 
     def on_quick_snapshot_clicked(self, btn):
@@ -826,7 +827,7 @@ class ScriptoriumApp(Gtk.Window):
         box.pack_start(lbl, False, False, 0)
 
         entry = Gtk.Entry()
-        entry.set_text(f"Snapshot: {subprocess.run(['date', '+%Y-%m-%d %H:%M'], capture_output=True, text=True).stdout.strip()}")
+        entry.set_text(f"Snapshot: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         box.pack_start(entry, False, False, 0)
         dialog.show_all()
 
@@ -834,7 +835,7 @@ class ScriptoriumApp(Gtk.Window):
             note = entry.get_text().strip()
             cmd = ["bash", str(PROJECT_ROOT / "scripts" / "save_snapshot.sh"), "--world", self.current_world_path, "--note", note]
             self.set_status("Saving version snapshot...")
-            threading.Thread(target=self._run_async_command, args=(cmd, "Snapshot recorded successfully!")).start()
+            self._start_worker(self._run_async_command, args=(cmd, "Snapshot recorded successfully!"))
         dialog.destroy()
 
     def on_save_snapshot_clicked(self, btn):
@@ -843,10 +844,10 @@ class ScriptoriumApp(Gtk.Window):
             return
         note = self.entry_snap_note.get_text().strip()
         if not note:
-            note = f"Snapshot: {subprocess.run(['date', '+%Y-%m-%d %H:%M'], capture_output=True, text=True).stdout.strip()}"
+            note = f"Snapshot: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
         cmd = ["bash", str(PROJECT_ROOT / "scripts" / "save_snapshot.sh"), "--world", self.current_world_path, "--note", note]
         self.set_status("Saving version milestone snapshot...")
-        threading.Thread(target=self._run_async_command, args=(cmd, "Snapshot recorded successfully!", self.refresh_snapshot_history)).start()
+        self._start_worker(self._run_async_command, args=(cmd, "Snapshot recorded successfully!", self.refresh_snapshot_history))
 
     def on_create_backup_clicked(self, btn):
         if not self.current_world_path:
@@ -854,7 +855,7 @@ class ScriptoriumApp(Gtk.Window):
             return
         cmd = ["bash", str(PROJECT_ROOT / "scripts" / "backup_world.sh"), "--world", self.current_world_path]
         self.set_status("Creating standalone verified backup archive...")
-        threading.Thread(target=self._run_async_command, args=(cmd, "Backup archive created with SHA-256 digest!")).start()
+        self._start_worker(self._run_async_command, args=(cmd, "Backup archive created with SHA-256 digest!"))
 
     def on_restore_clicked(self, btn):
         dialog = Gtk.FileChooserDialog(
@@ -888,7 +889,7 @@ class ScriptoriumApp(Gtk.Window):
                 if self.current_universe:
                     cmd.extend(["--universe", self.current_universe])
                 self.set_status("Restoring world from archive...")
-                threading.Thread(target=self._run_async_command, args=(cmd, "World restored and verified successfully!", self.refresh_universe_and_worlds)).start()
+                self._start_worker(self._run_async_command, args=(cmd, "World restored and verified successfully!", self.refresh_universe_and_worlds))
             name_dialog.destroy()
         else:
             dialog.destroy()
@@ -923,7 +924,7 @@ class ScriptoriumApp(Gtk.Window):
             proc.wait()
             GLib.idle_add(self._on_compile_done, proc.returncode)
 
-        threading.Thread(target=_worker).start()
+        self._start_worker(_worker)
 
     def _append_log(self, buffer_obj, text):
         end_iter = buffer_obj.get_end_iter()
@@ -989,7 +990,7 @@ class ScriptoriumApp(Gtk.Window):
             if vol_name:
                 cmd = ["bash", str(PROJECT_ROOT / "scripts" / "add_book.sh"), self.current_world_path, vol_name]
                 self.set_status(f"Scaffolding volume '{vol_name}'...")
-                threading.Thread(target=self._run_async_command, args=(cmd, f"Volume '{vol_name}' created successfully!", self.refresh_after_add_volume)).start()
+                self._start_worker(self._run_async_command, args=(cmd, f"Volume '{vol_name}' created successfully!", self.refresh_after_add_volume))
         dialog.destroy()
 
     def refresh_after_add_volume(self):
@@ -1021,7 +1022,7 @@ class ScriptoriumApp(Gtk.Window):
             else:
                 GLib.idle_add(self.set_status, "Concordance generation encountered warnings/errors.")
 
-        threading.Thread(target=_worker).start()
+        self._start_worker(_worker)
 
     def run_diagnostics(self):
         if not self.current_world_path:
@@ -1040,7 +1041,7 @@ class ScriptoriumApp(Gtk.Window):
             GLib.idle_add(self._append_log, self.doc_log_buffer, res2.stdout + "\n" + res2.stderr)
             GLib.idle_add(self.set_status, "Diagnostics complete.")
 
-        threading.Thread(target=_worker).start()
+        self._start_worker(_worker)
 
     def run_verify_harness(self):
         self.doc_log_buffer.set_text("Running full 7-stage verification suite...\n")
@@ -1054,7 +1055,7 @@ class ScriptoriumApp(Gtk.Window):
             proc.wait()
             GLib.idle_add(self.set_status, "Verification run complete.")
 
-        threading.Thread(target=_worker).start()
+        self._start_worker(_worker)
 
     def on_generate_demo_clicked(self, btn):
         demo_uni = "Cosmere-Prime"
@@ -1067,7 +1068,7 @@ class ScriptoriumApp(Gtk.Window):
             GLib.idle_add(self.refresh_universe_and_worlds)
             GLib.idle_add(self.set_status, "Demo Cosmos 'The Chronicles of Eldoria' created successfully!")
 
-        threading.Thread(target=_worker).start()
+        self._start_worker(_worker)
 
     def _is_flatpak_installed(self, app_id):
         try:
@@ -1076,9 +1077,20 @@ class ScriptoriumApp(Gtk.Window):
         except Exception:
             return False
 
+    def _launch_in_background(self, chooser):
+        """Resolve and spawn an external app on a daemon worker (N-04).
+        The `flatpak info` / `which` probes take tens to hundreds of
+        milliseconds each; running them on the GTK main thread stuttered the
+        UI on every launch click, so the whole launch chain runs off-thread.
+        """
+        self._start_worker(chooser)
+
     def on_launch_obsidian(self, btn):
-        if self.current_world_path:
-            bible = Path(self.current_world_path) / "00-World-Bible"
+        if not self.current_world_path:
+            return
+        bible = Path(self.current_world_path) / "00-World-Bible"
+
+        def _launch():
             if self._is_flatpak_installed("md.obsidian.Obsidian"):
                 subprocess.Popen(["flatpak", "run", "md.obsidian.Obsidian", str(bible)])
             elif subprocess.run(["which", "obsidian"], capture_output=True).stdout:
@@ -1086,10 +1098,15 @@ class ScriptoriumApp(Gtk.Window):
             else:
                 subprocess.Popen(["xdg-open", str(bible)])
 
+        self._launch_in_background(_launch)
+
     def on_launch_novelwriter(self, btn):
-        if self.current_world_path:
-            nw_proj = Path(self.current_world_path) / "01-Manuscript" / "nwProject.nwx"
-            target = str(nw_proj) if nw_proj.is_file() else str(Path(self.current_world_path) / "01-Manuscript")
+        if not self.current_world_path:
+            return
+        nw_proj = Path(self.current_world_path) / "01-Manuscript" / "nwProject.nwx"
+        target = str(nw_proj) if nw_proj.is_file() else str(Path(self.current_world_path) / "01-Manuscript")
+
+        def _launch():
             if self._is_flatpak_installed("io.gitlab.novelwriter.novelWriter"):
                 subprocess.Popen(["flatpak", "run", "io.gitlab.novelwriter.novelWriter", target])
             elif subprocess.run(["which", "novelwriter"], capture_output=True).stdout:
@@ -1097,29 +1114,40 @@ class ScriptoriumApp(Gtk.Window):
             else:
                 subprocess.Popen(["xdg-open", str(Path(self.current_world_path) / "01-Manuscript")])
 
+        self._launch_in_background(_launch)
+
     def on_launch_focuswriter(self, btn):
-        if self.current_world_path:
-            ms = Path(self.current_world_path) / "01-Manuscript" / "Book-01"
+        if not self.current_world_path:
+            return
+        ms = Path(self.current_world_path) / "01-Manuscript" / "Book-01"
+
+        def _launch():
             if subprocess.run(["which", "focuswriter"], capture_output=True).stdout:
                 subprocess.Popen(["focuswriter", str(ms)])
             else:
                 subprocess.Popen(["xdg-open", str(ms)])
 
+        self._launch_in_background(_launch)
+
     def on_launch_libreoffice(self, btn):
-        if subprocess.run(["which", "libreoffice"], capture_output=True).stdout:
-            subprocess.Popen(["libreoffice", "--writer"])
-        else:
-            subprocess.Popen(["xdg-open", str(HOME_DIR)])
+        def _launch():
+            if subprocess.run(["which", "libreoffice"], capture_output=True).stdout:
+                subprocess.Popen(["libreoffice", "--writer"])
+            else:
+                subprocess.Popen(["xdg-open", str(HOME_DIR)])
+
+        self._launch_in_background(_launch)
 
     def on_launch_calibre(self, btn):
-        if self._is_flatpak_installed("com.calibre_ebook.calibre"):
-            subprocess.Popen(["flatpak", "run", "com.calibre_ebook.calibre"])
-        elif self._is_flatpak_installed("com.calibredesk.calibre"):
-            subprocess.Popen(["flatpak", "run", "com.calibredesk.calibre"])
-        elif subprocess.run(["which", "calibre"], capture_output=True).stdout:
-            subprocess.Popen(["calibre"])
-        else:
-            subprocess.Popen(["xdg-open", str(HOME_DIR)])
+        def _launch():
+            if self._is_flatpak_installed("com.calibre_ebook.calibre"):
+                subprocess.Popen(["flatpak", "run", "com.calibre_ebook.calibre"])
+            elif subprocess.run(["which", "calibre"], capture_output=True).stdout:
+                subprocess.Popen(["calibre"])
+            else:
+                subprocess.Popen(["xdg-open", str(HOME_DIR)])
+
+        self._launch_in_background(_launch)
 
     def on_open_folder_clicked(self, btn):
         if self.current_world_path:
@@ -1167,6 +1195,15 @@ class ScriptoriumApp(Gtk.Window):
         )
         dialog.run()
         dialog.destroy()
+
+    def _start_worker(self, target, args=()):
+        """Run target on a daemon worker thread (N-04).
+        daemon=True so closing the window mid-operation ends the process
+        instead of leaving it alive until the subprocess finishes. Every
+        call that can block (subprocess.run/Popen of scripts, flatpak/which
+        probes) must go through here — never the GTK main thread.
+        """
+        threading.Thread(target=target, args=args, daemon=True).start()
 
     def _run_async_command(self, cmd, success_msg, callback=None):
         res = subprocess.run(cmd, capture_output=True, text=True)
