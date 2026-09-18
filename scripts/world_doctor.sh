@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium World Doctor (D-01 / Workstream 3.2)
+# Ars Arcanum World Doctor (D-01 / Workstream 3.2)
 # Purpose: Consistency checker for the Obsidian World Bible. Verifies wiki-link
 #          integrity, typed frontmatter references, orphaned entities,
 #          duplicate identities, and timeline chronology.
@@ -28,7 +28,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium World Doctor (D-01 / Workstream 3.2)
+Ars Arcanum World Doctor (D-01 / Workstream 3.2)
 Purpose: Consistency checker for the Obsidian World Bible. Verifies wiki-link
          integrity, typed frontmatter references, orphaned entities,
          duplicate identities, and timeline chronology.
@@ -81,7 +81,7 @@ if [ -z "${WORLD_DIR}" ]; then
         } >&2
         exit 2
     else
-        echo "Error: no worlds found under ~/Universes or ~/Worlds. Create one first (scriptorium init <name>)." >&2
+        echo "Error: no worlds found under ~/Universes or ~/Worlds. Create one first (arcanum world <name>)." >&2
         exit 2
     fi
 else
@@ -101,7 +101,7 @@ if [ -d "${WORLD_DIR}/00-World-Bible" ]; then
 elif [ -d "${WORLD_DIR}/Characters" ] || [ -f "${WORLD_DIR}/world.yaml" ] || [ -d "${WORLD_DIR}/.obsidian" ]; then
     BIBLE_DIR="${WORLD_DIR}"
 else
-    echo "Error: no World Bible lore found in ${WORLD_DIR} (is this a Scriptorium world?)" >&2
+    echo "Error: no World Bible lore found in ${WORLD_DIR} (is this an Ars Arcanum world?)" >&2
     exit 2
 fi
 
@@ -119,6 +119,7 @@ if [ -z "${MANUSCRIPT_DIR}" ]; then
         discover_manuscripts FOUND_MS
         for m in "${FOUND_MS[@]}"; do
             m_manifest="${m}/manuscript.yaml"
+            [ -f "${m_manifest}" ] || m_manifest="${m}/arcanum.yaml"
             [ -f "${m_manifest}" ] || m_manifest="${m}/scriptorium.yaml"
             if [ -f "${m_manifest}" ]; then
                 mw=$(sed -n -E 's/^world:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${m_manifest}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -625,7 +626,7 @@ findings = {
 if JSON_OUT:
     print(json.dumps(findings, indent=2))
 else:
-    print(f"Scriptorium World Doctor — {BIBLE}")
+    print(f"Ars Arcanum World Doctor — {BIBLE}")
     print(f"Notes scanned: {len(notes)}" + (" (fast cache)" if CACHE_USED else ""))
     if ms_files_scanned > 0:
         print(f"Manuscript scenes scanned: {ms_files_scanned}")

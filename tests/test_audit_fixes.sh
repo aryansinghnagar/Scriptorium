@@ -11,9 +11,9 @@ mkdir -p "${HOME}"
 unset DISPLAY WAYLAND_DISPLAY 2>/dev/null || true
 
 echo "[Test 1] Universe, World & Manuscript Creation..."
-bash scripts/scriptorium universe TestUni >/dev/null
-bash scripts/scriptorium world TestWorld --universe TestUni >/dev/null
-bash scripts/scriptorium manuscript TestManuscript --universe TestUni --world TestWorld >/dev/null
+bash scripts/arcanum universe TestUni >/dev/null
+bash scripts/arcanum world TestWorld --universe TestUni >/dev/null
+bash scripts/arcanum manuscript TestManuscript --universe TestUni --world TestWorld >/dev/null
 
 WORLD_PATH="${HOME}/Universes/TestUni/TestWorld"
 MS_PATH="${HOME}/Manuscripts/TestManuscript"
@@ -27,20 +27,20 @@ echo "  OK Test 1 passed"
 
 echo "[Test 2] Positional arguments in save_snapshot.sh..."
 echo "New scene text" >> "${MS_PATH}/Book-01/01_Act_I/01_Chapter_01.md"
-bash scripts/scriptorium snapshot TestManuscript -m "Positional snapshot test" >/dev/null
+bash scripts/arcanum snapshot TestManuscript -m "Positional snapshot test" >/dev/null
 LAST_COMMIT="$(git -C "${MS_PATH}" log -n 1 --oneline)"
 [[ "${LAST_COMMIT}" == *"Positional snapshot test"* ]]
 echo "  OK Test 2 passed: Positional snapshot recorded"
 
 echo "[Test 3] Add-volume multi-volume scaffolding and auto-increment..."
-bash scripts/scriptorium add-volume TestManuscript "Book-02" >/dev/null
+bash scripts/arcanum add-volume TestManuscript "Book-02" >/dev/null
 [ -d "${MS_PATH}/Book-02/01_Act_I" ]
 [ -d "${MS_PATH}/Book-02/02_Act_II" ]
 [ -d "${MS_PATH}/Book-02/03_Act_III" ]
 [ -d "${MS_PATH}/Book-02/.git" ]
 
 # Auto-increment to Book-03
-bash scripts/scriptorium add-volume TestManuscript >/dev/null
+bash scripts/arcanum add-volume TestManuscript >/dev/null
 [ -d "${MS_PATH}/Book-03/01_Act_I" ]
 [ -d "${MS_PATH}/Book-03/02_Act_II" ]
 [ -d "${MS_PATH}/Book-03/03_Act_III" ]
@@ -82,7 +82,7 @@ motto: "In Luce"
 ---
 EOF
 
-bash scripts/scriptorium concordance "${WORLD_PATH}" --manuscript "${MS_PATH}" --book Book-01 >/dev/null
+bash scripts/arcanum concordance "${WORLD_PATH}" --manuscript "${MS_PATH}" --book Book-01 >/dev/null
 [ -f "${MS_PATH}/Book-01/04_Back_Matter/01_Dramatis_Personae.md" ]
 [ -f "${MS_PATH}/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md" ]
 grep -q "Aurelius" "${MS_PATH}/Book-01/04_Back_Matter/01_Dramatis_Personae.md"
@@ -108,13 +108,13 @@ CANON_ERR="$(HOME="${CANON_HOME}" bash scripts/world_doctor.sh 2>&1 >/dev/null |
 [[ "${CANON_ERR}" != *"legacy ~/Worlds root"* ]] || { echo "  FAIL: canonical world was wrongly nudged" >&2; exit 1; }
 echo "  OK Test 7 passed: nudge fires for legacy auto-select only"
 
-echo "[Test 8] Scriptorium doctor -m, --manuscript option forwarding (DEV-01)..."
+echo "[Test 8] Ars Arcanum doctor -m, --manuscript option forwarding (DEV-01)..."
 set +e
-bash scripts/scriptorium_doctor.sh --world "${WORLD_PATH}" --manuscript "${MS_PATH}" > "${TMP_DIR}/doc.log" 2>&1
+bash scripts/arcanum_doctor.sh --world "${WORLD_PATH}" --manuscript "${MS_PATH}" > "${TMP_DIR}/doc.log" 2>&1
 DOC_RC=$?
 set -e
-[ "${DOC_RC}" -eq 0 ] || [ "${DOC_RC}" -eq 1 ] || { echo "  FAIL scriptorium_doctor exited with ${DOC_RC}:"; cat "${TMP_DIR}/doc.log"; exit 1; }
-echo "  OK Test 8 passed: scriptorium_doctor accepts and forwards --manuscript"
+[ "${DOC_RC}" -eq 0 ] || [ "${DOC_RC}" -eq 1 ] || { echo "  FAIL arcanum_doctor exited with ${DOC_RC}:"; cat "${TMP_DIR}/doc.log"; exit 1; }
+echo "  OK Test 8 passed: arcanum_doctor accepts and forwards --manuscript"
 
 echo "[Test 9] Save snapshot with 0 worlds and 1 manuscript (DEV-03)..."
 ZERO_WORLD_HOME="${TMP_DIR}/zero-world-home"
@@ -147,8 +147,8 @@ echo "[Test 11] Standardize CLI usage error exit code 2 across all scripts (CQA-
 for s in scripts/add_book.sh scripts/backup_world.sh scripts/export_book.sh \
          scripts/generate_concordance.sh scripts/init_manuscript.sh scripts/init_universe.sh \
          scripts/init_world.sh scripts/restore_world.sh scripts/save_snapshot.sh \
-         scripts/scriptorium_doctor.sh scripts/setup_scriptorium.sh \
-         scripts/uninstall_scriptorium.sh scripts/world_doctor.sh scripts/wordcount_report.sh; do
+         scripts/arcanum_doctor.sh scripts/setup_arcanum.sh \
+         scripts/uninstall_arcanum.sh scripts/world_doctor.sh scripts/wordcount_report.sh; do
     set +e
     bash "$s" --nonexistent-option >/dev/null 2>&1
     RC=$?
@@ -156,10 +156,10 @@ for s in scripts/add_book.sh scripts/backup_world.sh scripts/export_book.sh \
     [ $RC -eq 2 ] || { echo "  FAIL: $s exited with $RC on bad option (expected 2)"; exit 1; }
 done
 set +e
-bash scripts/scriptorium invalid-command >/dev/null 2>&1
+bash scripts/arcanum invalid-command >/dev/null 2>&1
 FACADE_RC=$?
 set -e
-[ $FACADE_RC -eq 2 ] || { echo "  FAIL: scriptorium facade exited with $FACADE_RC on unknown command (expected 2)"; exit 1; }
+[ $FACADE_RC -eq 2 ] || { echo "  FAIL: arcanum facade exited with $FACADE_RC on unknown command (expected 2)"; exit 1; }
 echo "  OK Test 11 passed: All 15 scripts exit 2 on CLI usage/option errors"
 
 echo "[Test 12] Standardize launcher Categories to Office;WordProcessor;Publishing; (UX-01)..."
@@ -175,7 +175,7 @@ grep -q '!contains(file.path, "Outlines")' "templates/manuscript/Outlines/Subplo
 echo "  OK Test 13 passed: Subplot-Thread-Matrix Dataview queries verified"
 
 echo "[Test 14] Typst Installer Fail-Closed Security (S-01)..."
-grep -B 2 -A 4 "upstream SHA-256 digest unavailable" "scripts/setup_scriptorium.sh" | grep -q "TYPST_OK=0" || {
+grep -B 2 -A 4 "upstream SHA-256 digest unavailable" "scripts/setup_arcanum.sh" | grep -q "TYPST_OK=0" || {
     echo "  FAIL: Typst installer fails open when digest is missing"; exit 1;
 }
 echo "  OK Test 14 passed: Typst installer fails closed on missing upstream digest"
@@ -190,7 +190,7 @@ touch "$DISC_TMP/Universes/Arda/Worlds/Valinor/World-Bible/World-Bible-Index.md"
 touch "$DISC_TMP/Worlds/SoloWorld/World-Bible/World-Bible-Index.md"
 
 (
-    unset SCRIPTORIUM_LIB_WORLDS_SOURCED
+    unset ARCANUM_LIB_WORLDS_SOURCED SCRIPTORIUM_LIB_WORLDS_SOURCED
     export UNIVERSES_BASE="$DISC_TMP/Universes"
     export LEGACY_WORLDS_BASE="$DISC_TMP/Worlds"
     source scripts/lib/worlds.sh
@@ -329,7 +329,7 @@ rm -rf "$MS_TMP"
 echo "  OK Test 17 passed: Manuscript outline wikilinks and lore drift detection verified"
 
 echo "[Test 18] Restore rejects punctuation-only target names (SEC-01)..."
-bash scripts/scriptorium manuscript RestoreVictim --universe TestUni --world TestWorld >/dev/null
+bash scripts/arcanum manuscript RestoreVictim --universe TestUni --world TestWorld >/dev/null
 bash scripts/backup_world.sh --manuscript RestoreVictim --dest "${TMP_DIR}" >/dev/null
 ARCHIVE="$(ls -t "${TMP_DIR}"/RestoreVictim-backup-*.tar.gz | head -n 1)"
 set +e
@@ -365,10 +365,10 @@ rm -rf "${NOMETADIR}" "${TMP_DIR}/restore-dest"
 echo "  OK Test 19 passed: missing checksum fails closed, --skip-checksum opts out explicitly"
 
 echo "[Test 20] Ambiguous world names fail closed (RES-01)..."
-bash scripts/scriptorium universe AmbigU1 >/dev/null
-bash scripts/scriptorium universe AmbigU2 >/dev/null
-bash scripts/scriptorium world Shared --universe AmbigU1 >/dev/null
-bash scripts/scriptorium world Shared --universe AmbigU2 >/dev/null
+bash scripts/arcanum universe AmbigU1 >/dev/null
+bash scripts/arcanum universe AmbigU2 >/dev/null
+bash scripts/arcanum world Shared --universe AmbigU1 >/dev/null
+bash scripts/arcanum world Shared --universe AmbigU2 >/dev/null
 set +e
 AMBIG_OUT="$(bash scripts/save_snapshot.sh Shared -m x 2>&1)"
 AMBIG_RC=$?
@@ -379,15 +379,15 @@ bash scripts/save_snapshot.sh Shared --universe AmbigU1 -m "unambiguous snapshot
 echo "  OK Test 20 passed: duplicate world names require --universe"
 
 echo "[Test 21] Manuscript XML escapes special characters (DAT-02)..."
-bash scripts/scriptorium manuscript "XMLTest" --universe TestUni --world TestWorld --author 'A & B <Draft> "Quoted"' >/dev/null
+bash scripts/arcanum manuscript "XMLTest" --universe TestUni --world TestWorld --author 'A & B <Draft> "Quoted"' >/dev/null
 python3 -c "import xml.etree.ElementTree as ET; ET.parse('${HOME}/Manuscripts/XMLTest/nwProject.nwx'); print('  OK Test 21 passed: nwProject.nwx parses with special chars')"
 grep -q '&amp;' "${HOME}/Manuscripts/XMLTest/nwProject.nwx" || { echo "  FAIL: expected XML entity escaping"; exit 1; }
 
 echo "[Test 22] Packaged CLI dispatches via symlink (PKG-01)..."
-mkdir -p "${TMP_DIR}/pkg/share/scriptorium" "${TMP_DIR}/pkg/bin"
-cp -r scripts "${TMP_DIR}/pkg/share/scriptorium/scripts"
-ln -sf "${TMP_DIR}/pkg/share/scriptorium/scripts/scriptorium" "${TMP_DIR}/pkg/bin/scriptorium"
-"${TMP_DIR}/pkg/bin/scriptorium" --version | grep -q "Scriptorium" || { echo "  FAIL: symlinked CLI --version failed"; exit 1; }
+mkdir -p "${TMP_DIR}/pkg/share/arcanum" "${TMP_DIR}/pkg/bin"
+cp -r scripts "${TMP_DIR}/pkg/share/arcanum/scripts"
+ln -sf "${TMP_DIR}/pkg/share/arcanum/scripts/arcanum" "${TMP_DIR}/pkg/bin/arcanum"
+"${TMP_DIR}/pkg/bin/arcanum" --version | grep -qi "Arcanum" || { echo "  FAIL: symlinked CLI --version failed"; exit 1; }
 echo "  OK Test 22 passed: symlink dispatch works"
 
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

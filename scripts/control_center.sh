@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Control Center (Workstream 4.2)
+# Ars Arcanum Control Center (Workstream 4.2)
 # Purpose: Lightweight desktop GUI dashboard for universe/world switching and 1-click actions.
 # ==============================================================================
 
@@ -14,9 +14,9 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 source "${SCRIPT_DIR}/lib/worlds.sh"
 
 # Prefer native GTK 3 desktop application if PyGObject is available
-if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/scriptorium_app.py" ]; then
+if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/arcanum_app.py" ]; then
     set +e
-    python3 "${SCRIPT_DIR}/scriptorium_app.py" "$@"
+    python3 "${SCRIPT_DIR}/arcanum_app.py" "$@"
     APP_RC=$?
     set -e
     if [ "${APP_RC}" -ne 2 ]; then
@@ -25,8 +25,8 @@ if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/scriptorium_app.py" ]; 
 fi
 
 if ! has_gui; then
-    echo "Scriptorium Control Center requires a graphical display and Zenity (or PyGObject)."
-    echo "Use the 'scriptorium' command line interface in terminal environments."
+    echo "Ars Arcanum Control Center requires a graphical display and Zenity (or PyGObject)."
+    echo "Use the 'arcanum' command line interface in terminal environments."
     exit 2
 fi
 
@@ -40,7 +40,7 @@ discover_worlds WORLDS_PATHS
 ACTIVE_WORLD_PATH=""
 
 if [ ${#WORLDS_PATHS[@]} -eq 0 ]; then
-    CHOICE=$(zenity --list --title="Scriptorium Control Center" \
+    CHOICE=$(zenity --list --title="Ars Arcanum Control Center" \
         --text="No worlds found.\nWhat would you like to create?" \
         --column="Action" --column="Description" \
         --width=450 --height=220 \
@@ -66,7 +66,7 @@ else
     CHOICES+=("+ Create New World" "Add a new world")
     CHOICES+=("+ Create New Universe" "Add a new universe container")
 
-    SELECTED_CHOICE=$(zenity --list --title="Scriptorium — Select Active World" \
+    SELECTED_CHOICE=$(zenity --list --title="Ars Arcanum — Select Active World" \
         --column="World Name" --column="Universe" \
         --width=460 --height=340 \
         "${CHOICES[@]}" || true)
@@ -99,7 +99,7 @@ WORLD_DIR="${ACTIVE_WORLD_PATH}"
 ACTIVE_WORLD="$(basename "${WORLD_DIR}")"
 UNIVERSE_NAME="$(universe_label "${WORLD_DIR}")"
 
-ACTION=$(zenity --list --title="Scriptorium Control Center — [${ACTIVE_WORLD} (${UNIVERSE_NAME})]" \
+ACTION=$(zenity --list --title="Ars Arcanum Control Center — [${ACTIVE_WORLD} (${UNIVERSE_NAME})]" \
     --column="Action" --column="Description" \
     --width=540 --height=400 \
     "1. Write: Obsidian" "Open World Bible in Obsidian (Plugins & Lore)" \
@@ -146,7 +146,7 @@ case "${ACTION}" in
                 xdg-open "$(dirname "${NW_PROJ}")" &
             fi
         else
-            zenity --info --title="Manuscript Project" --text="No novelWriter project found for '${ACTIVE_WORLD}'.\nCreate one with 'scriptorium manuscript <name>'." --width=400
+            zenity --info --title="Manuscript Project" --text="No novelWriter project found for '${ACTIVE_WORLD}'.\nCreate one with 'arcanum manuscript <name>'." --width=400
         fi
         ;;
     "3. Export Book")

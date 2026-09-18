@@ -1,14 +1,14 @@
-# Scriptorium Author's Field Manual
+# Ars Arcanum Author's Field Manual
 ### The Complete Plain-Language Guide to Local-First Novel Writing & Speculative Worldbuilding
 
-Welcome to **Scriptorium**! Whether you are writing your debut novel, crafting a sprawling multi-volume epic fantasy cosmos, or organizing deep speculative science fiction lore, Scriptorium gives you a professional, distraction-free environment that is 100% private, open, and permanently yours.
+Welcome to **Ars Arcanum**! Whether you are writing your debut novel, crafting a sprawling multi-volume epic fantasy cosmos, or organizing deep speculative science fiction lore, Ars Arcanum gives you a professional, distraction-free environment that is 100% private, open, and permanently yours.
 
-Zero programming or terminal experience is required for daily writing. Everything is accessible through the **Scriptorium Control Center** desktop app.
+Zero programming or terminal experience is required for daily writing. Everything is accessible through the **Ars Arcanum Control Center** desktop app.
 
 ---
 
 ## 📑 Table of Contents
-1. [The Scriptorium Philosophy & Architecture](#1-the-scriptorium-philosophy--architecture)
+1. [The Ars Arcanum Philosophy & Architecture](#1-the-ars-arcanum-philosophy--architecture)
 2. [Quick Start: Your First 5 Minutes](#2-quick-start-your-first-5-minutes)
 3. [The Desktop Control Center Tour](#3-the-desktop-control-center-tour)
    - [Tab 1: Cosmos & Projects](#tab-1-cosmos--projects)
@@ -24,12 +24,12 @@ Zero programming or terminal experience is required for daily writing. Everythin
 
 ---
 
-## 1. The Scriptorium Philosophy & Architecture
+## 1. The Ars Arcanum Philosophy & Architecture
 
-### Why Scriptorium Exists
+### Why Ars Arcanum Exists
 Most modern writing software locks your words into proprietary database formats, monthly cloud subscriptions, or closed operating systems. If the company changes pricing or shuts down, your work is in jeopardy.
 
-Scriptorium is built on **Four Unbreakable Invariants**:
+Ars Arcanum is built on **Four Unbreakable Invariants**:
 1. **Sovereign Plain Markdown (`.md`)**: Every word, outline, character bio, and chapter is stored in human-readable plain text files on your own hard drive. You can open and read your work 50 years from now on any computer.
 2. **One Premier Tool Per Creative Stage**:
    - **Obsidian**: For your World Bible, character dossiers, maps, and timeline wikis.
@@ -75,8 +75,8 @@ Scriptorium is built on **Four Unbreakable Invariants**:
 
 ## 2. Quick Start: Your First 5 Minutes
 
-### Step 1: Open Scriptorium Control Center
-Double-click **"Scriptorium Control Center"** on your Desktop (or run `scriptorium control-center` in a terminal).
+### Step 1: Open Ars Arcanum Control Center
+Double-click **"Ars Arcanum Control Center"** on your Desktop (or run `arcanum control-center` in a terminal).
 
 ### Step 2: Create or Explore a Project
 - **Option A (Instant Exploration)**: Click **"✨ Generate Demo Cosmos"** in Tab 1. This creates the *"Cosmere / Scadrial"* and *"Mistborn-Era1"* projects, pre-loaded with characters, bestiaries, magic systems, and sample chapters.
@@ -94,7 +94,7 @@ Double-click **"Scriptorium Control Center"** on your Desktop (or run `scriptori
 
 ## 3. The Desktop Control Center Tour
 
-The Scriptorium desktop application is organized into **5 intuitive tabs** with global project selectors across the top:
+The Ars Arcanum desktop application is organized into **5 intuitive tabs** with global project selectors across the top:
 
 ### Top Selector Bar
 - **Universe Selector**: Switch between different narrative universes.
@@ -172,7 +172,7 @@ If you are just getting started, open **`00_START_HERE.md`** inside your World B
 | **Languages** | `Languages/` | `Glossary-Conlang-Template.md` | Conlangs, phonetic rules, root words, idioms, proverbs, and naming conventions. |
 
 ### How to Use Metadata Menu Forms (No YAML Editing!)
-Instead of manually writing YAML headers, Scriptorium includes pre-built **`fileClasses`** schemas in `Templates/fileClasses/`.
+Instead of manually writing YAML headers, Ars Arcanum includes pre-built **`fileClasses`** schemas in `Templates/fileClasses/`.
 1. In Obsidian, open any note.
 2. Click the **Metadata Menu** icon or press the note's action menu.
 3. Select attributes from intuitive dropdown menus (e.g. select Status: `Alive / Deceased / Missing`, Threat: `Lethal`, Scale: `Continent / City`).
@@ -197,7 +197,7 @@ Your manuscript in `~/Manuscripts/<Manuscript>/Book-01/` is structured for long-
 ### Multi-Volume Series Scaffolding (`add-book`)
 When writing sequels, trilogies, or serials, you can scaffold subsequent volumes in your world with 1 click or a single command:
 ```bash
-scriptorium add-book My-Manuscript Book-02
+arcanum add-book My-Manuscript Book-02
 ```
 This automatically scaffolds:
 - `Book-02/01_Act_I`
@@ -230,7 +230,7 @@ Click **"⚡ Sprint Canvas"** in the Control Center to launch FocusWriter.
 
 ## 6. Typesetting & Book Publishing (Typst & Pandoc)
 
-Scriptorium includes an automated publishing pipeline that eliminates complex LaTeX scripts and expensive Mac-only tools like Vellum.
+Ars Arcanum includes an automated publishing pipeline that eliminates complex LaTeX scripts and expensive Mac-only tools like Vellum.
 
 ### How Compilation Works
 1. In the Control Center, open **Tab 3: Publishing Studio**.
@@ -241,22 +241,22 @@ Scriptorium includes an automated publishing pipeline that eliminates complex La
 
 ### Standard Manuscript Submission Format (.docx)
 For authors pitching literary agents, submitting to short fiction anthologies, or working with editors in traditional publishing workflows:
-- Scriptorium exports industry-standard Shunn-compliant `.docx` manuscripts via Pandoc.
+- Ars Arcanum exports industry-standard Shunn-compliant `.docx` manuscripts via Pandoc.
 - Automatically strips inline `@tag:` metadata and internal notes.
 - Applies standard double-spacing, 1-inch margins, running headers, and clean chapter demarcations.
 - Available via the Control Center dropdown or via CLI:
   ```bash
-  scriptorium export <manuscript> --format submission --book Book-01
+  arcanum export <manuscript> --format submission --book Book-01
   # or shortcut:
-  scriptorium export <manuscript> --docx -b Book-01
+  arcanum export <manuscript> --docx -b Book-01
   ```
 
 ### Automated Back-Matter Concordance & Dramatis Personae
-Click **"📖 Generate Concordance"** (or run `scriptorium concordance <world>`). Scriptorium's concordance engine reads all registered dossiers across your World Bible (`Characters/`, `Languages/`, `Bestiary/`, `Artifacts/`, and `Factions/`) and automatically creates:
+Click **"📖 Generate Concordance"** (or run `arcanum concordance <world>`). Ars Arcanum's concordance engine reads all registered dossiers across your World Bible (`Characters/`, `Languages/`, `Bestiary/`, `Artifacts/`, and `Factions/`) and automatically creates:
 - `<Manuscript>/<Book>/04_Back_Matter/01_Dramatis_Personae.md`
 - `<Manuscript>/<Book>/04_Back_Matter/02_Glossary_and_Concordance.md`
 
-Because of Scriptorium's natural alphabetical collation order, `04_Back_Matter` files are seamlessly compiled at the end of your Typst print PDFs, Pandoc EPUBs, and submission DOCXs with zero manual copy-pasting.
+Because of Ars Arcanum's natural alphabetical collation order, `04_Back_Matter` files are seamlessly compiled at the end of your Typst print PDFs, Pandoc EPUBs, and submission DOCXs with zero manual copy-pasting.
 
 ### Automated Cover Image Detection
 Place your book's cover art in `03-Art/cover.png` or `03-Art/cover.jpg`. When exporting to EPUB, Pandoc automatically detects and embeds your cover image (`--epub-cover-image`) into the ebook manifest.
@@ -272,7 +272,7 @@ Place your book's cover art in `03-Art/cover.png` or `03-Art/cover.jpg`. When ex
 
 ## 7. Data Safety, Version History & The 3-2-1 Rule
 
-Scriptorium enforces strict data sovereignty. You will never lose a word of your writing.
+Ars Arcanum enforces strict data sovereignty. You will never lose a word of your writing.
 
 ### 1. Automated Background Saves (Obsidian Git)
 Obsidian Git is pre-configured to automatically commit changes in your World Bible in the background **every 10 minutes** and whenever you save a file.
@@ -290,7 +290,7 @@ If you ever switch computers or want to rollback a project:
 1. Open **Tab 4: Vault Safety**.
 2. Click **"♻️ Restore World from Archive"**.
 3. Select your `.tar.gz` archive file.
-4. Scriptorium verifies the SHA-256 hash to ensure zero file corruption, stages the restoration safely, and registers your world.
+4. Ars Arcanum verifies the SHA-256 hash to ensure zero file corruption, stages the restoration safely, and registers your world.
 
 ---
 
@@ -316,33 +316,33 @@ If you ever switch computers or want to rollback a project:
 ### Troubleshooting & FAQ
 
 #### Q: A tool in Tab 5 says "Missing" (e.g. Typst or Pandoc). What should I do?
-**A**: Run the Scriptorium setup installer:
+**A**: Run the Ars Arcanum setup installer:
 ```bash
-scriptorium setup
+arcanum setup
 ```
 Or install the individual tool via your package manager (see `docs/guides/SOFTWARE_CATALOG.md`).
 
 #### Q: How do I share a draft with my human editor for track changes?
 **A**: Open the chapter or compiled Markdown file in **LibreOffice Writer** (Tab 1 launcher), click **Edit -> Track Changes -> Record**, and save as `.docx` or `.odt`.
 
-#### Q: Can I open Scriptorium without using the desktop app?
-**A**: Yes! Scriptorium includes a full command-line interface:
-- `scriptorium universe <name>` (or `scriptorium universe --list`)
-- `scriptorium world <name> -u <universe>` (or `scriptorium world --list`)
-- `scriptorium manuscript <name> -u <universe> -w <world>`
-- `scriptorium add-volume <manuscript> Book-02`
-- `scriptorium concordance <world> --manuscript <manuscript>`
-- `scriptorium export <manuscript> --book Book-01 --paper-size trade`
-- `scriptorium snapshot <manuscript> -m "Note"`
-- `scriptorium backup <target>`
-- `scriptorium restore <archive>`
-- `scriptorium report <manuscript>`
-- `scriptorium doctor`
-- `scriptorium world-doctor <world>`
+#### Q: Can I open Ars Arcanum without using the desktop app?
+**A**: Yes! Ars Arcanum includes a full command-line interface (`arcanum` or `ars-arcanum`):
+- `arcanum universe <name>` (or `arcanum universe --list`)
+- `arcanum world <name> -u <universe>` (or `arcanum world --list`)
+- `arcanum manuscript <name> -u <universe> -w <world>`
+- `arcanum add-volume <manuscript> Book-02`
+- `arcanum concordance <world> --manuscript <manuscript>`
+- `arcanum export <manuscript> --book Book-01 --paper-size trade`
+- `arcanum snapshot <manuscript> -m "Note"`
+- `arcanum backup <target>`
+- `arcanum restore <archive>`
+- `arcanum report <manuscript>`
+- `arcanum doctor`
+- `arcanum world-doctor <world>`
 
 #### Q: Where are my exported books saved?
 **A**: In your manuscript project folder under `Exports/` (e.g. `~/Manuscripts/Solaris-Rising/Exports/Solaris-Rising_Book-01.pdf`).
 
 ---
 
-*Scriptorium — Built with passion for speculative worldbuilders and novelists.*
+*Ars Arcanum — Built with passion for speculative worldbuilders and novelists.*

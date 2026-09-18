@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Add Manuscript Volume Engine
+# Ars Arcanum Add Manuscript Volume Engine
 # Purpose: Scaffolds a new manuscript volume (Book-02, Book-03, etc.) within
 #          a manuscript project with 3-act structure, starter chapters, and a
 #          discrete Git repository.
@@ -16,7 +16,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Add Volume — scaffold a new manuscript volume in a manuscript project.
+Ars Arcanum Add Volume — scaffold a new manuscript volume in a manuscript project.
 
 Usage:
   add_book.sh [MANUSCRIPT_NAME|MANUSCRIPT_DIR] [VOLUME_NAME] [OPTIONS]
@@ -68,7 +68,7 @@ VOLUME_NAME="${BOOK_CLI:-${POSITIONAL[1]:-}}"
 
 # Discover manuscripts
 discover_manuscripts MANUSCRIPTS
-
+ 
 if [ -z "${TARGET_INPUT}" ]; then
     if [ ${#MANUSCRIPTS[@]} -eq 1 ]; then
         TARGET_INPUT="${MANUSCRIPTS[0]}"
@@ -77,7 +77,7 @@ if [ -z "${TARGET_INPUT}" ]; then
         for m in "${MANUSCRIPTS[@]}"; do
             CHOICES+=("$(basename "$m")" "$m")
         done
-        PICKED=$(zenity --list --title="Scriptorium — Select Manuscript for New Volume" \
+        PICKED=$(zenity --list --title="Ars Arcanum — Select Manuscript for New Volume" \
             --text="Select the manuscript project to add a new volume to:" \
             --column="Manuscript Name" --column="Path" \
             --width=520 --height=320 \
@@ -134,7 +134,7 @@ if [ -z "${VOLUME_NAME}" ]; then
 
     if has_gui; then
         VOLUME_NAME=$(zenity --entry \
-            --title="Scriptorium — Add Manuscript Volume" \
+            --title="Ars Arcanum — Add Manuscript Volume" \
             --text="Enter the volume name for '${MANUSCRIPT_NAME}':" \
             --entry-text="${DEFAULT_VOL}" || true)
     else
@@ -205,7 +205,7 @@ if command -v git &> /dev/null; then
         cd "${TARGET_VOL_DIR}"
         git init -q
         git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial manuscript drafting repository for ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
+        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial manuscript drafting repository for ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
     ); then
         echo "[!] Warning: volume initial Git commit failed. Volume created without initial history." >&2
         GIT_HISTORY="failed"
@@ -217,7 +217,7 @@ if command -v git &> /dev/null; then
             cd "${MANUSCRIPT_DIR}"
             git config advice.addEmbeddedRepo false
             git -c advice.addEmbeddedRepo=false add "${TARGET_VOL_DIR#"${MANUSCRIPT_DIR}/"}" 2>/dev/null
-            git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
+            git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
         ); then
             echo "[!] Warning: manuscript tracking commit failed for '${VOLUME_NAME}'. Volume itself is intact." >&2
             [ "${GIT_HISTORY}" = "ok" ] && GIT_HISTORY="failed"

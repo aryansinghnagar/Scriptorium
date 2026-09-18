@@ -1,6 +1,6 @@
 # Optional Extras & Specialized Creative Tools Guide
 
-The default Scriptorium environment is kept lean and focused. When specialized creative needs arise, the following open-source tools can be installed directly from the Linux Mint Software Manager (or via Flatpak / APT).
+The default Ars Arcanum environment is kept lean and focused. When specialized creative needs arise, the following open-source tools can be installed directly from the Linux Mint Software Manager (or via Flatpak / APT).
 
 ---
 

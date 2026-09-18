@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scriptorium Desktop Application
+Ars Arcanum Desktop Application
 ================================
 A native GTK 3 desktop application for authors, worldbuilders, and novelists.
 Provides a unified, beginner-friendly interface for managing Universes,
@@ -18,7 +18,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-logger = logging.getLogger("scriptorium.ui_gtk3")
+logger = logging.getLogger("arcanum.ui_gtk3")
 
 # Check GTK 3 availability
 try:
@@ -41,9 +41,9 @@ LIB_DIR = Path(__file__).resolve().parent
 SCRIPT_DIR = LIB_DIR.parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 
-class ScriptoriumApp(Gtk.Window):
+class ArcanumApp(Gtk.Window):
     def __init__(self):
-        super().__init__(title="Scriptorium — Author & Worldbuilder Studio")
+        super().__init__(title="Ars Arcanum — Author & Worldbuilder Studio")
         self.set_default_size(1060, 720)
         self.set_position(Gtk.WindowPosition.CENTER)
 
@@ -66,7 +66,7 @@ class ScriptoriumApp(Gtk.Window):
         # Header Bar
         header = Gtk.HeaderBar()
         header.set_show_close_button(True)
-        header.props.title = "Scriptorium"
+        header.props.title = "Ars Arcanum"
         header.props.subtitle = "Sovereign Writing & Worldbuilding Studio"
         self.set_titlebar(header)
 
@@ -79,7 +79,7 @@ class ScriptoriumApp(Gtk.Window):
 
         # Manual / Help button
         help_btn = Gtk.Button(label="📖 Field Manual")
-        help_btn.set_tooltip_text("Open the Scriptorium Author's Field Manual")
+        help_btn.set_tooltip_text("Open the Ars Arcanum Author's Field Manual")
         help_btn.connect("clicked", self.on_open_manual_clicked)
         header.pack_end(help_btn)
 
@@ -252,7 +252,7 @@ class ScriptoriumApp(Gtk.Window):
         demo_frame.add(demo_box)
 
         lbl_demo = Gtk.Label()
-        lbl_demo.set_markup("<b>New to Scriptorium?</b> Generate a sample cosmos (<i>The Chronicles of Eldoria</i>) with lore dossiers, bestiary creatures, magic disciplines, and starter chapters.")
+        lbl_demo.set_markup("<b>New to Ars Arcanum?</b> Generate a sample cosmos (<i>The Chronicles of Eldoria</i>) with lore dossiers, bestiary creatures, magic disciplines, and starter chapters.")
         lbl_demo.set_line_wrap(True)
         demo_box.pack_start(lbl_demo, True, True, 0)
 
@@ -1261,7 +1261,7 @@ class ScriptoriumApp(Gtk.Window):
 
     def on_restore_clicked(self, btn):
         dialog = Gtk.FileChooserDialog(
-            title="Select Scriptorium Backup Archive",
+            title="Select Ars Arcanum Backup Archive",
             parent=self,
             action=Gtk.FileChooserAction.OPEN
         )
@@ -1445,11 +1445,11 @@ class ScriptoriumApp(Gtk.Window):
         self._start_worker(_worker)
 
     def run_diagnostics(self):
-        self.doc_log_buffer.set_text("Running Scriptorium & World Doctor diagnostics...\n")
+        self.doc_log_buffer.set_text("Running Ars Arcanum & World Doctor diagnostics...\n")
         self.set_status("Running diagnostics...")
 
         def _worker():
-            cmd1 = ["bash", str(PROJECT_ROOT / "scripts" / "scriptorium_doctor.sh")]
+            cmd1 = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum_doctor.sh")]
             if self.current_world_path:
                 cmd1.extend(["--world", self.current_world_path])
             try:
@@ -1573,7 +1573,7 @@ class ScriptoriumApp(Gtk.Window):
             self.show_error("Author's Field Manual not found.")
 
     def check_first_run(self):
-        flag_file = HOME_DIR / ".config" / "scriptorium" / "first_run_done"
+        flag_file = HOME_DIR / ".config" / "arcanum" / "first_run_done"
         if not flag_file.is_file() and not self.discovered_worlds and not self.discovered_manuscripts:
             GLib.idle_add(self.show_welcome_dialog, flag_file)
 
@@ -1583,10 +1583,10 @@ class ScriptoriumApp(Gtk.Window):
             flags=0,
             message_type=Gtk.MessageType.INFO,
             buttons=Gtk.ButtonsType.OK,
-            text="Welcome to Scriptorium!"
+            text="Welcome to Ars Arcanum!"
         )
         dialog.format_secondary_text(
-            "Scriptorium is your private, local-first writing and worldbuilding studio.\n\n"
+            "Ars Arcanum is your private, local-first writing and worldbuilding studio.\n\n"
             "• Tab 1 (Universes & Worlds): Manage Obsidian World Lore Vaults directly.\n"
             "• Tab 2 (Manuscripts & Drafting): Organize scenes and inspect/write @pov, @char, @location, @thread, and @status tags visually.\n"
             "• Tab 3 (Publishing & Exports): Compile trade-quality print PDFs, EPUBs, and DOCX submission manuscripts.\n"
@@ -1668,10 +1668,13 @@ class ScriptoriumApp(Gtk.Window):
         if callback:
             GLib.idle_add(callback)
 
+# Compatibility alias
+ScriptoriumApp = ArcanumApp
+
 def run_gtk3_app():
     if not HAS_GTK:
         return False
-    app = ScriptoriumApp()
+    app = ArcanumApp()
     app.connect("destroy", Gtk.main_quit)
     app.show_all()
     Gtk.main()

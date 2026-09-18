@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Wordcount & Progress Report (D-03 / Workstream 3.3)
+# Ars Arcanum Wordcount & Progress Report (D-03 / Workstream 3.3)
 # Purpose: Single-pass manuscript analytics: word counts per chapter, act, and
 #          book, plus novelWriter @status breakdown. Read-only; never touches
 #          manuscript files.
@@ -28,7 +28,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Wordcount & Progress Report (D-03 / Workstream 3.3)
+Ars Arcanum Wordcount & Progress Report (D-03 / Workstream 3.3)
 Purpose: Single-pass manuscript analytics: word counts per chapter, act, and
          book, plus novelWriter @status breakdown. Read-only; never touches
          manuscript files.
@@ -85,7 +85,7 @@ if [ -z "${WORLD_DIR}" ]; then
         } >&2
         exit 2
     else
-        echo "Error: no manuscripts or worlds found. Create one first (scriptorium manuscript <name>)." >&2
+        echo "Error: no manuscripts or worlds found. Create one first (arcanum manuscript <name>)." >&2
         exit 2
     fi
 else
@@ -194,7 +194,7 @@ elif MD:
         print(f"| {book} | {act} | {ch} | {w:,} | {st} |")
     print(f"| **Total** | | **{chapter_count} chapters** | **{total_words:,} words** | |")
 else:
-    print(f"Scriptorium Wordcount Report — {MS}")
+    print(f"Ars Arcanum Wordcount Report — {MS}")
     print(f"Chapters: {chapter_count:<8} Total words: {total_words:,}\n")
     print("By Volume:")
     for b in sorted(by_book):

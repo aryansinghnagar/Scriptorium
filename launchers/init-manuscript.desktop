@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=New Manuscript Creator
-GenericName=Scriptorium Manuscript Initializer
+GenericName=Ars Arcanum Manuscript Initializer
 Comment=Scaffold a new standalone prose manuscript project with novelWriter and 3-act chapters
 Exec=bash "__PROJECT_ROOT__/scripts/init_manuscript.sh"
 TryExec=bash

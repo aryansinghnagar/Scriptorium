@@ -1,10 +1,10 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: scriptorium
-Upstream-Contact: Aryan Singh Nagar <aryan@scriptorium.local>
-Source: https://github.com/aryansinghnagar/Scriptorium
+Upstream-Name: ars-arcanum
+Upstream-Contact: Ars Arcanum Maintainers <maintainers@arsarcanum.local>
+Source: https://github.com/aryansinghnagar/Ars-Arcanum
 
 Files: *
-Copyright: 2026 Aryan Singh Nagar
+Copyright: 2026 Ars Arcanum Contributors
 License: MIT
 
 License: MIT

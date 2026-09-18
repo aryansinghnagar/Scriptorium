@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Local Offline Semantic Continuity Engine Test Suite
+# Ars Arcanum Local Offline Semantic Continuity Engine Test Suite
 # Tests:
 #   1. Clean world & manuscript continuity verification
 #   2. Trait mismatch detection against World Bible (CNT-101)
 #   3. Inter-scene trait contradiction detection (CNT-102)
-#   4. scriptorium check-continuity CLI facade dispatch
+#   4. arcanum check-continuity CLI facade dispatch
 #   5. JSON report structure validation
 # ==============================================================================
 set -euo pipefail
@@ -103,7 +103,7 @@ echo "PASS: Test 3 passed"
 
 echo "=== Test 4: CLI Facade Dispatch ==="
 set +e
-"${SCRIPT_DIR}/scripts/scriptorium" check-continuity -w "${WORLD_DIR}" -m "${MS_DIR}" >/dev/null 2>&1
+"${SCRIPT_DIR}/scripts/arcanum" check-continuity -w "${WORLD_DIR}" -m "${MS_DIR}" >/dev/null 2>&1
 RC3=$?
 set -e
 

@@ -1,6 +1,6 @@
-# Contributing to Scriptorium
+# Contributing to Ars Arcanum
 
-Thank you for considering a contribution. Scriptorium is an open-source,
+Thank you for considering a contribution. Ars Arcanum is an open-source,
 audit-verified project with strict quality gates and a standardized exit-code
 contract. This guide is deliberately short and practical.
 
@@ -38,9 +38,9 @@ within this table:
 ## Development setup
 
 ```bash
-git clone https://github.com/aryansinghnagar/Scriptorium.git
-cd Scriptorium
-bash scripts/setup_scriptorium.sh --dry-run   # inspect what a real install does
+git clone https://github.com/aryansinghnagar/Ars-Arcanum.git
+cd Ars-Arcanum
+bash scripts/setup_arcanum.sh --dry-run   # inspect what a real install does
 ```
 
 You do not need the full toolchain to iterate: the test suites sandbox
@@ -52,12 +52,15 @@ and `python3` installed.
 Every change must pass all of these, in this order:
 
 ```bash
-bash -n scripts/*.sh scripts/lib/*.sh scripts/scriptorium   # syntax
-bash scripts/verify.sh                                       # 7-stage harness
+bash -n scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum   # syntax
+bash scripts/verify.sh                                                     # 7-stage harness
 bash tests/test_audit_fixes.sh
 bash tests/test_deep_audit.sh
 bash tests/test_concordance_edge_cases.sh
 bash tests/test_audit_claude_improvements.sh
+bash tests/test_continuity_engine.sh
+bash tests/test_performance_cache.sh
+python3 -m unittest discover tests
 ```
 
 `verify.sh` is the project's core quality gate — it must be able to *fail*

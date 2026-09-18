@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Comprehensive Verification Harness
+# Ars Arcanum Comprehensive Verification Harness
 # Usage: bash scripts/verify.sh
 # ==============================================================================
 set -euo pipefail
@@ -22,7 +22,7 @@ trap cleanup EXIT
 
 echo "[1/7] Script syntax & Python compilation validation..."
 # TST-02: same bash -n file set as CI (ci.yml) — scripts + lib + facade + tests.
-for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh; do
+for f in scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum tests/*.sh; do
     if [ -f "$f" ]; then
         if ! bash -n "$f"; then
             echo "  FAIL $f (bash syntax)" >&2
@@ -32,7 +32,7 @@ for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh; do
     fi
 done
 if command -v python3 >/dev/null; then
-    for py in scripts/scriptorium_app.py scripts/lib/*.py; do
+    for py in scripts/arcanum_app.py scripts/lib/*.py; do
         if [ -f "$py" ]; then
             if ! python3 -m py_compile "$py"; then
                 echo "  FAIL $py (Python compilation)" >&2
@@ -64,7 +64,7 @@ PYEOF
 # 2b. LeechBlock JSON schema validation
 python3 - << 'PYEOF'
 import json, sys
-with open('configs/leechblock_scriptorium_rules.json') as f:
+with open('configs/leechblock_arcanum_rules.json') as f:
     data = json.load(f)
 assert "blockSets" in data, "Missing blockSets in leechblock JSON"
 assert isinstance(data["blockSets"], list) and len(data["blockSets"]) > 0, "Empty blockSets"
@@ -220,7 +220,7 @@ MS_PATH="${HOME}/Manuscripts/${MANUSCRIPT}"
 echo "  OK init_manuscript (Manuscript root repo + Book-01 discrete volume repo + 3-Act structure)"
 
 # 6d. Test add-volume volume scaffolding & tag-poisoning test chapters
-bash scripts/scriptorium add-volume "${MS_PATH}" "Book-02" >/dev/null
+bash scripts/arcanum add-volume "${MS_PATH}" "Book-02" >/dev/null
 [ -d "${MS_PATH}/Book-02/01_Act_I" ] || { echo "  FAIL Book-02 Act I missing"; exit 1; }
 [ -d "${MS_PATH}/Book-02/02_Act_II" ] || { echo "  FAIL Book-02 Act II missing"; exit 1; }
 [ -d "${MS_PATH}/Book-02/03_Act_III" ] || { echo "  FAIL Book-02 Act III missing"; exit 1; }
@@ -450,7 +450,7 @@ spoken_by: "[[Solar_Hegemony]]"
 | *Vaelor* | Noun | /ˈvaɪ.lɔːr/ | Eternal Shield | Military vow |
 EOF
 
-bash scripts/scriptorium concordance "${WORLD_PATH}" --manuscript "${MS_PATH}" --book Book-01 >/dev/null
+bash scripts/arcanum concordance "${WORLD_PATH}" --manuscript "${MS_PATH}" --book Book-01 >/dev/null
 [ -f "${MS_PATH}/Book-01/04_Back_Matter/01_Dramatis_Personae.md" ] || { echo "  FAIL missing 01_Dramatis_Personae.md"; exit 1; }
 [ -f "${MS_PATH}/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md" ] || { echo "  FAIL missing 02_Glossary_and_Concordance.md"; exit 1; }
 grep -q "Aethelgard" "${MS_PATH}/Book-01/04_Back_Matter/01_Dramatis_Personae.md" || { echo "  FAIL Aethelgard missing from Dramatis Personae"; exit 1; }
@@ -503,14 +503,14 @@ RESTORED_PATH="${HOME}/Universes/${UNIVERSE}/${RESTORE_TARGET}"
 [ -f "${RESTORED_PATH}/Characters/Aethelgard.md" ] || { echo "  FAIL restored character missing"; exit 1; }
 echo "  OK restore_world (drill verified: archive -> restore -> verify content)"
 
-# 6k. Unified Scriptorium Doctor
+# 6k. Unified Ars Arcanum Doctor
 set +e
-bash scripts/scriptorium_doctor.sh --world "${RESTORE_TARGET}" --manuscript "${MANUSCRIPT}" > "${TMP_VERIFY}/doc.log" 2>&1
+bash scripts/arcanum_doctor.sh --world "${RESTORE_TARGET}" --manuscript "${MANUSCRIPT}" > "${TMP_VERIFY}/doc.log" 2>&1
 DOC_RC=$?
 set -e
-[ "${DOC_RC}" -eq 0 ] || [ "${DOC_RC}" -eq 1 ] || { echo "  FAIL scriptorium_doctor failed with exit code ${DOC_RC}:"; cat "${TMP_VERIFY}/doc.log"; exit 1; }
-[ -s "${TMP_VERIFY}/doc.log" ] || { echo "  FAIL scriptorium_doctor produced no output"; exit 1; }
-echo "  OK scriptorium_doctor diagnostics (exit ${DOC_RC})"
+[ "${DOC_RC}" -eq 0 ] || [ "${DOC_RC}" -eq 1 ] || { echo "  FAIL arcanum_doctor failed with exit code ${DOC_RC}:"; cat "${TMP_VERIFY}/doc.log"; exit 1; }
+[ -s "${TMP_VERIFY}/doc.log" ] || { echo "  FAIL arcanum_doctor produced no output"; exit 1; }
+echo "  OK arcanum_doctor diagnostics (exit ${DOC_RC})"
 
 # 6l. Performance Cache & Continuity Engine Regression Tests
 bash tests/test_performance_cache.sh > "${TMP_VERIFY}/cache_test.log" 2>&1 \
@@ -522,28 +522,29 @@ bash tests/test_continuity_engine.sh > "${TMP_VERIFY}/continuity_test.log" 2>&1 
 echo "  OK narrative continuity & trait contradiction tests"
 
 # 6m. Dry-run simulation tests
-bash scripts/setup_scriptorium.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \
-    || { echo "  FAIL setup_scriptorium --dry-run:"; tail -n 5 "${TMP_VERIFY}/setup_dryrun.log"; exit 1; }
-bash scripts/uninstall_scriptorium.sh --dry-run --force > "${TMP_VERIFY}/uninstall_dryrun.log" 2>&1 \
-    || { echo "  FAIL uninstall_scriptorium --dry-run:"; tail -n 5 "${TMP_VERIFY}/uninstall_dryrun.log"; exit 1; }
+bash scripts/setup_arcanum.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \
+    || { echo "  FAIL setup_arcanum --dry-run:"; tail -n 5 "${TMP_VERIFY}/setup_dryrun.log"; exit 1; }
+bash scripts/uninstall_arcanum.sh --dry-run --force > "${TMP_VERIFY}/uninstall_dryrun.log" 2>&1 \
+    || { echo "  FAIL uninstall_arcanum --dry-run:"; tail -n 5 "${TMP_VERIFY}/uninstall_dryrun.log"; exit 1; }
 echo "  OK setup & uninstall --dry-run simulations"
 
-echo "[7/7] Scriptorium CLI facade tests..."
-bash scripts/scriptorium --version >/dev/null
-bash scripts/scriptorium --help >/dev/null
-bash scripts/scriptorium universe --list >/dev/null
-bash scripts/scriptorium world --list >/dev/null
-bash scripts/scriptorium manuscript --list >/dev/null
-bash scripts/scriptorium add-volume --help >/dev/null
-bash scripts/scriptorium concordance --help >/dev/null
-bash scripts/scriptorium export --help >/dev/null
-bash scripts/scriptorium snapshot --help >/dev/null
-bash scripts/scriptorium backup --help >/dev/null
-bash scripts/scriptorium restore --help >/dev/null
-bash scripts/scriptorium report --help >/dev/null
-bash scripts/scriptorium doctor --help >/dev/null
-bash scripts/scriptorium world-doctor --help >/dev/null
-bash scripts/scriptorium check-continuity --help >/dev/null
-echo "  OK scriptorium CLI entrypoints and subcommands"
+echo "[7/7] Ars Arcanum CLI facade tests..."
+bash scripts/arcanum --version >/dev/null
+bash scripts/arcanum --help >/dev/null
+bash scripts/arcanum universe --list >/dev/null
+bash scripts/arcanum world --list >/dev/null
+bash scripts/arcanum manuscript --list >/dev/null
+bash scripts/arcanum add-volume --help >/dev/null
+bash scripts/arcanum concordance --help >/dev/null
+bash scripts/arcanum export --help >/dev/null
+bash scripts/arcanum snapshot --help >/dev/null
+bash scripts/arcanum backup --help >/dev/null
+bash scripts/arcanum restore --help >/dev/null
+bash scripts/arcanum report --help >/dev/null
+bash scripts/arcanum doctor --help >/dev/null
+bash scripts/arcanum world-doctor --help >/dev/null
+bash scripts/arcanum check-continuity --help >/dev/null
+bash scripts/ars-arcanum --version >/dev/null
+echo "  OK arcanum and ars-arcanum CLI entrypoints and subcommands"
 
 echo "ALL-CHECKS-PASS"

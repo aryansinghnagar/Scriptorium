@@ -1,8 +1,8 @@
-scriptorium (1.5.0-1) unstable; urgency=medium
+ars-arcanum (1.5.0-1) unstable; urgency=medium
 
-  * Initial Debian packaging release.
-  * Packaged unified CLI dispatcher and GTK control center.
+  * Initial Debian packaging release for Ars Arcanum.
+  * Packaged unified CLI dispatcher (arcanum, ars-arcanum) and GTK control center.
   * Added templates and configuration schemas.
   * Included FreeDesktop launcher specifications.
 
- -- Scriptorium Maintainers <maintainers@scriptorium.local>  Thu, 17 Sep 2026 18:30:00 +0530
+ -- Ars Arcanum Maintainers <maintainers@arsarcanum.local>  Thu, 17 Sep 2026 18:30:00 +0530

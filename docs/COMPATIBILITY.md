@@ -1,6 +1,6 @@
-# Scriptorium Toolchain & Dependency Compatibility Baselines
+# Ars Arcanum Toolchain & Dependency Compatibility Baselines
 
-This document pins the exact tool baselines, package versions, and supply chain verification parameters for **Scriptorium**.
+This document pins the exact tool baselines, package versions, and supply chain verification parameters for **Ars Arcanum**.
 
 ---
 
@@ -8,7 +8,7 @@ This document pins the exact tool baselines, package versions, and supply chain 
 
 | Tool | Tested Baseline | Min. Version | Installation Source | Checksum / Verification |
 | :--- | :--- | :--- | :--- | :--- |
-| **Typst** | `0.13.0` (pinned; see `dependencies.lock`) | `>= 0.11.0` | GitHub Releases (musl binary) | SHA-256 asset digest verified against hardcoded digests in `scripts/setup_scriptorium.sh` |
+| **Typst** | `0.13.0` (pinned; see `dependencies.lock`) | `>= 0.11.0` | GitHub Releases (musl binary) | SHA-256 asset digest verified against hardcoded digests in `scripts/setup_arcanum.sh` |
 | **Pandoc** | `3.1.x` / `2.19.x` | `>= 2.16.0` | APT package (`pandoc`) | Standard distro package verification (GPG) |
 | **Git** | `2.43.x` | `>= 2.34.0` | APT package (`git`) | Standard distro package verification (GPG) |
 | **Python** | `3.12.x` | `>= 3.10.0` | APT package (`python3`) | Standard distro package verification (GPG) |
@@ -55,7 +55,7 @@ All Flatpak packages are sourced from the official Flathub remote repository (`h
 
 | System | Target Software | Version / Schema | Config Path |
 | :--- | :--- | :--- | :--- |
-| **Site Blocker** | LeechBlock NG (Firefox) | `1.5.2` (BlockSets Schema v1) | `configs/leechblock_scriptorium_rules.json` |
+| **Site Blocker** | LeechBlock NG (Firefox) | `1.5.2` (BlockSets Schema v1) | `configs/leechblock_arcanum_rules.json` |
 | **Manuscript Scaffold** | novelWriter | `fileVersion 1.5` | `templates/manuscript/nwProject.nwx` |
 | **World Manifest** | World Lore Manifest | `schema v1` (flat key-value) | `~/Universes/<UniverseName>/<WorldName>/world.yaml` |
 | **Manuscript Manifest** | Manuscript Manifest | `schema v1` (flat key-value) | `~/Manuscripts/<ManuscriptName>/manuscript.yaml` |

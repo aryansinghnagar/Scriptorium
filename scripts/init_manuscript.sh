@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Manuscript Project Initializer
+# Ars Arcanum Manuscript Project Initializer
 # Purpose: Atomically creates a brand new Manuscript Project in ~/Manuscripts/<ManuscriptName>
 #          with discrete Volume Git repositories, 3-Act structure, Outlines,
 #          novelWriter project scaffolding, Typst export templates, and linking
@@ -19,7 +19,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Manuscript Initializer — atomically scaffold a Manuscript Project.
+Ars Arcanum Manuscript Initializer — atomically scaffold a Manuscript Project.
 
 Usage:
   init_manuscript.sh [MANUSCRIPT_NAME] [OPTIONS]
@@ -75,7 +75,7 @@ if [ "${LIST_MODE}" -eq 1 ]; then
     echo "Discovered Manuscript Projects in ${MANUSCRIPTS_BASE}:"
     discover_manuscripts MANUSCRIPTS
     if [ ${#MANUSCRIPTS[@]} -eq 0 ]; then
-        echo "  (No Manuscript projects found yet. Create one with: scriptorium manuscript <name>)"
+        echo "  (No Manuscript projects found yet. Create one with: arcanum manuscript <name>)"
     else
         for m in "${MANUSCRIPTS[@]}"; do
             echo "  • $(basename "$m") -> $m"
@@ -95,7 +95,7 @@ mkdir -p "${MANUSCRIPTS_BASE}"
 if [ -z "${MANUSCRIPT_NAME}" ]; then
     if has_gui; then
         MANUSCRIPT_NAME=$(zenity --entry \
-            --title="Scriptorium — New Manuscript Creator" \
+            --title="Ars Arcanum — New Manuscript Creator" \
             --text="Enter the title for your new Manuscript Project:\n(e.g., 'Chronicles-of-Eldoria', 'The-Last-Archon')" \
             --entry-text="My-New-Novel" || true)
     fi
@@ -129,7 +129,7 @@ if [ -d "${TARGET_DIR}" ]; then
     exit 1
 fi
 
-echo "Scaffolding Scriptorium Manuscript Project: ${MANUSCRIPT_NAME} ..."
+echo "Scaffolding Ars Arcanum Manuscript Project: ${MANUSCRIPT_NAME} ..."
 
 # 2. Transactional Staging Architecture
 SUCCESS=0
@@ -219,7 +219,7 @@ fi
 
 # Create .gitignore and manuscript manifests
 cat << 'EOF' > "${STAGING_DIR}/.gitignore"
-# Scriptorium Manuscript Git Ignore
+# Ars Arcanum Manuscript Git Ignore
 *.bak
 *.tmp
 *.log
@@ -235,7 +235,7 @@ YAML_AUTHOR="$(yaml_escape "${AUTHOR_NAME}")"
 YAML_UNIVERSE="$(yaml_escape "${UNIVERSE_NAME}")"
 YAML_WORLD="$(yaml_escape "${WORLD_NAME}")"
 cat << EOF > "${STAGING_DIR}/manuscript.yaml"
-# Scriptorium Manuscript Project Manifest
+# Ars Arcanum Manuscript Project Manifest
 title: "${YAML_TITLE}"
 author: "${YAML_AUTHOR}"
 universe: "${YAML_UNIVERSE}"
@@ -243,8 +243,8 @@ world: "${YAML_WORLD}"
 created_at: "$(date +%Y-%m-%d)"
 EOF
 
-cat << EOF > "${STAGING_DIR}/scriptorium.yaml"
-# Scriptorium world manifest for backwards compatibility
+cat << EOF > "${STAGING_DIR}/arcanum.yaml"
+# Ars Arcanum world manifest for backwards compatibility
 title: "${YAML_TITLE}"
 author: "${YAML_AUTHOR}"
 universe: "${YAML_UNIVERSE}"
@@ -265,7 +265,7 @@ if command -v git &> /dev/null; then
         cd "${STAGING_DIR}/Book-01"
         git init -q
         git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial drafting repository for Book-01 in ${MANUSCRIPT_NAME}" 2>/dev/null
+        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial drafting repository for Book-01 in ${MANUSCRIPT_NAME}" 2>/dev/null
     ); then
         echo "[!] Warning: Book-01 initial Git commit failed (lock contention or identity issue). Volume created without initial history." >&2
         GIT_HISTORY="failed"
@@ -277,7 +277,7 @@ if command -v git &> /dev/null; then
         git init -q
         git config advice.addEmbeddedRepo false
         git -c advice.addEmbeddedRepo=false add . 2>/dev/null
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium manuscript repository: ${MANUSCRIPT_NAME}" 2>/dev/null
+        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial Ars Arcanum manuscript repository: ${MANUSCRIPT_NAME}" 2>/dev/null
     ); then
         echo "[!] Warning: manuscript root initial Git commit failed. Project created without initial history." >&2
         echo "    Repair with: git -C '${STAGING_DIR}/Book-01' commit -m 'Initial commit' (after move: git -C \"\$HOME/Manuscripts/${MANUSCRIPT_NAME}/Book-01\" commit)" >&2

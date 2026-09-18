@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Back-Matter Concordance & Dramatis Personae Engine
+# Ars Arcanum Back-Matter Concordance & Dramatis Personae Engine
 # Purpose: Automatically reads YAML frontmatter and lore definitions from
 #          00-World-Bible/ (Characters, Languages, Bestiary, Artifacts, Factions)
 #          and generates publication-ready Markdown back-matter files in
@@ -18,7 +18,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Concordance Generator — generate Dramatis Personae and Glossary back-matter.
+Ars Arcanum Concordance Generator — generate Dramatis Personae and Glossary back-matter.
 
 Usage:
   generate_concordance.sh [MANUSCRIPT|WORLD] [OPTIONS]
@@ -108,7 +108,7 @@ if [ -z "${RESOLVED_MS}" ] && [ -z "${RESOLVED_WORLD}" ]; then
         for w in "${WORLDS[@]}"; do
             CHOICES+=("$(basename "$w")" "[World Lore] $w")
         done
-        PICKED=$(zenity --list --title="Scriptorium — Select Project for Concordance" \
+        PICKED=$(zenity --list --title="Ars Arcanum — Select Project for Concordance" \
             --text="Select the manuscript or world to generate back-matter concordance for:" \
             --column="Name" --column="Type & Path" \
             --width=520 --height=320 \
@@ -134,6 +134,7 @@ if [ -n "${RESOLVED_MS}" ] && [ -d "${RESOLVED_MS}" ]; then
     LINKED_WORLD=""
     LINKED_UNI=""
     MANIFEST="${RESOLVED_MS}/manuscript.yaml"
+    [ -f "${MANIFEST}" ] || MANIFEST="${RESOLVED_MS}/arcanum.yaml"
     [ -f "${MANIFEST}" ] || MANIFEST="${RESOLVED_MS}/scriptorium.yaml"
     if [ -f "${MANIFEST}" ]; then
         LINKED_WORLD=$(sed -n -E 's/^world:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -172,6 +173,7 @@ elif [ -n "${RESOLVED_WORLD}" ] && [ -d "${RESOLVED_WORLD}" ]; then
         WNAME="$(basename "${RESOLVED_WORLD}")"
         for m in "${MANUSCRIPTS[@]}"; do
             m_manifest="${m}/manuscript.yaml"
+            [ -f "${m_manifest}" ] || m_manifest="${m}/arcanum.yaml"
             [ -f "${m_manifest}" ] || m_manifest="${m}/scriptorium.yaml"
             if [ -f "${m_manifest}" ]; then
                 mw=$(sed -n -E 's/^world:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${m_manifest}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')

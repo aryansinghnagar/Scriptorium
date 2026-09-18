@@ -1,5 +1,7 @@
 *.sh text eol=lf
 *.py text eol=lf
+scripts/arcanum text eol=lf
+scripts/ars-arcanum text eol=lf
 scripts/scriptorium text eol=lf
 debian/* text eol=lf
 *.typ text eol=lf

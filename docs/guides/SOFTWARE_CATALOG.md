@@ -1,6 +1,6 @@
-# Scriptorium Software Resource Catalog & Reference Links
+# Ars Arcanum Software Resource Catalog & Reference Links
 
-This catalog provides official download links, package names (APT / Flatpak / AppImage / Official Installers), and installation commands for all core tools specified in the Scriptorium architecture.
+This catalog provides official download links, package names (APT / Flatpak / AppImage / Official Installers), and installation commands for all core tools specified in the Ars Arcanum architecture.
 
 ---
 
@@ -89,7 +89,7 @@ This catalog provides official download links, package names (APT / Flatpak / Ap
 - **Installation Methods**:
   ```bash
   # Option A: Official Precompiled Binary from GitHub Release (Instant)
-  # setup_scriptorium.sh auto-selects x86_64 vs aarch64; manual equivalent:
+  # setup_arcanum.sh auto-selects x86_64 vs aarch64; manual equivalent:
   ARCH="$(uname -m)"; case "$ARCH" in x86_64|amd64) TYPST_ARCH="x86_64-unknown-linux-musl";; aarch64|arm64) TYPST_ARCH="aarch64-unknown-linux-musl";; *) echo unsupported;; esac
   curl -L -o /tmp/typst.tar.xz "https://github.com/typst/typst/releases/latest/download/typst-${TYPST_ARCH}.tar.xz"
   tar -xf /tmp/typst.tar.xz -C /tmp/
@@ -121,7 +121,7 @@ This catalog provides official download links, package names (APT / Flatpak / Ap
 ### 2. LeechBlock NG (Firefox Add-on)
 - **Role**: Scheduled distraction blocker for social media and video sites.
 - **Official Firefox Add-ons URL**: [https://addons.mozilla.org/firefox/addon/leechblock-ng/](https://addons.mozilla.org/firefox/addon/leechblock-ng/)
-- **Pre-configured Export File**: See `configs/leechblock_scriptorium_rules.json` in this repository.
+- **Pre-configured Export File**: See `configs/leechblock_arcanum_rules.json` in this repository.
 
 ### 3. Git & Zenity
 - **Role**: Local version snapshotting with beginner-friendly GUI dialogs.

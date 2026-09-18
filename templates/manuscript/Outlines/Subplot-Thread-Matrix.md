@@ -14,7 +14,7 @@ Modern speculative fiction and complex novels weave multiple concurrent narrativ
 
 ## 2. Tagging Conventions (`@thread:` & Metadata)
 
-When drafting scene markdown files in `<Book>/...` (e.g. `Book-01/01_Act_I/01_Chapter_01.md`), use novelWriter metadata tags at the top of each scene file. Scriptorium's publication export engine automatically strips these tags during compilation so they remain strictly for internal planning and Dataview tracking.
+When drafting scene markdown files in `<Book>/...` (e.g. `Book-01/01_Act_I/01_Chapter_01.md`), use novelWriter metadata tags at the top of each scene file. Ars Arcanum's publication export engine automatically strips these tags during compilation so they remain strictly for internal planning and Dataview tracking.
 
 ### Core Scene Metadata Headers
 ```markdown
@@ -96,4 +96,4 @@ GROUP BY pov
 
 ## 5. Clean Compilation Invariant
 
-Scriptorium's exporter (`scripts/export_book.sh` / `scriptorium export`) ensures that all `@thread:`, `@pov:`, `@char:`, `@location:`, and `@status:` tag lines are stripped prior to rendering Typst print PDFs and Pandoc EPUBs. You can freely annotate your draft files without fear of internal development tags leaking into your published books.
+Ars Arcanum's exporter (`scripts/export_book.sh` / `arcanum export`) ensures that all `@thread:`, `@pov:`, `@char:`, `@location:`, and `@status:` tag lines are stripped prior to rendering Typst print PDFs and Pandoc EPUBs. You can freely annotate your draft files without fear of internal development tags leaking into your published books.

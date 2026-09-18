@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Ars Arcanum - Legacy CLI Wrapper (Deprecated: use 'arcanum' or 'ars-arcanum')
+# Ars Arcanum - CLI Alias Wrapper
 # ==============================================================================
 set -euo pipefail
 

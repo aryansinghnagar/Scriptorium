@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Unified Doctor (Workstream 3.1)
+# Ars Arcanum Unified Doctor (Workstream 3.1)
 # Purpose: Comprehensive system, toolchain, workspace, world, and backup diagnostics.
 # ==============================================================================
 
@@ -12,10 +12,10 @@ WORLDS_BASE="${HOME}/Worlds"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Unified Doctor — diagnose system, toolchain, workspace, and world health.
+Ars Arcanum Unified Doctor — diagnose system, toolchain, workspace, and world health.
 
 Usage:
-  scriptorium_doctor.sh [OPTIONS]
+  arcanum_doctor.sh [OPTIONS]
 
 Options:
   -w, --world NAME         Run deep domain diagnostics on a specific world
@@ -176,10 +176,10 @@ for label, app_id in flatpak_apps.items():
 desktop_dir = os.path.expanduser("~/Desktop")
 app_dir = os.path.expanduser("~/.local/share/applications")
 
-launchers = ["init-world.desktop", "init-manuscript.desktop", "export-book.desktop", "save-snapshot.desktop", "scriptorium-control-center.desktop"]
+launchers = ["init-world.desktop", "init-manuscript.desktop", "export-book.desktop", "save-snapshot.desktop", "arcanum-control-center.desktop"]
 installed_launchers = [lf for lf in launchers if os.path.isfile(os.path.join(app_dir, lf)) or os.path.isfile(os.path.join(desktop_dir, lf))]
 
-leechblock_json = os.path.join(PROJECT_ROOT, "configs", "leechblock_scriptorium_rules.json")
+leechblock_json = os.path.join(PROJECT_ROOT, "configs", "leechblock_arcanum_rules.json")
 leechblock_valid = False
 if os.path.isfile(leechblock_json):
     try:
@@ -326,7 +326,7 @@ if JSON_OUT:
     print(json.dumps(findings, indent=2))
 else:
     print("============================================================")
-    print("  Scriptorium Unified Doctor Diagnostic Report")
+    print("  Ars Arcanum Unified Doctor Diagnostic Report")
     print("============================================================")
     print(f"System:       {findings['system']['os']} ({findings['system']['architecture']})")
     print(f"Disk Free:    {findings['system']['free_disk_gb']} GB")

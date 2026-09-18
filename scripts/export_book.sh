@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Book Exporter
+# Ars Arcanum Book Exporter
 # Purpose: Compiles a novelWriter / Markdown manuscript into a print-ready PDF
 #          (using Typst) and a distribution-ready EPUB (using Pandoc).
 # ==============================================================================
@@ -35,7 +35,7 @@ safe_filename() {
 
 usage() {
     cat << 'USAGE'
-Scriptorium Book Exporter — compile a Markdown/novelWriter manuscript into
+Ars Arcanum Book Exporter — compile a Markdown/novelWriter manuscript into
 print-ready PDF (Typst), distribution EPUB (Pandoc), or submission DOCX (Pandoc).
 
 Usage:
@@ -104,7 +104,7 @@ if [ -z "${TARGET_DIR}" ]; then
         PICKER_ROOT="${MANUSCRIPTS_BASE}"
         [ -d "${PICKER_ROOT}" ] || PICKER_ROOT="${UNIVERSES_BASE}"
         TARGET_DIR=$(zenity --file-selection --directory \
-            --title="Scriptorium — Select Manuscript Directory to Export" \
+            --title="Ars Arcanum — Select Manuscript Directory to Export" \
             --filename="${PICKER_ROOT}/" || true)
     fi
 fi
@@ -146,8 +146,9 @@ echo "Compiling publication files for: ${PROJECT_NAME} ..."
 BOOK_TITLE="${BOOK_TITLE_CLI:-}"
 AUTHOR_NAME="${AUTHOR_NAME_CLI:-}"
 
-# Read manifest (manuscript.yaml or scriptorium.yaml) if present — flat `key: value` pairs only
+# Read manifest (manuscript.yaml, arcanum.yaml, or scriptorium.yaml) if present — flat `key: value` pairs only
 MANIFEST="${TARGET_DIR}/manuscript.yaml"
+[ -f "${MANIFEST}" ] || MANIFEST="${TARGET_DIR}/arcanum.yaml"
 [ -f "${MANIFEST}" ] || MANIFEST="${TARGET_DIR}/scriptorium.yaml"
 if [ -f "${MANIFEST}" ]; then
     if [ -z "${BOOK_TITLE}" ]; then
@@ -159,7 +160,7 @@ if [ -f "${MANIFEST}" ]; then
 fi
 
 if has_gui && { [ -z "${BOOK_TITLE}" ] || [ -z "${AUTHOR_NAME}" ]; }; then
-    METADATA=$(zenity --forms --title="Scriptorium — Book Metadata" \
+    METADATA=$(zenity --forms --title="Ars Arcanum — Book Metadata" \
         --text="Enter metadata for the compiled book:" \
         --add-entry="Book Title" \
         --add-entry="Author Name" || true)
@@ -217,7 +218,7 @@ elif [ ${#AVAILABLE_BOOKS[@]} -gt 1 ]; then
             CHOICES+=("$b" "Volume $b")
         done
         CHOICES+=("All (Omnibus)" "Compile entire series omnibus")
-        PICKED=$(zenity --list --title="Scriptorium — Select Volume to Export" \
+        PICKED=$(zenity --list --title="Ars Arcanum — Select Volume to Export" \
             --text="Multiple book volumes detected in '${PROJECT_NAME}'.\nWhich volume would you like to export?" \
             --column="Volume" --column="Description" \
             --hide-column=2 \
@@ -278,7 +279,7 @@ fi
 # publishable artifact.
 if [ ! -s "${COMBINED_MD}" ]; then
     echo "Error: no manuscript content found for '${SELECTED_VOLUME}' under ${MANUSCRIPT_DIR}." >&2
-    echo "       Add chapters first (scriptorium add-book <world>, novelWriter, or plain .md files)." >&2
+    echo "       Add chapters first (arcanum add-book <world>, novelWriter, or plain .md files)." >&2
     exit 1
 fi
 
@@ -311,7 +312,7 @@ cat << EOF > "${TYPST_SRC}"
   subtitle: "",
   year: "$(date +%Y)",
   isbn: "978-0-000000-00-0",
-  publisher: "Scriptorium Press",
+  publisher: "Ars Arcanum Press",
   paper-size: "${PAPER_SIZE}", // Options: "us-trade" (6x9in), "trade" (5.5x8.5in), "pocket" (5x8in)
   body-font: "Linux Libertine",
 )

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Restore Engine (REL-03)
+# Ars Arcanum Restore Engine (REL-03)
 # Purpose: Validates archive checksum integrity, stages extraction safely,
 #          and restores a world into ~/Universes/<Universe>/Worlds/ or ~/Worlds/.
 # ==============================================================================
@@ -15,7 +15,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium World Restore Engine — restore a world from a verified backup archive.
+Ars Arcanum World Restore Engine — restore a world from a verified backup archive.
 
 Usage:
   restore_world.sh [ARCHIVE_PATH] [OPTIONS]
@@ -85,8 +85,8 @@ ARCHIVE_PATH="${ARCHIVE_CLI:-${POSITIONAL[0]:-}}"
 if [ -z "${ARCHIVE_PATH}" ]; then
     if has_gui; then
         ARCHIVE_PATH=$(zenity --file-selection \
-            --title="Scriptorium — Select Backup Archive (.tar.gz) to Restore" \
-            --file-filter="Scriptorium Archives (*.tar.gz) | *.tar.gz" || true)
+            --title="Ars Arcanum — Select Backup Archive (.tar.gz) to Restore" \
+            --file-filter="Ars Arcanum Archives (*.tar.gz) | *.tar.gz" || true)
     fi
 fi
 
@@ -148,7 +148,7 @@ echo "Extracting archive into staging..."
 # S-04: refuse archives whose members could escape the staging root or
 # execute code on the next git operation, before extracting anything.
 # Note: .git/hooks/*.sample files ship with every 'git init' and appear in
-# every legitimate Scriptorium backup; only non-sample hooks (which would
+# every legitimate Ars Arcanum backup; only non-sample hooks (which would
 # execute on the next snapshot commit) are rejected. The co-located sha256
 # manifest proves integrity against bit-rot, not authenticity: anyone who
 # can replace the archive can regenerate the manifest.
@@ -240,9 +240,9 @@ fi
 
 if [ ! -d "${EXTRACTED_DIR}/Characters" ] && [ ! -d "${EXTRACTED_DIR}/00-World-Bible" ] && \
    [ ! -d "${EXTRACTED_DIR}/01-Manuscript" ] && [ ! -d "${EXTRACTED_DIR}/Book-01" ] && \
-   [ ! -f "${EXTRACTED_DIR}/world.yaml" ] && [ ! -f "${EXTRACTED_DIR}/manuscript.yaml" ] && \
-   [ ! -f "${EXTRACTED_DIR}/scriptorium.yaml" ]; then
-    echo "Error: Archive contents do not appear to be a valid Scriptorium project." >&2
+   [ ! -f "${EXTRACTED_DIR}/arcanum.yaml" ] && [ ! -f "${EXTRACTED_DIR}/world.yaml" ] && \
+   [ ! -f "${EXTRACTED_DIR}/manuscript.yaml" ] && [ ! -f "${EXTRACTED_DIR}/scriptorium.yaml" ]; then
+    echo "Error: Archive contents do not appear to be a valid Ars Arcanum project." >&2
     exit 1
 fi
 

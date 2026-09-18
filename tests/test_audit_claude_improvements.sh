@@ -31,9 +31,9 @@ grep -q "Character-Quickstart-Template" "templates/world-bible/Templates/World-B
 echo "  OK Beginner templates and index links verified"
 
 echo "=== 3. Testing WLD-108 Manuscript Name Drift in World Doctor ==="
-bash scripts/scriptorium universe TestCosmos >/dev/null
-bash scripts/scriptorium world TestWorld --universe TestCosmos >/dev/null
-bash scripts/scriptorium manuscript TestManuscript --universe TestCosmos --world TestWorld >/dev/null
+bash scripts/arcanum universe TestCosmos >/dev/null
+bash scripts/arcanum world TestWorld --universe TestCosmos >/dev/null
+bash scripts/arcanum manuscript TestManuscript --universe TestCosmos --world TestWorld >/dev/null
 
 WORLD_PATH="${HOME}/Universes/TestCosmos/TestWorld"
 MS_PATH="${HOME}/Manuscripts/TestManuscript"

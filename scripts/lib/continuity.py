@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scriptorium Semantic Continuity Engine (scripts/lib/continuity.py)
+Ars Arcanum Semantic Continuity Engine (scripts/lib/continuity.py)
 ==================================================================
 Local-first, privacy-preserving narrative continuity and consistency analyzer.
 Extracts character attributes, physical traits (eyes, hair, titles), and facts
@@ -17,7 +17,7 @@ import argparse
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("scriptorium.continuity")
+logger = logging.getLogger("arcanum.continuity")
 
 TRAIT_PATTERNS = {
     "eye_color": [
@@ -331,7 +331,7 @@ def run_continuity_audit(world_dir: str, manuscript_dir: str) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scriptorium Local Semantic Continuity Engine")
+    parser = argparse.ArgumentParser(description="Ars Arcanum Local Semantic Continuity Engine")
     parser.add_argument("-w", "--world", help="World Bible lore directory")
     parser.add_argument("-m", "--manuscript", help="Manuscript draft directory")
     parser.add_argument("--json", action="store_true", help="Output JSON report")
@@ -387,7 +387,7 @@ def main():
     if args.json:
         print(json.dumps(report, indent=2))
     else:
-        print("=== Scriptorium Narrative Continuity Report ===")
+        print("=== Ars Arcanum Narrative Continuity Report ===")
         print(f"World: {report['world']} | Manuscript: {report['manuscript'] or 'N/A'}")
         print(f"Profiled Entities: {report['entities_profiled']}")
         print(f"Continuity Findings: {report['total_findings']}")

@@ -2,7 +2,7 @@
 Version=1.0
 Type=Application
 Name=New World Vault Creator
-GenericName=Scriptorium World Initializer
+GenericName=Ars Arcanum World Initializer
 Comment=Scaffold a new pure World Lore Vault with Obsidian pre-configured suite
 Exec=bash "__PROJECT_ROOT__/scripts/init_world.sh"
 TryExec=bash

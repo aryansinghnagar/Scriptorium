@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scriptorium Modern GTK 4 / Libadwaita Presentation Layer (scripts/lib/ui_adw.py)
+Ars Arcanum Modern GTK 4 / Libadwaita Presentation Layer (scripts/lib/ui_adw.py)
 Implements adaptive modern desktop views, system dark-mode synchronization,
 and responsive controls for GNOME / modern Linux desktops.
 """
@@ -11,7 +11,7 @@ import threading
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("scriptorium.ui_adw")
+logger = logging.getLogger("arcanum.ui_adw")
 
 HAS_ADW = False
 try:
@@ -30,15 +30,15 @@ WORLDS_DIR = HOME_DIR / "Worlds"
 SCRIPT_DIR = Path(__file__).resolve().parent.parent
 
 
-class ScriptoriumAppAdw:
-    """Modern Libadwaita desktop application for Scriptorium."""
+class ArcanumAppAdw:
+    """Modern Libadwaita desktop application for Ars Arcanum."""
 
     def __init__(self, application=None):
         if not HAS_ADW:
             raise RuntimeError("Libadwaita / GTK 4 is not available.")
 
         self.app = application
-        self.window = Adw.ApplicationWindow(application=self.app, title="Scriptorium Studio")
+        self.window = Adw.ApplicationWindow(application=self.app, title="Ars Arcanum Studio")
         self.window.set_default_size(1100, 760)
 
         self.current_universe = None
@@ -55,7 +55,7 @@ class ScriptoriumAppAdw:
         
         view_switcher_title = Adw.ViewSwitcherTitle()
         view_switcher_title.set_stack(self.view_stack)
-        view_switcher_title.set_title("Scriptorium")
+        view_switcher_title.set_title("Ars Arcanum")
         view_switcher_title.set_subtitle("Author & Worldbuilder Studio")
         header.set_title_widget(view_switcher_title)
 
@@ -243,10 +243,10 @@ class ScriptoriumAppAdw:
 def run_adw_app():
     if not HAS_ADW:
         return False
-    app = Adw.Application(application_id="org.scriptorium.Scriptorium")
+    app = Adw.Application(application_id="org.arsarcanum.ArsArcanum")
     
     def on_activate(application):
-        win = ScriptoriumAppAdw(application)
+        win = ArcanumAppAdw(application)
         win.present()
 
     app.connect("activate", on_activate)

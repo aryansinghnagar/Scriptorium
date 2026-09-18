@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Backup Engine (REL-03)
+# Ars Arcanum Backup Engine (REL-03)
 # Purpose: Creates a decoupled, verified, compressed backup archive of a world
 #          with an immutable SHA-256 checksum manifest and metadata.
 # ==============================================================================
@@ -15,7 +15,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium World Backup Engine — create a standalone, verified backup archive.
+Ars Arcanum World Backup Engine — create a standalone, verified backup archive.
 
 Usage:
   backup_world.sh [WORLD_NAME|WORLD_DIR] [OPTIONS]
@@ -78,7 +78,7 @@ TARGET_INPUT="${MANUSCRIPT_CLI:-${WORLD_CLI:-${PROJECT_CLI:-${POSITIONAL[0]:-}}}
 if [ -z "${TARGET_INPUT}" ]; then
     if has_gui; then
         TARGET_INPUT=$(zenity --file-selection --directory \
-            --title="Scriptorium — Select World Directory to Back Up" \
+            --title="Ars Arcanum — Select World Directory to Back Up" \
             --filename="${HOME}/" || true)
     fi
 fi

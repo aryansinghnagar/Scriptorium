@@ -11,9 +11,9 @@ mkdir -p "${HOME}"
 unset DISPLAY WAYLAND_DISPLAY 2>/dev/null || true
 
 echo "=== Edge Case Test 1: Notes without explicit name key and nested subdirectories ==="
-bash scripts/scriptorium universe EdgeUniverse >/dev/null
-bash scripts/scriptorium world EdgeWorld -u EdgeUniverse >/dev/null
-bash scripts/scriptorium manuscript EdgeManuscript -u EdgeUniverse -w EdgeWorld >/dev/null
+bash scripts/arcanum universe EdgeUniverse >/dev/null
+bash scripts/arcanum world EdgeWorld -u EdgeUniverse >/dev/null
+bash scripts/arcanum manuscript EdgeManuscript -u EdgeUniverse -w EdgeWorld >/dev/null
 WORLD="${HOME}/Universes/EdgeUniverse/EdgeWorld"
 MS="${HOME}/Manuscripts/EdgeManuscript"
 
@@ -71,7 +71,7 @@ motto: "In Umbra Vincimus"
 A secret network operating beneath the surface.
 FAC_EOF
 
-bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" >/dev/null
+bash scripts/arcanum concordance "${WORLD}" --manuscript "${MS}" >/dev/null
 
 DP_FILE="${MS}/Book-01/04_Back_Matter/01_Dramatis_Personae.md"
 GC_FILE="${MS}/Book-01/04_Back_Matter/02_Glossary_and_Concordance.md"
@@ -192,9 +192,9 @@ print("  OK all 17 timeline parsing cases verified")
 PYEOF
 
 echo "=== Edge Case Test 3: CLI facade argument combinations ==="
-bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" --book Book-01 >/dev/null
-bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" -b all >/dev/null
-bash scripts/scriptorium concordance "${WORLD}" --manuscript "${MS}" Book-01 >/dev/null
+bash scripts/arcanum concordance "${WORLD}" --manuscript "${MS}" --book Book-01 >/dev/null
+bash scripts/arcanum concordance "${WORLD}" --manuscript "${MS}" -b all >/dev/null
+bash scripts/arcanum concordance "${WORLD}" --manuscript "${MS}" Book-01 >/dev/null
 
 echo "  OK CLI argument combinations verified"
 echo "=== ALL EDGE CASE TESTS PASSED! ==="

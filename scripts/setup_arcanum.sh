@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Automated System Installer
+# Ars Arcanum Automated System Installer
 # Purpose: Installs and configures all core tools, fonts, Typst, Pandoc,
 #          desktop launchers, and templates on Linux Mint (XFCE) or Debian.
 # ==============================================================================
@@ -12,10 +12,10 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Automated System Installer
+Ars Arcanum Automated System Installer
 
 Usage:
-  setup_scriptorium.sh [OPTIONS]
+  setup_arcanum.sh [OPTIONS]
 
 Options:
   --dry-run          Simulate and log all planned system and user mutations
@@ -54,7 +54,7 @@ done
 LOG_DIR="${TMPDIR:-/tmp}"
 LOG_FILE=""
 if [ "${DRY_RUN}" -eq 0 ]; then
-    LOG_FILE="${LOG_DIR}/scriptorium-install-$(date +%Y%m%d-%H%M%S).log"
+    LOG_FILE="${LOG_DIR}/arcanum-install-$(date +%Y%m%d-%H%M%S).log"
     if mkdir -p "${LOG_DIR}" 2>/dev/null && touch "${LOG_FILE}" 2>/dev/null; then
         exec > >(tee -a "${LOG_FILE}") 2>&1
     else
@@ -63,7 +63,7 @@ if [ "${DRY_RUN}" -eq 0 ]; then
 fi
 
 echo "============================================================"
-echo "  Scriptorium — Automated Setup for Linux Writing System"
+echo "  Ars Arcanum — Automated Setup for Linux Writing System"
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [MODE: DRY-RUN SIMULATION — No system changes will be made]"
 fi
@@ -115,9 +115,9 @@ if [ "${IS_SUPPORTED}" -eq 0 ]; then
         echo "[!] WARNING: ${OS_PRETTY} is not a verified Tier 1 target, but --force was passed. Proceeding..."
     else
         echo "[!] ERROR: Unsupported distribution '${OS_PRETTY}'." >&2
-        echo "    Scriptorium is optimized and verified for Linux Mint 21/22 and Debian 12/13." >&2
+        echo "    Ars Arcanum is optimized and verified for Linux Mint 21/22 and Debian 12/13." >&2
         echo "    To proceed anyway on this platform, run with --force:" >&2
-        echo "      bash scripts/setup_scriptorium.sh --force" >&2
+        echo "      bash scripts/setup_arcanum.sh --force" >&2
         exit 2
     fi
 else
@@ -372,8 +372,11 @@ else
 
     # Set executable permissions on scripts
     chmod +x "${PROJECT_ROOT}/scripts/"*.sh
-    if [ -f "${PROJECT_ROOT}/scripts/scriptorium" ]; then
-        chmod +x "${PROJECT_ROOT}/scripts/scriptorium"
+    if [ -f "${PROJECT_ROOT}/scripts/arcanum" ]; then
+        chmod +x "${PROJECT_ROOT}/scripts/arcanum"
+    fi
+    if [ -f "${PROJECT_ROOT}/scripts/ars-arcanum" ]; then
+        chmod +x "${PROJECT_ROOT}/scripts/ars-arcanum"
     fi
 
     for launcher in "${PROJECT_ROOT}/launchers/"*.desktop; do
@@ -399,24 +402,24 @@ echo "============================================================"
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [DRY-RUN COMPLETE] All simulated checks passed without errors."
 elif [ "${#FLATPAK_FAILED[@]}" -gt 0 ]; then
-    echo "  [PARTIAL] Scriptorium setup finished WITH WARNINGS — Flatpak failures: ${FLATPAK_FAILED[*]}"
+    echo "  [PARTIAL] Ars Arcanum setup finished WITH WARNINGS — Flatpak failures: ${FLATPAK_FAILED[*]}"
     echo "============================================================"
     echo "Next Steps:"
     echo "1. Re-run setup when network is available, or: flatpak install flathub ${FLATPAK_FAILED[0]}"
     echo "2. Double-click 'New World Vault Creator' (or run ./scripts/init_world.sh) to start a lore vault"
     echo "3. Double-click 'New Manuscript Creator' (or run ./scripts/init_manuscript.sh) to start a novel"
-    echo "4. Open Control Center on your desktop (or run ./scripts/scriptorium control-center)"
-    echo "5. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_scriptorium_rules.json"
+    echo "4. Open Control Center on your desktop (or run ./scripts/arcanum control-center)"
+    echo "5. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_arcanum_rules.json"
     echo "6. Connect an external drive and configure Déjà Dup for 3-2-1 backups."
     echo "============================================================"
 else
-    echo "  [SUCCESS] Scriptorium Writing Setup Installed Successfully!"
+    echo "  [SUCCESS] Ars Arcanum Writing Setup Installed Successfully!"
     echo "============================================================"
     echo "Next Steps:"
     echo "1. Double-click 'New World Vault Creator' (or run ./scripts/init_world.sh) to start a lore vault"
     echo "2. Double-click 'New Manuscript Creator' (or run ./scripts/init_manuscript.sh) to start a novel"
-    echo "3. Open Control Center on your desktop (or run ./scripts/scriptorium control-center)"
-    echo "4. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_scriptorium_rules.json"
+    echo "3. Open Control Center on your desktop (or run ./scripts/arcanum control-center)"
+    echo "4. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_arcanum_rules.json"
     echo "5. Connect an external drive and configure Déjà Dup for 3-2-1 backups."
     echo "============================================================"
     if [ -f "${LOG_FILE:-}" ]; then
@@ -424,6 +427,6 @@ else
     fi
 
     if command -v notify-send &> /dev/null; then
-        notify-send "Scriptorium Setup Complete" "All tools, fonts, Typst, and desktop launchers are ready!" -i accessories-text-editor 2>/dev/null || true
+        notify-send "Ars Arcanum Setup Complete" "All tools, fonts, Typst, and desktop launchers are ready!" -i accessories-text-editor 2>/dev/null || true
     fi
 fi

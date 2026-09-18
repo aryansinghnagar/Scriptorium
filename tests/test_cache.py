@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unit tests for Scriptorium Cache Engine (scripts/lib/cache.py).
+Unit tests for Ars Arcanum Cache Engine (scripts/lib/cache.py).
 Covers cache persistence, 0o600 permission hardening, frontmatter parsing,
 novelWriter tag extraction, wikilink parsing, and mtime invalidation logic.
 """

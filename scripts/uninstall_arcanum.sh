@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Uninstaller & Rollback Utility (SEC-02)
-# Purpose: Safely removes Scriptorium desktop launchers, system binaries,
+# Ars Arcanum Uninstaller & Rollback Utility (SEC-02)
+# Purpose: Safely removes Ars Arcanum desktop launchers, system binaries,
 #          and optionally purges installed Flatpak applications.
 # ==============================================================================
 
@@ -9,10 +9,10 @@ set -euo pipefail
 
 usage() {
     cat << 'USAGE'
-Scriptorium Uninstaller & Rollback Utility
+Ars Arcanum Uninstaller & Rollback Utility
 
 Usage:
-  uninstall_scriptorium.sh [OPTIONS]
+  uninstall_arcanum.sh [OPTIONS]
 
 Options:
   --dry-run          Simulate and log all removal operations without deleting files
@@ -45,7 +45,7 @@ while [ $# -gt 0 ]; do
 done
 
 echo "============================================================"
-echo "  Scriptorium — System Uninstaller & Rollback"
+echo "  Ars Arcanum — System Uninstaller & Rollback"
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [MODE: DRY-RUN SIMULATION — No files will be deleted]"
 fi
@@ -53,7 +53,7 @@ echo "============================================================"
 
 if [ "${FORCE_PROMPT}" -eq 0 ] && [ "${DRY_RUN}" -eq 0 ]; then
     if [ -t 0 ]; then
-        read -rp "Are you sure you want to uninstall Scriptorium launchers and components? [y/N]: " CONFIRM
+        read -rp "Are you sure you want to uninstall Ars Arcanum launchers and components? [y/N]: " CONFIRM
         case "${CONFIRM:-n}" in
             y|Y|yes|YES) ;;
             *) echo "Uninstall canceled."; exit 0 ;;
@@ -69,6 +69,7 @@ LAUNCHER_FILES=(
     "init-manuscript.desktop"
     "export-book.desktop"
     "save-snapshot.desktop"
+    "arcanum-control-center.desktop"
     "scriptorium-control-center.desktop"
 )
 
@@ -109,7 +110,7 @@ if [ -f "/usr/local/bin/typst" ]; then
         fi
     fi
 else
-    echo "  [i] No Scriptorium-installed Typst binary found at /usr/local/bin/typst"
+    echo "  [i] No Ars Arcanum-installed Typst binary found at /usr/local/bin/typst"
 fi
 
 echo "[3/3] Handling Flatpak applications..."
@@ -132,7 +133,7 @@ echo "============================================================"
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [DRY-RUN COMPLETE] Rollback simulation finished successfully."
 else
-    echo "  [SUCCESS] Scriptorium uninstallation complete."
+    echo "  [SUCCESS] Ars Arcanum uninstallation complete."
     echo "  User writing data in ~/Universes, ~/Manuscripts, and legacy ~/Worlds remains intact and preserved."
 fi
 echo "============================================================"

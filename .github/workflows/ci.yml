@@ -1,4 +1,4 @@
-name: Scriptorium CI
+name: Ars Arcanum CI
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
       - name: Set up Typst
         uses: typst-community/setup-typst@65c09e3962657e3f60f6d8959fbcfeecbb327e58 # v4.0.1
         with:
-          # DEP-01: exact pin matching dependencies.lock + setup_scriptorium.sh
+          # DEP-01: exact pin matching dependencies.lock + setup_arcanum.sh
           # (0.13.0). Bump deliberately after testing
           # (templates/typst/book_template.typ + preview_sample.typ), never
           # via 'latest' or floating minor — a silent toolchain bump can break
@@ -72,7 +72,7 @@ jobs:
       - name: Bash syntax validation (bash -n)
         run: |
           status=0
-          for f in scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh; do
+          for f in scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum tests/*.sh; do
             [ -f "$f" ] || continue
             if ! bash -n "$f"; then
               echo "  FAIL $f (bash syntax)" >&2
@@ -87,7 +87,7 @@ jobs:
         run: |
           # C-01: tests/ contain the same risky patterns as the main scripts;
           # lib/ joined the tree with the Q-01 refactor.
-          shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium tests/*.sh
+          shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum tests/*.sh
 
       - name: Validate desktop launcher entries
         run: |
@@ -104,7 +104,7 @@ jobs:
           for f in launchers/*.desktop; do
             base=$(basename "$f")
             case "$base" in
-              scriptorium-control-center.desktop) sub="control-center";;
+              arcanum-control-center.desktop|ars-arcanum-control-center.desktop|scriptorium-control-center.desktop) sub="control-center";;
               init-world.desktop) sub="world";;
               init-manuscript.desktop) sub="manuscript";;
               export-book.desktop) sub="export";;
@@ -112,9 +112,9 @@ jobs:
               *) sub="";;
             esac
             if [ -n "$sub" ]; then
-              sed -e "s|^Exec=.*|Exec=/usr/bin/scriptorium $sub|" -e "s|^TryExec=.*|TryExec=/usr/bin/scriptorium|" "$f" > "/tmp/pkg-test/applications/$base"
+              sed -e "s|^Exec=.*|Exec=/usr/bin/arcanum $sub|" -e "s|^TryExec=.*|TryExec=/usr/bin/arcanum|" "$f" > "/tmp/pkg-test/applications/$base"
             else
-              sed -e "s|__PROJECT_ROOT__|/usr/share/scriptorium|g" "$f" > "/tmp/pkg-test/applications/$base"
+              sed -e "s|__PROJECT_ROOT__|/usr/share/ars-arcanum|g" "$f" > "/tmp/pkg-test/applications/$base"
             fi
           done
           ! grep -r "__PROJECT_ROOT__" /tmp/pkg-test/applications/ || (echo "ERROR: placeholder survived substitution" >&2; exit 1)
@@ -123,23 +123,25 @@ jobs:
 
       - name: Smoke test packaged CLI dispatch via symlink (PKG-01)
         run: |
-          mkdir -p /tmp/pkg-test/share/scriptorium /tmp/pkg-test/bin
-          cp -r scripts /tmp/pkg-test/share/scriptorium/scripts
-          ln -sf /tmp/pkg-test/share/scriptorium/scripts/scriptorium /tmp/pkg-test/bin/scriptorium
-          /tmp/pkg-test/bin/scriptorium --version
-          /tmp/pkg-test/bin/scriptorium --help > /dev/null
+          mkdir -p /tmp/pkg-test/share/ars-arcanum /tmp/pkg-test/bin
+          cp -r scripts /tmp/pkg-test/share/ars-arcanum/scripts
+          ln -sf /tmp/pkg-test/share/ars-arcanum/scripts/arcanum /tmp/pkg-test/bin/arcanum
+          ln -sf /tmp/pkg-test/share/ars-arcanum/scripts/ars-arcanum /tmp/pkg-test/bin/ars-arcanum
+          /tmp/pkg-test/bin/arcanum --version
+          /tmp/pkg-test/bin/arcanum --help > /dev/null
+          /tmp/pkg-test/bin/ars-arcanum --version
           echo "  OK symlinked CLI dispatches"
 
       - name: Validate JSON, YAML and XML configurations
         run: |
-          python3 -c "import json; json.load(open('configs/leechblock_scriptorium_rules.json')); print('  OK leechblock JSON')"
+          python3 -c "import json; json.load(open('configs/leechblock_arcanum_rules.json')); print('  OK leechblock JSON')"
           python3 -c "import xml.etree.ElementTree as ET; ET.parse('templates/manuscript/nwProject.nwx'); print('  OK nwProject XML')"
-          python3 -c "import yaml" 2>/dev/null && python3 -c "import yaml; yaml.safe_load(open('org.scriptorium.Scriptorium.yaml')); print('  OK flatpak manifest YAML')" || python3 -c "
+          python3 -c "import yaml" 2>/dev/null && python3 -c "import yaml; yaml.safe_load(open('org.arsarcanum.ArsArcanum.yaml')); print('  OK flatpak manifest YAML')" || python3 -c "
           import re,sys
-          t=open('org.scriptorium.Scriptorium.yaml').read()
-          assert 'app-id: org.scriptorium.Scriptorium' in t, 'flatpak app-id missing'
+          t=open('org.arsarcanum.ArsArcanum.yaml').read()
+          assert 'app-id: org.arsarcanum.ArsArcanum' in t, 'flatpak app-id missing'
           assert '__PROJECT_ROOT__' not in t, 'placeholder leaked into flatpak manifest'
-          assert '/app/bin/scriptorium' in t, 'flatpak CLI symlink missing'
+          assert '/app/bin/arcanum' in t, 'flatpak CLI symlink missing'
           print('  OK flatpak manifest (structural check)')"
 
       - name: Run verification harness (scripts/verify.sh)
@@ -156,8 +158,8 @@ jobs:
 
       - name: Smoke test Typst book preview compilation
         run: |
-          typst compile templates/typst/preview_sample.typ /tmp/scriptorium-preview.pdf
-          ls -lh /tmp/scriptorium-preview.pdf
+          typst compile templates/typst/preview_sample.typ /tmp/arcanum-preview.pdf
+          ls -lh /tmp/arcanum-preview.pdf
 
       - name: Smoke test Pandoc Markdown to Typst conversion
         run: |

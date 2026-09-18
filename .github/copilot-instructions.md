@@ -1,6 +1,6 @@
-# Scriptorium Agent & Developer Governance Instructions
+# Ars Arcanum Agent & Developer Governance Instructions
 
-> **Canonical commands, verification gates, exit-code contracts, branching doctrines, and invariant rules for working on Scriptorium.**
+> **Canonical commands, verification gates, exit-code contracts, branching doctrines, and invariant rules for working on Ars Arcanum.**
 
 ---
 
@@ -19,7 +19,7 @@
 
 ## 2. Exit-Code Contract
 
-All scripts and the CLI facade (`scripts/scriptorium`) adhere strictly to this 4-value contract:
+All scripts and the CLI facade (`scripts/arcanum`) adhere strictly to this 4-value contract:
 
 | Exit Code | Semantics | Description |
 | :---: | :--- | :--- |
@@ -36,11 +36,11 @@ Every proposed change MUST pass the full quality gate in this exact order before
 
 ```bash
 # 1. Shell and Python syntax checks
-bash -n scripts/*.sh scripts/lib/*.sh scripts/scriptorium
-python3 -m py_compile scripts/scriptorium_app.py
+bash -n scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum
+python3 -m py_compile scripts/arcanum_app.py
 
 # 2. Shell static analysis (zero warnings allowed)
-shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium
+shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum
 
 # 3. Core 7-stage quality and regression harness
 bash scripts/verify.sh
@@ -50,6 +50,9 @@ bash tests/test_audit_fixes.sh
 bash tests/test_deep_audit.sh
 bash tests/test_concordance_edge_cases.sh
 bash tests/test_audit_claude_improvements.sh
+bash tests/test_continuity_engine.sh
+bash tests/test_performance_cache.sh
+python3 -m unittest discover tests
 ```
 
 ---
@@ -59,7 +62,7 @@ bash tests/test_audit_claude_improvements.sh
 - **Centralized Discovery**: Never implement bespoke filesystem scanning for worlds or universes. Always source and use [`scripts/lib/worlds.sh`](file:///scripts/lib/worlds.sh) (`discover_universes`, `discover_worlds`, `discover_manuscripts`, `resolve_universe_dir`, `resolve_world_dir`, `resolve_manuscript_dir`, `universe_label`).
 - **Headless Safety**: When writing or modifying test suites in `tests/`, always sandbox `$HOME` (`TEST_HOME=$(mktemp -d)`) and unset `$DISPLAY` / `$WAYLAND_DISPLAY` so tests run headlessly.
 - **Python / Shell Boundary**: When executing Python helper commands from shell scripts, pass arguments via `sys.argv` or `stdin` — never interpolate shell variables into `python3 -c` code strings.
-- **GTK Worker Threading**: In [`scripts/scriptorium_app.py`](file:///scripts/scriptorium_app.py), never execute long-running CLI tools or subprocesses on the GTK main UI thread. Always use `_start_worker(target_func)` with `GLib.idle_add` UI callbacks.
+- **GTK Worker Threading**: In [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py), never execute long-running CLI tools or subprocesses on the GTK main UI thread. Always use `_start_worker(target_func)` with `GLib.idle_add` UI callbacks.
 
 ---
 

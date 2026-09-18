@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unit tests for Scriptorium Narrative Continuity Engine (scripts/lib/continuity.py).
+Unit tests for Ars Arcanum Narrative Continuity Engine (scripts/lib/continuity.py).
 Covers trait normalization, inline regex trait extraction, lore bible profiling,
 lore trait contradiction detection (CNT-101), and inter-scene drift (CNT-102).
 """

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Cache Performance & Invalidation Test Suite
+# Ars Arcanum Cache Performance & Invalidation Test Suite
 # Tests:
 #   1. Cache creation on project vault
 #   2. Cache hit verification (unmodified files)
@@ -60,8 +60,8 @@ EOF
 
 echo "=== Test 1: Cache creation ==="
 python3 "${SCRIPT_DIR}/scripts/lib/cache.py" scan "${WORLD_DIR}"
-if [ ! -f "${WORLD_DIR}/.scriptorium_cache.json" ]; then
-    echo "FAIL: .scriptorium_cache.json not created in ${WORLD_DIR}" >&2
+if [ ! -f "${WORLD_DIR}/.arcanum_cache.json" ]; then
+    echo "FAIL: .arcanum_cache.json not created in ${WORLD_DIR}" >&2
     exit 1
 fi
 echo "PASS: Test 1 passed"
@@ -74,13 +74,13 @@ echo "PASS: Test 2 passed"
 echo "=== Test 3: Cache invalidation on file edit ==="
 # Initial scan
 python3 "${SCRIPT_DIR}/scripts/lib/cache.py" scan "${MS_DIR}"
-INITIAL_WC="$(python3 -c "import json; d=json.load(open('${MS_DIR}/.scriptorium_cache.json')); print(d['files']['Book-01/01_Act_I/01_Chapter.md']['word_count'])")"
+INITIAL_WC="$(python3 -c "import json; d=json.load(open('${MS_DIR}/.arcanum_cache.json')); print(d['files']['Book-01/01_Act_I/01_Chapter.md']['word_count'])")"
 
 # Append text
 echo "Extra words appended to scene file." >> "${MS_DIR}/Book-01/01_Act_I/01_Chapter.md"
 # Rescan
 python3 "${SCRIPT_DIR}/scripts/lib/cache.py" scan "${MS_DIR}"
-UPDATED_WC="$(python3 -c "import json; d=json.load(open('${MS_DIR}/.scriptorium_cache.json')); print(d['files']['Book-01/01_Act_I/01_Chapter.md']['word_count'])")"
+UPDATED_WC="$(python3 -c "import json; d=json.load(open('${MS_DIR}/.arcanum_cache.json')); print(d['files']['Book-01/01_Act_I/01_Chapter.md']['word_count'])")"
 
 if [ "${UPDATED_WC}" -le "${INITIAL_WC}" ]; then
     echo "FAIL: Cache did not detect updated word count (${UPDATED_WC} <= ${INITIAL_WC})" >&2
@@ -113,7 +113,7 @@ echo "PASS: Test 4 passed"
 
 echo "=== Test 5: Cache clear ==="
 python3 "${SCRIPT_DIR}/scripts/lib/cache.py" clear "${WORLD_DIR}"
-if [ -f "${WORLD_DIR}/.scriptorium_cache.json" ]; then
+if [ -f "${WORLD_DIR}/.arcanum_cache.json" ]; then
     echo "FAIL: Cache file still exists after clear" >&2
     exit 1
 fi

@@ -1,5 +1,5 @@
 // ==============================================================================
-// Scriptorium Novel Typesetting Template (Typst)
+// Ars Arcanum Novel Typesetting Template (Typst)
 // Designed for book-quality fiction & trade paperback publishing.
 // ==============================================================================
 
@@ -12,7 +12,7 @@
   epigraph-author: "",
   year: "2026",
   isbn: "978-0-000000-00-0",
-  publisher: "Scriptorium Press",
+  publisher: "Ars Arcanum Press",
   paper-size: "us-trade", // Options: "us-trade" (6x9in), "trade" (5.5x8.5in), "pocket" (5x8in)
   body-font: "Linux Libertine",
   heading-font: "Linux Libertine",

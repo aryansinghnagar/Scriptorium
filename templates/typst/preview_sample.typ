@@ -1,5 +1,5 @@
 // ==============================================================================
-// Scriptorium Preview Book Sample
+// Ars Arcanum Preview Book Sample
 // Test file to verify Typst rendering and novel typography formatting.
 // ==============================================================================
 
@@ -14,7 +14,7 @@
   epigraph-author: "The Archon of Whispers",
   year: "2026",
   isbn: "978-1-234567-89-0",
-  publisher: "Scriptorium Press",
+  publisher: "Ars Arcanum Press",
   paper-size: "us-trade", // "us-trade" (6x9in), "trade" (5.5x8.5in), "pocket" (5x8in)
   body-font: "Linux Libertine",
 )

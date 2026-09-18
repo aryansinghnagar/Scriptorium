@@ -1,14 +1,25 @@
 # Changelog
 
-All notable changes to Scriptorium are documented in this file. The format is
+All notable changes to Ars Arcanum are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Scope decisions
 behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
+### Changed & Renamed (Ars Arcanum Transition)
+- **Project Renaming**:
+  - Renamed the project from "Scriptorium" to "Ars Arcanum" across the entire codebase, documentation, templates, desktop launchers, Debian packaging, and Git remote.
+  - Provided new unified CLI commands `arcanum` and `ars-arcanum` with backward-compatible `scriptorium` fallback.
+  - Renamed scripts: `setup_arcanum.sh`, `uninstall_arcanum.sh`, `arcanum_doctor.sh`, `arcanum_app.py`, `leechblock_arcanum_rules.json`.
+  - Renamed performance cache artifact to `.arcanum_cache.json` with fallback support.
+- **Privacy & Asset Provenance (Data Minimization & Attribution)**:
+  - Added [PRIVACY.md](PRIVACY.md) specifying zero telemetry, local-only processing, and explicit consent policies.
+  - Added [REFERENCES.md](REFERENCES.md) with complete Open Source / Creative Commons attribution records for non-commercial use.
+  - Scrubbed personal identifiable information (PII) across the codebase in favor of generic maintainer identifiers and official repository links.
+
 ### Fixed & Hardened (Master Forensic Audit Remediation)
 - **CLI & Diagnostics Robustness**:
-  - Added `-m, --manuscript NAME` option parsing to `scripts/scriptorium_doctor.sh` and option forwarding to `world_doctor.sh` (DEV-01).
+  - Added `-m, --manuscript NAME` option parsing to `scripts/arcanum_doctor.sh` and option forwarding to `world_doctor.sh` (DEV-01).
   - Unmasked Stage 6k in `scripts/verify.sh` to enforce real doctor exit codes without `|| true` masking (DEV-02).
   - Fixed snapshot discovery lockout in `scripts/save_snapshot.sh` for authors with 0 world lore vaults (DEV-03).
   - Fixed unbound variable crashes under `set -u` in `scripts/export_book.sh` (line 217) and `scripts/generate_concordance.sh` (line 192).
@@ -19,16 +30,16 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Template & Directory Invariants**:
   - Restored Dataview queries in `templates/manuscript/Outlines/Subplot-Thread-Matrix.md` to `FROM ""` for ADR-022 compatibility (AUT-01).
   - Scoped `is_template` in `scripts/world_doctor.sh` to validate `World-Bible-Index.md` while preventing false-positive orphan reports on `fileClasses/` and writing logs (WLD-01).
-  - Initialized primary `~/Universes` and `~/Manuscripts` directory roots in `scripts/setup_scriptorium.sh` (SYS-01).
+  - Initialized primary `~/Universes` and `~/Manuscripts` directory roots in `scripts/setup_arcanum.sh` (SYS-01).
   - Modernized `docs/AUTHOR_MANUAL.md` and `templates/world-bible/00_START_HERE.md` to remove legacy single-vault path assumptions (AUT-02, AUT-03).
 - **Security & Discovery Hardening (ADR-023)**:
-  - Hardened Typst binary installer in `scripts/setup_scriptorium.sh` to fail closed (`TYPST_OK=0`) when SHA-256 digest is unavailable, preventing unverified binary installation.
+  - Hardened Typst binary installer in `scripts/setup_arcanum.sh` to fail closed (`TYPST_OK=0`) when SHA-256 digest is unavailable, preventing unverified binary installation.
   - Enhanced `scripts/lib/worlds.sh` to discover direct depth-2 (`~/Universes/<Universe>/<World>`), legacy subfolder depth-3 (`~/Universes/<Universe>/Worlds/<World>`), and legacy root (`~/Worlds/<World>`) structures without polluting discovery with the literal `"Worlds"` directory, and fixed `universe_label` for depth-3 worlds.
   - Expanded `world_doctor.sh` chronological paradox engine (`WLD-104`) with ISO 8601 calendar date parsing (`YYYY-MM-DD`, `YYYY-MM`, `YYYY/MM/DD`).
   - Added manuscript and outline indexing to Pass 3 of `world_doctor.sh` to resolve intra-manuscript wikilinks (e.g. `[[Master-Outline]]`) without false-positive `WLD-108` lore drift findings.
-  - Added snapshot history reload to HeaderBar Quick Snapshot and protected YAML frontmatter during scene tag updates in `scripts/scriptorium_app.py`.
+  - Added snapshot history reload to HeaderBar Quick Snapshot and protected YAML frontmatter during scene tag updates in `scripts/arcanum_app.py`.
 - **Desktop & Python Ergonomics**:
-  - Migrated external `which` subprocesses in `scripts/scriptorium_app.py` to standard library `shutil.which`.
+  - Migrated external `which` subprocesses in `scripts/arcanum_app.py` to standard library `shutil.which`.
   - Standardized FreeDesktop categories across `launchers/*.desktop` to `Office;WordProcessor;Publishing;` (UX-01).
   - Integrated execution of all `tests/*.sh` regression test suites into GitHub Actions CI (`.github/workflows/ci.yml`).
 
@@ -46,7 +57,7 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Modernized Desktop Launcher Suite**:
   - Added `launchers/init-manuscript.desktop` for 1-click Standalone Manuscript creation.
   - Standardized all launchers in `launchers/` with `TryExec=bash` and valid desktop categories.
-  - Updated `scripts/setup_scriptorium.sh`, `scripts/uninstall_scriptorium.sh`, and `scripts/scriptorium_doctor.sh` to install, check, and purge `init-manuscript.desktop`.
+  - Updated `scripts/setup_arcanum.sh`, `scripts/uninstall_arcanum.sh`, and `scripts/arcanum_doctor.sh` to install, check, and purge `init-manuscript.desktop`.
 - **Modernized Test Fixtures**: Restructured `tests/fixtures/` into `sample_universe/`, `sample_world/`, and `sample_manuscript/` reflecting separated lore and manuscript architecture.
 - **Separated Pure World Lore & Manuscript Architecture**:
   - `~/Universes/<UniverseName>/<WorldName>/`: World Lore Vaults are now pure, direct Obsidian vaults without nested `00-World-Bible` wrappers or mixed manuscript folders.

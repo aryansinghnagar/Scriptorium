@@ -1,6 +1,6 @@
 # Obsidian Out-of-the-Box Plugin Suite Guide
 
-Your Scriptorium World Lore Vaults come pre-configured with a premier, modular suite of worldbuilding and authoring plugins enabled out-of-the-box.
+Your Ars Arcanum World Lore Vaults come pre-configured with a premier, modular suite of worldbuilding and authoring plugins enabled out-of-the-box.
 
 ---
 

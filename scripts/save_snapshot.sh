@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Save Snapshot (Git Version History)
+# Ars Arcanum Save Snapshot (Git Version History)
 # Purpose: One-click tool to stage and record an immutable version snapshot
 #          of your world and manuscripts without needing the terminal.
 # ==============================================================================
@@ -15,7 +15,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Save Snapshot — one-click Git version snapshot of a world.
+Ars Arcanum Save Snapshot — one-click Git version snapshot of a world.
 
 Usage:
   save_snapshot.sh [WORLD_NAME|WORLD_DIR] [OPTIONS]
@@ -172,7 +172,7 @@ Exports/
 04-Publishing/
 EOF
     git -c advice.addEmbeddedRepo=false add .
-    if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial repository creation for ${WORLD_NAME}" 2>/dev/null; then
+    if ! git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial repository creation for ${WORLD_NAME}" 2>/dev/null; then
         echo "[!] Initial commit skipped (git identity missing). Files staged."
     fi
 fi
@@ -188,7 +188,7 @@ for ms_repo in Book-*/ 01-Manuscript/*/; do
             wait_for_git_lock "."
             git add -A
             if ! git diff --cached --quiet; then
-                if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Volume snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null; then
+                if ! git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Volume snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null; then
                     echo "[!] Warning: volume commit skipped for '${ms_repo}' (git lock contention or identity missing); world snapshot may reference a stale state." >&2
                 fi
             fi
@@ -217,7 +217,7 @@ git -c advice.addEmbeddedRepo=false add -A
 if git diff --cached --quiet; then
     MSG="No uncommitted changes in '${WORLD_NAME}' since last snapshot."
     if command -v notify-send &> /dev/null; then
-        notify-send "Scriptorium Snapshot" "${MSG}" -i document-save 2>/dev/null || true
+        notify-send "Ars Arcanum Snapshot" "${MSG}" -i document-save 2>/dev/null || true
     else
         echo "${MSG}"
     fi
@@ -225,7 +225,7 @@ if git diff --cached --quiet; then
 fi
 
 if ! git commit -q -m "${NOTE}" 2>/dev/null; then
-    if ! git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "${NOTE}"; then
+    if ! git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "${NOTE}"; then
         echo "[!] Snapshot failed: git commit rejected the change." >&2
         exit 1
     fi
@@ -234,7 +234,7 @@ fi
 MSG="Snapshot saved successfully for '${WORLD_NAME}'!\n\nNote: ${NOTE}"
 
 if command -v notify-send &> /dev/null; then
-    notify-send "Scriptorium Snapshot Saved" "${NOTE}" -i document-save 2>/dev/null || true
+    notify-send "Ars Arcanum Snapshot Saved" "${NOTE}" -i document-save 2>/dev/null || true
 fi
 
 if has_gui; then

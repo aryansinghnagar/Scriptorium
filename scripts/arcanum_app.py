@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scriptorium Desktop Application Launcher & Controller (scripts/scriptorium_app.py)
+Ars Arcanum Desktop Application Launcher & Controller (scripts/arcanum_app.py)
 ================================================================================
 Modern dynamic presentation launcher with adaptive Libadwaita / GTK 4 support
 and seamless GTK 3 & Zenity desktop fallbacks for Linux Mint, Debian & Wayland/X11.
@@ -11,7 +11,7 @@ import argparse
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("scriptorium_app")
+logger = logging.getLogger("arcanum_app")
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -53,7 +53,7 @@ def fallback_zenity() -> int:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scriptorium Desktop Studio")
+    parser = argparse.ArgumentParser(description="Ars Arcanum Desktop Studio")
     parser.add_argument("--gtk3", action="store_true", help="Force GTK 3 presentation layer")
     parser.add_argument("--adw", "--gtk4", action="store_true", help="Force GTK 4 / Libadwaita presentation layer")
     parser.add_argument("--check-ui", action="store_true", help="Probe and print available UI backends")

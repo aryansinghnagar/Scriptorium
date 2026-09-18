@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium World Initializer (Pure World Lore Vault Architecture)
+# Ars Arcanum World Initializer (Pure World Lore Vault Architecture)
 # Purpose: Atomically creates a brand new World Lore Vault within a Universe:
 #          ~/Universes/<UniverseName>/<WorldName>
 #          Direct Obsidian vault with pre-configured plugin suite,
@@ -20,7 +20,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium World Initializer — atomically scaffold a World Lore Vault in a Universe.
+Ars Arcanum World Initializer — atomically scaffold a World Lore Vault in a Universe.
 
 Usage:
   init_world.sh [WORLD_NAME] [OPTIONS]
@@ -70,7 +70,7 @@ if [ "${LIST_MODE}" -eq 1 ]; then
     echo "Discovered World Lore Vaults:"
     discover_worlds WORLDS
     if [ ${#WORLDS[@]} -eq 0 ]; then
-        echo "  (No World Lore Vaults found yet. Create one with: scriptorium world <name>)"
+        echo "  (No World Lore Vaults found yet. Create one with: arcanum world <name>)"
     else
         for w in "${WORLDS[@]}"; do
             echo "  • $(basename "$w") -> $w"
@@ -99,7 +99,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
                     CHOICES+=("$u" "Existing Universe")
                 done
                 CHOICES+=("+ Create New Universe" "New Universe Container")
-                SELECTED_UNI=$(zenity --list --title="Scriptorium — Select Universe" \
+                SELECTED_UNI=$(zenity --list --title="Ars Arcanum — Select Universe" \
                     --text="Which Universe does this world lore vault belong to?" \
                     --column="Universe" --column="Type" \
                     --hide-column=2 \
@@ -111,7 +111,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
                     UNIVERSE_NAME="$SELECTED_UNI"
                 fi
             else
-                UNIVERSE_NAME=$(zenity --entry --title="Scriptorium — Universe Context" \
+                UNIVERSE_NAME=$(zenity --entry --title="Ars Arcanum — Universe Context" \
                     --text="Enter the Universe for this world lore vault (e.g., 'Cosmere', 'Solaris-Prime'):" \
                     --entry-text="Default-Universe" || true)
             fi
@@ -174,7 +174,7 @@ EOF
                 cd "${UNIVERSE_DIR}"
                 git init -q
                 git add .
-                git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial universe repository: ${UNIVERSE_NAME}" 2>/dev/null || true
+                git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial universe repository: ${UNIVERSE_NAME}" 2>/dev/null || true
             )
         fi
     fi
@@ -188,7 +188,7 @@ fi
 if [ -z "${WORLD_NAME}" ]; then
     if has_gui; then
         WORLD_NAME=$(zenity --entry \
-            --title="Scriptorium — New World Lore Creator" \
+            --title="Ars Arcanum — New World Lore Creator" \
             --text="Enter the name for your new World Lore Vault:\n(e.g., 'Eldoria', 'Cyberpunk-2099', 'The-Last-Archon')" \
             --entry-text="My-New-World" || true)
     fi
@@ -222,7 +222,7 @@ if [ -d "${TARGET_DIR}" ]; then
     exit 1
 fi
 
-echo "Scaffolding Scriptorium World Lore Vault: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}] ..."
+echo "Scaffolding Ars Arcanum World Lore Vault: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}] ..."
 
 # 3. Transactional Staging Architecture (REL-01)
 SUCCESS=0
@@ -252,9 +252,9 @@ if [ -d "${PROJECT_ROOT}/templates/world-bible" ]; then
     cp -a "${PROJECT_ROOT}/templates/world-bible/." "${STAGING_DIR}/"
 fi
 
-# Create .gitignore and world manifest (world.yaml & scriptorium.yaml for compatibility)
+# Create .gitignore and world manifest (world.yaml & arcanum.yaml for compatibility)
 cat << 'EOF' > "${STAGING_DIR}/.gitignore"
-# Scriptorium World Git Ignore
+# Ars Arcanum World Git Ignore
 .obsidian/workspace.json
 .obsidian/cache
 *.bak
@@ -266,15 +266,15 @@ Backups/
 EOF
 
 cat << EOF > "${STAGING_DIR}/world.yaml"
-# Scriptorium World Lore Vault Manifest
+# Ars Arcanum World Lore Vault Manifest
 name: "${WORLD_NAME}"
 universe: "${UNIVERSE_NAME}"
 created_at: "$(date +%Y-%m-%d)"
 description: "World Lore Vault for ${WORLD_NAME}"
 EOF
 
-cat << EOF > "${STAGING_DIR}/scriptorium.yaml"
-# Scriptorium world manifest
+cat << EOF > "${STAGING_DIR}/arcanum.yaml"
+# Ars Arcanum world manifest
 title: "${WORLD_NAME}"
 author: "Author Name"
 universe: "${UNIVERSE_NAME}"
@@ -294,7 +294,7 @@ if command -v git &> /dev/null; then
         git init -q
         git config advice.addEmbeddedRepo false
         git -c advice.addEmbeddedRepo=false add . 2>/dev/null
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium world lore repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]" 2>/dev/null
+        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial Ars Arcanum world lore repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]" 2>/dev/null
     ); then
         echo "[!] Warning: world initial Git commit failed. World created without initial history." >&2
         echo "    Repair with: git -C \"\$HOME/Universes/<Universe>/${WORLD_NAME}\" commit -m 'Initial commit'" >&2
@@ -314,7 +314,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ] && [ -d "${UNIVERSE_DIR}/.git" ] && command -v 
     if ! (
         cd "${UNIVERSE_DIR}"
         git add "${WORLD_NAME}" 2>/dev/null
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'" 2>/dev/null
+        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'" 2>/dev/null
     ); then
         echo "[!] Warning: universe tracking commit failed for '${WORLD_NAME}'. World itself is intact." >&2
         [ "${GIT_HISTORY}" = "ok" ] && GIT_HISTORY="failed"

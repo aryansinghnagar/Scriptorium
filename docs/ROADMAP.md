@@ -1,10 +1,10 @@
-# Scriptorium Roadmap, Milestones & Operational Status
+# Ars Arcanum Roadmap, Milestones & Operational Status
 
 ---
 
 ## 1. Project Charter & Executive Summary
 
-Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbuilding environment designed for authors, novelists, and worldbuilders running Linux (primarily Linux Mint XFCE edition or Debian 13/12 XFCE). It emphasizes open formats (plain Markdown), minimal system management overhead, ironclad data safety (full-disk encryption + 3-2-1 automated backups + verified restores), and publication-ready typesetting using modern tools (Typst, Pandoc, novelWriter, Obsidian, Calibre, FocusWriter).
+Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbuilding environment designed for authors, novelists, and worldbuilders running Linux (primarily Linux Mint XFCE edition or Debian 13/12 XFCE). It emphasizes open formats (plain Markdown), minimal system management overhead, ironclad data safety (full-disk encryption + 3-2-1 automated backups + verified restores), and publication-ready typesetting using modern tools (Typst, Pandoc, novelWriter, Obsidian, Calibre, FocusWriter).
 
 ---
 
@@ -34,8 +34,8 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] `.editorconfig` formatting standards and immutable 40-char SHA pinning in CI.
 
 ### M1: Execution Foundation & Safety
-- [x] Installer `--dry-run` simulation and OS distribution gating (`scripts/setup_scriptorium.sh`).
-- [x] Automated rollback uninstaller (`scripts/uninstall_scriptorium.sh`).
+- [x] Installer `--dry-run` simulation and OS distribution gating (`scripts/setup_arcanum.sh`).
+- [x] Automated rollback uninstaller (`scripts/uninstall_arcanum.sh`).
 - [x] Transactional staging for world creation (`scripts/init_world.sh`).
 - [x] Independent Pandoc error trapping and non-zero artifact verification (`scripts/export_book.sh`).
 
@@ -46,13 +46,13 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] Modernized test fixtures (`tests/fixtures/`).
 
 ### M3: Production Diagnostics & Domain Toolchain
-- [x] Unified Scriptorium Doctor diagnostics (`scripts/scriptorium_doctor.sh`).
+- [x] Unified Ars Arcanum Doctor diagnostics (`scripts/arcanum_doctor.sh`).
 - [x] World Doctor with multi-era timeline and entity validation (`scripts/world_doctor.sh`).
 - [x] Manuscript progress analytics and wordcount reporting (`scripts/wordcount_report.sh`).
 
 ### M4: Unified Authoring Platform & Verification Harness
-- [x] Unified CLI entrypoint dispatcher (`scripts/scriptorium`).
-- [x] Desktop Control Center GUI (`scripts/control_center.sh`, `launchers/scriptorium-control-center.desktop`).
+- [x] Unified CLI entrypoint dispatcher (`scripts/arcanum` and alias `scripts/ars-arcanum`).
+- [x] Desktop Control Center GUI (`scripts/control_center.sh`, `launchers/arcanum-control-center.desktop`).
 - [x] Comprehensive 7-stage verification harness (`scripts/verify.sh`).
 
 ### M5: Narrative Universe Architecture & Out-of-the-Box Obsidian Suite
@@ -60,7 +60,7 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] Pre-configured Obsidian suite (`.obsidian/` configs, `Templates/fileClasses/`, Dataview JS/DQL, Obsidian Git 10-minute auto-commits).
 
 ### M6: Multi-Volume Manuscript Compilation Isolation
-- [x] Volume discovery and explicit `-b, --book <Volume>` selector (`export_book.sh`, `scriptorium export`).
+- [x] Volume discovery and explicit `-b, --book <Volume>` selector (`export_book.sh`, `arcanum export`).
 - [x] Interactive GUI volume picker and omnibus export support.
 
 ### M7: Professional Literary Typography & Typesetting Engine
@@ -82,17 +82,17 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] 7-stage verification harness passing with `ALL-CHECKS-PASS`.
 
 ### M11: Unified GTK 3 Desktop Control Center & Author's Field Manual
-- [x] Native Python 3 / PyGObject GTK 3 desktop dashboard (`scripts/scriptorium_app.py`) with 5-tab author workflow.
+- [x] Native Python 3 / PyGObject GTK 3 desktop dashboard (`scripts/arcanum_app.py`) with 5-tab author workflow.
 - [x] First-Flight onboarding wizard with starter demo cosmos (*"The Chronicles of Eldoria"*).
 - [x] Comprehensive 8-chapter Author's Field Manual (`docs/AUTHOR_MANUAL.md`).
 
 ### M12: Speculative Ontology Harmonization, Multi-Volume Engine & Publishing Polish
 - [x] Harmonized frontmatter templates and `World-Bible-Index.md` with strict `fileClasses` schemas (`MagicSystem.md`, `Language.md`).
-- [x] Multi-volume scaffolding (`scripts/add_book.sh`, `scriptorium add-book`).
+- [x] Multi-volume scaffolding (`scripts/add_book.sh`, `arcanum add-book`).
 - [x] Paper trim size presets (`-s, --paper-size us-trade|trade|pocket`) and EPUB cover image auto-detection (`03-Art/cover.png`).
 
 ### M13: Automated Narrative Concordance, Multi-Era Chronology & Subplot Matrix
-- [x] Automated Back-Matter Concordance & Dramatis Personae Engine (`scripts/generate_concordance.sh`, `scriptorium concordance`).
+- [x] Automated Back-Matter Concordance & Dramatis Personae Engine (`scripts/generate_concordance.sh`, `arcanum concordance`).
 - [x] Multi-era chronological timeline parsing in `world_doctor.sh` (`WLD-104`).
 - [x] Subplot & Narrative Thread Pacing Matrix (`templates/manuscript/Outlines/Subplot-Thread-Matrix.md`) with `@thread:` tags.
 
@@ -129,7 +129,7 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 - [ ] Physical machine deployment and first-flight testing on Linux Mint 22 (XFCE) / Debian 13 (XFCE).
 
 #### `improve` (Post-GA Enhancements)
-- [ ] Implement mtime-based live wordcount caching in `scripts/scriptorium_app.py` for massive omnibus manuscripts.
+- [ ] Implement mtime-based live wordcount caching in `scripts/arcanum_app.py` for massive omnibus manuscripts.
 - [ ] Add optional local semantic continuity checking.
 - [ ] Port Desktop Control Center to GTK 4 / Libadwaita.
 
@@ -142,8 +142,8 @@ Scriptorium is a purpose-built, distraction-free, low-effort writing and worldbu
 ## 6. Definition of Done
 
 - `bash scripts/verify.sh` prints `ALL-CHECKS-PASS` across all 7 verification stages.
-- `python3 -m py_compile scripts/scriptorium_app.py` compiles without syntax errors.
+- `python3 -m py_compile scripts/arcanum_app.py` compiles without syntax errors.
 - `docs/AUTHOR_MANUAL.md` provides visual, plain-English guidance for all creative and technical workflows.
 - `typst compile templates/typst/preview_sample.typ` produces a paginated PDF with clean front matter, ornamental scene breaks, and running headers.
 - Test universes, pure world lore vaults, and standalone manuscripts scaffold, export (PDF, EPUB, DOCX), snapshot, and restore cleanly without data loss.
-- Zero warnings under `shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/scriptorium`.
+- Zero warnings under `shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum`.

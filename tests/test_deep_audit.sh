@@ -111,12 +111,14 @@ grep -q "#world/system" "templates/world-bible/Templates/World-Bible-Index.md" |
 grep -q "#world/language" "templates/world-bible/Templates/World-Bible-Index.md" || { echo "FAIL: #world/language table missing in World-Bible-Index.md"; exit 1; }
 
 echo "=== 7. Testing CLI Facade Dispatch ==="
+bash scripts/arcanum --version >/dev/null
+bash scripts/arcanum --help >/dev/null
+bash scripts/ars-arcanum --version >/dev/null
+bash scripts/arcanum add-book --help >/dev/null
+bash scripts/arcanum export --help >/dev/null
+bash scripts/arcanum snapshot --help >/dev/null
+bash scripts/arcanum concordance --help >/dev/null
 bash scripts/scriptorium --version >/dev/null
-bash scripts/scriptorium --help >/dev/null
-bash scripts/scriptorium add-book --help >/dev/null
-bash scripts/scriptorium export --help >/dev/null
-bash scripts/scriptorium snapshot --help >/dev/null
-bash scripts/scriptorium concordance --help >/dev/null
 
 echo "=== 8. Testing Subplot Outline & Root Cleanliness ==="
 [ -f "templates/manuscript/Outlines/Subplot-Thread-Matrix.md" ] || { echo "FAIL: Subplot-Thread-Matrix.md missing"; exit 1; }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Scriptorium Cache Engine (scripts/lib/cache.py)
+Ars Arcanum Cache Engine (scripts/lib/cache.py)
 High-performance mtime-keyed in-memory & on-disk cache layer for World Bibles and Manuscripts.
 Ensures sub-millisecond treeview rendering and accelerated diagnostic passes.
 """
@@ -13,10 +13,10 @@ import argparse
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("scriptorium.cache")
+logger = logging.getLogger("arcanum.cache")
 
 CACHE_VERSION = 2
-CACHE_FILENAME = ".scriptorium_cache.json"
+CACHE_FILENAME = ".arcanum_cache.json"
 
 # ANA-01: canonical word-count definition shared by cache.py,
 # wordcount_report.sh, and ui_gtk3.py. Policy: strip YAML frontmatter and
@@ -56,7 +56,11 @@ def get_cache_path(project_dir: str) -> Path:
 def load_cache(project_dir: str) -> dict:
     cache_path = get_cache_path(project_dir)
     if not cache_path.is_file():
-        return {"version": CACHE_VERSION, "files": {}}
+        legacy_path = Path(project_dir) / ".scriptorium_cache.json"
+        if legacy_path.is_file():
+            cache_path = legacy_path
+        else:
+            return {"version": CACHE_VERSION, "files": {}}
     try:
         with open(cache_path, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -265,7 +269,7 @@ def compute_wordcounts(project_dir: str) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Scriptorium Fast Cache Engine")
+    parser = argparse.ArgumentParser(description="Ars Arcanum Fast Cache Engine")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     scan_cmd = subparsers.add_parser("scan", help="Scan and update project cache")
@@ -301,10 +305,17 @@ def main():
 
     elif args.command == "clear":
         cp = get_cache_path(args.path)
+        legacy_cp = Path(args.path) / ".scriptorium_cache.json"
+        cleared = False
         if cp.exists():
             cp.unlink()
             print(f"[CACHE] Cleared {cp}")
-        else:
+            cleared = True
+        if legacy_cp.exists():
+            legacy_cp.unlink()
+            print(f"[CACHE] Cleared {legacy_cp}")
+            cleared = True
+        if not cleared:
             print(f"[CACHE] No cache found at {cp}")
         sys.exit(0)
 

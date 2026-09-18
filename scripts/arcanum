@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Ars Arcanum Unified CLI
+# Purpose: Single command-line interface for all Ars Arcanum authoring workflows.
+# ==============================================================================
+
+set -euo pipefail
+
+# PKG-01: dereference symlinks so packaged installs
+# (/usr/bin/arcanum -> /usr/share/ars-arcanum/scripts/arcanum,
+#  /app/bin/arcanum -> /app/share/ars-arcanum/scripts/arcanum)
+# resolve to the real script directory instead of /usr/bin or /app/bin.
+_RESOLVED_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "${_RESOLVED_SCRIPT}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
+if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ]; then
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+fi
+# Packaged layout: scripts live directly under the share root
+# (/usr/share/ars-arcanum/scripts/, /app/share/ars-arcanum/scripts/).
+if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ] && [ -f "${SCRIPT_DIR}/verify.sh" ]; then
+    PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+    # SCRIPT_DIR is already .../scripts; PROJECT_ROOT is the share root.
+    # Normalise: PROJECT_ROOT/scripts must exist.
+    if [ ! -d "${PROJECT_ROOT}/scripts" ]; then
+        PROJECT_ROOT="$SCRIPT_DIR"
+    fi
+fi
+
+VERSION="1.5.0"
+
+usage() {
+    cat << USAGE
+Ars Arcanum Unified CLI — v${VERSION}
+A reproducible, fail-safe Linux authoring and worldbuilding platform.
+
+Usage:
+  arcanum <command> [arguments...]
+  ars-arcanum <command> [arguments...]
+
+Universe & World Lore Management:
+  universe [NAME] [--list]     Create or list narrative Universes in ~/Universes/
+  world <name> [-u UNIVERSE]   Atomically scaffold a World Lore Vault in a Universe
+  control-center               Launch graphical desktop control center
+
+Manuscripts, Drafting & Publishing:
+  manuscript <name> [options]  Scaffold a new Manuscript Project in ~/Manuscripts/
+  add-volume <ms> [volume]     Scaffold a new manuscript volume (Book-02, etc.)
+  concordance <ms|world> [-b]  Generate Dramatis Personae & Glossary back-matter
+  export <manuscript> [-b BK]  Compile manuscript into PDF, EPUB, or DOCX (--format book|submission|all)
+  report <manuscript> [--md]   Show word counts and manuscript progress analytics
+
+Data Protection & Version Control:
+  snapshot <target> [-m note]  Record a Git version snapshot (World & Manuscripts)
+  backup <target> [options]    Create a standalone verified .tar.gz backup archive
+  restore <archive> [opts]     Restore a project from a verified backup archive
+
+System Health & Maintenance:
+  doctor [options]             Run unified health and toolchain diagnostics (-w WORLD, -m MS)
+  world-doctor <world> [opts]  Run deep World Bible lore consistency diagnostics (-m MS, --fast, --json)
+  check-continuity [options]   Run local offline narrative continuity & character trait checks (-w WORLD, -m MS)
+  verify                       Run complete 7-stage test harness
+  setup [--dry-run]            Install core packages, fonts, and desktop launchers
+  uninstall [--dry-run]        Revert desktop launchers and system components
+
+Global Options:
+  -v, --version                Display Ars Arcanum version
+  -h, --help                   Display this help menu
+USAGE
+}
+
+if [ $# -eq 0 ]; then
+    usage
+    exit 0
+fi
+
+COMMAND="$1"
+shift
+
+case "${COMMAND}" in
+    universe|multiverse)
+        exec bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$@"
+        ;;
+    world|init-world|init)
+        exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
+        ;;
+    manuscript|init-manuscript|novel)
+        exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
+        ;;
+    add-volume|add-book|new-book)
+        exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
+        ;;
+    concordance|glossary|dramatis-personae)
+        exec bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$@"
+        ;;
+    world-doctor|lore-doctor)
+        exec bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$@"
+        ;;
+    check-continuity|continuity)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/continuity.py" "$@"
+        ;;
+    doctor|check)
+        exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
+        ;;
+    export|publish)
+        exec bash "${PROJECT_ROOT}/scripts/export_book.sh" "$@"
+        ;;
+    snapshot|snap)
+        exec bash "${PROJECT_ROOT}/scripts/save_snapshot.sh" "$@"
+        ;;
+    backup)
+        exec bash "${PROJECT_ROOT}/scripts/backup_world.sh" "$@"
+        ;;
+    restore)
+        exec bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$@"
+        ;;
+    report|wordcount)
+        exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
+        ;;
+    verify)
+        exec bash "${PROJECT_ROOT}/scripts/verify.sh" "$@"
+        ;;
+    setup)
+        exec bash "${PROJECT_ROOT}/scripts/setup_arcanum.sh" "$@"
+        ;;
+    uninstall)
+        exec bash "${PROJECT_ROOT}/scripts/uninstall_arcanum.sh" "$@"
+        ;;
+    control-center|dashboard|gui|app)
+        if [ -f "${PROJECT_ROOT}/scripts/arcanum_app.py" ]; then
+            exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
+        else
+            exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
+        fi
+        ;;
+    -v|--version|version)
+        echo "Ars Arcanum v${VERSION}"
+        exit 0
+        ;;
+    -h|--help|help)
+        usage
+        exit 0
+        ;;
+    *)
+        echo "Error: Unknown command '${COMMAND}'" >&2
+        echo "Run 'arcanum --help' for available commands." >&2
+        exit 2
+        ;;
+esac

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Shared Discovery & Resolution Library
+# Ars Arcanum Shared Discovery & Resolution Library
 # Purpose: Single source of truth for every entry-point script to locate
 #          Universes (~/Universes/<Universe>), World Lore Vaults
 #          (~/Universes/<Universe>/<World>), and Manuscript Projects
@@ -30,9 +30,10 @@
 # must never exit on its own.
 # ==============================================================================
 
-if [ -n "${SCRIPTORIUM_LIB_WORLDS_SOURCED:-}" ]; then
+if [ -n "${ARCANUM_LIB_WORLDS_SOURCED:-}" ] || [ -n "${SCRIPTORIUM_LIB_WORLDS_SOURCED:-}" ]; then
     return 0
 fi
+ARCANUM_LIB_WORLDS_SOURCED=1
 SCRIPTORIUM_LIB_WORLDS_SOURCED=1
 
 UNIVERSES_BASE="${UNIVERSES_BASE:-${HOME}/Universes}"
@@ -40,7 +41,7 @@ MANUSCRIPTS_BASE="${MANUSCRIPTS_BASE:-${HOME}/Manuscripts}"
 LEGACY_WORLDS_BASE="${LEGACY_WORLDS_BASE:-${HOME}/Worlds}"
 # RES-01: set to 1 by resolvers when a name is ambiguous, so
 # resolve_target_dir does not fall through to a different project type.
-SCRIPTORIUM_RESOLVE_AMBIGUOUS=0
+ARCANUM_RESOLVE_AMBIGUOUS=0
 
 # GUI detection works on both X11 and Wayland
 has_gui() {
@@ -230,7 +231,7 @@ resolve_world_dir() {
                     echo "Re-run with an explicit universe (e.g. --universe <Name>) or an absolute path."
                 } >&2
                 resolved=""
-                SCRIPTORIUM_RESOLVE_AMBIGUOUS=1
+                ARCANUM_RESOLVE_AMBIGUOUS=1
             fi
         fi
     fi
@@ -271,7 +272,7 @@ resolve_manuscript_dir() {
                     echo "Re-run with an absolute path."
                 } >&2
                 resolved=""
-                SCRIPTORIUM_RESOLVE_AMBIGUOUS=1
+                ARCANUM_RESOLVE_AMBIGUOUS=1
             fi
         fi
     fi

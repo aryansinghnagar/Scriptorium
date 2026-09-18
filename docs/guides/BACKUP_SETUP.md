@@ -1,6 +1,6 @@
 # Déjà Dup Automated Backup Guide (The 3-2-1 Rule)
 
-Your writing represents years of intellectual effort. Scriptorium adheres to the **3-2-1 Backup Rule**:
+Your writing represents years of intellectual effort. Ars Arcanum adheres to the **3-2-1 Backup Rule**:
 - **3** copies of your data (Working disk, external USB drive, offsite/cloud).
 - **2** different storage media types.
 - **1** copy stored offsite or on a detached external drive.

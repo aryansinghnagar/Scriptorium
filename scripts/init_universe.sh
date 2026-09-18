@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Scriptorium Universe Initializer & Manager
+# Ars Arcanum Universe Initializer & Manager
 # Purpose: Scaffolds a narrative Universe ~/Universes/<UniverseName> to house
 #          and track multiple interconnected worlds with a Universe-level Git repository.
 # ==============================================================================
@@ -15,7 +15,7 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Scriptorium Universe Manager — scaffold and manage narrative Universes.
+Ars Arcanum Universe Manager — scaffold and manage narrative Universes.
 
 Usage:
   init_universe.sh [UNIVERSE_NAME] [OPTIONS]
@@ -66,7 +66,7 @@ if [ "${LIST_MODE}" -eq 1 ]; then
         COUNT=$((COUNT + 1))
     done < <(find "${UNIVERSES_BASE}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null)
     if [ "${COUNT}" -eq 0 ]; then
-        echo "  (No Universes found yet. Create one with: scriptorium universe <name>)"
+        echo "  (No Universes found yet. Create one with: arcanum universe <name>)"
     fi
     exit 0
 fi
@@ -76,7 +76,7 @@ UNIVERSE_NAME="${UNIVERSE_NAME_CLI:-${POSITIONAL[0]:-}}"
 if [ -z "${UNIVERSE_NAME}" ]; then
     if has_gui; then
         UNIVERSE_NAME=$(zenity --entry \
-            --title="Scriptorium — New Universe Creator" \
+            --title="Ars Arcanum — New Universe Creator" \
             --text="Enter the name for your narrative Universe:\n(e.g., 'Cosmere', 'Solaris-Prime', 'High-Fantasy-Multiverse')" \
             --entry-text="Default-Universe" || true)
     fi
@@ -112,7 +112,7 @@ mkdir -p "${TARGET_UNIVERSE_DIR}"
 
 # Create universe manifest & index note
 cat << EOF > "${TARGET_UNIVERSE_DIR}/universe.yaml"
-# Scriptorium Universe Manifest
+# Ars Arcanum Universe Manifest
 name: "${UNIVERSE_NAME}"
 created_at: "$(date +%Y-%m-%d)"
 description: "Narrative Universe housing interconnected worlds and lore."
@@ -155,7 +155,7 @@ if command -v git &> /dev/null; then
         cd "${TARGET_UNIVERSE_DIR}"
         git init -q
         git add .
-        git -c user.name="Scriptorium" -c user.email="scriptorium@localhost" commit -q -m "Initial Scriptorium universe repository: ${UNIVERSE_NAME}" 2>/dev/null
+        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial Ars Arcanum universe repository: ${UNIVERSE_NAME}" 2>/dev/null
     ); then
         echo "[!] Warning: universe initial Git commit failed. Universe created without initial history." >&2
         echo "    Repair with: git -C '${TARGET_UNIVERSE_DIR}' commit -m 'Initial commit'" >&2

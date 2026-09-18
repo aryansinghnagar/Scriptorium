@@ -1,6 +1,6 @@
-# Scriptorium Platform & Environment Support Matrix
+# Ars Arcanum Platform & Environment Support Matrix
 
-This document defines the formal compatibility, architecture tiers, and display server support for **Scriptorium**.
+This document defines the formal compatibility, architecture tiers, and display server support for **Ars Arcanum**.
 
 ---
 
@@ -18,7 +18,7 @@ This document defines the formal compatibility, architecture tiers, and display 
 | **Non-Linux (Windows/macOS)** | Any | N/A | Any | **Unsupported** | Linux native tools required |
 
 ### Tier Definitions
-- **Tier 1 (Target Reference)**: Fully verified through automated test harnesses and installation scripts (`setup_scriptorium.sh`). All desktop launchers, fonts, Flatpaks, and typesetting engines run out-of-the-box.
+- **Tier 1 (Target Reference)**: Fully verified through automated test harnesses and installation scripts (`setup_arcanum.sh`). All desktop launchers, fonts, Flatpaks, and typesetting engines run out-of-the-box.
 - **Tier 2 (Compatible)**: Supported via `--force` flag in setup scripts. Minor package name variations (e.g., font package names) are handled gracefully by fallback routines.
 
 ---
