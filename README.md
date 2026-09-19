@@ -107,6 +107,8 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
 5. **`Back-Matter Concordance` (`arcanum concordance <world> --manuscript <manuscript>`)**: Automatically parses World Bible lore into publication-ready `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
 6. **`Export Book` (`arcanum export <manuscript> [-b Book-01|all] [-s us-trade|trade|pocket] [--format book|submission|all]`)**: Compiles your manuscript or specific volume into a print-ready PDF via Typst, an EPUB via Pandoc, and a submission DOCX in one click.
 7. **`Save Snapshot` (`arcanum snapshot <target> [-m note]`)**: Records timestamped Git version snapshots across your world and manuscript repositories.
+8. **`Fast Performance Cache` (`arcanum cache <scan|wordcounts|clear> [path]`)**: Manages mtime-keyed in-memory index caching for sub-millisecond analytics.
+9. **`Continuity & Diagnostics` (`arcanum check-continuity -w <world> -m <ms>` / `arcanum doctor`)**: Scans character traits, timeline paradoxes, and toolchain integrity.
 
 ---
 

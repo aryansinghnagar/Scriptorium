@@ -16,6 +16,11 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
   - Added [PRIVACY.md](PRIVACY.md) specifying zero telemetry, local-only processing, and explicit consent policies.
   - Added [REFERENCES.md](REFERENCES.md) with complete Open Source / Creative Commons attribution records for non-commercial use.
   - Scrubbed personal identifiable information (PII) across the codebase in favor of generic maintainer identifiers and official repository links.
+- **Cross-Platform Robustness & CLI Performance Upgrades**:
+  - Upgraded YAML frontmatter regex and word count parsing across `scripts/lib/cache.py`, `scripts/lib/continuity.py`, and `scripts/wordcount_report.sh` to seamlessly handle both CRLF (`\r\n`) and LF (`\n`) line endings.
+  - Expanded `arcanum` CLI with dedicated `cache` subcommands (`arcanum cache <scan|wordcounts|clear>`, `arcanum cache-scan`, `arcanum cache-clear`).
+  - Upgraded `scripts/arcanum_doctor.sh` System Diagnostics to validate and report existence and write permissions for `~/Universes` and `~/Manuscripts` directory roots.
+  - Added automated unit test suite `test_crlf_frontmatter_and_word_counts` in `tests/test_cache.py` (21/21 passing).
 
 ### Fixed & Hardened (Master Forensic Audit Remediation)
 - **CLI & Diagnostics Robustness**:

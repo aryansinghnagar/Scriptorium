@@ -337,6 +337,8 @@ Or install the individual tool via your package manager (see `docs/guides/SOFTWA
 - `arcanum backup <target>`
 - `arcanum restore <archive>`
 - `arcanum report <manuscript>`
+- `arcanum cache <scan|wordcounts|clear> [path]`
+- `arcanum check-continuity -w <world> -m <manuscript>`
 - `arcanum doctor`
 - `arcanum world-doctor <world>`
 
