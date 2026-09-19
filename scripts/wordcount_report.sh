@@ -122,7 +122,7 @@ try:
 except Exception:
     # Fallback mirrors the canonical policy if the lib is unavailable.
     MAX_BYTES = 8 * 1024 * 1024
-    _FM = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+    _FM = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
     def canonical_count(text: str) -> int:
         clean = _FM.sub("", text)
         clean = re.sub(r"```.*?```", "", clean, flags=re.DOTALL)

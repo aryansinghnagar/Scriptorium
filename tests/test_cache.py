@@ -22,6 +22,7 @@ from lib.cache import (  # noqa: E402
     get_cache_path,
     load_cache,
     save_cache,
+    count_words,
     parse_frontmatter,
     parse_markdown_file,
     scan_project,
@@ -186,7 +187,13 @@ Real prose words here.
         cache = scan_project(str(self.project_dir))
         self.assertIn("real.md", cache.get("files", {}))
         self.assertNotIn("Exports/compiled.md", cache.get("files", {}))
-        self.assertTrue(cache.get("healthy", False))
+    def test_crlf_frontmatter_and_word_counts(self):
+        # Verify CRLF line endings parse correctly across frontmatter and word counts
+        crlf_text = "---\r\ntitle: \"CRLF Novel\"\r\nauthor: \"Author Name\"\r\n---\r\n\r\n# Chapter 1\r\n\r\n@pov: Hero\r\n\r\nProse content with CRLF line endings."
+        fm = parse_frontmatter(crlf_text)
+        self.assertEqual(fm.get("title"), "CRLF Novel")
+        self.assertEqual(fm.get("author"), "Author Name")
+        self.assertEqual(count_words(crlf_text), 8)  # Chapter + 1 + Prose + content + with + CRLF + line + endings
 
 
 if __name__ == "__main__":

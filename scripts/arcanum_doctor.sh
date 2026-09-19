@@ -8,7 +8,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-WORLDS_BASE="${HOME}/Worlds"
+UNIVERSES_BASE="${UNIVERSES_BASE:-${HOME}/Universes}"
+MANUSCRIPTS_BASE="${MANUSCRIPTS_BASE:-${HOME}/Manuscripts}"
+WORLDS_BASE="${LEGACY_WORLDS_BASE:-${HOME}/Worlds}"
 
 usage() {
     cat << 'USAGE'
@@ -58,6 +60,8 @@ done
 command -v python3 &>/dev/null || { echo "Error: python3 is required." >&2; exit 2; }
 
 PROJECT_ROOT="${PROJECT_ROOT}" \
+UNIVERSES_BASE="${UNIVERSES_BASE}" \
+MANUSCRIPTS_BASE="${MANUSCRIPTS_BASE}" \
 WORLDS_BASE="${WORLDS_BASE}" \
 WORLD_FILTER="${WORLD_FILTER}" \
 MANUSCRIPT_FILTER="${MANUSCRIPT_FILTER}" \
@@ -72,7 +76,9 @@ import subprocess
 import platform
 
 PROJECT_ROOT = os.environ["PROJECT_ROOT"]
-WORLDS_BASE = os.environ["WORLDS_BASE"]
+UNIVERSES_BASE = os.environ.get("UNIVERSES_BASE", os.path.expanduser("~/Universes"))
+MANUSCRIPTS_BASE = os.environ.get("MANUSCRIPTS_BASE", os.path.expanduser("~/Manuscripts"))
+WORLDS_BASE = os.environ.get("WORLDS_BASE", os.path.expanduser("~/Worlds"))
 WORLD_FILTER = os.environ["WORLD_FILTER"]
 MANUSCRIPT_FILTER = os.environ.get("MANUSCRIPT_FILTER", "")
 ALL_WORLDS = os.environ["ALL_WORLDS"] == "1"
@@ -105,6 +111,12 @@ try:
 except Exception:
     pass
 
+universes_exists = os.path.isdir(UNIVERSES_BASE)
+universes_writable = os.access(UNIVERSES_BASE, os.W_OK) if universes_exists else os.access(os.path.expanduser("~"), os.W_OK)
+
+manuscripts_exists = os.path.isdir(MANUSCRIPTS_BASE)
+manuscripts_writable = os.access(MANUSCRIPTS_BASE, os.W_OK) if manuscripts_exists else os.access(os.path.expanduser("~"), os.W_OK)
+
 worlds_exists = os.path.isdir(WORLDS_BASE)
 worlds_writable = os.access(WORLDS_BASE, os.W_OK) if worlds_exists else os.access(os.path.expanduser("~"), os.W_OK)
 
@@ -114,6 +126,12 @@ findings["system"] = {
     "architecture": platform.machine(),
     "python_version": platform.python_version(),
     "free_disk_gb": disk_free_gb,
+    "universes_dir": UNIVERSES_BASE,
+    "universes_dir_exists": universes_exists,
+    "universes_dir_writable": universes_writable,
+    "manuscripts_dir": MANUSCRIPTS_BASE,
+    "manuscripts_dir_exists": manuscripts_exists,
+    "manuscripts_dir_writable": manuscripts_writable,
     "worlds_dir": WORLDS_BASE,
     "worlds_dir_exists": worlds_exists,
     "worlds_dir_writable": worlds_writable,
@@ -121,7 +139,7 @@ findings["system"] = {
 
 if disk_free_gb < 2.0:
     findings["summary"]["warnings"] += 1
-if not worlds_writable:
+if not universes_writable or not manuscripts_writable:
     findings["summary"]["errors"] += 1
 
 # 2. TOOLCHAIN DIAGNOSTICS
@@ -330,7 +348,8 @@ else:
     print("============================================================")
     print(f"System:       {findings['system']['os']} ({findings['system']['architecture']})")
     print(f"Disk Free:    {findings['system']['free_disk_gb']} GB")
-    print(f"Worlds Base:  {findings['system']['worlds_dir']} (Writable: {findings['system']['worlds_dir_writable']})")
+    print(f"Universes:    {findings['system']['universes_dir']} (Writable: {findings['system']['universes_dir_writable']})")
+    print(f"Manuscripts:  {findings['system']['manuscripts_dir']} (Writable: {findings['system']['manuscripts_dir_writable']})")
     print("\nToolchain Status:")
     for tool, data in findings["toolchain"].items():
         sym = "✓" if data.get("installed") else "!"

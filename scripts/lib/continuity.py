@@ -38,7 +38,7 @@ TRAIT_PATTERNS = {
     ]
 }
 
-FRONTMATTER_REGEX = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
+FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
 
 
 def normalize_trait(trait_type: str, raw_val: str) -> str:

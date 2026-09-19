@@ -49,6 +49,7 @@ Manuscripts, Drafting & Publishing:
   concordance <ms|world> [-b]  Generate Dramatis Personae & Glossary back-matter
   export <manuscript> [-b BK]  Compile manuscript into PDF, EPUB, or DOCX (--format book|submission|all)
   report <manuscript> [--md]   Show word counts and manuscript progress analytics
+  cache <scan|wordcounts|clear> [path] Manage mtime-keyed performance cache
 
 Data Protection & Version Control:
   snapshot <target> [-m note]  Record a Git version snapshot (World & Manuscripts)
@@ -98,6 +99,15 @@ case "${COMMAND}" in
         ;;
     check-continuity|continuity)
         exec python3 "${PROJECT_ROOT}/scripts/lib/continuity.py" "$@"
+        ;;
+    cache|cache-engine)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/cache.py" "$@"
+        ;;
+    cache-clear)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/cache.py" clear "$@"
+        ;;
+    cache-scan)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/cache.py" scan "$@"
         ;;
     doctor|check)
         exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
