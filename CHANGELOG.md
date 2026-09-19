@@ -6,7 +6,32 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
-### Changed & Renamed (Ars Arcanum Transition)
+### Added (Draft Management, Visual Redline Comparator & Dual-Target Secure Backups)
+- **Discrete Multi-Draft Manuscript Management (`scripts/init_draft.sh`)**:
+  - Implemented discrete draft version hierarchy (`~/Manuscripts/<Novel>/Book-01/Draft-01/`, `Draft-02/`, `Draft-03/`) preserving 100% open Markdown readability.
+  - Added 1-click draft forking (`arcanum draft <ms> [name]`, `arcanum new draft <ms>`) that automatically copies scenes into the new draft directory, updates the `active_draft` pointer in `manuscript.yaml`, and tags a Git milestone commit.
+  - Backward compatible baseline resolution: existing flat structures (`Book-01/01_Act_I/`) are seamlessly detected and established as `Draft-01`.
+- **Accessible Visual Manuscript Revision Comparator (`scripts/lib/manuscript_diff.py` & `scripts/compare_drafts.sh`)**:
+  - Built a fast word-level token diffing engine using Python `difflib.SequenceMatcher` tailored for fiction manuscripts.
+  - Generates standalone, accessible HTML Redline changelog reports with:
+    - Soft rose/blush (`#f8d7da` / dark mode `#3a1e22`) background highlight with dark text and strikethrough for deleted text (`<del class="diff-del">`).
+    - Soft mint/sage (`#d4edda` / dark mode `#1e3a29`) background highlight with dark text and underline for added text (`<ins class="diff-ins">`).
+    - Chapter sidebar with jump-to-section navigation, chapter-level word delta pills (`+X / -Y words`), and similarity match scoring.
+    - Interactive dark/light mode toggle, live search filter, and "Highlight Changes Only" changelog view (dimming unchanged paragraphs).
+    - Print-to-PDF stylesheet support.
+  - Added terminal ANSI color output (`arcanum compare <ms> <d2> <d1> --terminal`) and machine-readable JSON metrics (`--json`).
+  - Added native LibreOffice Writer Track Changes bridge (`arcanum compare <ms> <d2> <d1> --libreoffice`).
+- **Dual-Target Secure External & USB Backups (`scripts/lib/config.py` & `scripts/backup_world.sh`)**:
+  - Added persistent XDG configuration manager (`~/.config/ars-arcanum/config.json`) supporting `arcanum backup-dest get|set|clear`.
+  - Upgraded `scripts/backup_world.sh` with dual-target replication: verified `.tar.gz` archives and SHA-256 sidecars are created locally in `05-Backups/` and automatically synced to the configured secure destination (USB drives, external mounts, secondary drives).
+  - Validates destination paths against path traversal attacks (`..`).
+- **Desktop Control Center GUI Integration (`scripts/lib/ui_gtk3.py`)**:
+  - Added **Manuscript Draft Revisions & Redline Comparator** frame to Tab 2 (Manuscript & Drafting) with volume and draft selectors, "+ Fork New Draft" dialog, "View Redline Changelog (Browser)" launcher, and LibreOffice comparison button.
+  - Added **Dual-Target Secure Backup Destination** frame to Tab 4 (Snapshots & Backups) with interactive directory picker and clear destination controls.
+- **Comprehensive Automated Test Coverage**:
+  - Added `tests/test_drafts_and_diff.py` (unit tests for config persistence, word diff tokenization, SequenceMatcher, HTML redline styling, JSON metrics).
+  - Added `tests/test_drafts_and_diff.sh` (end-to-end integration test for `init_draft.sh`, `compare_drafts.sh`, dual-target `backup_world.sh`, and CLI dispatching).
+  - Integrated both suites into `scripts/verify.sh` with zero regressions.
 - **Project Renaming**:
   - Renamed the project from "Scriptorium" to "Ars Arcanum" across the entire codebase, documentation, templates, desktop launchers, Debian packaging, and Git remote.
   - Provided new unified CLI commands `arcanum` and `ars-arcanum` with backward-compatible `scriptorium` fallback.

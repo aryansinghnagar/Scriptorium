@@ -512,7 +512,7 @@ set -e
 [ -s "${TMP_VERIFY}/doc.log" ] || { echo "  FAIL arcanum_doctor produced no output"; exit 1; }
 echo "  OK arcanum_doctor diagnostics (exit ${DOC_RC})"
 
-# 6l. Performance Cache & Continuity Engine Regression Tests
+# 6l. Performance Cache, Continuity Engine & Draft Diff Regression Tests
 bash tests/test_performance_cache.sh > "${TMP_VERIFY}/cache_test.log" 2>&1 \
     || { echo "  FAIL test_performance_cache.sh:"; tail -n 5 "${TMP_VERIFY}/cache_test.log"; exit 1; }
 echo "  OK performance cache & mtime invalidation tests"
@@ -520,6 +520,10 @@ echo "  OK performance cache & mtime invalidation tests"
 bash tests/test_continuity_engine.sh > "${TMP_VERIFY}/continuity_test.log" 2>&1 \
     || { echo "  FAIL test_continuity_engine.sh:"; tail -n 5 "${TMP_VERIFY}/continuity_test.log"; exit 1; }
 echo "  OK narrative continuity & trait contradiction tests"
+
+bash tests/test_drafts_and_diff.sh > "${TMP_VERIFY}/drafts_diff_test.log" 2>&1 \
+    || { echo "  FAIL test_drafts_and_diff.sh:"; tail -n 5 "${TMP_VERIFY}/drafts_diff_test.log"; exit 1; }
+echo "  OK draft versioning, redline diff comparison & dual-target backup tests"
 
 # 6m. Dry-run simulation tests
 bash scripts/setup_arcanum.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \
@@ -534,11 +538,14 @@ bash scripts/arcanum --help >/dev/null
 bash scripts/arcanum universe --list >/dev/null
 bash scripts/arcanum world --list >/dev/null
 bash scripts/arcanum manuscript --list >/dev/null
+bash scripts/arcanum draft --help >/dev/null
+bash scripts/arcanum compare --help >/dev/null
 bash scripts/arcanum add-volume --help >/dev/null
 bash scripts/arcanum concordance --help >/dev/null
 bash scripts/arcanum export --help >/dev/null
 bash scripts/arcanum snapshot --help >/dev/null
 bash scripts/arcanum backup --help >/dev/null
+bash scripts/arcanum backup-dest --help >/dev/null
 bash scripts/arcanum restore --help >/dev/null
 bash scripts/arcanum report --help >/dev/null
 bash scripts/arcanum doctor --help >/dev/null

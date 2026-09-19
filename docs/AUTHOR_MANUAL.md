@@ -206,6 +206,33 @@ This automatically scaffolds:
 - Starter chapters for each act
 - A discrete, isolated Git repository for granular drafting commits in `Book-02`!
 
+### Draft Management & Visual Redline Comparison (`arcanum draft` / `arcanum compare`)
+Ars Arcanum includes a first-class draft management and visual manuscript revision comparator (similar to MS Word Track Changes / Document Compare, but built for plain Markdown).
+
+#### 1. Maintaining Multiple Draft Versions
+Books can maintain discrete draft versions (`Draft-01`, `Draft-02`, `Draft-03`) directly inside their volume directory (`Book-01/Draft-01/`, `Book-01/Draft-02/`).
+- To fork your current prose into a new revision draft, click **"+ Fork New Draft"** in Tab 2 of the Control Center, or run:
+  ```bash
+  arcanum draft My-Novel Draft-02
+  ```
+- This atomically copies all scenes into `Book-01/Draft-02/`, updates the active draft pointer in `manuscript.yaml`, and tags a Git milestone commit.
+
+#### 2. Visual Redline Document Comparison
+To see what was cut from an older draft and what was added in a newer revision:
+- Open the Control Center (Tab 2 -> **Manuscript Draft Revisions & Redline Comparator**), pick your Target Draft (e.g. `Draft-02`) and Prior Draft (e.g. `Draft-01`), and click **"📊 View Redline Changelog"**.
+- Or via CLI:
+  ```bash
+  arcanum compare My-Novel Draft-02 Draft-01 --browser
+  ```
+- **Accessible Design**: Additions appear in soft sage/mint highlights (`<ins>`) with underlines, while cut text appears in soft blush/rose highlights (`<del>`) with strikethrough—avoiding harsh, unreadable red fonts.
+- **Interactive Features**:
+  - Chapter sidebar with jump links and word delta pills (`+250 / -80 words`).
+  - Dark mode and Light mode toggle switches.
+  - "Highlight Changes Only" changelog mode (dims unchanged paragraphs).
+  - Search bar to live-filter modified text.
+  - One-click Print/PDF export.
+- **LibreOffice Bridge**: Click **"📝 LibreOffice Writer"** (or `--libreoffice`) to open native side-by-side Track Changes comparison in LibreOffice Writer!
+
 ### Scene Breaks in Trade Typography
 To insert a scene break within a chapter, use standard Markdown:
 ```markdown
@@ -280,16 +307,19 @@ Obsidian Git is pre-configured to automatically commit changes in your World Bib
 ### 2. Version Milestone Snapshots (Git)
 Whenever you reach a milestone (e.g. finishing a chapter or rewriting an act), click **"📷 Quick Snapshot"** in the top bar or use **Tab 4**. This creates an immutable restore point in your local Git history.
 
-### 3. Standalone Archive Backups (The 3-2-1 Rule)
-- **What it is**: A compressed `.tar.gz` archive containing your entire world, lore, maps, and manuscripts, accompanied by a cryptographic SHA-256 checksum (`.sha256`).
-- **How to use**: Click **"📦 Create Standalone Backup Archive"** in Tab 4.
-- **Recommendation**: Copy your backup archives from `05-Backups/` to an external USB drive or secondary hard drive once a week.
+### 3. Dual-Target Standalone Archive Backups (The 3-2-1 Rule)
+- **What it is**: A compressed `.tar.gz` archive containing your entire project (world lore, manuscripts, outlines, and Git history), accompanied by a cryptographic SHA-256 checksum (`.sha256`) and JSON metadata.
+- **Dual-Target Secure Replication**:
+  - Configure a persistent secondary destination (external USB drive, encrypted vault, secondary disk):
+    - In Tab 4: Click **"📁 Choose External / USB Backup Directory..."**
+    - Or via CLI: `arcanum backup-dest set /media/usb/backups`
+  - When you click **"📦 Create Standalone Backup Archive"** (or run `arcanum backup <project>`), Ars Arcanum creates the verified archive locally in `05-Backups/` and automatically replicates it to your configured secure destination, verifying the SHA-256 checksum in both locations!
 
 ### 4. Verified Disaster Recovery
 If you ever switch computers or want to rollback a project:
 1. Open **Tab 4: Vault Safety**.
 2. Click **"♻️ Restore World from Archive"**.
-3. Select your `.tar.gz` archive file.
+3. Select your `.tar.gz` archive file from your local disk or external USB drive.
 4. Ars Arcanum verifies the SHA-256 hash to ensure zero file corruption, stages the restoration safely, and registers your world.
 
 ---

@@ -2,7 +2,8 @@
 # ==============================================================================
 # Ars Arcanum Backup Engine (REL-03)
 # Purpose: Creates a decoupled, verified, compressed backup archive of a world
-#          with an immutable SHA-256 checksum manifest and metadata.
+#          or manuscript with an immutable SHA-256 checksum manifest and metadata.
+#          Supports dual-target backups (local project root + secure external/USB storage).
 # ==============================================================================
 
 set -euo pipefail
@@ -15,22 +16,27 @@ source "${SCRIPT_DIR}/lib/worlds.sh"
 
 usage() {
     cat << 'USAGE'
-Ars Arcanum World Backup Engine — create a standalone, verified backup archive.
+Ars Arcanum Backup Engine — create a standalone, verified backup archive.
 
 Usage:
-  backup_world.sh [WORLD_NAME|WORLD_DIR] [OPTIONS]
+  backup_world.sh [TARGET_NAME|TARGET_DIR] [OPTIONS]
 
 Options:
-  -w, --world NAME     World name or path
-  -u, --universe NAME  Universe name (optional)
-  -d, --dest DIR       Destination directory for archive (default: <world>/05-Backups)
-  -n, --note NOTE      Optional backup note/label
-  -h, --help           Show this help and exit
+  -w, --world NAME       World name or path
+  -m, --manuscript NAME  Manuscript name or path
+  -p, --project NAME     Project name or path
+  -u, --universe NAME    Universe name (optional)
+  -d, --dest DIR         Primary destination directory for archive
+  -s, --secure-dest DIR  Explicit secure external/USB backup destination
+  -n, --note NOTE        Optional backup note/label
+  --no-local             Write only to secure external destination (skip local Backups/)
+  -h, --help             Show this help and exit
 
 Exit codes:
   0  backup created and checksum verified
-  1  error (world not found, compression failure, checksum failure)
-  3  user abort (no world selected)
+  1  error (target not found, compression failure, checksum failure)
+  2  usage error or destination path disallowed
+  3  user abort (no target selected)
 USAGE
 }
 
@@ -39,7 +45,9 @@ MANUSCRIPT_CLI=""
 PROJECT_CLI=""
 UNIVERSE_CLI=""
 DEST_CLI=""
+SECURE_DEST_CLI=""
 NOTE_CLI=""
+NO_LOCAL=0
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
@@ -59,9 +67,14 @@ while [ $# -gt 0 ]; do
         -d|--dest)
             [ $# -ge 2 ] || { echo "Error: --dest requires a value." >&2; exit 2; }
             DEST_CLI="$2"; shift 2 ;;
+        -s|--secure-dest)
+            [ $# -ge 2 ] || { echo "Error: --secure-dest requires a value." >&2; exit 2; }
+            SECURE_DEST_CLI="$2"; shift 2 ;;
         -n|--note)
             [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 2; }
             NOTE_CLI="$2"; shift 2 ;;
+        --no-local)
+            NO_LOCAL=1; shift ;;
         -h|--help)
             usage; exit 0 ;;
         --)
@@ -78,13 +91,13 @@ TARGET_INPUT="${MANUSCRIPT_CLI:-${WORLD_CLI:-${PROJECT_CLI:-${POSITIONAL[0]:-}}}
 if [ -z "${TARGET_INPUT}" ]; then
     if has_gui; then
         TARGET_INPUT=$(zenity --file-selection --directory \
-            --title="Ars Arcanum — Select World Directory to Back Up" \
+            --title="Ars Arcanum — Select Project Directory to Back Up" \
             --filename="${HOME}/" || true)
     fi
 fi
 
 if [ -z "${TARGET_INPUT}" ]; then
-    echo "No world directory specified. Aborting." >&2
+    echo "No project directory specified. Aborting." >&2
     exit 3
 fi
 
@@ -99,36 +112,54 @@ WORLD_NAME="$(basename "${WORLD_DIR}")"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 SAFE_NAME="$(sanitize_name "${WORLD_NAME}" "project")"
 
-if [ -n "${DEST_CLI}" ]; then
-    # Validate and canonicalize destination path against path traversal (Issue 4)
-    RESOLVED_DEST="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "${DEST_CLI}" 2>/dev/null || realpath -m "${DEST_CLI}" 2>/dev/null || echo "${DEST_CLI}")"
-    RESOLVED_HOME="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "${HOME}" 2>/dev/null || realpath -m "${HOME}" 2>/dev/null || echo "${HOME}")"
-    RESOLVED_TMP="$(python3 -c 'import os, tempfile; print(os.path.abspath(tempfile.gettempdir()))' 2>/dev/null || echo "/tmp")"
-
-    ALLOWED=0
-    if [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}" ]] || [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}/"* ]] || \
-       [[ "${RESOLVED_DEST}" == "${RESOLVED_TMP}" ]] || [[ "${RESOLVED_DEST}" == "${RESOLVED_TMP}/"* ]] || \
-       [[ "${RESOLVED_DEST}" == "/tmp" ]] || [[ "${RESOLVED_DEST}" == "/tmp/"* ]] || \
-       [[ "${RESOLVED_DEST}" == "/var/tmp" ]] || [[ "${RESOLVED_DEST}" == "/var/tmp/"* ]]; then
-        ALLOWED=1
+# Validate destination path against path traversal
+validate_destination() {
+    local raw_dest="$1"
+    local resolved
+    resolved="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "${raw_dest}" 2>/dev/null || realpath -m "${raw_dest}" 2>/dev/null || echo "${raw_dest}")"
+    
+    # Reject explicit traversal tokens
+    if [[ "${raw_dest}" == *".."* ]]; then
+        echo "Error: Backup destination contains path traversal ('..')." >&2
+        return 1
     fi
+    printf '%s' "${resolved}"
+}
 
-    if [ "${ALLOWED}" -eq 0 ]; then
-        echo "Error: Backup destination '${DEST_CLI}' is outside allowed directory roots (must reside within \$HOME or temporary directories)." >&2
-        exit 2
-    fi
-    BACKUP_DIR="${RESOLVED_DEST}"
-elif [ -d "${WORLD_DIR}/05-Backups" ]; then
-    BACKUP_DIR="${WORLD_DIR}/05-Backups"
+# Resolve local and secure external backup directories
+LOCAL_BACKUP_DIR=""
+if [ -d "${WORLD_DIR}/05-Backups" ]; then
+    LOCAL_BACKUP_DIR="${WORLD_DIR}/05-Backups"
 else
-    BACKUP_DIR="${WORLD_DIR}/Backups"
+    LOCAL_BACKUP_DIR="${WORLD_DIR}/Backups"
 fi
-mkdir -p "${BACKUP_DIR}"
+
+# Check global secure backup destination setting
+CONFIG_SECURE_DEST=""
+if [ -f "${SCRIPT_DIR}/lib/config.py" ] && command -v python3 &>/dev/null; then
+    CONFIG_SECURE_DEST="$(python3 "${SCRIPT_DIR}/lib/config.py" backup-dest get 2>/dev/null || true)"
+fi
+
+SECURE_BACKUP_DIR=""
+if [ -n "${SECURE_DEST_CLI}" ]; then
+    SECURE_BACKUP_DIR="$(validate_destination "${SECURE_DEST_CLI}")" || exit 2
+elif [ -n "${DEST_CLI}" ]; then
+    SECURE_BACKUP_DIR="$(validate_destination "${DEST_CLI}")" || exit 2
+elif [ -n "${CONFIG_SECURE_DEST}" ]; then
+    SECURE_BACKUP_DIR="$(validate_destination "${CONFIG_SECURE_DEST}")" || exit 2
+fi
+
+# Determine primary writing target
+PRIMARY_BACKUP_DIR="${LOCAL_BACKUP_DIR}"
+if [ "${NO_LOCAL}" -eq 1 ] && [ -n "${SECURE_BACKUP_DIR}" ]; then
+    PRIMARY_BACKUP_DIR="${SECURE_BACKUP_DIR}"
+fi
+mkdir -p "${PRIMARY_BACKUP_DIR}"
 
 ARCHIVE_BASE="${SAFE_NAME}-backup-${TIMESTAMP}"
-ARCHIVE_TAR="${BACKUP_DIR}/${ARCHIVE_BASE}.tar.gz"
-CHECKSUM_FILE="${BACKUP_DIR}/${ARCHIVE_BASE}.sha256"
-META_FILE="${BACKUP_DIR}/${ARCHIVE_BASE}.meta.json"
+ARCHIVE_TAR="${PRIMARY_BACKUP_DIR}/${ARCHIVE_BASE}.tar.gz"
+CHECKSUM_FILE="${PRIMARY_BACKUP_DIR}/${ARCHIVE_BASE}.sha256"
+META_FILE="${PRIMARY_BACKUP_DIR}/${ARCHIVE_BASE}.meta.json"
 
 echo "Creating verified backup archive for: ${WORLD_NAME} ..."
 echo "[i] Policy: .git history IS included (disaster-recovery restores keep version history)."
@@ -136,17 +167,15 @@ echo "[i] Policy: .git history IS included (disaster-recovery restores keep vers
 PARENT_DIR="$(dirname "${WORLD_DIR}")"
 DIR_BASENAME="$(basename "${WORLD_DIR}")"
 
-# BAK-01: pre-flight free-space check — refuse before writing a partial archive.
+# Pre-flight free-space check
 SRC_BYTES="$(du -sb "${WORLD_DIR}" 2>/dev/null | cut -f1 || echo 0)"
-AVAIL_BYTES="$(df -B1 "${BACKUP_DIR}" 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)"
+AVAIL_BYTES="$(df -B1 "${PRIMARY_BACKUP_DIR}" 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)"
 if [ "${SRC_BYTES}" -gt 0 ] && [ "${AVAIL_BYTES}" -gt 0 ] && [ "${AVAIL_BYTES}" -lt "${SRC_BYTES}" ]; then
-    echo "Error: insufficient disk space in '${BACKUP_DIR}' (need ~${SRC_BYTES} B, have ${AVAIL_BYTES} B)." >&2
+    echo "Error: insufficient disk space in '${PRIMARY_BACKUP_DIR}' (need ~${SRC_BYTES} B, have ${AVAIL_BYTES} B)." >&2
     exit 1
 fi
 
-# BAK-01: deterministic member order + numeric ownership so identical trees
-# produce identical byte streams (modulo file mtimes, which are preserved
-# deliberately — the cache engine keys on mtime/size).
+# Deterministic member order & archive creation
 tar -czf "${ARCHIVE_TAR}" \
     -C "${PARENT_DIR}" \
     --sort=name \
@@ -177,10 +206,6 @@ fi
 
 ARCHIVE_BYTES="$(wc -c < "${ARCHIVE_TAR}" | tr -d ' ')"
 
-# F-07: write metadata with proper JSON escaping. The previous heredoc
-# interpolated the note directly, so any note containing quotes, backslashes,
-# or newlines produced metadata no JSON consumer could parse. Values are
-# passed as argv (never interpolated into Python source).
 python3 -c '
 import json, sys
 meta = {
@@ -198,19 +223,41 @@ with open(sys.argv[8], "w", encoding="utf-8") as f:
 ' "${WORLD_NAME}" "${TIMESTAMP}" "${ARCHIVE_BASE}.tar.gz" "${ACTUAL_SHA}" "${ARCHIVE_BYTES}" "${GIT_COMMIT}" "${NOTE_CLI:-auto-backup}" "${META_FILE}"
 
 (
-    cd "${BACKUP_DIR}"
+    cd "${PRIMARY_BACKUP_DIR}"
     sha256sum -c "${ARCHIVE_BASE}.sha256" >/dev/null
 )
 
-echo "[✓] Backup archive created and verified:"
+echo "[✓] Primary backup archive created and verified:"
 echo "    Archive:  ${ARCHIVE_TAR}"
 echo "    SHA-256:  ${ACTUAL_SHA}"
 echo "    Metadata: ${META_FILE}"
 
-MSG="Backup created successfully for '${WORLD_NAME}'!\n\nArchive: ${ARCHIVE_TAR}\nSHA256: ${ACTUAL_SHA:0:16}...\nSize: $(( ARCHIVE_BYTES / 1024 )) KB"
+# Dual-target replication to secure external/USB destination
+SECURE_SYNCED=0
+if [ -n "${SECURE_BACKUP_DIR}" ] && [ "${SECURE_BACKUP_DIR}" != "${PRIMARY_BACKUP_DIR}" ]; then
+    echo "Replicating backup to secure external destination: ${SECURE_BACKUP_DIR} ..."
+    if mkdir -p "${SECURE_BACKUP_DIR}" 2>/dev/null; then
+        cp "${ARCHIVE_TAR}" "${SECURE_BACKUP_DIR}/"
+        cp "${CHECKSUM_FILE}" "${SECURE_BACKUP_DIR}/"
+        cp "${META_FILE}" "${SECURE_BACKUP_DIR}/"
+        (
+            cd "${SECURE_BACKUP_DIR}"
+            sha256sum -c "${ARCHIVE_BASE}.sha256" >/dev/null
+        )
+        echo "[✓] Secure external backup verified at: ${SECURE_BACKUP_DIR}/${ARCHIVE_BASE}.tar.gz"
+        SECURE_SYNCED=1
+    else
+        echo "[!] Warning: Could not write to secure external destination '${SECURE_BACKUP_DIR}' (device unmounted or permission denied)." >&2
+    fi
+fi
+
+MSG="Backup created successfully for '${WORLD_NAME}'!\n\nLocal Archive: ${ARCHIVE_TAR}\nSHA256: ${ACTUAL_SHA:0:16}...\nSize: $(( ARCHIVE_BYTES / 1024 )) KB"
+if [ "${SECURE_SYNCED}" -eq 1 ]; then
+    MSG="${MSG}\n\n[✓] Secure External Backup Synced:\n${SECURE_BACKUP_DIR}/${ARCHIVE_BASE}.tar.gz"
+fi
 
 if has_gui; then
-    zenity --info --title="Backup Created Successfully" --text="${MSG}" --width=450
+    zenity --info --title="Backup Created Successfully" --text="${MSG}" --width=500
 fi
 
 exit 0

@@ -97,18 +97,25 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
 
 1. **`Ars Arcanum Control Center` (`arcanum control-center`)**: Native Python/GTK 3 dashboard with 5 tabs:
    - **🪐 Universes & Worlds**: Universe and World Lore Vault management, creation wizards, toolchain launchers.
-   - **✍️ Manuscripts & Drafting**: Manuscript hierarchy tree, live word counts, and the **Visual Scene Metadata Inspector** for `@pov`, `@char`, `@location`, `@thread`, `@time`, `@status`.
+   - **✍️ Manuscripts & Drafting**: Manuscript hierarchy tree, live word counts, **Manuscript Draft Revisions & Redline Comparator** (fork drafts, visual diff, LibreOffice bridge), and the **Visual Scene Metadata Inspector** for `@pov`, `@char`, `@location`, `@thread`, `@time`, `@status`.
    - **📚 Publishing & Exports**: 1-Click Typst PDF, Pandoc EPUB, and submission DOCX export, automated Back-Matter Concordance & Dramatis Personae generator, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
-   - **🔒 Snapshots & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, restore drill wizard.
+   - **🔒 Snapshots & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, **Dual-Target Secure External/USB Backup destination manager**, restore drill wizard.
    - **🩺 Diagnostics & Doctor**: Ars Arcanum toolchain status badges, World Bible lore consistency checks (`world-doctor`), 7-stage verification trigger.
 2. **`Write & Open Workspace` (`arcanum write [target]`)**: Opens novelWriter (for manuscripts) or Obsidian (for world lore) directly without terminal management.
-3. **`New Project Scaffolder` (`arcanum new <manuscript|world|universe|volume> <name>`)**: Scaffolds novels, world lore vaults, narrative universes, or subsequent manuscript volumes.
-4. **`Save Snapshot` (`arcanum save [target] [-m "note"]` / `arcanum snapshot`)**: Records an instant timestamped Git version snapshot.
-5. **`Publish & Export` (`arcanum publish [manuscript] [--format book|submission|all]` / `arcanum export`)**: Compiles print PDF (Typst), distribution EPUB (Pandoc), and standard submission DOCX in one command.
-6. **`Words & Analytics` (`arcanum words [manuscript]` / `arcanum report`)**: Shows live word counts, chapter metrics, and status breakdowns.
-7. **`Back-Matter Concordance` (`arcanum concordance <world> --manuscript <ms>`)**: Compiles publication-ready Dramatis Personae and Glossary back-matter.
-8. **`Health & Diagnostics` (`arcanum check` / `arcanum doctor` / `arcanum continuity`)**: Runs system diagnostics, toolchain verification, and character consistency audits.
-9. **`Fast Performance Cache` (`arcanum cache <scan|wordcounts|clear> [path]`)**: Manages mtime-keyed in-memory caching for sub-millisecond analytics.
+3. **`New Project Scaffolder` (`arcanum new <manuscript|draft|world|universe|volume> <name>`)**: Scaffolds novels, drafts, world lore vaults, narrative universes, or subsequent manuscript volumes.
+4. **`Manuscript Drafts & Redline Comparison` (`arcanum draft <ms>` / `arcanum compare <ms> <target_draft> <prior_draft>`)**:
+   - `arcanum draft <ms> [name]`: Atomically forks existing prose into discrete draft folders (`Draft-01`, `Draft-02`, `Draft-03`), updates active draft pointer, and tags Git milestone.
+   - `arcanum compare <ms> [d2] [d1] --browser`: Generates accessible, high-contrast standalone HTML Redline reports with soft pastel deletion/addition styling, word delta metrics, chapter navigation sidebar, and search filtering.
+   - `arcanum compare <ms> [d2] [d1] --libreoffice`: Launches native LibreOffice Writer Track Changes comparison.
+5. **`Save Snapshot` (`arcanum save [target] [-m "note"]` / `arcanum snapshot`)**: Records an instant timestamped Git version snapshot.
+6. **`Dual-Target Secure Backups` (`arcanum backup [target]` / `arcanum backup-dest set <path>`)**:
+   - `arcanum backup-dest set /media/usb/backups`: Configures a persistent secure secondary destination (USB, encrypted vault, external mount).
+   - `arcanum backup <target>`: Creates standalone verified `.tar.gz` archive with SHA-256 sidecar, simultaneously replicating to both local `05-Backups/` and the configured secure destination with dual integrity verification.
+7. **`Publish & Export` (`arcanum publish [manuscript] [--format book|submission|all]` / `arcanum export`)**: Compiles print PDF (Typst), distribution EPUB (Pandoc), and standard submission DOCX in one command.
+8. **`Words & Analytics` (`arcanum words [manuscript]` / `arcanum report`)**: Shows live word counts, chapter metrics, and status breakdowns.
+9. **`Back-Matter Concordance` (`arcanum concordance <world> --manuscript <ms>`)**: Compiles publication-ready Dramatis Personae and Glossary back-matter.
+10. **`Health & Diagnostics` (`arcanum check` / `arcanum doctor` / `arcanum continuity`)**: Runs system diagnostics, toolchain verification, and character consistency audits.
+11. **`Fast Performance Cache` (`arcanum cache <scan|wordcounts|clear> [path]`)**: Manages mtime-keyed in-memory caching for sub-millisecond analytics.
 
 ---
 
@@ -131,8 +138,9 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
    - Every Universe, World, and individual Book manuscript has dedicated Git version control.
    - Obsidian Git automatically commits changes every 10 minutes and on manual saves.
    - Click **Save Snapshot** (`arcanum snapshot`) anytime to create milestone commits.
-2. **Standalone Archive Backups**:
-   - Run `arcanum backup` or use the Control Center to create timestamped `.tar.gz` archives with SHA-256 verification checksums stored in `05-Backups/` or external media.
+2. **Dual-Target Standalone Archive Backups**:
+   - Configure external backup target with `arcanum backup-dest set /media/usb/backups` or via Control Center.
+   - Run `arcanum backup <project>` to create timestamped `.tar.gz` archives with SHA-256 verification checksums stored simultaneously in local `05-Backups/` and replicated to external media.
    - Test full system recovery with `arcanum restore`.
 3. **Full-Disk Encryption & Automated External Backups**:
    - During Linux Mint installation, tick *"Encrypt the new Linux Mint installation"* (LUKS).

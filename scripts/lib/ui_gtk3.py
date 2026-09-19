@@ -20,6 +20,16 @@ from pathlib import Path
 
 logger = logging.getLogger("arcanum.ui_gtk3")
 
+try:
+    from lib.config import get_backup_dest, set_backup_dest, clear_backup_dest
+except Exception:
+    try:
+        from config import get_backup_dest, set_backup_dest, clear_backup_dest
+    except Exception:
+        def get_backup_dest(): return ""
+        def set_backup_dest(p): return True
+        def clear_backup_dest(): return True
+
 # Check GTK 3 availability
 try:
     import gi
@@ -58,6 +68,12 @@ class ArcanumApp(Gtk.Window):
         self.discovered_universes = []
         self.discovered_worlds = []
         self.discovered_manuscripts = []
+
+        self.combo_draft_vol = None
+        self.combo_draft_list = None
+        self.combo_diff_a = None
+        self.combo_diff_b = None
+        self.lbl_secure_dest = None
 
         # Main vertical container
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -413,6 +429,52 @@ class ArcanumApp(Gtk.Window):
         paned.pack2(inspector_frame, True, False)
         box.pack_start(paned, True, True, 0)
 
+        # Drafts & Revision Redline Comparator
+        revisions_frame = Gtk.Frame(label=" Manuscript Draft Revisions & Redline Comparator ")
+        rev_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        rev_vbox.set_border_width(10)
+        revisions_frame.add(rev_vbox)
+
+        # Row 1: Draft Management & Forking
+        draft_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        draft_row.pack_start(Gtk.Label(label="<b>Volume:</b>", use_markup=True), False, False, 0)
+        self.combo_draft_vol = Gtk.ComboBoxText()
+        self.combo_draft_vol.connect("changed", lambda c: self.refresh_draft_selectors())
+        draft_row.pack_start(self.combo_draft_vol, False, False, 0)
+
+        draft_row.pack_start(Gtk.Label(label="<b>Drafts:</b>", use_markup=True), False, False, 4)
+        self.combo_draft_list = Gtk.ComboBoxText()
+        draft_row.pack_start(self.combo_draft_list, False, False, 0)
+
+        btn_fork_draft = Gtk.Button(label="+ Fork New Draft")
+        btn_fork_draft.get_style_context().add_class("suggested-action")
+        btn_fork_draft.connect("clicked", self.on_fork_draft_clicked)
+        draft_row.pack_start(btn_fork_draft, False, False, 0)
+
+        rev_vbox.pack_start(draft_row, False, False, 0)
+
+        # Row 2: Diff Comparison
+        diff_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        diff_row.pack_start(Gtk.Label(label="<b>Compare:</b>", use_markup=True), False, False, 0)
+        self.combo_diff_b = Gtk.ComboBoxText()  # Target / Newer
+        diff_row.pack_start(self.combo_diff_b, False, False, 0)
+
+        diff_row.pack_start(Gtk.Label(label="<i>against prior</i>", use_markup=True), False, False, 0)
+        self.combo_diff_a = Gtk.ComboBoxText()  # Base / Older
+        diff_row.pack_start(self.combo_diff_a, False, False, 0)
+
+        btn_view_redline = Gtk.Button(label="📊 View Redline Changelog (Browser)")
+        btn_view_redline.get_style_context().add_class("suggested-action")
+        btn_view_redline.connect("clicked", self.on_view_redline_clicked)
+        diff_row.pack_start(btn_view_redline, False, False, 0)
+
+        btn_lo_diff = Gtk.Button(label="📝 LibreOffice Writer")
+        btn_lo_diff.connect("clicked", self.on_lo_compare_clicked)
+        diff_row.pack_start(btn_lo_diff, False, False, 0)
+
+        rev_vbox.pack_start(diff_row, False, False, 0)
+        box.pack_start(revisions_frame, False, False, 0)
+
         return scrolled
 
     def create_stat_card(self, title, default_val, subtitle):
@@ -581,6 +643,33 @@ class ArcanumApp(Gtk.Window):
 
         backup_box.pack_start(backup_btns, False, False, 0)
         box.pack_start(backup_frame, False, False, 0)
+
+        # 3. Dual-Target Secure External / USB Backup Destination
+        secure_frame = Gtk.Frame(label=" Dual-Target External & USB Backup Destination ")
+        secure_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        secure_box.set_border_width(10)
+        secure_frame.add(secure_box)
+
+        lbl_s_info = Gtk.Label(label="Replicate verified backups automatically to an external USB drive, encrypted vault, or secondary disk path.", xalign=0)
+        lbl_s_info.set_line_wrap(True)
+        secure_box.pack_start(lbl_s_info, False, False, 0)
+
+        self.lbl_secure_dest = Gtk.Label(label="<b>Secure Destination:</b> <i>None (Local 05-Backups/ only)</i>", use_markup=True)
+        self.lbl_secure_dest.set_xalign(0)
+        self.lbl_secure_dest.set_selectable(True)
+        secure_box.pack_start(self.lbl_secure_dest, False, False, 0)
+
+        sec_btns = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_set_dest = Gtk.Button(label="📁 Choose External / USB Backup Directory...")
+        btn_set_dest.connect("clicked", self.on_select_secure_dest_clicked)
+        sec_btns.pack_start(btn_set_dest, True, True, 0)
+
+        btn_clear_dest = Gtk.Button(label="✖ Clear Destination")
+        btn_clear_dest.connect("clicked", self.on_clear_secure_dest_clicked)
+        sec_btns.pack_start(btn_clear_dest, False, False, 0)
+
+        secure_box.pack_start(sec_btns, False, False, 0)
+        box.pack_start(secure_frame, False, False, 0)
 
         # 3. Snapshot History Log
         history_frame = Gtk.Frame(label=" Recent Milestone History ")
@@ -805,13 +894,17 @@ class ArcanumApp(Gtk.Window):
             mname = mpath.name
             self.entry_pub_title.set_text(mname)
             self.refresh_volume_options()
+            self.refresh_draft_selectors()
             self.refresh_manuscript_analytics()
             self.refresh_snapshot_history()
+            self.update_secure_dest_display()
             self.set_status(f"Active Manuscript: {mname}")
         else:
             self.card_total_words.val_label.set_text("0")
             self.card_chapters.val_label.set_text("0")
             self.manuscript_store.clear()
+            self.refresh_draft_selectors()
+            self.update_secure_dest_display()
 
     def refresh_volume_options(self):
         self.combo_pub_volume.remove_all()
@@ -864,27 +957,44 @@ class ArcanumApp(Gtk.Window):
         total_words = 0
         total_chapters = 0
 
+        def _process_act_dir(act_dir, parent_iter):
+            nonlocal total_chapters
+            act_words = 0
+            a_iter = self.manuscript_store.append(parent_iter, [act_dir.name, "Act / Section", "", str(act_dir)])
+            for ch_file in sorted(act_dir.glob("*.md")):
+                if ch_file.is_file() and not ch_file.name.startswith("."):
+                    try:
+                        content = ch_file.read_text(encoding="utf-8", errors="replace")
+                        wc = _canonical_count(content)
+                        act_words += wc
+                        total_chapters += 1
+                        self.manuscript_store.append(a_iter, [ch_file.name, "Scene / Chapter", f"{wc:,} words", str(ch_file)])
+                    except Exception as e:
+                        logger.warning("Error calculating scene word count for %s: %s", ch_file, e)
+            self.manuscript_store.set_value(a_iter, 2, f"{act_words:,} words")
+            return act_words
+
         if ms_dir.is_dir():
             for book_dir in sorted(ms_dir.glob("Book-*")):
                 if book_dir.is_dir():
                     book_words = 0
                     b_iter = self.manuscript_store.append(None, [book_dir.name, "Volume", "Calculating...", str(book_dir)])
-                    for act_dir in sorted(book_dir.iterdir()):
-                        if act_dir.is_dir():
-                            act_words = 0
-                            a_iter = self.manuscript_store.append(b_iter, [act_dir.name, "Act / Section", "", str(act_dir)])
-                            for ch_file in sorted(act_dir.glob("*.md")):
-                                if ch_file.is_file():
-                                    try:
-                                        content = ch_file.read_text(encoding="utf-8", errors="replace")
-                                        wc = _canonical_count(content)
-                                        act_words += wc
-                                        total_chapters += 1
-                                        self.manuscript_store.append(a_iter, [ch_file.name, "Scene / Chapter", f"{wc:,} words", str(ch_file)])
-                                    except Exception as e:
-                                        logger.warning("Error calculating scene word count for %s: %s", ch_file, e)
-                            self.manuscript_store.set_value(a_iter, 2, f"{act_words:,} words")
-                            book_words += act_words
+                    
+                    draft_dirs = sorted([d for d in book_dir.glob("Draft-*") if d.is_dir()])
+                    if draft_dirs:
+                        for draft_dir in draft_dirs:
+                            d_words = 0
+                            d_iter = self.manuscript_store.append(b_iter, [draft_dir.name, "Draft Version", "", str(draft_dir)])
+                            for sub in sorted(draft_dir.iterdir()):
+                                if sub.is_dir() and not sub.name.startswith("."):
+                                    d_words += _process_act_dir(sub, d_iter)
+                            self.manuscript_store.set_value(d_iter, 2, f"{d_words:,} words")
+                            book_words += d_words
+                    else:
+                        for act_dir in sorted(book_dir.iterdir()):
+                            if act_dir.is_dir() and not act_dir.name.startswith(".") and act_dir.name != "Outlines":
+                                book_words += _process_act_dir(act_dir, b_iter)
+
                     self.manuscript_store.set_value(b_iter, 2, f"{book_words:,} words")
                     total_words += book_words
 
@@ -1595,8 +1705,153 @@ class ArcanumApp(Gtk.Window):
         )
         dialog.run()
         dialog.destroy()
-        flag_file.parent.mkdir(parents=True, exist_ok=True)
-        flag_file.touch()
+    def refresh_draft_selectors(self):
+        if not hasattr(self, "combo_draft_vol") or self.combo_draft_vol is None:
+            return
+        
+        target = self.current_manuscript_path
+        if not target or not Path(target).is_dir():
+            self.combo_draft_vol.remove_all()
+            self.combo_draft_list.remove_all()
+            self.combo_diff_a.remove_all()
+            self.combo_diff_b.remove_all()
+            return
+
+        tpath = Path(target)
+        cur_vol = self.combo_draft_vol.get_active_id()
+        self.combo_draft_vol.remove_all()
+        volumes = [b.name for b in sorted(tpath.glob("Book-*")) if b.is_dir()]
+        if not volumes:
+            volumes = ["Book-01"]
+        for v in volumes:
+            self.combo_draft_vol.append(v, v)
+        
+        if cur_vol and cur_vol in volumes:
+            self.combo_draft_vol.set_active_id(cur_vol)
+        else:
+            self.combo_draft_vol.set_active(0)
+
+        active_vol = self.combo_draft_vol.get_active_id() or "Book-01"
+        book_dir = tpath / active_vol
+
+        drafts = []
+        if book_dir.is_dir():
+            for d in sorted(book_dir.glob("Draft-*")):
+                if d.is_dir():
+                    drafts.append(d.name)
+        if not drafts and (book_dir / "01_Act_I").is_dir():
+            drafts = ["Draft-01 (Baseline)"]
+
+        self.combo_draft_list.remove_all()
+        self.combo_diff_a.remove_all()
+        self.combo_diff_b.remove_all()
+
+        for d in drafts:
+            self.combo_draft_list.append(d, d)
+            self.combo_diff_a.append(d, d)
+            self.combo_diff_b.append(d, d)
+
+        if drafts:
+            self.combo_draft_list.set_active(len(drafts) - 1)
+            self.combo_diff_b.set_active(len(drafts) - 1)
+            self.combo_diff_a.set_active(0)
+
+    def update_secure_dest_display(self):
+        if not hasattr(self, "lbl_secure_dest") or self.lbl_secure_dest is None:
+            return
+        dest = get_backup_dest()
+        if dest:
+            self.lbl_secure_dest.set_markup(f"<b>Secure Destination:</b> <code>{dest}</code>")
+        else:
+            self.lbl_secure_dest.set_markup("<b>Secure Destination:</b> <i>None (Local 05-Backups/ only)</i>")
+
+    def on_fork_draft_clicked(self, btn):
+        target = self.current_manuscript_path
+        if not target:
+            self.show_error("Please select an active manuscript first.")
+            return
+
+        vol = self.combo_draft_vol.get_active_id() or "Book-01"
+        dialog = Gtk.Dialog(title="Fork New Manuscript Draft", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+        box.set_spacing(8)
+
+        lbl = Gtk.Label(label=f"Enter identifier for new draft in {Path(target).name} ({vol}):")
+        box.pack_start(lbl, False, False, 0)
+
+        entry = Gtk.Entry()
+        entry.set_text("Draft-02")
+        box.pack_start(entry, False, False, 0)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            draft_name = entry.get_text().strip()
+            if draft_name:
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "init_draft.sh"), target, draft_name, "-b", vol]
+                self.set_status(f"Forking draft '{draft_name}'...")
+                def _after_fork():
+                    self.refresh_draft_selectors()
+                    self.refresh_manuscript_analytics()
+                self._start_worker(self._run_async_command, args=(cmd, f"Draft '{draft_name}' initialized!", _after_fork))
+        dialog.destroy()
+
+    def on_view_redline_clicked(self, btn):
+        target = self.current_manuscript_path
+        if not target:
+            self.show_error("Please select an active manuscript first.")
+            return
+        vol = self.combo_draft_vol.get_active_id() or "Book-01"
+        draft_b = self.combo_diff_b.get_active_id()
+        draft_a = self.combo_diff_a.get_active_id()
+        if not draft_b or not draft_a:
+            self.show_error("Please select both a target draft and a prior draft to compare.")
+            return
+        if draft_b == draft_a:
+            self.show_error("Target draft and prior draft must be different to view changes.")
+            return
+
+        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "compare_drafts.sh"), target, draft_b, draft_a, "-b", vol, "--browser"]
+        self.set_status(f"Generating Redline diff: {draft_a} vs {draft_b}...")
+        self._start_worker(self._run_async_command, args=(cmd, "Redline diff opened in browser!"))
+
+    def on_lo_compare_clicked(self, btn):
+        target = self.current_manuscript_path
+        if not target:
+            self.show_error("Please select an active manuscript first.")
+            return
+        vol = self.combo_draft_vol.get_active_id() or "Book-01"
+        draft_b = self.combo_diff_b.get_active_id()
+        draft_a = self.combo_diff_a.get_active_id()
+        if not draft_b or not draft_a:
+            self.show_error("Please select both drafts.")
+            return
+        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "compare_drafts.sh"), target, draft_b, draft_a, "-b", vol, "--libreoffice"]
+        self.set_status("Launching LibreOffice Writer Track Changes comparison...")
+        self._start_worker(self._run_async_command, args=(cmd, "LibreOffice Writer comparison launched."))
+
+    def on_select_secure_dest_clicked(self, btn):
+        dialog = Gtk.FileChooserDialog(
+            title="Select External / USB Secure Backup Destination Directory",
+            parent=self,
+            action=Gtk.FileChooserAction.SELECT_FOLDER
+        )
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK)
+        if dialog.run() == Gtk.ResponseType.OK:
+            chosen = dialog.get_filename()
+            dialog.destroy()
+            if chosen:
+                set_backup_dest(chosen)
+                self.update_secure_dest_display()
+                self.set_status(f"Secure backup destination updated: {chosen}")
+        else:
+            dialog.destroy()
+
+    def on_clear_secure_dest_clicked(self, btn):
+        clear_backup_dest()
+        self.update_secure_dest_display()
+        self.set_status("Secure backup destination cleared (local only).")
 
     def show_error(self, message):
         dialog = Gtk.MessageDialog(

@@ -37,7 +37,9 @@ Usage:
 
 ✍️  Core Authoring Workflow:
   write [TARGET]               Open writing workspace in novelWriter or Obsidian (alias: open)
-  new <type> <NAME> [opts]     Scaffold new project (type: manuscript | world | universe | volume)
+  new <type> <NAME> [opts]     Scaffold new project (type: manuscript | draft | world | universe | volume)
+  draft <MS> [DRAFT_NAME]      Fork next manuscript draft version (alias: new draft, init-draft)
+  compare <MS> [D_NEW] [D_OLD] Visual Redline changelog comparison between drafts (alias: diff, redline)
   save [TARGET] [-m "note"]    Save an instant Git version milestone (alias: snapshot)
   publish [MS] [options]       Compile to print PDF, EPUB, or DOCX (alias: export)
   words [MS] [--md|--json]     Show live word counts and chapter analytics (alias: report, count)
@@ -50,6 +52,7 @@ Usage:
 
 🔒 Data Protection & Safety:
   backup <TARGET> [options]    Create a verified, standalone .tar.gz backup archive
+  backup-dest <get|set|clear>  Configure secure secondary backup destination (alias: config backup-dest)
   restore <ARCHIVE> [options]  Restore a project from a verified backup archive
 
 🩺 System Health & Tools:
@@ -88,10 +91,11 @@ case "${COMMAND}" in
     # --- New Scaffolder Dispatcher ---
     new|create)
         if [ $# -eq 0 ]; then
-            echo "Usage: arcanum new <manuscript|world|universe|volume> <name> [options]" >&2
+            echo "Usage: arcanum new <manuscript|draft|world|universe|volume> <name> [options]" >&2
             echo "" >&2
             echo "Available project types:" >&2
             echo "  manuscript <name> [-u UNIVERSE] [-w WORLD]  Create a novel manuscript" >&2
+            echo "  draft <manuscript> [draft_name]             Fork next manuscript draft version" >&2
             echo "  world <name> [-u UNIVERSE]                  Create a World Lore Vault" >&2
             echo "  universe <name>                             Create a narrative Universe" >&2
             echo "  volume <manuscript> [volume]                Add Book-02/Book-03 to manuscript" >&2
@@ -102,6 +106,9 @@ case "${COMMAND}" in
         case "${SUBTYPE}" in
             manuscript|novel|book)
                 exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
+                ;;
+            draft|new-draft|revision)
+                exec bash "${PROJECT_ROOT}/scripts/init_draft.sh" "$@"
                 ;;
             world|lore|vault)
                 exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
@@ -114,7 +121,7 @@ case "${COMMAND}" in
                 ;;
             *)
                 echo "Error: Unknown project type '${SUBTYPE}' for 'arcanum new'." >&2
-                echo "Valid types: manuscript, world, universe, volume." >&2
+                echo "Valid types: manuscript, draft, world, universe, volume." >&2
                 exit 2
                 ;;
         esac
@@ -191,6 +198,12 @@ case "${COMMAND}" in
     manuscript|init-manuscript|novel)
         exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
         ;;
+    draft|drafts|init-draft|new-draft|revision)
+        exec bash "${PROJECT_ROOT}/scripts/init_draft.sh" "$@"
+        ;;
+    compare|diff|redline|changelog)
+        exec bash "${PROJECT_ROOT}/scripts/compare_drafts.sh" "$@"
+        ;;
     add-volume|add-book|new-book|volume)
         exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
         ;;
@@ -216,6 +229,12 @@ case "${COMMAND}" in
         ;;
     backup)
         exec bash "${PROJECT_ROOT}/scripts/backup_world.sh" "$@"
+        ;;
+    backup-dest|backup-destination)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/config.py" backup-dest "$@"
+        ;;
+    config|settings|preferences)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/config.py" "$@"
         ;;
     restore)
         exec bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$@"
@@ -261,10 +280,11 @@ import difflib
 cmd = sys.argv[1]
 known_commands = [
     "write", "open", "new", "create", "save", "snapshot", "publish", "export",
+    "draft", "drafts", "compare", "diff", "redline", "changelog",
     "words", "count", "report", "universe", "world", "manuscript", "volume",
     "add-volume", "concordance", "continuity", "check-continuity", "doctor",
-    "check", "world-doctor", "backup", "restore", "cache", "gui", "control-center",
-    "verify", "setup", "uninstall", "version", "help"
+    "check", "world-doctor", "backup", "backup-dest", "config", "restore", "cache",
+    "gui", "control-center", "verify", "setup", "uninstall", "version", "help"
 ]
 
 matches = difflib.get_close_matches(cmd, known_commands, n=1, cutoff=0.55)
