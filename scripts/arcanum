@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Ars Arcanum Unified CLI
-# Purpose: Single command-line interface for all Ars Arcanum authoring workflows.
+# Purpose: Intuitive, human-friendly command-line interface for novel writing,
+#          worldbuilding, typesetting, continuity diagnostics, and backups.
 # ==============================================================================
 
 set -euo pipefail
@@ -16,12 +17,8 @@ PROJECT_ROOT="$SCRIPT_DIR"
 if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ]; then
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 fi
-# Packaged layout: scripts live directly under the share root
-# (/usr/share/ars-arcanum/scripts/, /app/share/ars-arcanum/scripts/).
 if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ] && [ -f "${SCRIPT_DIR}/verify.sh" ]; then
     PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-    # SCRIPT_DIR is already .../scripts; PROJECT_ROOT is the share root.
-    # Normalise: PROJECT_ROOT/scripts must exist.
     if [ ! -d "${PROJECT_ROOT}/scripts" ]; then
         PROJECT_ROOT="$SCRIPT_DIR"
     fi
@@ -32,41 +29,50 @@ VERSION="1.5.0"
 usage() {
     cat << USAGE
 Ars Arcanum Unified CLI — v${VERSION}
-A reproducible, fail-safe Linux authoring and worldbuilding platform.
+An intuitive, fail-safe Linux writing and worldbuilding studio.
 
 Usage:
   arcanum <command> [arguments...]
   ars-arcanum <command> [arguments...]
 
-Universe & World Lore Management:
-  universe [NAME] [--list]     Create or list narrative Universes in ~/Universes/
-  world <name> [-u UNIVERSE]   Atomically scaffold a World Lore Vault in a Universe
-  control-center               Launch graphical desktop control center
+✍️  Core Authoring Workflow:
+  write [TARGET]               Open writing workspace in novelWriter or Obsidian (alias: open)
+  new <type> <NAME> [opts]     Scaffold new project (type: manuscript | world | universe | volume)
+  save [TARGET] [-m "note"]    Save an instant Git version milestone (alias: snapshot)
+  publish [MS] [options]       Compile to print PDF, EPUB, or DOCX (alias: export)
+  words [MS] [--md|--json]     Show live word counts and chapter analytics (alias: report, count)
 
-Manuscripts, Drafting & Publishing:
-  manuscript <name> [options]  Scaffold a new Manuscript Project in ~/Manuscripts/
-  add-volume <ms> [volume]     Scaffold a new manuscript volume (Book-02, etc.)
-  concordance <ms|world> [-b]  Generate Dramatis Personae & Glossary back-matter
-  export <manuscript> [-b BK]  Compile manuscript into PDF, EPUB, or DOCX (--format book|submission|all)
-  report <manuscript> [--md]   Show word counts and manuscript progress analytics
-  cache <scan|wordcounts|clear> [path] Manage mtime-keyed performance cache
+🪐 Universe & World Lore:
+  universe [NAME] [--list]     Create or list narrative universes in ~/Universes/
+  world <NAME> [-u UNIVERSE]   Scaffold an Obsidian World Lore Vault
+  concordance <TARGET> [-b]    Generate Dramatis Personae & Glossary back-matter
+  continuity [-w W -m MS]      Analyze character traits & narrative consistency (alias: check-continuity)
 
-Data Protection & Version Control:
-  snapshot <target> [-m note]  Record a Git version snapshot (World & Manuscripts)
-  backup <target> [options]    Create a standalone verified .tar.gz backup archive
-  restore <archive> [opts]     Restore a project from a verified backup archive
+🔒 Data Protection & Safety:
+  backup <TARGET> [options]    Create a verified, standalone .tar.gz backup archive
+  restore <ARCHIVE> [options]  Restore a project from a verified backup archive
 
-System Health & Maintenance:
-  doctor [options]             Run unified health and toolchain diagnostics (-w WORLD, -m MS)
-  world-doctor <world> [opts]  Run deep World Bible lore consistency diagnostics (-m MS, --fast, --json)
-  check-continuity [options]   Run local offline narrative continuity & character trait checks (-w WORLD, -m MS)
-  verify                       Run complete 7-stage test harness
-  setup [--dry-run]            Install core packages, fonts, and desktop launchers
+🩺 System Health & Tools:
+  doctor [options]             Run unified health & toolchain diagnostics (alias: check, audit)
+  world-doctor <WORLD> [opts]  Run deep World Bible lore consistency checks
+  cache <scan|wordcounts|clear> Manage mtime-keyed fast performance cache
+  gui                          Launch desktop Control Center (aliases: app, control-center)
+  verify                       Run canonical 7-stage test harness
+  setup [--dry-run]            Install core packages, typography fonts, and launchers
   uninstall [--dry-run]        Revert desktop launchers and system components
 
 Global Options:
   -v, --version                Display Ars Arcanum version
   -h, --help                   Display this help menu
+
+Quick Examples:
+  arcanum new manuscript "The-Last-Archon"    # Scaffold a novel with 3-act structure
+  arcanum new world "Eldoria" -u "Cosmere"    # Scaffold an Obsidian lore vault
+  arcanum write "The-Last-Archon"             # Launch novelWriter for drafting
+  arcanum save "The-Last-Archon" -m "Act 1"   # Record a version snapshot
+  arcanum publish "The-Last-Archon" --format all  # Compile print PDF, EPUB & DOCX
+  arcanum words "The-Last-Archon"             # View progress report
+  arcanum check                               # Run system health check
 USAGE
 }
 
@@ -79,26 +85,120 @@ COMMAND="$1"
 shift
 
 case "${COMMAND}" in
+    # --- New Scaffolder Dispatcher ---
+    new|create)
+        if [ $# -eq 0 ]; then
+            echo "Usage: arcanum new <manuscript|world|universe|volume> <name> [options]" >&2
+            echo "" >&2
+            echo "Available project types:" >&2
+            echo "  manuscript <name> [-u UNIVERSE] [-w WORLD]  Create a novel manuscript" >&2
+            echo "  world <name> [-u UNIVERSE]                  Create a World Lore Vault" >&2
+            echo "  universe <name>                             Create a narrative Universe" >&2
+            echo "  volume <manuscript> [volume]                Add Book-02/Book-03 to manuscript" >&2
+            exit 2
+        fi
+        SUBTYPE="$1"
+        shift
+        case "${SUBTYPE}" in
+            manuscript|novel|book)
+                exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
+                ;;
+            world|lore|vault)
+                exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
+                ;;
+            universe|cosmos|multiverse)
+                exec bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$@"
+                ;;
+            volume|add-volume|add-book|new-book)
+                exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
+                ;;
+            *)
+                echo "Error: Unknown project type '${SUBTYPE}' for 'arcanum new'." >&2
+                echo "Valid types: manuscript, world, universe, volume." >&2
+                exit 2
+                ;;
+        esac
+        ;;
+
+    # --- Write / Open Workspace ---
+    write|open|launch)
+        TARGET="${1:-}"
+        if [ -n "${TARGET}" ]; then
+            # shellcheck source=scripts/lib/worlds.sh
+            source "${PROJECT_ROOT}/scripts/lib/worlds.sh"
+            RESOLVED="$(resolve_target_dir "${TARGET}")"
+            if [ -n "${RESOLVED}" ] && [ -d "${RESOLVED}" ]; then
+                # Check for novelWriter project
+                NW_PROJ=""
+                if [ -f "${RESOLVED}/nwProject.nwx" ]; then
+                    NW_PROJ="${RESOLVED}/nwProject.nwx"
+                elif [ -f "${RESOLVED}/01-Manuscript/nwProject.nwx" ]; then
+                    NW_PROJ="${RESOLVED}/01-Manuscript/nwProject.nwx"
+                fi
+
+                if [ -n "${NW_PROJ}" ]; then
+                    if command -v flatpak &>/dev/null && flatpak info io.gitlab.novelwriter.novelWriter &>/dev/null; then
+                        exec flatpak run io.gitlab.novelwriter.novelWriter "${NW_PROJ}"
+                    elif command -v novelwriter &>/dev/null; then
+                        exec novelwriter "${NW_PROJ}"
+                    else
+                        exec xdg-open "$(dirname "${NW_PROJ}")"
+                    fi
+                fi
+
+                # Check for World Lore Vault (Obsidian)
+                if [ -d "${RESOLVED}/Characters" ] || [ -f "${RESOLVED}/world.yaml" ] || [ -d "${RESOLVED}/.obsidian" ] || [ -d "${RESOLVED}/00-World-Bible" ]; then
+                    OBS_TARGET="${RESOLVED}"
+                    [ -d "${RESOLVED}/00-World-Bible" ] && OBS_TARGET="${RESOLVED}/00-World-Bible"
+                    if command -v flatpak &>/dev/null && flatpak info md.obsidian.Obsidian &>/dev/null; then
+                        exec flatpak run md.obsidian.Obsidian "${OBS_TARGET}"
+                    elif command -v obsidian &>/dev/null; then
+                        exec obsidian "${OBS_TARGET}"
+                    else
+                        exec xdg-open "${OBS_TARGET}"
+                    fi
+                fi
+
+                exec xdg-open "${RESOLVED}"
+            fi
+        fi
+        # Default: Launch Control Center GUI
+        if [ -f "${PROJECT_ROOT}/scripts/arcanum_app.py" ]; then
+            exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
+        else
+            exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
+        fi
+        ;;
+
+    # --- Universe & World Lore ---
     universe|multiverse)
         exec bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$@"
         ;;
     world|init-world|init)
         exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
         ;;
-    manuscript|init-manuscript|novel)
-        exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
-        ;;
-    add-volume|add-book|new-book)
-        exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
-        ;;
     concordance|glossary|dramatis-personae)
         exec bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$@"
+        ;;
+    continuity|check-continuity)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/continuity.py" "$@"
         ;;
     world-doctor|lore-doctor)
         exec bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$@"
         ;;
-    check-continuity|continuity)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/continuity.py" "$@"
+
+    # --- Manuscripts & Drafting ---
+    manuscript|init-manuscript|novel)
+        exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
+        ;;
+    add-volume|add-book|new-book|volume)
+        exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
+        ;;
+    export|publish|build|compile)
+        exec bash "${PROJECT_ROOT}/scripts/export_book.sh" "$@"
+        ;;
+    report|wordcount|words|count|stats)
+        exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
         ;;
     cache|cache-engine)
         exec python3 "${PROJECT_ROOT}/scripts/lib/cache.py" "$@"
@@ -109,13 +209,9 @@ case "${COMMAND}" in
     cache-scan)
         exec python3 "${PROJECT_ROOT}/scripts/lib/cache.py" scan "$@"
         ;;
-    doctor|check)
-        exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
-        ;;
-    export|publish)
-        exec bash "${PROJECT_ROOT}/scripts/export_book.sh" "$@"
-        ;;
-    snapshot|snap)
+
+    # --- Data Safety & Snapshots ---
+    snapshot|snap|save|commit)
         exec bash "${PROJECT_ROOT}/scripts/save_snapshot.sh" "$@"
         ;;
     backup)
@@ -124,10 +220,19 @@ case "${COMMAND}" in
     restore)
         exec bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$@"
         ;;
-    report|wordcount)
-        exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
+
+    # --- System Diagnostics & GUI ---
+    doctor|check|audit)
+        exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
         ;;
-    verify)
+    control-center|dashboard|gui|app|ui)
+        if [ -f "${PROJECT_ROOT}/scripts/arcanum_app.py" ]; then
+            exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
+        else
+            exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
+        fi
+        ;;
+    verify|test|tests)
         exec bash "${PROJECT_ROOT}/scripts/verify.sh" "$@"
         ;;
     setup)
@@ -136,13 +241,8 @@ case "${COMMAND}" in
     uninstall)
         exec bash "${PROJECT_ROOT}/scripts/uninstall_arcanum.sh" "$@"
         ;;
-    control-center|dashboard|gui|app)
-        if [ -f "${PROJECT_ROOT}/scripts/arcanum_app.py" ]; then
-            exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
-        else
-            exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
-        fi
-        ;;
+
+    # --- Global Flags ---
     -v|--version|version)
         echo "Ars Arcanum v${VERSION}"
         exit 0
@@ -151,9 +251,29 @@ case "${COMMAND}" in
         usage
         exit 0
         ;;
+
+    # --- Unknown Command with Smart Suggestion ---
     *)
-        echo "Error: Unknown command '${COMMAND}'" >&2
-        echo "Run 'arcanum --help' for available commands." >&2
+        python3 - "${COMMAND}" << 'SUGG_EOF'
+import sys
+import difflib
+
+cmd = sys.argv[1]
+known_commands = [
+    "write", "open", "new", "create", "save", "snapshot", "publish", "export",
+    "words", "count", "report", "universe", "world", "manuscript", "volume",
+    "add-volume", "concordance", "continuity", "check-continuity", "doctor",
+    "check", "world-doctor", "backup", "restore", "cache", "gui", "control-center",
+    "verify", "setup", "uninstall", "version", "help"
+]
+
+matches = difflib.get_close_matches(cmd, known_commands, n=1, cutoff=0.55)
+if matches:
+    print(f"Error: Unknown command '{cmd}'. Did you mean '{matches[0]}'?", file=sys.stderr)
+else:
+    print(f"Error: Unknown command '{cmd}'.", file=sys.stderr)
+print("Run 'arcanum --help' for available commands and examples.", file=sys.stderr)
+SUGG_EOF
         exit 2
         ;;
 esac

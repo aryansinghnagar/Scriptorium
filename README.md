@@ -101,14 +101,14 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
    - **📚 Publishing & Exports**: 1-Click Typst PDF, Pandoc EPUB, and submission DOCX export, automated Back-Matter Concordance & Dramatis Personae generator, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
    - **🔒 Snapshots & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, restore drill wizard.
    - **🩺 Diagnostics & Doctor**: Ars Arcanum toolchain status badges, World Bible lore consistency checks (`world-doctor`), 7-stage verification trigger.
-2. **`Universe & World Scaffolder` (`arcanum universe <name>` / `arcanum world <name> -u <universe>`)**: Scaffolds Universes and pure World Lore Vaults directly opened in Obsidian.
-3. **`Manuscript Scaffolder` (`arcanum manuscript <name> -u <universe> -w <world>`)**: Scaffolds independent manuscript projects linked to lore vaults.
-4. **`Add Volume` (`arcanum add-volume <manuscript> [book]`)**: Scaffolds subsequent manuscript volumes (`Book-02`, `Book-03`, etc.) with three acts, sample chapters, and discrete Git repos.
-5. **`Back-Matter Concordance` (`arcanum concordance <world> --manuscript <manuscript>`)**: Automatically parses World Bible lore into publication-ready `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
-6. **`Export Book` (`arcanum export <manuscript> [-b Book-01|all] [-s us-trade|trade|pocket] [--format book|submission|all]`)**: Compiles your manuscript or specific volume into a print-ready PDF via Typst, an EPUB via Pandoc, and a submission DOCX in one click.
-7. **`Save Snapshot` (`arcanum snapshot <target> [-m note]`)**: Records timestamped Git version snapshots across your world and manuscript repositories.
-8. **`Fast Performance Cache` (`arcanum cache <scan|wordcounts|clear> [path]`)**: Manages mtime-keyed in-memory index caching for sub-millisecond analytics.
-9. **`Continuity & Diagnostics` (`arcanum check-continuity -w <world> -m <ms>` / `arcanum doctor`)**: Scans character traits, timeline paradoxes, and toolchain integrity.
+2. **`Write & Open Workspace` (`arcanum write [target]`)**: Opens novelWriter (for manuscripts) or Obsidian (for world lore) directly without terminal management.
+3. **`New Project Scaffolder` (`arcanum new <manuscript|world|universe|volume> <name>`)**: Scaffolds novels, world lore vaults, narrative universes, or subsequent manuscript volumes.
+4. **`Save Snapshot` (`arcanum save [target] [-m "note"]` / `arcanum snapshot`)**: Records an instant timestamped Git version snapshot.
+5. **`Publish & Export` (`arcanum publish [manuscript] [--format book|submission|all]` / `arcanum export`)**: Compiles print PDF (Typst), distribution EPUB (Pandoc), and standard submission DOCX in one command.
+6. **`Words & Analytics` (`arcanum words [manuscript]` / `arcanum report`)**: Shows live word counts, chapter metrics, and status breakdowns.
+7. **`Back-Matter Concordance` (`arcanum concordance <world> --manuscript <ms>`)**: Compiles publication-ready Dramatis Personae and Glossary back-matter.
+8. **`Health & Diagnostics` (`arcanum check` / `arcanum doctor` / `arcanum continuity`)**: Runs system diagnostics, toolchain verification, and character consistency audits.
+9. **`Fast Performance Cache` (`arcanum cache <scan|wordcounts|clear> [path]`)**: Manages mtime-keyed in-memory caching for sub-millisecond analytics.
 
 ---
 

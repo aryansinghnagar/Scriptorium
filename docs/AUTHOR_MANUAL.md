@@ -326,21 +326,17 @@ Or install the individual tool via your package manager (see `docs/guides/SOFTWA
 **A**: Open the chapter or compiled Markdown file in **LibreOffice Writer** (Tab 1 launcher), click **Edit -> Track Changes -> Record**, and save as `.docx` or `.odt`.
 
 #### Q: Can I open Ars Arcanum without using the desktop app?
-**A**: Yes! Ars Arcanum includes a full command-line interface (`arcanum` or `ars-arcanum`):
-- `arcanum universe <name>` (or `arcanum universe --list`)
-- `arcanum world <name> -u <universe>` (or `arcanum world --list`)
-- `arcanum manuscript <name> -u <universe> -w <world>`
-- `arcanum add-volume <manuscript> Book-02`
-- `arcanum concordance <world> --manuscript <manuscript>`
-- `arcanum export <manuscript> --book Book-01 --paper-size trade`
-- `arcanum snapshot <manuscript> -m "Note"`
-- `arcanum backup <target>`
-- `arcanum restore <archive>`
-- `arcanum report <manuscript>`
-- `arcanum cache <scan|wordcounts|clear> [path]`
-- `arcanum check-continuity -w <world> -m <manuscript>`
-- `arcanum doctor`
-- `arcanum world-doctor <world>`
+**A**: Yes! Ars Arcanum includes an intuitive command-line interface (`arcanum` or `ars-arcanum`):
+- `arcanum write [target]` (or `arcanum open`) — launch your writing canvas
+- `arcanum new <manuscript|world|universe|volume> <name>` — scaffold any project type
+- `arcanum save [target] -m "Finished Act 1"` (or `arcanum snapshot`) — record a Git version
+- `arcanum publish [manuscript] [--format book|submission|all]` (or `arcanum export`) — compile PDF, EPUB, DOCX
+- `arcanum words [manuscript]` (or `arcanum count`, `arcanum report`) — view live word counts
+- `arcanum concordance <world> --manuscript <ms>` — generate Dramatis Personae & Glossary
+- `arcanum check` (or `arcanum doctor`) — run system & toolchain diagnostics
+- `arcanum continuity -w <world> -m <ms>` — check narrative trait consistency
+- `arcanum cache <scan|wordcounts|clear> [path]` — manage fast performance index
+- `arcanum backup <target>` / `arcanum restore <archive>` — disaster-recovery backups
 
 #### Q: Where are my exported books saved?
 **A**: In your manuscript project folder under `Exports/` (e.g. `~/Manuscripts/Solaris-Rising/Exports/Solaris-Rising_Book-01.pdf`).
