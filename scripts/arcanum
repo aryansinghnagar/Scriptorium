@@ -44,13 +44,22 @@ Usage:
   compare <MS> [D_NEW] [D_OLD] Visual Redline changelog comparison between drafts (alias: diff, redline)
   save [TARGET] [-m "note"]    Save an instant Git version milestone (alias: snapshot)
   publish [MS] [options]       Compile to print PDF, EPUB, or DOCX (alias: export)
-  words [MS] [--md|--json]     Show live word counts and chapter analytics (alias: report, count)
+  words [MS] [--md|--json|--pov] Show live word counts and chapter analytics (alias: report, count)
+  pace [MS] [--pov|--html]     Analyze dialogue/action density & prose rhythm
+  tension [MS] [--html]        Model chapter tension curve & narrative arcs
 
 🪐 Universe & World Lore:
   universe [NAME] [--list]     Create or list narrative universes in ~/Universes/
   world <NAME> [-u UNIVERSE]   Scaffold an Obsidian World Lore Vault
   concordance <TARGET> [-b]    Generate Dramatis Personae & Glossary back-matter
   continuity [-w W -m MS]      Analyze character traits & narrative consistency (alias: check-continuity)
+  magic-check [-w W -m MS]     Verify hard magic system constraints & tier limits
+  magic-report [-w W]          Export comprehensive arcane constraint report
+  genealogy <House|Char>       Compile dynastic lineage trees & Mermaid flowcharts
+  lineage <House>              Display succession rank roster & claimants
+  conlang <gen|mut|lex> <Lang> Conlang phonotactics, sound-law shift & lexicon
+  calendar [WORLD] [--phases]  Planetary calendar arithmetic & multi-moon syzygy
+  calc <subcommand>            Astrophysics & journey mechanics calculator
 
 🔒 Data Protection & Safety:
   backup <TARGET> [options]    Create a verified, standalone .tar.gz backup archive
@@ -71,13 +80,12 @@ Global Options:
   -h, --help                   Display this help menu
 
 Quick Examples:
-  arcanum new manuscript "The-Last-Archon"    # Scaffold a novel with 3-act structure
-  arcanum new world "Eldoria" -u "Cosmere"    # Scaffold an Obsidian lore vault
-  arcanum write "The-Last-Archon"             # Launch novelWriter for drafting
-  arcanum save "The-Last-Archon" -m "Act 1"   # Record a version snapshot
-  arcanum publish "The-Last-Archon" --format all  # Compile print PDF, EPUB & DOCX
-  arcanum words "The-Last-Archon"             # View progress report
-  arcanum check                               # Run system health check
+  arcanum calc transit "alpha-centauri"       # 1g Brachistochrone relativistic flight
+  arcanum magic-check "Eldoria" -m "Manuscript" # Verify spell tier & catalyst constraints
+  arcanum genealogy "House Stark"             # Render dynastic family tree
+  arcanum conlang generate "High Valen" -n 5  # Generate phonotactically valid names
+  arcanum pace "The-Last-Archon"              # Analyze scene pacing & dialogue ratio
+  arcanum calendar "Eldoria" --phases         # Check moon phases and conjunctions
 USAGE
 }
 
@@ -195,6 +203,63 @@ case "${COMMAND}" in
     world-doctor|lore-doctor)
         exec bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$@"
         ;;
+    magic-check)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/magic_system.py" check "$@"
+        ;;
+    magic-report)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/magic_system.py" report "$@"
+        ;;
+    magic|magic-system)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/magic_system.py" "$@"
+        ;;
+    genealogy|tree)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/genealogy.py" tree "$@"
+        ;;
+    lineage|dynasty|succession)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/genealogy.py" lineage "$@"
+        ;;
+    conlang|language-engine)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/conlang.py" "$@"
+        ;;
+    calendar|phases|syzygy)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/calendar.py" "$@"
+        ;;
+
+    # --- Speculative Calculations & Mechanics ---
+    calc|calculator)
+        if [ $# -eq 0 ]; then
+            echo "Usage: arcanum calc <transit|time-dilation|orbit|comms|habitability|journey> [args...]" >&2
+            exit 2
+        fi
+        CALC_SUB="$1"
+        shift
+        case "${CALC_SUB}" in
+            journey|travel|overland)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/journey.py" "$@"
+                ;;
+            transit|flight|brachistochrone)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" transit "$@"
+                ;;
+            time-dilation|dilation|lorentz)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" time-dilation "$@"
+                ;;
+            orbit|hohmann|transfer)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" orbit "$@"
+                ;;
+            comms|communication|latency)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" comms "$@"
+                ;;
+            habitability|gravity|hab)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" habitability "$@"
+                ;;
+            *)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" "${CALC_SUB}" "$@"
+                ;;
+        esac
+        ;;
+    journey|expedition)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/journey.py" "$@"
+        ;;
 
     # --- Manuscripts & Drafting ---
     manuscript|init-manuscript|novel)
@@ -220,6 +285,12 @@ case "${COMMAND}" in
         ;;
     report|wordcount|words|count|stats)
         exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
+        ;;
+    pace|pacing)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/pacing.py" pace "$@"
+        ;;
+    tension|tension-arc)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/pacing.py" tension "$@"
         ;;
     cache|cache-engine)
         exec python3 "${PROJECT_ROOT}/scripts/lib/cache.py" "$@"
@@ -292,6 +363,8 @@ known_commands = [
     "words", "count", "report", "universe", "world", "manuscript", "volume",
     "add-volume", "concordance", "continuity", "check-continuity", "doctor",
     "check", "world-doctor", "backup", "backup-dest", "config", "restore", "cache",
+    "calc", "magic-check", "magic-report", "genealogy", "lineage", "conlang",
+    "pace", "tension", "calendar", "journey",
     "gui", "control-center", "verify", "setup", "uninstall", "version", "help"
 ]
 

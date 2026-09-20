@@ -390,4 +390,145 @@ ln -sf "${TMP_DIR}/pkg/share/arcanum/scripts/arcanum" "${TMP_DIR}/pkg/bin/arcanu
 "${TMP_DIR}/pkg/bin/arcanum" --version | grep -qi "Arcanum" || { echo "  FAIL: symlinked CLI --version failed"; exit 1; }
 echo "  OK Test 22 passed: symlink dispatch works"
 
+echo "[Test 23] Single-quote book title export without python syntax errors..."
+bash scripts/arcanum manuscript "QuoteTest" --universe TestUni --world TestWorld >/dev/null
+bash scripts/export_book.sh "${HOME}/Manuscripts/QuoteTest" --book Book-01 --format submission --title "The King's General & Rogue's Tale" --author "O'Connor" > "${TMP_DIR}/export_quote.log" 2>&1
+grep -q "Submission manuscript generated" "${TMP_DIR}/export_quote.log" || { echo "  FAIL: single quote title export failed:"; cat "${TMP_DIR}/export_quote.log"; exit 1; }
+echo "  OK Test 23 passed: Single-quote and apostrophe title export passed safely"
+
+echo "[Test 24] DOCX sync ignores consolidated manuscript and prevents duplication..."
+python3 "${SCRIPT_DIR}/scripts/lib/docx_sync.py" build "${HOME}/Manuscripts/QuoteTest" >/dev/null
+python3 "${SCRIPT_DIR}/scripts/lib/docx_sync.py" sync "${HOME}/Manuscripts/QuoteTest" >/dev/null
+[ ! -f "${HOME}/Manuscripts/QuoteTest/Book-01/Draft-01/Draft-01_Manuscript.md" ] || { echo "  FAIL: Draft-01_Manuscript.md was erroneously created during sync"; exit 1; }
+echo "  OK Test 24 passed: Consolidated manuscript ignored during chapter sync"
+
+echo "[Test 25] DOCX generation with illegal XML 1.0 control characters..."
+python3 - << 'PYEOF'
+import sys
+from pathlib import Path
+sys.path.insert(0, "scripts/lib")
+from docx_sync import escape_xml, build_docx_package, get_docx_config, parse_markdown_to_paragraphs
+import tempfile
+
+with tempfile.TemporaryDirectory() as td:
+    tpath = Path(td) / "dirty.docx"
+    md = "# Chapter 1\x00\x08\x0b\n\nPasted text with \x0c form feed and \x1f control character."
+    paragraphs = parse_markdown_to_paragraphs(md)
+    cfg = get_docx_config()
+    ok = build_docx_package(tpath, paragraphs, cfg, title="Dirty\x00Title", author="Author\x08Name")
+    assert ok, "build_docx_package failed with control chars"
+    import zipfile, xml.etree.ElementTree as ET
+    with zipfile.ZipFile(tpath) as zf:
+        doc_xml = zf.read("word/document.xml")
+        root = ET.fromstring(doc_xml)
+        assert root is not None, "XML parsing failed on generated docx"
+print("  OK Test 25 passed: XML 1.0 illegal control characters filtered and valid DOCX generated")
+PYEOF
+
+echo "[Test 26] Relativistic Astrophysics & Brachistochrone CLI..."
+bash scripts/arcanum calc transit "alpha-centauri" --json > "${TMP_DIR}/astro.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/astro.json')); assert d['peak_velocity_c_fraction'] > 0.9; assert d['proper_time_sec'] > 0"
+bash scripts/arcanum calc comms "5.2 AU" --json > "${TMP_DIR}/comms.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/comms.json')); assert d['one_way_seconds'] > 2000"
+echo "  OK Test 26 passed: Relativistic Brachistochrone and comms latency verified"
+
+echo "[Test 27] Hard Magic System constraints & tier violation detection..."
+cat > "${WORLD_PATH}/Magic-Technology/Weaving.md" << 'EOF'
+---
+name: "Weaving"
+type: magic_tech_system
+danger_cost: "High"
+max_tier: 5
+catalysts: ["Ruby Focus"]
+hard_limitations: ["Cannot resurrect the dead"]
+---
+EOF
+cat > "${WORLD_PATH}/Characters/MageValen.md" << 'EOF'
+---
+name: "MageValen"
+type: character
+magic_tier: 1
+catalyst: "Ruby Focus"
+---
+EOF
+cat > "${MS_PATH}/Book-01/01_Act_I/03_MagicScene.md" << 'EOF'
+# Chapter 3: Arcane Trial
+@pov: MageValen
+@cast: MageValen, Hellfire, tier=3
+
+MageValen cast the spell.
+EOF
+set +e
+bash scripts/arcanum magic-check "${WORLD_PATH}" -m "${MS_PATH}" --json > "${TMP_DIR}/magic_res.json"
+MAGIC_RC=$?
+set -e
+[ "${MAGIC_RC}" -eq 1 ] || { echo "  FAIL: expected magic tier violation exit code 1"; exit 1; }
+python3 -c "import json; d = json.load(open('${TMP_DIR}/magic_res.json')); assert any(f['id'] == 'MAG-101' for f in d['findings'])"
+echo "  OK Test 27 passed: Arcane Constraint Matrix detected MAG-101 tier violation"
+rm -f "${MS_PATH}/Book-01/01_Act_I/03_MagicScene.md"
+
+echo "[Test 28] Dynastic Genealogies & Succession Lineage..."
+cat > "${WORLD_PATH}/Characters/KingAethel.md" << 'EOF'
+---
+name: "King Aethel"
+type: character
+house: "House Solar"
+title: "Emperor"
+born: "100 AC"
+died: "170 AC"
+succession_order: 1
+---
+EOF
+cat > "${WORLD_PATH}/Characters/PrinceKael.md" << 'EOF'
+---
+name: "Prince Kael"
+type: character
+house: "House Solar"
+title: "Crown Prince"
+parents: ["[[King Aethel]]"]
+born: "130 AC"
+died: "190 AC"
+succession_order: 2
+---
+EOF
+bash scripts/arcanum genealogy "House Solar" -w "${WORLD_PATH}" --mermaid > "${TMP_DIR}/tree.mmd"
+grep -q "King Aethel" "${TMP_DIR}/tree.mmd"
+grep -q "Prince Kael" "${TMP_DIR}/tree.mmd"
+bash scripts/arcanum lineage "House Solar" -w "${WORLD_PATH}" --json > "${TMP_DIR}/lineage.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/lineage.json')); assert len(d['members']) >= 2; assert d['members'][0]['name'] == 'King Aethel'"
+echo "  OK Test 28 passed: Dynastic Genealogies & Succession order compiled"
+
+echo "[Test 29] Conlang Phonotactics & Historical Sound Shifts..."
+cat > "${WORLD_PATH}/Languages/Archaic_Valen.md" << 'EOF'
+---
+name: "Archaic Valen"
+type: language
+consonants: [p, t, k, s, m, n, l, r]
+vowels: [a, e, i, o, u]
+syllable_structures: ["CV", "CVC"]
+sound_changes:
+  - "p > f / V_V"
+  - "k > ch / _[e,i]"
+---
+EOF
+bash scripts/arcanum conlang generate "Archaic Valen" -w "${WORLD_PATH}" -n 5 --json > "${TMP_DIR}/conlang_gen.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/conlang_gen.json')); assert len(d['words']) == 5"
+bash scripts/arcanum conlang mutate "Archaic Valen" "apata keli" -w "${WORLD_PATH}" --json > "${TMP_DIR}/conlang_mut.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/conlang_mut.json')); assert d['mutated'] == 'afata cheli'"
+echo "  OK Test 29 passed: Conlang generation and sound-law mutations verified"
+
+echo "[Test 30] Narrative Pacing, POV Balance & Tension Arc Analytics..."
+bash scripts/arcanum pace "${MS_PATH}" --json > "${TMP_DIR}/pacing.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/pacing.json')); assert d['total_chapters'] >= 1; assert 'pov_distribution' in d"
+bash scripts/arcanum words "${MS_PATH}" --pov --json > "${TMP_DIR}/pov_report.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/pov_report.json')); assert 'pov_distribution' in d"
+echo "  OK Test 30 passed: Pacing & POV screen-time analytics verified"
+
+echo "[Test 31] Overland Journey Modeler & Custom Planetary Calendar..."
+bash scripts/arcanum calc journey 150km -t mountain-pass -p foot-normal --json > "${TMP_DIR}/journey.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/journey.json')); assert d['total_days'] > 0; assert d['supplies_required']['rations_food_kg'] > 0"
+bash scripts/arcanum calendar "${WORLD_PATH}" --phases --json > "${TMP_DIR}/calendar.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/calendar.json')); assert len(d['moons']) >= 1; assert 'day' in d"
+echo "  OK Test 31 passed: Journey route calculation and Planetary calendar verified"
+
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

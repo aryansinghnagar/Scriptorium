@@ -9,6 +9,16 @@ classification: "Hard Magic / Soft Magic / Cybernetic Tech / Bio-Engineering"
 source_of_power: "Ley Lines / Internal Essence / Quantum Field / Rare Ore"
 prevalence: "Rare / Restricted to Guilds / Ubiquitous"
 danger_cost: "High (Soul Toll / Cellular Decay) / Moderate / Low"
+max_tier: 5
+disciplines:
+  - "Discipline A"
+  - "Discipline B"
+catalysts:
+  - "Focus Wand"
+  - "Rare Ore / Reagent"
+hard_limitations:
+  - "Cannot resurrect the dead"
+  - "Cannot create matter from nothing"
 ---
 
 # <% tp.file.title %>

@@ -33,6 +33,18 @@ fields:
         - Latin Script
         - Logographic
         - Oral Only
+  consonants:
+    type: List
+  vowels:
+    type: List
+  syllable_structures:
+    type: List
+  forbidden_clusters:
+    type: List
+  stress_rule:
+    type: Input
+  sound_changes:
+    type: List
 ---
 # Language FileClass Schema
 Defines structured frontmatter fields and linguistic validation for languages, dialects, and conlangs via Metadata Menu.

@@ -10,6 +10,24 @@ domain: "Creation / Shadow / War / Astral Void / Time / Nature"
 plane_of_origin: "Celestial Realm / Void / Mortal Sphere / Underworld"
 worship_status: "Primary Pantheon / Forgotten Cult / Forbidden / Universally Acknowledged"
 associated_faction: "[[Faction-Name]]"
+days_per_year: 365
+hours_per_day: 24
+months:
+  - "Primis"
+  - "Secundus"
+  - "Tertius"
+weekdays:
+  - "Moonday"
+  - "Fireday"
+  - "Waterday"
+  - "Earthday"
+  - "Windday"
+  - "Starday"
+  - "Sunday"
+moons:
+  - name: "Lumina"
+    period: 28.0
+    offset: 0.0
 ---
 
 # <% tp.file.title %>

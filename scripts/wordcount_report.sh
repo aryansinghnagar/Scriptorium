@@ -39,6 +39,7 @@ Usage:
 Options:
   --markdown    Emit a Markdown table (for pasting into the Daily Writing Log)
   --json        Emit machine-readable JSON analytics
+  --pov         Emit POV character screen-time and balance analytics
   -h, --help    Show this help
 
 Exit codes:
@@ -51,15 +52,25 @@ USAGE
 WORLD_DIR=""
 MARKDOWN=0
 JSON_OUT=0
+POV_OUT=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --markdown) MARKDOWN=1; shift ;;
         --json) JSON_OUT=1; shift ;;
+        --pov) POV_OUT=1; shift ;;
         -h|--help) usage; exit 0 ;;
         -*) echo "Error: unknown option: $1 (see --help)" >&2; exit 2 ;;
         *) WORLD_DIR="$1"; shift ;;
     esac
 done
+
+if [ "${POV_OUT}" -eq 1 ]; then
+    if [ "${JSON_OUT}" -eq 1 ]; then
+        exec python3 "${SCRIPT_DIR}/lib/pacing.py" pov ${WORLD_DIR:+"${WORLD_DIR}"} --json
+    else
+        exec python3 "${SCRIPT_DIR}/lib/pacing.py" pov ${WORLD_DIR:+"${WORLD_DIR}"}
+    fi
+fi
 
 # F-05: a bare invocation now discovers worlds (auto-selecting when exactly
 # one exists) instead of defaulting to ~/Worlds, which is a container of

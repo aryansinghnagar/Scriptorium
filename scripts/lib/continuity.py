@@ -96,14 +96,20 @@ def extract_traits_from_text(text: str) -> dict:
 def extract_lore_profiles(world_dir: Path) -> dict:
     """Scans World Bible character files and extracts baseline entity profiles."""
     profiles = {}
-    char_dirs = [world_dir / "Characters", world_dir / "00-World-Bible" / "Characters", world_dir]
+    char_dirs = []
+    if (world_dir / "Characters").is_dir():
+        char_dirs.append(world_dir / "Characters")
+    if (world_dir / "00-World-Bible" / "Characters").is_dir():
+        char_dirs.append(world_dir / "00-World-Bible" / "Characters")
+    if not char_dirs:
+        char_dirs.append(world_dir)
     
+    seen_files = set()
     for cdir in char_dirs:
-        if not cdir.is_dir():
-            continue
-        for md_file in cdir.glob("*.md"):
-            if md_file.name.startswith(".") or "Template" in md_file.name:
+        for md_file in sorted(cdir.rglob("*.md")):
+            if md_file in seen_files or md_file.name.startswith(".") or "Template" in md_file.name or any(p in (".obsidian", ".git", "Outlines", "Exports", "Backups") for p in md_file.parts):
                 continue
+            seen_files.add(md_file)
             try:
                 content = md_file.read_text(encoding="utf-8", errors="replace")
                 entity_name = md_file.stem

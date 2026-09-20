@@ -552,10 +552,21 @@ bash scripts/arcanum snapshot --help >/dev/null
 bash scripts/arcanum backup --help >/dev/null
 bash scripts/arcanum backup-dest --help >/dev/null
 bash scripts/arcanum restore --help >/dev/null
-bash scripts/arcanum report --help >/dev/null
-bash scripts/arcanum doctor --help >/dev/null
-bash scripts/arcanum world-doctor --help >/dev/null
 bash scripts/arcanum check-continuity --help >/dev/null
+bash scripts/arcanum calc transit --help >/dev/null
+bash scripts/arcanum calc time-dilation --help >/dev/null
+bash scripts/arcanum calc orbit --help >/dev/null
+bash scripts/arcanum calc comms --help >/dev/null
+bash scripts/arcanum calc habitability --help >/dev/null
+bash scripts/arcanum calc journey --help >/dev/null
+bash scripts/arcanum magic-check --help >/dev/null
+bash scripts/arcanum magic-report --help >/dev/null
+bash scripts/arcanum genealogy --help >/dev/null
+bash scripts/arcanum lineage --help >/dev/null
+bash scripts/arcanum conlang --help >/dev/null
+bash scripts/arcanum pace --help >/dev/null
+bash scripts/arcanum tension --help >/dev/null
+bash scripts/arcanum calendar --help >/dev/null
 bash scripts/ars-arcanum --version >/dev/null
 echo "  OK arcanum and ars-arcanum CLI entrypoints and subcommands"
 

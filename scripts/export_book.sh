@@ -565,17 +565,20 @@ if [ "${BUILD_DOCX}" -eq 1 ]; then
 
     # Native Python OpenXML builder fallback if pandoc is missing or didn't run
     if [ "${DOCX_COMPILED}" -eq 0 ] && command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/lib/docx_sync.py" ]; then
-        if python3 -c "
-from pathlib import Path
+        if python3 - "${COMBINED_MD}" "${DOCX_OUTPUT}" "${BOOK_TITLE}" "${AUTHOR_NAME}" "${SCRIPT_DIR}/lib" << 'PYEOF' 2>/dev/null
 import sys
-sys.path.insert(0, '${SCRIPT_DIR}/lib')
+from pathlib import Path
+
+combined_md, docx_output, book_title, author_name, lib_dir = sys.argv[1:6]
+sys.path.insert(0, lib_dir)
 from docx_sync import parse_markdown_to_paragraphs, build_docx_package, get_docx_config
 
-md_text = Path('${COMBINED_MD}').read_text(encoding='utf-8')
+md_text = Path(combined_md).read_text(encoding='utf-8')
 paragraphs = parse_markdown_to_paragraphs(md_text)
 config = get_docx_config()
-build_docx_package(Path('${DOCX_OUTPUT}'), paragraphs, config, title='${BOOK_TITLE}', author='${AUTHOR_NAME}', is_full_manuscript=True)
-" 2>/dev/null; then
+build_docx_package(Path(docx_output), paragraphs, config, title=book_title, author=author_name, is_full_manuscript=True)
+PYEOF
+        then
             if [ -s "${DOCX_OUTPUT}" ]; then
                 echo "[✓] Submission manuscript generated with native engine at: ${DOCX_OUTPUT}"
                 DOCX_COMPILED=1

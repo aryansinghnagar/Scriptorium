@@ -74,6 +74,38 @@ The knight commander of the realm.
         self.assertIn("green", profiles["Renée d'Anjou"]["traits"].get("eye_color", []))
         self.assertIn("black", profiles["Renée d'Anjou"]["traits"].get("hair_color", []))
 
+    def test_extract_lore_profiles_recursive_subfolders(self):
+        """Test that character profiles nested in subdirectories are indexed."""
+        proto_dir = self.world_dir / "Characters" / "Protagonists"
+        proto_dir.mkdir(parents=True)
+        (proto_dir / "Aric.md").write_text("""---
+name: "Aric"
+type: character
+eyes: sapphire
+hair: golden
+---
+A valiant hero from the north.
+""", encoding="utf-8")
+
+        antag_dir = self.world_dir / "Characters" / "Antagonists"
+        antag_dir.mkdir(parents=True)
+        (antag_dir / "Malakor.md").write_text("""---
+name: "Malakor"
+type: character
+eyes: crimson
+hair: silver
+---
+A dark sorcerer.
+""", encoding="utf-8")
+
+        profiles = extract_lore_profiles(self.world_dir)
+        self.assertIn("Aric", profiles)
+        self.assertIn("blue", profiles["Aric"]["traits"].get("eye_color", []))
+        self.assertIn("blonde", profiles["Aric"]["traits"].get("hair_color", []))
+        self.assertIn("Malakor", profiles)
+        self.assertIn("crimson", profiles["Malakor"]["traits"].get("eye_color", []))
+        self.assertIn("silver/white", profiles["Malakor"]["traits"].get("hair_color", []))
+
     def test_scan_manuscript_clean(self):
         chars_dir = self.world_dir / "Characters"
         chars_dir.mkdir(parents=True)

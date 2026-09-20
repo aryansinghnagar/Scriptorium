@@ -9,6 +9,14 @@ language_family: "Proto-Eldorian / Old High Valen / Cyber-Slang"
 spoken_by: "[[Faction-A]], Inhabitants of [[Location-A]]"
 status: "Living / Liturgical / Extinct / Secret Dialect"
 writing_system: "Runic Glyphs / Syllabary / Cuneiform / Latin Script"
+consonants: [p, t, k, b, d, g, s, z, m, n, l, r, w, j, th, sh, ch]
+vowels: [a, e, i, o, u, ae, ai, au]
+syllable_structures: ["CV", "CVC", "V", "VC"]
+forbidden_clusters: ["pw", "tl", "sr"]
+stress_rule: "penultimate"
+sound_changes:
+  - "p > f / V_V"
+  - "k > ch / _[e,i]"
 ---
 
 # <% tp.file.title %>

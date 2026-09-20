@@ -21,6 +21,13 @@ Zero programming or terminal experience is required for daily writing. Everythin
 6. [Typesetting & Book Publishing (Typst & Pandoc)](#6-typesetting--book-publishing-typst--pandoc)
 7. [Data Safety, Version History & The 3-2-1 Rule](#7-data-safety-version-history--the-3-2-1-rule)
 8. [Author's Quick Reference & Troubleshooting FAQ](#8-authors-quick-reference--troubleshooting-faq)
+9. [Speculative Fiction Authorial Workflow Suites](#9-speculative-fiction-authorial-workflow-suites)
+   - [Wave 1: Astrophysics & Relativistic Spaceflight](#wave-1-astrophysics--relativistic-spaceflight)
+   - [Wave 2: Hard Magic Systems & Arcane Constraint Matrix](#wave-2-hard-magic-systems--arcane-constraint-matrix)
+   - [Wave 3: Dynastic Genealogies & Succession Lineage Graphs](#wave-3-dynastic-genealogies--succession-lineage-graphs)
+   - [Wave 4: Conlang Phonotactics, Lexicography & Sound-Change Applier](#wave-4-conlang-phonotactics-lexicography--sound-change-applier)
+   - [Wave 5: Narrative Pacing, POV Balance & Tension Arc Analytics](#wave-5-narrative-pacing-pov-balance--tension-arc-analytics)
+   - [Wave 6: Overland/Naval Journey Modeler & Custom Planetary Calendars](#wave-6-overlandnaval-journey-modeler--custom-planetary-calendars)
 
 ---
 
@@ -444,16 +451,228 @@ Or install the individual tool via your package manager (see `docs/guides/SOFTWA
 - `arcanum compare <ms> <draft_new> <draft_old>` — visual redline draft comparator
 - `arcanum save [target] -m "Finished Act 1"` (or `arcanum snapshot`) — record a Git version
 - `arcanum publish [manuscript] [--format book|submission|all]` (or `arcanum export`) — compile PDF, EPUB, DOCX
-- `arcanum words [manuscript]` (or `arcanum count`, `arcanum report`) — view live word counts
+- `arcanum words [manuscript]` (or `arcanum count`, `arcanum report`, `arcanum words --pov`) — view live word counts & POV balance
 - `arcanum concordance <world> --manuscript <ms>` — generate Dramatis Personae & Glossary
 - `arcanum check` (or `arcanum doctor`) — run system & toolchain diagnostics
 - `arcanum continuity -w <world> -m <ms>` — check narrative trait consistency
 - `arcanum cache <scan|wordcounts|clear> [path]` — manage fast performance index
 - `arcanum backup <target>` / `arcanum restore <archive>` — disaster-recovery backups
 - `arcanum config <backup-dest|docx-preset|docx-presets|docx-config>` — manage settings
+- `arcanum calc <transit|time-dilation|orbit|comms|habitability>` — relativistic spaceflight, orbital mechanics & astrophysics
+- `arcanum magic-check -w <world> -m <ms>` / `arcanum magic-report` — validate hard magic system rules & constraints (MAG-101..104)
+- `arcanum genealogy -w <world> [-f mermaid|html|json]` / `arcanum lineage` — dynastic family trees, DAG succession & paradox detection
+- `arcanum conlang <generate|mutate|lexicon>` — conlang phonotactics word generation, sound-law mutations & lexicon exporter
+- `arcanum pace <manuscript>` / `arcanum tension` — narrative pacing metrics, dialogue ratios & tension arc visualization
+- `arcanum journey -t <terrain> -d <km> -p <party> -m <mode>` — overland and naval expedition speed, rations & day-by-day itineraries
+- `arcanum calendar -w <world> [-d <day>]` — custom planetary calendars, multi-moon synodic phases, eclipses & syzygies
 
 #### Q: Where are my exported books saved?
 **A**: In your manuscript project folder under `Exports/` (e.g. `~/Manuscripts/Solaris-Rising/Exports/Solaris-Rising_Book-01.pdf`).
+
+---
+
+## 9. Speculative Fiction Authorial Workflow Suites
+
+Ars Arcanum includes six built-in speculative authoring engines. Designed specifically for hard science fiction, epic fantasy, and worldbuilding novelists, these engines operate 100% locally with zero external dependencies and provide rigorous physical, linguistic, dynastic, and magical consistency checking.
+
+---
+
+### Wave 1: Astrophysics & Relativistic Spaceflight
+
+The astrophysics suite (`scripts/lib/astrophysics.py` / `arcanum calc`) calculates real-world relativistic kinematics, orbital transfers, radio communication delays, and stellar habitability.
+
+#### Key Features:
+- **Brachistochrone Relativistic Trajectories**: Computes continuous acceleration/deceleration burns (e.g. 1g torch-ships).
+  - Ship proper time ($\tau$) vs coordinate observer time ($t$).
+  - Peak velocity ($v_{\max}/c$) and relativistic Lorentz factor ($\gamma$).
+  - Relativistic Tsiolkovsky fuel mass ratio ($m_0/m_f = \exp(a \tau / v_e)$).
+- **Hohmann Orbital Transfers**: Calculates $\Delta v_1$, $\Delta v_2$, total $\Delta v$, and transfer time between circular orbits for Earth, Mars, Moon, Jupiter, Saturn, or custom planetary bodies.
+- **Interplanetary Communication Latencies**: Calculates light-speed one-way and round-trip communication delays at minimum, average, and maximum planetary conjunction distances.
+- **Stellar Habitability & Planetary Surface Gravity**: Computes habitable zone inner/outer boundaries (AU) based on stellar luminosity and surface gravity ($g$) based on planet radius and mass.
+- **Interactive HTML & SVG Reports**: Generates standalone visual flight profiles with embedded SVG charts.
+
+#### Example Usage:
+```bash
+# Calculate 1g relativistic flight to Alpha Centauri (4.24 light-years) with an antimatter drive (Isp = 100,000 s)
+arcanum calc transit --dist 4.24 --dist-unit ly --accel 1.0 --isp 100000
+
+# Compute time dilation for a crew cruising at 0.95c for 5 ship years
+arcanum calc time-dilation --v-frac 0.95 --time 5.0 --time-unit years
+
+# Compute Hohmann transfer from LEO (300 km) to GEO (35,786 km)
+arcanum calc orbit --body Earth --r1 300 --r2 35786
+
+# Calculate communication delays to Mars
+arcanum calc comms --body Mars
+
+# Export comprehensive HTML flight dossier
+arcanum calc transit --dist 5.9 --dist-unit au --accel 0.5 -o flight_dossier.html
+```
+
+---
+
+### Wave 2: Hard Magic Systems & Arcane Constraint Matrix
+
+The arcane constraint engine (`scripts/lib/magic_system.py` / `arcanum magic-check`, `arcanum magic-report`) applies Brandon Sanderson-style hard magic validation against your manuscript scenes and world lore dossiers.
+
+#### Tag Conventions:
+Include these tags in your scene headers or prose comments:
+- `@magic: <SystemName>` — Declares active magic system for the scene.
+- `@cast: <Character>: <Ability/Spell>` — Records a specific casting act.
+- `@reagent: <Material1>, <Material2>` — Materials or catalysts consumed/present.
+- `@fatigue: <Level>` — Current character arcane exhaustion.
+
+#### Diagnostic Rules:
+- **`MAG-101`**: Character Affinity Tier Violation (casting an ability higher than the character's licensed or biological tier in their dossier).
+- **`MAG-102`**: Missing Catalyst / Reagent (casting a spell requiring material reagents not present or consumed in the scene).
+- **`MAG-103`**: Hard Limitation Violation (attempting an action explicitly barred by world lore laws, e.g. affecting aluminum, raising true dead).
+- **`MAG-104`**: Fatigue & Exhaustion Overflow (accumulating fatigue beyond threshold without scene rest).
+
+#### Example Usage:
+```bash
+# Validate magic consistency across a manuscript
+arcanum magic-check -w Scadrial -m Mistborn-Era1
+
+# Generate an interactive HTML audit report
+arcanum magic-report -w Scadrial -m Mistborn-Era1 -o magic_audit.html
+```
+
+---
+
+### Wave 3: Dynastic Genealogies & Succession Lineage Graphs
+
+The genealogy engine (`scripts/lib/genealogy.py` / `arcanum genealogy`, `arcanum lineage`) parses character dossiers to build family tree Directed Acyclic Graphs (DAGs), evaluate succession inheritance laws, and detect chronological/biological anomalies.
+
+#### Dossier Frontmatter Conventions:
+```yaml
+---
+name: Lord Elend Venture
+house: House Venture
+father: Lord Straff Venture
+mother: Lady Clarisse Venture
+born: 1002 FE
+died: 1025 FE
+gender: male
+---
+```
+
+#### Diagnostic Rules & Features:
+- **`GEN-101`**: Biological & Chronological Paradoxes:
+  - Parent died before child birth (or child conceived > 9 months post-mortem).
+  - Parent under minimum childbearing age (< 12 years old) at child birth.
+  - Generational loop / cycle in DAG (e.g. A is ancestor of B and B is ancestor of A).
+- **`GEN-102`**: Succession Claim Conflicts:
+  - Disputed primogeniture or agnatic claims among rival heirs.
+- **Export Formats**:
+  - `mermaid`: Direct Mermaid.js flowchart markdown for Obsidian or GitHub rendering.
+  - `html`: Standalone interactive visualization with pan/zoom and family branch styling.
+  - `json`: Structured lineage database for custom tooling.
+
+#### Example Usage:
+```bash
+# Output Mermaid diagram of royal lineage
+arcanum genealogy -w Scadrial -f mermaid
+
+# Export interactive HTML dynasty graph
+arcanum genealogy -w Scadrial -f html -o royal_houses.html
+
+# Compute inheritance succession order for a throne
+arcanum lineage -w Scadrial --ruler "Lord Straff Venture"
+```
+
+---
+
+### Wave 4: Conlang Phonotactics, Lexicography & Sound-Change Applier
+
+The conlang engine (`scripts/lib/conlang.py` / `arcanum conlang`) provides complete linguistic tooling for fantasy and sci-fi authors, from generating phonotactically consistent names to simulating centuries of historical sound change.
+
+#### World Lore Language Profile:
+Define your language in `Languages/<Language-Name>.md`:
+```yaml
+---
+name: Archaic Valen
+consonants: [p, t, k, b, d, g, m, n, s, r, l]
+vowels: [a, e, i, o, u]
+syllable_structures: ["(C)V", "(C)V(C)", "CV(C)"]
+cluster_blacklist: ["pt", "kp", "bm", "sr", "ln"]
+sound_laws:
+  - "p > f / V_V"
+  - "k > ch / _[e,i]"
+  - "s > h / #_"
+  - "e > 0 / _#"
+---
+```
+
+#### Key Capabilities:
+- **Phonotactic Word & Name Generator**: Synthesizes authentic vocabulary conforming strictly to your syllable templates and phoneme inventories while automatically discarding blacklisted consonant clusters.
+- **Historical Sound-Law Applier**: Applies ordered regular sound shifts across millennia using standard linguistic notation (`target > replacement / environment`).
+- **Lexicon Manager & Exporter**: Extracts conlang dictionaries and glossaries to Markdown tables, CSV, or JSON.
+
+#### Example Usage:
+```bash
+# Generate 15 phonotactically valid character or place names
+arcanum conlang generate -w Scadrial --lang "Archaic Valen" -n 15
+
+# Apply historical sound laws to derive modern daughter language words
+arcanum conlang mutate -w Scadrial --lang "Archaic Valen" --words "patre,kento,sol,bare"
+
+# Export complete lexicon dictionary
+arcanum conlang lexicon -w Scadrial --lang "Archaic Valen" -f markdown
+```
+
+---
+
+### Wave 5: Narrative Pacing, POV Balance & Tension Arc Analytics
+
+The pacing and tension engine (`scripts/lib/pacing.py` / `arcanum pace`, `arcanum tension`, `arcanum words --pov`) analyzes draft prose structure to ensure compelling narrative momentum and balanced character focus.
+
+#### Key Metrics:
+- **Prose Mode Distribution**: Accurately classifies sentences into Dialogue, Action, and Exposition using punctuation density and syntactic cues.
+- **Rhythm & Sentence Length Variance**: Measures sentence length distribution, standard deviation, and identifies monotonous paragraph pacing.
+- **POV Screen-Time Balance & Starvation Alerts**: Quantifies word count and chapter allocation per POV character; triggers starvation warnings if a key POV character goes unmentioned for > 3 consecutive chapters.
+- **Tension Arc Modeling (0–100)**: Evaluates scene stakes using conflict vocabulary, action pacing, and dialogue urgency.
+- **Embedded SVG Visualizer**: Generates self-contained HTML reports featuring SVG tension and pacing curves across the entire novel.
+
+#### Example Usage:
+```bash
+# Analyze scene pacing and dialogue/action ratios across manuscript
+arcanum pace Solaris-Rising
+
+# Generate interactive tension arc graph
+arcanum tension Solaris-Rising -o tension_arc.html
+
+# View POV character word count distribution
+arcanum words Solaris-Rising --pov
+```
+
+---
+
+### Wave 6: Overland/Naval Journey Modeler & Custom Planetary Calendars
+
+The expedition and calendar suite (`scripts/lib/journey.py`, `scripts/lib/calendar.py` / `arcanum journey`, `arcanum calendar`) handles realistic travel logistics and non-Earth temporal tracking.
+
+#### Overland & Naval Journey Modeler:
+- **14 Terrain Types**: Paved Road ($1.0$), Dirt Trail ($0.85$), Open Grassland ($0.75$), Dense Forest ($0.45$), Swamp/Marsh ($0.25$), Desert Dunes ($0.35$), Mountain Pass ($0.30$), River Downstream ($1.4$), Ocean Fair ($1.2$), Ocean Storm ($0.3$), etc.
+- **8 Travel Modes**: Casual Walk, March, Forced March, Mounted Trot, Draft Wagon, Sled, Riverboat, Sailing Ship.
+- **Supply Tracking**: Accurately computes party and pack animal ration (kg) and water (L) consumption, providing day-by-day itineraries and critical warning flags before starvation.
+
+#### Custom Planetary Calendars & Multi-Moon Tracking:
+- **Planetary Periods**: Custom year lengths, non-standard month lengths, leap rules, and customizable weekday names.
+- **Multi-Moon Orbit Calculations**: Tracks multiple moons with independent synodic orbital periods and initial phase offsets.
+- **Celestial Alignments**: Automatically detects Syzygy (grand conjunction when multiple moons align with the sun) and solar/lunar eclipses.
+- **Visual ANSI & HTML Outputs**: Displays monthly calendar matrices in terminal and exports interactive astronomical charts.
+
+#### Example Usage:
+```bash
+# Model a 350 km expedition through dense forest with 4 travelers and 2 pack horses
+arcanum journey -d 350 -t "dense_forest" -m "foot_march" -p 4 --pack-animals 2
+
+# Inspect planetary calendar and moon phases on day 145 of the year
+arcanum calendar -w Scadrial -d 145
+
+# Export interactive astronomical and calendar report
+arcanum calendar -w Scadrial --html -o planetary_calendar.html
+```
 
 ---
 

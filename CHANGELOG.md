@@ -6,6 +6,57 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
+### Added (Speculative Fiction Authorial Workflow Suites — Waves 1–6)
+- **Wave 1: Astrophysics & Relativistic Spaceflight (`scripts/lib/astrophysics.py`)**:
+  - Implemented exact relativistic Brachistochrone 1g constant-acceleration trajectory calculator ($\tau$ proper vs $t$ coordinate time, peak $v/c$, Lorentz factor $\gamma$, fuel mass ratios via relativistic Tsiolkovsky equations).
+  - Added Hohmann orbital transfer calculations, interplanetary communication latencies (one-way/round-trip), stellar habitability zones, and surface gravity calculations.
+  - Added interactive visual HTML flight profile report export with embedded SVG velocity curves.
+  - CLI subcommands: `arcanum calc transit`, `arcanum calc time-dilation`, `arcanum calc orbit`, `arcanum calc comms`, `arcanum calc habitability`.
+- **Wave 2: Hard Magic Systems & Arcane Constraint Matrix (`scripts/lib/magic_system.py`)**:
+  - Implemented Sanderson-style hard magic validation against scene metadata and lore dossiers.
+  - Diagnostic rules: `MAG-101` (Character Affinity Tier Limits), `MAG-102` (Missing Catalyst/Reagents), `MAG-103` (Hard Limitations Enforcement), `MAG-104` (Fatigue & Arcane Exhaustion Accumulation).
+  - CLI subcommands: `arcanum magic-check -w <world> -m <ms>`, `arcanum magic-report`, `arcanum magic`.
+- **Wave 3: Dynastic Genealogies & Succession Lineage Graphs (`scripts/lib/genealogy.py`)**:
+  - Implemented family tree Directed Acyclic Graph (DAG) parser for character dossiers.
+  - Diagnostic rules: `GEN-101` (Chronological/biological paradoxes: post-mortem conception, underage parentage, generational loops), `GEN-102` (Succession claim conflicts: competing primogeniture/agnatic heirs).
+  - Export formats: Mermaid.js flowchart markdown, standalone interactive HTML visualizer, and JSON.
+  - CLI subcommands: `arcanum genealogy -w <world> [-f mermaid|html|json]`, `arcanum lineage`.
+- **Wave 4: Conlang Phonotactics, Lexicography & Sound-Change Applier (`scripts/lib/conlang.py`)**:
+  - Implemented syllable template phonotactic word/name generator (`(C)V(C)`, etc.) with consonant cluster blacklist filtering.
+  - Implemented historical sound law mutation engine supporting ordered phonetic transformations (`target > replacement / environment`).
+  - Added lexicon extraction and export to Markdown tables, CSV, and JSON.
+  - CLI subcommands: `arcanum conlang generate`, `arcanum conlang mutate`, `arcanum conlang lexicon`.
+- **Wave 5: Narrative Pacing, POV Balance & Tension Arc Analytics (`scripts/lib/pacing.py`)**:
+  - Implemented prose mode classification (Dialogue, Action, Exposition) via sentence structure and punctuation density analysis.
+  - Added sentence length variance and pacing rhythm metrics.
+  - Added POV screen-time balance analysis with starvation alerts (> 3 consecutive chapters unmentioned).
+  - Implemented tension score modeling (0–100) and standalone HTML visualizer with embedded SVG curves.
+  - CLI subcommands: `arcanum pace <manuscript>`, `arcanum tension <manuscript>`, `arcanum words <manuscript> --pov`.
+- **Wave 6: Overland/Naval Journey Modeler & Custom Planetary Calendars (`scripts/lib/journey.py`, `scripts/lib/calendar.py`)**:
+  - Implemented expedition journey modeler with 14 terrain friction coefficients, 8 travel modes, ration/water burn rates, and day-by-day itineraries.
+  - Implemented custom planetary calendar arithmetic supporting arbitrary year lengths, custom months/weekdays, multi-moon synodic phase cycle tracking, syzygies (grand conjunctions), and eclipses.
+  - CLI subcommands: `arcanum journey`, `arcanum calendar`.
+- **Control Center GUI & World Bible Integration**:
+  - Integrated all 6 speculative tool buttons and dialogs into GTK 3 desktop UI (`scripts/lib/ui_gtk3.py`).
+  - Enriched world-bible templates and Metadata Menu schemas (`Magic-Tech-System-Template.md`, `Glossary-Conlang-Template.md`, `Deity-Cosmology-Template.md`, `Character-Template.md`, `fileClasses/*.md`).
+- **Comprehensive Automated Test Coverage**:
+  - Added 48 unit tests across `tests/test_astrophysics.py`, `tests/test_magic_system.py`, `tests/test_genealogy.py`, `tests/test_conlang.py`, `tests/test_pacing.py`, `tests/test_journey.py`, `tests/test_calendar.py` (82 total unit tests discovery).
+  - Added end-to-end integration tests 26–31 in `tests/test_audit_fixes.sh`.
+
+### Fixed & Hardened (Full-Spectrum Forensic Audit & Resilience Upgrades)
+- **DOCX Synchronization Consolidated Manuscript Filtering (`scripts/lib/docx_sync.py`)**:
+  - Fixed stem evaluation condition (`not f.stem.endswith("_Manuscript")`) in `sync_manuscript_docx` to correctly ignore consolidated draft DOCX files during chapter discovery, preventing spurious `Draft-01_Manuscript.md` duplication.
+- **Subprocess String Interpolation Boundary Hardening (`scripts/export_book.sh`)**:
+  - Refactored native Python OpenXML fallback builder to pass paths and metadata (`${BOOK_TITLE}`, `${AUTHOR_NAME}`) via `sys.argv`, preventing `SyntaxError` crashes on manuscript titles with apostrophes or single quotes.
+- **XML 1.0 Illegal Control Character Sanitization (`scripts/lib/docx_sync.py`)**:
+  - Added strict control character regex filtering in `escape_xml()` (`\x00-\x08`, `\x0b-\x0c`, `\x0e-\x1f`) to prevent OpenXML schema corruption on pasted raw text.
+- **Recursive Character Dossier Discovery (`scripts/lib/continuity.py`)**:
+  - Upgraded `extract_lore_profiles()` to traverse character subdirectories recursively (`cdir.rglob("*.md")`) with deduplication, supporting nested dossier taxonomies (`Characters/Protagonists/`, `Characters/Antagonists/`).
+- **Recursive Lore Vault Entity Counting (`scripts/lib/ui_gtk3.py`)**:
+  - Updated GTK dashboard entity counting to use `fdir.rglob("*.md")`, accurately reflecting nested lore notes.
+- **Automated Test Coverage**:
+  - Added comprehensive unit tests and regression assertions in `tests/test_docx_sync.py`, `tests/test_continuity.py`, and `tests/test_audit_fixes.sh` (34 passing unit tests, 25/25 integration tests).
+
 ### Added (Standard DOCX Integration, Bidirectional Word Processor Sync & Formatting Presets)
 - **Zero-Dependency Native OpenXML Engine (`scripts/lib/docx_sync.py`)**:
   - Implemented pure Python standard library (`zipfile`, `xml.etree.ElementTree`) `.docx` builder and extractor, operating 100% offline with zero external pip dependencies.

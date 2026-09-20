@@ -8,13 +8,22 @@ tags:
 role: Protagonist / Antagonist / Supporting / Minor
 status: Alive / Deceased / Missing / Unknown
 faction: "[[Faction-Name]]"
+house: "[[House-Name]]"
+title: "Lord / Commander"
 origin: "[[Location-Name]]"
 current_location: "[[Location-Name]]"
 species_race: Human
-age: 
+born: 
+died: 
+parents: []
+spouses: []
+children: []
+succession_order: 
 gender: 
 occupation: 
 magic_ability: 
+magic_tier: 1
+catalyst: "[[Focus-Item]]"
 first_appearance: "Book 1, Chapter 1"
 ---
 

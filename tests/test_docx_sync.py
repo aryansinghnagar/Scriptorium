@@ -23,7 +23,7 @@ from lib.config import (
 from lib.docx_sync import (
     parse_markdown_to_paragraphs, strip_scene_tags_and_frontmatter,
     build_docx_package, convert_docx_to_markdown,
-    build_manuscript_docx, sync_manuscript_docx
+    build_manuscript_docx, sync_manuscript_docx, escape_xml
 )
 
 
@@ -206,6 +206,42 @@ The trees shouted loudly in the wild tempest.
         self.assertIn("@location: Forest", updated_md)
         self.assertIn("The trees shouted loudly in the wild tempest", updated_md)
         self.assertNotIn("The trees whispered in the quiet dawn", updated_md)
+
+    def test_escape_xml_illegal_control_characters(self):
+        """Test that illegal XML 1.0 control characters are stripped cleanly."""
+        dirty_input = "Hello\x00 World\x08!\x0b Newline\n Tab\t FormFeed\x0c Quote\" & Amp<>"
+        escaped = escape_xml(dirty_input)
+        self.assertNotIn("\x00", escaped)
+        self.assertNotIn("\x08", escaped)
+        self.assertNotIn("\x0b", escaped)
+        self.assertNotIn("\x0c", escaped)
+        self.assertIn("Hello World!", escaped)
+        self.assertIn("Newline\n", escaped)
+        self.assertIn("Tab\t", escaped)
+        self.assertIn("&quot;", escaped)
+        self.assertIn("&amp;", escaped)
+        self.assertIn("&lt;&gt;", escaped)
+
+    def test_consolidated_manuscript_not_duplicated_as_chapter(self):
+        """Test that Draft-01_Manuscript.docx is ignored during chapter discovery and not duplicated as a chapter .md."""
+        ms_dir = self.root / "NovelSyncTest"
+        draft_dir = ms_dir / "Book-01" / "Draft-01" / "01_Act_I"
+        draft_dir.mkdir(parents=True, exist_ok=True)
+
+        (ms_dir / "manuscript.yaml").write_text("title: \"Novel Sync\"\nauthor: \"Writer\"\n", encoding="utf-8")
+        scene = draft_dir / "01_Chapter_01.md"
+        scene.write_text("# Chapter 1\n\nSome great prose.\n", encoding="utf-8")
+
+        build_manuscript_docx(ms_dir)
+        cons_docx = ms_dir / "Book-01" / "Draft-01" / "Draft-01_Manuscript.docx"
+        self.assertTrue(cons_docx.is_file())
+
+        # Perform sync
+        res_sync = sync_manuscript_docx(ms_dir)
+        # Verify Draft-01_Manuscript.md was NOT created
+        cons_md = ms_dir / "Book-01" / "Draft-01" / "Draft-01_Manuscript.md"
+        self.assertFalse(cons_md.exists())
+        self.assertNotIn("Book-01/Draft-01/Draft-01_Manuscript.md", res_sync["docx_to_md"])
 
 
 if __name__ == "__main__":

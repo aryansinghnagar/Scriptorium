@@ -40,6 +40,14 @@ fields:
         - Moderate
         - High
         - Lethal / Soul Toll
+  max_tier:
+    type: Number
+  disciplines:
+    type: List
+  catalysts:
+    type: List
+  hard_limitations:
+    type: List
 ---
 # MagicSystem FileClass Schema
 Defines structured frontmatter fields and rules validation for magic and technological systems via Metadata Menu.

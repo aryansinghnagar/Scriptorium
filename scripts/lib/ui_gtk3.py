@@ -266,6 +266,30 @@ class ArcanumApp(Gtk.Window):
         btn_concordance.connect("clicked", self.on_generate_concordance_clicked)
         launchers_grid.attach(btn_concordance, 2, 0, 1, 1)
 
+        btn_magic = Gtk.Button(label="✨  Arcane Constraint Matrix\n(Hard Magic System Checks)")
+        btn_magic.connect("clicked", self.on_magic_check_clicked)
+        launchers_grid.attach(btn_magic, 0, 1, 1, 1)
+
+        btn_genealogy = Gtk.Button(label="👑  Dynastic Genealogies\n(Lineage Trees & Mermaid)")
+        btn_genealogy.connect("clicked", self.on_genealogy_clicked)
+        launchers_grid.attach(btn_genealogy, 1, 1, 1, 1)
+
+        btn_conlang = Gtk.Button(label="🗣️  Conlang Studio\n(Phonotactics & Mutations)")
+        btn_conlang.connect("clicked", self.on_conlang_clicked)
+        launchers_grid.attach(btn_conlang, 2, 1, 1, 1)
+
+        btn_calendar = Gtk.Button(label="📅  Planetary Calendar\n(Multi-Moon Syzygy & Eclipses)")
+        btn_calendar.connect("clicked", self.on_calendar_clicked)
+        launchers_grid.attach(btn_calendar, 0, 2, 1, 1)
+
+        btn_astrophysics = Gtk.Button(label="🌌  Astrophysics Flight\n(Relativistic 1g Calculator)")
+        btn_astrophysics.connect("clicked", self.on_astrophysics_clicked)
+        launchers_grid.attach(btn_astrophysics, 1, 2, 1, 1)
+
+        btn_journey = Gtk.Button(label="🗺️  Expedition Modeler\n(Overland Journey Calculator)")
+        btn_journey.connect("clicked", self.on_journey_clicked)
+        launchers_grid.attach(btn_journey, 2, 2, 1, 1)
+
         grid_box.pack_start(launchers_grid, True, True, 0)
         box.pack_start(grid_frame, False, False, 0)
 
@@ -368,6 +392,16 @@ class ArcanumApp(Gtk.Window):
         btn_fw = Gtk.Button(label="⚡ FocusWriter")
         btn_fw.connect("clicked", self.on_launch_focuswriter)
         ms_btns.pack_start(btn_fw, False, False, 0)
+
+        btn_pacing = Gtk.Button(label="📈 Pacing")
+        btn_pacing.set_tooltip_text("Analyze narrative pacing & chapter tension curves")
+        btn_pacing.connect("clicked", self.on_pacing_clicked)
+        ms_btns.pack_start(btn_pacing, False, False, 0)
+
+        btn_pov = Gtk.Button(label="👥 POV")
+        btn_pov.set_tooltip_text("Analyze POV screen-time balance & starvation")
+        btn_pov.connect("clicked", self.on_pov_clicked)
+        ms_btns.pack_start(btn_pov, False, False, 0)
 
         tree_vbox.pack_start(ms_btns, False, False, 0)
         paned.pack1(tree_frame, True, False)
@@ -915,7 +949,7 @@ class ArcanumApp(Gtk.Window):
                 if not fdir.is_dir() and (wpath / "00-World-Bible" / folder).is_dir():
                     fdir = wpath / "00-World-Bible" / folder
                 if fdir.is_dir():
-                    c = len([f for f in fdir.glob("*.md") if not f.name.startswith(".") and "Template" not in f.name])
+                    c = len([f for f in fdir.rglob("*.md") if not f.name.startswith(".") and "Template" not in f.name])
                     counts[folder] = c
                 else:
                     counts[folder] = 0
@@ -1567,30 +1601,222 @@ class ArcanumApp(Gtk.Window):
         self.refresh_volume_options()
         self.refresh_manuscript_analytics()
 
-    def on_generate_concordance_clicked(self, btn):
-        target = self.current_manuscript_path or self.current_world_path
-        if not target:
-            self.show_error("Please select an active manuscript or world first.")
-            return
+    def _show_text_result_dialog(self, title: str, text: str):
+        """Displays formatted text results in a resizable scrolled dialog."""
+        dialog = Gtk.Dialog(title=title, parent=self, flags=0)
+        dialog.set_default_size(720, 520)
+        dialog.add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
 
-        volume = self.combo_pub_volume.get_active_id() or "all"
-        cmd = [
-            "bash", str(PROJECT_ROOT / "scripts" / "generate_concordance.sh"),
-            target,
-            "--book", volume
-        ]
-        self.set_status(f"Generating back-matter concordance for volume '{volume}'...")
-        self.pub_log_buffer.set_text(f"Starting Concordance & Dramatis Personae generation [{volume}]...\n")
+        box = dialog.get_content_area()
+        box.set_border_width(8)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_hexpand(True)
+        scrolled.set_vexpand(True)
+
+        text_view = Gtk.TextView()
+        text_view.set_editable(False)
+        text_view.set_cursor_visible(False)
+        text_view.set_monospace(True)
+        text_view.set_left_margin(12)
+        text_view.set_right_margin(12)
+        text_view.set_top_margin(10)
+        text_view.set_bottom_margin(10)
+        text_view.get_buffer().set_text(text)
+
+        scrolled.add(text_view)
+        box.pack_start(scrolled, True, True, 0)
+        dialog.show_all()
+        dialog.run()
+        dialog.destroy()
+
+    def on_magic_check_clicked(self, btn):
+        target = self.current_world_path
+        if not target:
+            self.show_error("Please select an active world lore vault first.")
+            return
+        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "magic_system.py"), "check", target]
+        if self.current_manuscript_path:
+            cmd.extend(["-m", self.current_manuscript_path])
+        self.set_status("Running Arcane Constraint Matrix checks...")
 
         def _worker():
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            self._stream_process_to_log(proc, self.pub_log_buffer, self._append_log)
-            proc.wait()
-            if proc.returncode == 0:
-                GLib.idle_add(self.set_status, "Concordance and Dramatis Personae generated successfully!")
-                GLib.idle_add(self.refresh_manuscript_analytics)
-            else:
-                GLib.idle_add(self.set_status, "Concordance generation encountered warnings/errors.")
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            out = res.stdout or res.stderr
+            GLib.idle_add(self._show_text_result_dialog, "Arcane Constraint Matrix Diagnostics", out)
+            GLib.idle_add(self.set_status, "Arcane consistency check completed.")
+
+        self._start_worker(_worker)
+
+    def on_genealogy_clicked(self, btn):
+        target = self.current_world_path
+        if not target:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog = Gtk.Dialog(title="Dynastic Genealogy Explorer", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+        box.pack_start(Gtk.Label(label="Enter House or Character name to build genealogy tree:"), False, False, 6)
+        entry = Gtk.Entry()
+        entry.set_text("House")
+        box.pack_start(entry, False, False, 6)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            query = entry.get_text().strip()
+            if query:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "genealogy.py"), "tree", query, "-w", target]
+                self.set_status(f"Compiling genealogy tree for '{query}'...")
+
+                def _worker():
+                    res = subprocess.run(cmd, capture_output=True, text=True)
+                    out = res.stdout or res.stderr
+                    GLib.idle_add(self._show_text_result_dialog, f"Dynastic Genealogy: {query}", out)
+                    GLib.idle_add(self.set_status, "Genealogy tree compiled.")
+
+                self._start_worker(_worker)
+        dialog.destroy()
+
+    def on_conlang_clicked(self, btn):
+        target = self.current_world_path
+        if not target:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog = Gtk.Dialog(title="Conlang Phonotactics & Generator", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+        box.pack_start(Gtk.Label(label="Enter Language name (matches Languages/<Lang>.md):"), False, False, 4)
+        entry = Gtk.Entry()
+        entry.set_text("Solar Tongue")
+        box.pack_start(entry, False, False, 6)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            lang = entry.get_text().strip()
+            if lang:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "generate", lang, "-w", target, "-n", "12"]
+                self.set_status(f"Generating conlang vocabulary for '{lang}'...")
+
+                def _worker():
+                    res = subprocess.run(cmd, capture_output=True, text=True)
+                    out = res.stdout or res.stderr
+                    GLib.idle_add(self._show_text_result_dialog, f"Conlang Generator: {lang}", out)
+                    GLib.idle_add(self.set_status, "Conlang generated.")
+
+                self._start_worker(_worker)
+        dialog.destroy()
+
+    def on_calendar_clicked(self, btn):
+        target = self.current_world_path
+        if not target:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "calendar.py"), target, "--phases"]
+        self.set_status("Calculating planetary calendar & moon phases...")
+
+        def _worker():
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            out = res.stdout or res.stderr
+            GLib.idle_add(self._show_text_result_dialog, "Planetary Calendar & Celestial Syzygy", out)
+            GLib.idle_add(self.set_status, "Calendar rendered.")
+
+        self._start_worker(_worker)
+
+    def on_astrophysics_clicked(self, btn):
+        dialog = Gtk.Dialog(title="Relativistic Brachistochrone Flight Calculator", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+        box.pack_start(Gtk.Label(label="Enter distance (e.g., 'alpha-centauri', '1.5 AU', '4.2 ly', '54 mkm'):"), False, False, 4)
+        entry = Gtk.Entry()
+        entry.set_text("alpha-centauri")
+        box.pack_start(entry, False, False, 6)
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            dist = entry.get_text().strip()
+            if dist:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "transit", dist]
+                self.set_status(f"Calculating relativistic trajectory to '{dist}'...")
+
+                def _worker():
+                    res = subprocess.run(cmd, capture_output=True, text=True)
+                    out = res.stdout or res.stderr
+                    GLib.idle_add(self._show_text_result_dialog, f"Relativistic Flight: {dist}", out)
+                    GLib.idle_add(self.set_status, "Trajectory calculation complete.")
+
+                self._start_worker(_worker)
+        dialog.destroy()
+
+    def on_journey_clicked(self, btn):
+        dialog = Gtk.Dialog(title="Overland & Expedition Route Modeler", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+        box.pack_start(Gtk.Label(label="Enter journey distance (e.g., '150 km', '80 miles'):"), False, False, 4)
+        entry_dist = Gtk.Entry()
+        entry_dist.set_text("150 km")
+        box.pack_start(entry_dist, False, False, 4)
+
+        box.pack_start(Gtk.Label(label="Terrain type (road, trail, plains, hills, mountains, swamp, desert, ocean):"), False, False, 4)
+        entry_terr = Gtk.Entry()
+        entry_terr.set_text("mountain-pass")
+        box.pack_start(entry_terr, False, False, 4)
+
+        dialog.show_all()
+
+        if dialog.run() == Gtk.ResponseType.OK:
+            dist = entry_dist.get_text().strip()
+            terr = entry_terr.get_text().strip()
+            if dist:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "journey.py"), dist, "-t", terr]
+                self.set_status(f"Modeling expedition journey ({dist})...")
+
+                def _worker():
+                    res = subprocess.run(cmd, capture_output=True, text=True)
+                    out = res.stdout or res.stderr
+                    GLib.idle_add(self._show_text_result_dialog, f"Expedition Route Plan: {dist}", out)
+                    GLib.idle_add(self.set_status, "Expedition plan generated.")
+
+                self._start_worker(_worker)
+        dialog.destroy()
+
+    def on_pacing_clicked(self, btn):
+        target = self.current_manuscript_path
+        if not target:
+            self.show_error("Please select an active manuscript project first.")
+            return
+
+        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "pacing.py"), "pace", target]
+        self.set_status("Analyzing narrative pacing and prose tension curves...")
+
+        def _worker():
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            out = res.stdout or res.stderr
+            GLib.idle_add(self._show_text_result_dialog, "Narrative Pacing & Tension Report", out)
+            GLib.idle_add(self.set_status, "Pacing analysis complete.")
+
+        self._start_worker(_worker)
+
+    def on_pov_clicked(self, btn):
+        target = self.current_manuscript_path
+        if not target:
+            self.show_error("Please select an active manuscript project first.")
+            return
+
+        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "pacing.py"), "pov", target]
+        self.set_status("Calculating POV character screen-time allocation...")
+
+        def _worker():
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            out = res.stdout or res.stderr
+            GLib.idle_add(self._show_text_result_dialog, "POV Screen-Time & Balance Analytics", out)
+            GLib.idle_add(self.set_status, "POV balance calculation complete.")
 
         self._start_worker(_worker)
 

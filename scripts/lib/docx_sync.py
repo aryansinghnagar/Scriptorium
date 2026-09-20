@@ -50,12 +50,14 @@ except Exception:
 FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
 NW_TAG_REGEX = re.compile(r"^@[A-Za-z0-9_-]+:", re.MULTILINE)
 MD_BOLD_ITALIC_REGEX = re.compile(r"(\*\*\*[^*]+\*\*\*|\*\*[^*]+\*\*|\*[^*]+\*|___[^_]+___|__[^_]+__|_[^_]+_)")
+_ILLEGAL_XML_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
 def escape_xml(text: str) -> str:
-    """Escapes XML special characters."""
+    """Escapes XML special characters and strips illegal XML 1.0 control characters."""
+    clean = _ILLEGAL_XML_CHARS.sub("", str(text))
     return (
-        str(text)
+        clean
         .replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
@@ -594,7 +596,7 @@ def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
     
     # 1. Discover all pairs
     md_files = {f.stem: f for f in draft_dir.rglob("*.md") if not f.name.startswith(".") and "Outlines" not in f.parts}
-    docx_files = {f.stem: f for f in draft_dir.rglob("*.docx") if not f.name.startswith(".") and not f.name.endswith("_Manuscript")}
+    docx_files = {f.stem: f for f in draft_dir.rglob("*.docx") if not f.name.startswith(".") and not f.stem.endswith("_Manuscript")}
     
     all_stems = set(md_files.keys()).union(set(docx_files.keys()))
     

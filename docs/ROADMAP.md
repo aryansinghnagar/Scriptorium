@@ -133,19 +133,30 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] CLI and GUI integration (`arcanum docx <build|sync|import|open>`, `arcanum word`, Control Center Tab 2 toolbar).
 - [x] Automated unit and end-to-end regression tests (`tests/test_docx_sync.py`, `tests/test_docx_sync.sh`, `scripts/verify.sh`).
 
+### M20: Speculative Fiction Authorial Workflow Suites (Waves 1–6)
+- [x] **Wave 1: Astrophysics & Relativistic Spaceflight** (`scripts/lib/astrophysics.py`, `arcanum calc transit|time-dilation|orbit|comms|habitability`): Brachistochrone 1g constant-acceleration trajectory calculator ($\tau$ proper vs $t$ coordinate time, peak $v/c$, Lorentz $\gamma$, fuel mass ratio), Hohmann orbital transfers, comms latencies, habitability & gravity, standalone HTML flight report.
+- [x] **Wave 2: Hard Magic Systems & Arcane Constraint Matrix** (`scripts/lib/magic_system.py`, `arcanum magic-check|magic-report|magic`): Sanderson-style arcane rules, character tier limit checks (`MAG-101`), catalyst/reagent validation (`MAG-102`), hard limitation enforcement (`MAG-103`), cumulative fatigue tracking (`MAG-104`), HTML audit report.
+- [x] **Wave 3: Dynastic Genealogies & Succession Lineage Graphs** (`scripts/lib/genealogy.py`, `arcanum genealogy|lineage`): Family tree Directed Acyclic Graph (DAG) parser, chronological/biological paradox detection (`GEN-101`), succession claim conflict validation (`GEN-102`), Mermaid.js flowchart markdown, interactive HTML tree visualizer.
+- [x] **Wave 4: Conlang Phonotactics, Lexicography & Sound-Change Applier** (`scripts/lib/conlang.py`, `arcanum conlang generate|mutate|lexicon`): Syllable template phonotactic word/name generator, cluster blacklist filter, historical sound law mutation engine (`p > f / V_V`, `k > ch / _[e,i]`), lexicon dictionary parser & multi-format exporter (Markdown, CSV, JSON).
+- [x] **Wave 5: Narrative Pacing, POV Balance & Tension Arc Analytics** (`scripts/lib/pacing.py`, `arcanum pace`, `arcanum tension`, `arcanum words --pov`): Prose mode classification (dialogue/action/exposition), sentence rhythm and variance metrics, POV screen-time balance & starvation alerts, tension arc modeling (0–100), embedded SVG chart visualizer.
+- [x] **Wave 6: Overland/Naval Journey Modeler & Custom Planetary Calendars** (`scripts/lib/journey.py`, `scripts/lib/calendar.py`, `arcanum journey`, `arcanum calendar`): 14 terrain friction coefficients, 8 travel modes, ration/water burn rates, day-by-day itineraries, custom planetary calendar arithmetic, multi-moon synodic phase cycles, syzygies, and eclipses.
+- [x] Full GTK 3 Control Center GUI integration in Tab 1 and Tab 2 (`scripts/lib/ui_gtk3.py`).
+- [x] 100% standard library implementation with zero external pip dependencies and 100% offline privacy.
+- [x] Comprehensive test suites (82 unit tests across `tests/test_*.py` + end-to-end CLI tests 26–31 in `tests/test_audit_fixes.sh`).
+
 ---
 
 ## 5. Real-Time Operational Status & Momentum Queues
 
 ### Operational State
-- **Active Status**: Production-Ready / All 19 Milestones Complete & Verified (Grade A).
-- **Verification**: 100% Pass Rate across all test harnesses (`scripts/verify.sh`, `tests/test_audit_fixes.sh`, `tests/test_deep_audit.sh`, `tests/test_concordance_edge_cases.sh`, `tests/test_audit_claude_improvements.sh`, `tests/test_performance_cache.sh`, `tests/test_continuity_engine.sh`, `tests/test_drafts_and_diff.py`, `tests/test_drafts_and_diff.sh`, `tests/test_docx_sync.py`, `tests/test_docx_sync.sh`).
+- **Active Status**: Production-Ready / All 20 Milestones Complete & Verified (Grade A).
+- **Verification**: 100% Pass Rate across all test harnesses (`scripts/verify.sh`, `tests/test_audit_fixes.sh`, `tests/test_deep_audit.sh`, `tests/test_concordance_edge_cases.sh`, `tests/test_audit_claude_improvements.sh`, `tests/test_performance_cache.sh`, `tests/test_continuity_engine.sh`, `tests/test_drafts_and_diff.py`, `tests/test_drafts_and_diff.sh`, `tests/test_docx_sync.py`, `tests/test_docx_sync.sh`, `tests/test_astrophysics.py`, `tests/test_magic_system.py`, `tests/test_genealogy.py`, `tests/test_conlang.py`, `tests/test_pacing.py`, `tests/test_journey.py`, `tests/test_calendar.py`).
 - **Code Quality**: Zero ShellCheck warnings, zero Python syntax errors, valid XML/JSON schemas, pre-compiled regex performance optimizations.
 
 ### Momentum Queues
 
 #### `now` (Immediate Focus)
-- [x] Modernize and synchronize all repository documentation, C4 architecture diagrams, and complete ADR-001 through ADR-026 catalog.
+- [x] Modernize and synchronize all repository documentation, C4 architecture diagrams, and complete ADR-001 through ADR-027 catalog.
 - [x] Pass all automated test suites and quality gates.
 
 #### `next` (Ready to Execute)
