@@ -89,6 +89,58 @@ def save_config(config_data: dict) -> bool:
         return False
 
 
+DOCX_PRESETS = {
+    "standard-submission": {
+        "name": "Standard Submission (Shunn / Industry)",
+        "description": "William Shunn standard manuscript format. Times New Roman 12pt, double-spaced, 1-inch margins, 0.5-inch indent, '#' scene breaks.",
+        "font_family": "Times New Roman",
+        "font_size_pt": 12.0,
+        "line_spacing": 2.0,
+        "margin_inches": 1.0,
+        "first_line_indent_inches": 0.5,
+        "scene_break_symbol": "#",
+        "page_break_chapters": True,
+        "include_header_slug": True,
+    },
+    "modern-manuscript": {
+        "name": "Modern Manuscript",
+        "description": "Clean modern editorial layout. Georgia 11.5pt, 1.35 line spacing, 1-inch margins, 0.35-inch indent, '* * *' scene breaks.",
+        "font_family": "Georgia",
+        "font_size_pt": 11.5,
+        "line_spacing": 1.35,
+        "margin_inches": 1.0,
+        "first_line_indent_inches": 0.35,
+        "scene_break_symbol": "* * *",
+        "page_break_chapters": True,
+        "include_header_slug": True,
+    },
+    "classic-trade": {
+        "name": "Classic Literary & Trade",
+        "description": "Classic book proportions. EB Garamond 12pt, 1.5 line spacing, 1-inch margins, 0.5-inch indent.",
+        "font_family": "EB Garamond",
+        "font_size_pt": 12.0,
+        "line_spacing": 1.5,
+        "margin_inches": 1.0,
+        "first_line_indent_inches": 0.5,
+        "scene_break_symbol": "* * *",
+        "page_break_chapters": True,
+        "include_header_slug": False,
+    },
+    "custom": {
+        "name": "Custom User Formatting",
+        "description": "User-customized manuscript typography and spacing.",
+        "font_family": "Times New Roman",
+        "font_size_pt": 12.0,
+        "line_spacing": 2.0,
+        "margin_inches": 1.0,
+        "first_line_indent_inches": 0.5,
+        "scene_break_symbol": "#",
+        "page_break_chapters": True,
+        "include_header_slug": True,
+    }
+}
+
+
 def get_backup_dest() -> str:
     """Returns configured external secure backup destination path or empty string."""
     cfg = load_config()
@@ -112,6 +164,58 @@ def clear_backup_dest() -> bool:
     return save_config(cfg)
 
 
+def get_active_docx_preset_name() -> str:
+    """Returns the name of the currently active DOCX preset."""
+    cfg = load_config()
+    docx_cfg = cfg.get("docx_formatting", {})
+    preset = docx_cfg.get("active_preset", "standard-submission")
+    if preset not in DOCX_PRESETS:
+        preset = "standard-submission"
+    return preset
+
+
+def get_docx_config() -> dict:
+    """Returns the resolved DOCX formatting dictionary."""
+    cfg = load_config()
+    docx_cfg = cfg.get("docx_formatting", {})
+    preset_name = docx_cfg.get("active_preset", "standard-submission")
+    base = dict(DOCX_PRESETS.get(preset_name, DOCX_PRESETS["standard-submission"]))
+    base["active_preset"] = preset_name
+    # Merge custom overrides if custom preset or explicit overrides present
+    if "custom_overrides" in docx_cfg and isinstance(docx_cfg["custom_overrides"], dict):
+        base.update(docx_cfg["custom_overrides"])
+    return base
+
+
+def set_docx_preset(preset_name: str) -> bool:
+    """Sets the active DOCX formatting preset."""
+    if preset_name not in DOCX_PRESETS:
+        logger.error("Unknown DOCX preset: %s", preset_name)
+        return False
+    cfg = load_config()
+    if "docx_formatting" not in cfg or not isinstance(cfg["docx_formatting"], dict):
+        cfg["docx_formatting"] = {}
+    cfg["docx_formatting"]["active_preset"] = preset_name
+    return save_config(cfg)
+
+
+def set_docx_option(key: str, val) -> bool:
+    """Sets a specific DOCX formatting option."""
+    cfg = load_config()
+    if "docx_formatting" not in cfg or not isinstance(cfg["docx_formatting"], dict):
+        cfg["docx_formatting"] = {}
+    if "custom_overrides" not in cfg["docx_formatting"] or not isinstance(cfg["docx_formatting"]["custom_overrides"], dict):
+        cfg["docx_formatting"]["custom_overrides"] = {}
+    cfg["docx_formatting"]["custom_overrides"][key] = val
+    cfg["docx_formatting"]["active_preset"] = "custom"
+    return save_config(cfg)
+
+
+def list_docx_presets() -> dict:
+    """Returns all available DOCX presets."""
+    return DOCX_PRESETS
+
+
 def main():
     parser = argparse.ArgumentParser(description="Ars Arcanum Configuration Tool")
     subparsers = parser.add_subparsers(dest="subcommand", required=True)
@@ -126,6 +230,18 @@ def main():
     set_p.add_argument("path", help="Absolute or relative path to secure backup directory")
 
     bd_sub.add_parser("clear", help="Clear configured secure backup destination")
+
+    # docx-preset subcommand
+    preset_parser = subparsers.add_parser("docx-preset", help="Manage DOCX formatting presets")
+    preset_parser.add_argument("preset", nargs="?", help="Preset name to activate (standard-submission, modern-manuscript, classic-trade, custom)")
+
+    # docx-presets list subcommand
+    subparsers.add_parser("docx-presets", help="List all available DOCX formatting presets")
+
+    # docx-config subcommand
+    dcfg_parser = subparsers.add_parser("docx-config", help="View or set DOCX formatting options")
+    dcfg_parser.add_argument("key", nargs="?", help="Option key (e.g. font_family, font_size_pt, line_spacing, margin_inches)")
+    dcfg_parser.add_argument("value", nargs="?", help="Option value")
 
     args = parser.parse_args()
 
@@ -151,6 +267,60 @@ def main():
             else:
                 print(f"[!] Error updating configuration.", file=sys.stderr)
                 sys.exit(1)
+
+    elif args.subcommand == "docx-preset":
+        if args.preset:
+            if set_docx_preset(args.preset):
+                print(f"[CONFIG] Active DOCX preset set to: {args.preset}")
+                sys.exit(0)
+            else:
+                print(f"[!] Error: Invalid preset '{args.preset}'. Available: {', '.join(DOCX_PRESETS.keys())}", file=sys.stderr)
+                sys.exit(1)
+        else:
+            print(get_active_docx_preset_name())
+            sys.exit(0)
+
+    elif args.subcommand == "docx-presets":
+        active = get_active_docx_preset_name()
+        print("=== Ars Arcanum DOCX Formatting Presets ===")
+        for pid, info in DOCX_PRESETS.items():
+            mark = " (active)" if pid == active else ""
+            print(f"- {pid}{mark}: {info['name']}")
+            print(f"    Font: {info['font_family']} {info['font_size_pt']}pt | Spacing: {info['line_spacing']}x | Margins: {info['margin_inches']}\"")
+            print(f"    Description: {info['description']}")
+        sys.exit(0)
+
+    elif args.subcommand == "docx-config":
+        if args.key and args.value is not None:
+            val = args.value
+            # Type cast numbers
+            try:
+                if "." in val:
+                    val = float(val)
+                else:
+                    val = int(val)
+            except ValueError:
+                if val.lower() == "true":
+                    val = True
+                elif val.lower() == "false":
+                    val = False
+            if set_docx_option(args.key, val):
+                print(f"[CONFIG] DOCX option '{args.key}' set to: {val}")
+                sys.exit(0)
+            else:
+                print(f"[!] Error updating DOCX option.", file=sys.stderr)
+                sys.exit(1)
+        elif args.key:
+            cfg = get_docx_config()
+            if args.key in cfg:
+                print(cfg[args.key])
+                sys.exit(0)
+            else:
+                print(f"[!] Key '{args.key}' not found in DOCX configuration.", file=sys.stderr)
+                sys.exit(1)
+        else:
+            print(json.dumps(get_docx_config(), indent=2))
+            sys.exit(0)
 
 
 if __name__ == "__main__":

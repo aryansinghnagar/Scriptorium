@@ -43,10 +43,44 @@ Your writing represents years of intellectual effort. Ars Arcanum adheres to the
 
 ---
 
+## Native Ars Arcanum Dual-Target Disaster Recovery Backups
+
+In addition to system-level Déjà Dup backups, Ars Arcanum includes a native, standalone dual-target archive manager (`scripts/backup_world.sh`) with SHA-256 integrity validation.
+
+### 1. Configure Secondary Secure Destination (External / USB)
+You can configure a persistent secondary replication target via CLI or the GTK Desktop Control Center:
+
+```bash
+# Set secondary backup destination to an external drive or USB stick:
+arcanum backup-dest set /media/username/SecureUSB/ArsArcanumBackups
+
+# View currently configured backup destination:
+arcanum backup-dest get
+
+# Clear secondary backup destination:
+arcanum backup-dest clear
+```
+
+In the **GTK Control Center** (Tab 4: Snapshots & Backups), click **"📁 Set Secondary Backup Path..."** to select your connected external storage volume.
+
+### 2. Creating Verified Dual-Target Archives
+Whenever you run `arcanum backup <project>` or click **"📦 Create Verified Backup Archive"** in the Control Center:
+1. A compressed, standalone `.tar.gz` archive is compiled and stored in the primary project backup directory (`~/Backups/` or `<project>/05-Backups/`).
+2. An SHA-256 checksum manifest (`.sha256`) is computed and validated immediately.
+3. If a secondary destination is configured and mounted, the verified archive and checksum are automatically replicated to the external drive.
+4. If the external drive is unmounted or unplugged, the tool logs an advisory warning without failing your primary local backup.
+
+---
+
 ## Step 4: Testing Restoration (Fire Drill)
 
 A backup is only as good as its restore test. Once a month:
-1. Open **Backups**.
-2. Click **Restore...**
-3. Select a previous date and choose a single test file to restore to `/tmp`.
-4. Verify that the file opens cleanly in Obsidian or novelWriter.
+1. **Via Ars Arcanum Restore Engine**:
+   ```bash
+   arcanum restore /path/to/backup_archive.tar.gz
+   ```
+2. **Via Déjà Dup**:
+   - Open **Backups**.
+   - Click **Restore...**
+   - Select a previous date and choose a single test file to restore to `/tmp`.
+   - Verify that the file opens cleanly in Obsidian or novelWriter.

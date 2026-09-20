@@ -63,14 +63,15 @@ This catalog provides official download links, package names (APT / Flatpak / Ap
   # flatpak install -y flathub org.gottcode.FocusWriter
   ```
 
-### 4. LibreOffice Writer (Revisions & Formats)
-- **Role**: Track changes with editors, `.docx` / `.odt` export and inspection.
-- **Website**: [https://www.libreoffice.org/](https://www.libreoffice.org/)
+### 4. Word Processors & LibreOffice Writer (Collaborative Revisions & DOCX Drafting)
+- **Role**: Open and edit consolidated manuscript `.docx` drafts and individual chapter `.docx` files in Microsoft Word (365 / Desktop), Google Docs, or LibreOffice Writer with bidirectional Markdown synchronization.
+- **LibreOffice Website**: [https://www.libreoffice.org/](https://www.libreoffice.org/)
 - **Pre-installed**: Included by default in Linux Mint.
 - **Installation (Debian / Re-install)**:
   ```bash
   sudo apt install -y libreoffice-writer libreoffice-gtk3
   ```
+- **DOCX Interoperability**: Fully compatible with Microsoft Word 365 / desktop / web, Google Docs, and LibreOffice Writer via Ars Arcanum's zero-dependency OpenXML sync engine (`scripts/lib/docx_sync.py`).
 
 ### 5. Calibre (Ebook Compilation & Inspection)
 - **Role**: EPUB generation, metadata editing, e-reader device management.

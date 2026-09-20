@@ -6,6 +6,51 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
+### Added (Standard DOCX Integration, Bidirectional Word Processor Sync & Formatting Presets)
+- **Zero-Dependency Native OpenXML Engine (`scripts/lib/docx_sync.py`)**:
+  - Implemented pure Python standard library (`zipfile`, `xml.etree.ElementTree`) `.docx` builder and extractor, operating 100% offline with zero external pip dependencies.
+  - Generates OpenXML packages fully compatible with Microsoft Word (365 / Desktop / Web), Google Docs, and LibreOffice Writer.
+  - Supports Markdown headings (`#`, `##`), italic/bold/bold-italic formatting (`*`, `**`, `***`), scene breaks (`* * *`, `#`, `✦ ✦ ✦`), and paragraph-level styles.
+- **Dual-Synchronized Hybrid Manuscript Architecture**:
+  - Automatically generates both consolidated draft documents (`Draft-01_Manuscript.docx`) and individual chapter files (`01_Chapter.docx`) on `init_manuscript.sh` and `init_draft.sh`.
+  - Strips distracting internal metadata tags (`@pov:`, `@location:`, `@char:`, `@thread:`, `@time:`, `@status:`) and HTML comments from `.docx` files for a clean reading experience in word processors.
+  - Bidirectional sync engine (`arcanum docx sync <ms>`) compares file modification timestamps (`mtime`), extracting updated prose from `.docx` and safely reattaching original scene metadata headers into `.md`.
+- **Configurable Typography & Submission Presets (`scripts/lib/config.py`)**:
+  - Added four global formatting presets:
+    - `Standard Submission` (Shunn): Times New Roman 12pt, double-spaced, 1" margins, 0.5" first-line indent, `#` scene breaks.
+    - `Modern Manuscript`: Georgia 11.5pt, 1.35x spacing, 1" margins, 0.35" indent, `* * *` scene breaks.
+    - `Classic Trade`: EB Garamond 12pt, 1.5x spacing, 1" margins, 0.4" indent, `✦ ✦ ✦` scene breaks.
+    - `Custom`: Fully customizable via CLI or GUI.
+  - CLI configuration commands: `arcanum config docx-presets`, `arcanum config docx-preset <name>`, `arcanum config docx-config <key> <val>`.
+- **Desktop Control Center GUI Integration (`scripts/lib/ui_gtk3.py`)**:
+  - Added **Word Processing & DOCX Synchronization** toolbar to Tab 2 with "Open in Word Processor", "Sync DOCX ↔ Markdown", and "DOCX Formatting Settings" buttons.
+  - Created modal DOCX Formatting Settings dialog allowing authors to switch presets and preview typography settings visually.
+- **Action-Oriented CLI Subcommands (`scripts/arcanum`)**:
+  - Added `arcanum docx <build|sync|import|open> [ms]` and shortcut `arcanum word [ms]` for 1-click word processor launching.
+  - Added `arcanum docx-sync` and `arcanum sync-docx` aliases.
+- **Automated Test Coverage**:
+  - Added `tests/test_docx_sync.py` (5 unit tests covering OpenXML paragraph building, XML escaping, tag extraction, preset rendering, and roundtrip conversion).
+  - Added `tests/test_docx_sync.sh` (end-to-end integration test verifying scaffolding, draft forking, preset build, bidirectional sync, and external file import).
+  - Integrated into 7-stage verification harness (`scripts/verify.sh`).
+
+### Optimized & Streamlined (Performance, Resource Efficiency & Uncluttering)
+- **Regex Compilation Optimization & Cache Throughput**:
+  - Pre-compiled all hot regex patterns at module scope across `scripts/lib/cache.py` (`FENCED_CODE_REGEX`, `WORD_REGEX`, `NW_TAG_LINE_REGEX`, `FRONTMATTER_REGEX`), eliminating repeated per-call regex compilation overhead during large repository scans.
+  - Pre-compiled tokenization and filtering regexes in `scripts/lib/manuscript_diff.py` (`TOKEN_REGEX`, `WORD_REGEX`, `STEM_CLEAN_REGEX`, `NW_TAG_REGEX`).
+  - Added module-level regex caching in `scripts/lib/continuity.py` for word boundary candidate searches and possessive bindings, eliminating redundant regex compilation across thousands of sentences.
+  - Upfront directory pruning in `scripts/wordcount_report.sh` to skip excluded directories (`Outlines`, `.git`, `04-Publishing`, `Exports`, etc.) before traversal.
+- **Draft-Aware Export & Analytics Resolution**:
+  - Upgraded `scripts/export_book.sh` with `-d, --draft <name>` support and automatic `active_draft` resolution from `manuscript.yaml` / latest draft directory, preventing scene duplication across draft iterations during PDF/EPUB/DOCX compilation.
+  - Upgraded `scripts/wordcount_report.sh` to gracefully parse multi-draft directory hierarchies (`Book-01/Draft-01/01_Act_I/01_Chapter.md`) while preserving flat hierarchy compatibility.
+- **Documentation Modernization & ADR Synchronization**:
+  - Added **ADR-024** (Discrete Multi-Draft Architecture & Accessible Visual Redline Comparator) and **ADR-025** (Dual-Target Secure External & USB Backup Replication) to `docs/ARCHITECTURE.md`.
+  - Updated Tech-Stack detection table, C4 system context, and entry points in `docs/ARCHITECTURE.md`.
+  - Added Milestones **M16** (Sovereign Privacy & Asset Provenance), **M17** (Intuitive Action-Oriented CLI & Fast Performance Cache), and **M18** (Multi-Draft Management, Visual Redline Comparator & Dual-Target Secure Backups) to `docs/ROADMAP.md`.
+  - Synchronized `docs/guides/BACKUP_SETUP.md` with native dual-target replication commands and GTK picker instructions.
+- **Repository Hygiene & Local Decluttering**:
+  - Verified and hardened `.gitignore` exclusions for `.arcanum_cache.json`, `__pycache__/`, `*.py[cod]`, `.pytest_cache/`, `*.tmp`, `*.bak`, and `*.log`.
+  - Cleaned up untracked artifacts and temporary test files across the repository.
+
 ### Added (Draft Management, Visual Redline Comparator & Dual-Target Secure Backups)
 - **Discrete Multi-Draft Manuscript Management (`scripts/init_draft.sh`)**:
   - Implemented discrete draft version hierarchy (`~/Manuscripts/<Novel>/Book-01/Draft-01/`, `Draft-02/`, `Draft-03/`) preserving 100% open Markdown readability.

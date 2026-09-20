@@ -59,3 +59,22 @@ sudo apt install -y \
 - **First Paragraph of Chapter / Section Break**: `0pt` indent (flush left), optionally featuring an opening ornament or drop cap.
 - **Margins**: Alternating inner (gutter) `0.75in` - `0.85in` and outer `0.65in` - `0.75in`.
 - **Ornamental Scene Breaks**: Three centered asterisks (`* * *` or `show line: it => scene-break()`) with 1.5em vertical margins.
+
+---
+
+## 4. Word Processor & DOCX Typography Presets
+
+Ars Arcanum includes built-in styling presets for Microsoft Word (365 / latest), Google Docs, and LibreOffice Writer:
+
+| Preset Name | Typeface | Size | Line Spacing | Margins | First-Line Indent | Scene Break | Typical Use |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `standard-submission` | Times New Roman | 12 pt | 2.0x (Double) | 1.0 in (all sides) | 0.50 in | `#` | Shunn industry standard for literary agents & editors |
+| `modern-manuscript` | Georgia | 11.5 pt | 1.35x | 1.0 in (all sides) | 0.35 in | `* * *` | High-legibility on-screen drafting & desktop reading |
+| `classic-trade` | EB Garamond | 12 pt | 1.50x | 1.0 in (all sides) | 0.40 in | `✦ ✦ ✦` | Bookish aesthetic in word processors |
+| `custom` | *Configurable* | *Custom* | *Custom* | *Custom* | *Custom* | *Custom* | User-defined typography in `config.json` |
+
+Configure your preset in the Desktop Control Center (Tab 2: **DOCX Formatting Settings**) or via CLI:
+```bash
+arcanum config docx-presets
+arcanum config docx-preset modern-manuscript
+```

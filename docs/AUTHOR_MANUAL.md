@@ -59,13 +59,17 @@ Ars Arcanum is built on **Four Unbreakable Invariants**:
     └── .obsidian/             → Pre-configured plugin suite (Storyline, Longform, Dataview, etc.)
 
 ~/Manuscripts/<ManuscriptName>/
-├── manuscript.yaml            → Project manifest linking Universe and World Lore Vault
+├── manuscript.yaml            → Project manifest linking Universe, World Vault & active draft
 ├── nwProject.nwx              → novelWriter project manifest
-├── Book-01/                   → Discrete Git repository for Book-01 (Acts, Chapters, Scenes)
-│   ├── 01_Act_I/
-│   ├── 02_Act_II/
-│   ├── 03_Act_III/
-│   └── 04_Back_Matter/        → Automatically generated Dramatis Personae & Glossary
+├── Book-01/                   → Discrete Git repository for Book-01
+│   ├── Draft-01/              → Active discrete draft directory
+│   │   ├── Draft-01_Manuscript.docx → Consolidated draft in standard MS Word / Google Docs format
+│   │   ├── 01_Act_I/
+│   │   │   ├── 01_Chapter.md  → Sovereign Plain Markdown source with scene metadata
+│   │   │   └── 01_Chapter.docx → Individual chapter in standard Word format (auto-synchronized)
+│   │   ├── 02_Act_II/
+│   │   ├── 03_Act_III/
+│   │   └── 04_Back_Matter/    → Automatically generated Dramatis Personae & Glossary
 ├── Outlines/                  → Three-act structural beats & Subplot-Thread-Matrix.md
 ├── Exports/                   → Exported print PDFs (Typst), EPUBs, and submission DOCXs (Pandoc)
 └── Backups/                   → Standalone timestamped .tar.gz archives with SHA-256 digests
@@ -110,6 +114,13 @@ The Ars Arcanum desktop application is organized into **5 intuitive tabs** with 
 ### Tab 2: ✍️ Manuscripts & Drafting
 - **Live Word Count Dashboard**: Displays total manuscript word counts, scene counts, and volume progress.
 - **Manuscript Tree Explorer**: Interactive tree view listing Volumes (`Book-01`, `Book-02`), Acts, Chapters, and Scenes.
+- **Word Processing & DOCX Synchronization Toolbar**:
+  - **Open in Word Processor**: 1-click button to launch your preferred word processor (Microsoft Word, Google Docs via browser, or LibreOffice Writer) directly with the active consolidated draft (`Draft-01_Manuscript.docx`) or selected chapter.
+  - **Sync DOCX ↔ Markdown**: 1-click bidirectional synchronization engine. Reconciles prose changes between `.docx` files and Markdown scenes while preserving all narrative metadata tags (`@pov:`, `@location:`, etc.).
+  - **DOCX Formatting Settings**: Modal dialog to configure global Word styling presets (`Standard Submission / Shunn`, `Modern Manuscript`, `Classic Trade`, or `Custom` font, line spacing, margins, and paragraph indents).
+- **Manuscript Draft Revisions & Redline Comparator**:
+  - Fork new draft versions (`+ Fork New Draft`) to maintain independent revisions (`Draft-01`, `Draft-02`).
+  - View visual redline changelogs in your browser or LibreOffice Writer to see added/deleted prose between drafts.
 - **Visual Scene Metadata Inspector**: A non-technical visual control panel for inspecting and modifying scene headers:
   - **POV Character**: Set `@pov: CharacterName`
   - **Characters Present**: Set `@char: CharA, CharB`
@@ -253,6 +264,71 @@ Click **"⚡ Sprint Canvas"** in the Control Center to launch FocusWriter.
 - Press **`F11`** to enter full-screen distraction-free mode.
 - Set a daily word count target (e.g. 1,000 words) with live ambient typing sounds and custom themes.
 
+### Standard Word Processor Drafting & DOCX Dual-Synchronization
+
+For authors who prefer drafting or revising in dedicated word processors—such as **Microsoft Word (365 / latest)**, **Google Docs**, or **LibreOffice Writer**—Ars Arcanum features a native, offline dual-synchronized OpenXML engine (`scripts/lib/docx_sync.py`).
+
+#### 1. The Dual-Synchronized Hybrid Model
+Ars Arcanum automatically maintains standard `.docx` documents alongside plain Markdown files:
+- **Consolidated Draft Document**: `Book-01/Draft-01/Draft-01_Manuscript.docx` compiles all acts and chapters into a single continuous manuscript file for cohesive reading and global revisions.
+- **Individual Chapter Documents**: Each chapter (e.g. `Book-01/Draft-01/01_Act_I/01_Chapter.docx`) is generated as a standalone `.docx` file for focused, scene-level editing.
+- **Zero Dependencies**: 100% pure Python standard library OpenXML generator—requires zero external packages, no internet connection, and runs instantaneously.
+
+#### 2. Distraction-Free Reading & Tag Preservation
+- **Clean Body Prose**: Internal metadata tags (`@pov:`, `@location:`, `@char:`, `@thread:`, `@time:`, `@status:`) and HTML comments are automatically scrubbed from `.docx` body text, presenting a clean reading environment in MS Word and Google Docs.
+- **Metadata Tag Preservation on Sync**: When you edit prose in MS Word and sync back to Markdown, Ars Arcanum automatically matches each chapter, extracts the modified body paragraphs, and reattaches the original metadata header tags safely!
+
+#### 3. Opening & Editing in Word Processors
+- **From the Control Center**:
+  1. Open **Tab 2: Manuscripts & Drafting**.
+  2. Click **"📝 Open in Word Processor"** to immediately open the consolidated manuscript in Microsoft Word (Windows/macOS), LibreOffice Writer (Linux), or your system default editor.
+- **From the Command Line**:
+  ```bash
+  # Launch active manuscript draft in Word / LibreOffice
+  arcanum word My-Novel
+  
+  # Or explicitly:
+  arcanum docx open My-Novel
+  ```
+
+#### 4. Bidirectional Synchronization (`arcanum docx sync`)
+Whenever you make edits in either format:
+- **From GUI**: Click **"🔄 Sync DOCX ↔ Markdown"** in Tab 2.
+- **From CLI**: Run `arcanum docx sync My-Novel` (or `arcanum docx-sync My-Novel`).
+- **How It Works**: The sync engine compares modification timestamps (`mtime`):
+  - If `.md` is newer than `.docx` → Rebuilds `.docx` with latest Markdown prose.
+  - If `.docx` is newer than `.md` → Extracts updated prose from `.docx`, restores scene metadata tags, and updates `.md`.
+
+#### 5. Configurable Formatting Presets
+Customize how Word documents look using built-in typography presets:
+
+| Preset | Font Family | Size | Spacing | Margins | First-Line Indent | Scene Break | Best For |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Standard Submission** | Times New Roman | 12 pt | 2.0x (Double) | 1.0 inch | 0.50 inch | `#` | Shunn industry standard for literary agents and publisher submissions |
+| **Modern Manuscript** | Georgia | 11.5 pt | 1.35x | 1.0 inch | 0.35 inch | `* * *` | High-readability modern drafting and comfortable desktop reading |
+| **Classic Trade** | EB Garamond | 12 pt | 1.50x | 1.0 inch | 0.40 inch | `✦ ✦ ✦` | Elegant book typography feel in word processors |
+| **Custom** | *User choice* | *User* | *User* | *User* | *User* | *User* | Configured via GUI dialog or CLI |
+
+- **To Change Preset in GUI**: Click **"⚙️ DOCX Formatting Settings"** in Tab 2 to open the modal configuration dialog.
+- **To Change Preset in CLI**:
+  ```bash
+  # List available presets
+  arcanum config docx-presets
+
+  # Set active preset
+  arcanum config docx-preset standard-submission
+
+  # Rebuild DOCX files with new preset styling
+  arcanum docx build My-Novel
+  ```
+
+#### 6. Collaborative Workflows with Google Docs & Editors
+- **Working with Google Docs**: Upload `Draft-01_Manuscript.docx` to Google Drive, open with Google Docs, write or collaborate with beta readers, then download as `.docx` back into your manuscript folder and click **"Sync DOCX ↔ Markdown"**.
+- **Importing Standalone Word Files**: If an editor sends back an edited chapter `.docx`:
+  ```bash
+  arcanum docx import /path/to/Edited_Chapter.docx My-Novel --target-chapter 01_Chapter.md
+  ```
+
 ---
 
 ## 6. Typesetting & Book Publishing (Typst & Pandoc)
@@ -352,13 +428,20 @@ arcanum setup
 ```
 Or install the individual tool via your package manager (see `docs/guides/SOFTWARE_CATALOG.md`).
 
+#### Q: Can I write my entire novel in Microsoft Word or Google Docs?
+**A**: Yes! Ars Arcanum automatically maintains `.docx` files for every draft and chapter (`Draft-01_Manuscript.docx`, `01_Chapter.docx`). You can open and edit them in Microsoft Word (Desktop/365), Google Docs, or LibreOffice Writer. Whenever you want to pull your changes back into Markdown and Git, simply click **"🔄 Sync DOCX ↔ Markdown"** in Tab 2 or run `arcanum docx sync <manuscript>`.
+
 #### Q: How do I share a draft with my human editor for track changes?
-**A**: Open the chapter or compiled Markdown file in **LibreOffice Writer** (Tab 1 launcher), click **Edit -> Track Changes -> Record**, and save as `.docx` or `.odt`.
+**A**: Send them `Draft-01_Manuscript.docx` or an individual `Chapter.docx`. When they return the revised file with edits, save it in your manuscript folder and run `arcanum docx sync` (or use `arcanum docx import <path> <manuscript>`). You can then use **"📊 View Redline Changelog"** or `arcanum compare` to inspect all additions and deletions visually!
 
 #### Q: Can I open Ars Arcanum without using the desktop app?
 **A**: Yes! Ars Arcanum includes an intuitive command-line interface (`arcanum` or `ars-arcanum`):
 - `arcanum write [target]` (or `arcanum open`) — launch your writing canvas
+- `arcanum word [manuscript]` — launch active draft in Word / LibreOffice
+- `arcanum docx <build|sync|import|open> [ms]` — manage Word documents & sync
 - `arcanum new <manuscript|world|universe|volume> <name>` — scaffold any project type
+- `arcanum draft <manuscript> [draft_name]` — fork a discrete revision draft
+- `arcanum compare <ms> <draft_new> <draft_old>` — visual redline draft comparator
 - `arcanum save [target] -m "Finished Act 1"` (or `arcanum snapshot`) — record a Git version
 - `arcanum publish [manuscript] [--format book|submission|all]` (or `arcanum export`) — compile PDF, EPUB, DOCX
 - `arcanum words [manuscript]` (or `arcanum count`, `arcanum report`) — view live word counts
@@ -367,6 +450,7 @@ Or install the individual tool via your package manager (see `docs/guides/SOFTWA
 - `arcanum continuity -w <world> -m <ms>` — check narrative trait consistency
 - `arcanum cache <scan|wordcounts|clear> [path]` — manage fast performance index
 - `arcanum backup <target>` / `arcanum restore <archive>` — disaster-recovery backups
+- `arcanum config <backup-dest|docx-preset|docx-presets|docx-config>` — manage settings
 
 #### Q: Where are my exported books saved?
 **A**: In your manuscript project folder under `Exports/` (e.g. `~/Manuscripts/Solaris-Rising/Exports/Solaris-Rising_Book-01.pdf`).

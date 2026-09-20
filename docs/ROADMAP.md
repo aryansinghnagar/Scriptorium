@@ -26,7 +26,7 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 
 ---
 
-## 4. Master Milestone Roadmap (M0–M15)
+## 4. Master Milestone Roadmap (M0–M19)
 
 ### M0: Governance & Architecture Freeze
 - [x] Security vulnerability disclosure policy (`SECURITY.md`).
@@ -109,29 +109,52 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] Dedicated `init_manuscript.sh` with `manuscript.yaml` manifest.
 - [x] Centralized guides in `docs/guides/` and consolidated architecture docs in `docs/ARCHITECTURE.md` and `docs/ROADMAP.md`.
 
+### M16: Sovereign Privacy, Asset Provenance & Unified Rebranding
+- [x] Full unified project rebranding to *Ars Arcanum* across CLI, scripts, desktop launchers, Debian packaging, and documentation.
+- [x] Creation of `PRIVACY.md` detailing 100% offline local-first privacy, zero telemetry, and complete data sovereignty.
+- [x] Cataloging all open-source & Creative Commons assets in `REFERENCES.md` with explicit creator attribution and zero-AI guarantee.
+
+### M17: Intuitive Action-Oriented CLI & Fast Performance Cache
+- [x] Action-first intuitive CLI design (`arcanum write`, `arcanum new`, `arcanum draft`, `arcanum save`, `arcanum publish`, `arcanum words`, `arcanum check`).
+- [x] High-throughput mtime-keyed caching engine (`scripts/lib/cache.py`, `arcanum cache`) for sub-second wordcount and vault diagnostics.
+- [x] Offline local-first semantic continuity analyzer (`scripts/lib/continuity.py`, `arcanum continuity`) for character trait and physical contradiction detection.
+
+### M18: Multi-Draft Management, Visual Redline Comparator & Dual-Target Secure Backups
+- [x] Discrete multi-draft versioning (`scripts/init_draft.sh`, `arcanum draft <ms> [draft_name]`) with automated Git milestone tagging.
+- [x] Accessible, WCAG-compliant visual redline diffing (`scripts/lib/manuscript_diff.py`, `scripts/compare_drafts.sh`, `arcanum compare`) with soft pastel highlight palette, collapsible chapter sidebars, word delta pills, terminal changelog mode, and LibreOffice Writer bridge.
+- [x] Dual-target backup replication to secondary external/USB locations with SHA-256 verification (`scripts/lib/config.py`, `scripts/backup_world.sh`, `arcanum backup-dest`).
+- [x] Integration of draft revisions, visual comparator, and secure backup picker into GTK 3 desktop UI.
+
+### M19: Standard DOCX Integration, Bidirectional Word Processor Sync & Formatting Presets
+- [x] Zero-dependency OpenXML engine (`scripts/lib/docx_sync.py`) generating native `.docx` files compatible with Microsoft Word (365 / Desktop), Google Docs, and LibreOffice Writer.
+- [x] Dual-synchronized manuscript model: auto-generates consolidated draft documents (`Draft-01_Manuscript.docx`) and chapter files (`01_Chapter.docx`) on manuscript scaffolding and draft forking.
+- [x] Distraction-free prose generation with scene tag scrubbing (`@pov:`, `@location:`, etc.) and safe metadata restoration during bidirectional sync.
+- [x] Configurable global typography presets (`Standard Submission` / Shunn, `Modern Manuscript`, `Classic Trade`, `Custom`) in `scripts/lib/config.py` and GTK modal dialog.
+- [x] CLI and GUI integration (`arcanum docx <build|sync|import|open>`, `arcanum word`, Control Center Tab 2 toolbar).
+- [x] Automated unit and end-to-end regression tests (`tests/test_docx_sync.py`, `tests/test_docx_sync.sh`, `scripts/verify.sh`).
+
 ---
 
 ## 5. Real-Time Operational Status & Momentum Queues
 
 ### Operational State
-- **Active Status**: Production-Ready / All 15 Milestones Complete & Verified (Grade A).
-- **Verification**: 100% Pass Rate across all 5 test harnesses (`scripts/verify.sh`, `tests/test_audit_fixes.sh`, `tests/test_deep_audit.sh`, `tests/test_concordance_edge_cases.sh`, `tests/test_audit_claude_improvements.sh`).
-- **Code Quality**: Zero ShellCheck warnings, zero Python syntax errors, valid XML/JSON schemas.
+- **Active Status**: Production-Ready / All 19 Milestones Complete & Verified (Grade A).
+- **Verification**: 100% Pass Rate across all test harnesses (`scripts/verify.sh`, `tests/test_audit_fixes.sh`, `tests/test_deep_audit.sh`, `tests/test_concordance_edge_cases.sh`, `tests/test_audit_claude_improvements.sh`, `tests/test_performance_cache.sh`, `tests/test_continuity_engine.sh`, `tests/test_drafts_and_diff.py`, `tests/test_drafts_and_diff.sh`, `tests/test_docx_sync.py`, `tests/test_docx_sync.sh`).
+- **Code Quality**: Zero ShellCheck warnings, zero Python syntax errors, valid XML/JSON schemas, pre-compiled regex performance optimizations.
 
 ### Momentum Queues
 
 #### `now` (Immediate Focus)
-- [x] Modernize and synchronize all repository documentation, C4 architecture diagrams, and complete ADR-001 through ADR-023 catalog.
+- [x] Modernize and synchronize all repository documentation, C4 architecture diagrams, and complete ADR-001 through ADR-026 catalog.
 - [x] Pass all automated test suites and quality gates.
 
 #### `next` (Ready to Execute)
-- [ ] Implement native `.deb` and Flatpak packaging.
+- [ ] Build and verify native `.deb` package and Flatpak manifest (`org.arsarcanum.ArsArcanum.yaml`).
 - [ ] Physical machine deployment and first-flight testing on Linux Mint 22 (XFCE) / Debian 13 (XFCE).
 
 #### `improve` (Post-GA Enhancements)
-- [ ] Implement mtime-based live wordcount caching in `scripts/arcanum_app.py` for massive omnibus manuscripts.
-- [ ] Add optional local semantic continuity checking.
 - [ ] Port Desktop Control Center to GTK 4 / Libadwaita.
+- [ ] Add EPUB visual preview bridge in GTK 3 Control Center.
 
 #### `recurring` (Continuous Health)
 - [ ] Run `bash scripts/verify.sh` on every change and pull request.

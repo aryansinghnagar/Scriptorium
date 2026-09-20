@@ -525,6 +525,10 @@ bash tests/test_drafts_and_diff.sh > "${TMP_VERIFY}/drafts_diff_test.log" 2>&1 \
     || { echo "  FAIL test_drafts_and_diff.sh:"; tail -n 5 "${TMP_VERIFY}/drafts_diff_test.log"; exit 1; }
 echo "  OK draft versioning, redline diff comparison & dual-target backup tests"
 
+bash tests/test_docx_sync.sh > "${TMP_VERIFY}/docx_sync_test.log" 2>&1 \
+    || { echo "  FAIL test_docx_sync.sh:"; tail -n 5 "${TMP_VERIFY}/docx_sync_test.log"; exit 1; }
+echo "  OK docx synchronization & word processor integration tests"
+
 # 6m. Dry-run simulation tests
 bash scripts/setup_arcanum.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \
     || { echo "  FAIL setup_arcanum --dry-run:"; tail -n 5 "${TMP_VERIFY}/setup_dryrun.log"; exit 1; }
@@ -540,6 +544,7 @@ bash scripts/arcanum world --list >/dev/null
 bash scripts/arcanum manuscript --list >/dev/null
 bash scripts/arcanum draft --help >/dev/null
 bash scripts/arcanum compare --help >/dev/null
+bash scripts/arcanum docx --help >/dev/null
 bash scripts/arcanum add-volume --help >/dev/null
 bash scripts/arcanum concordance --help >/dev/null
 bash scripts/arcanum export --help >/dev/null

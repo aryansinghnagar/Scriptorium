@@ -291,7 +291,12 @@ if command -v git &>/dev/null; then
     )
 fi
 
-MSG="Draft '${NEW_DRAFT_NAME}' successfully initialized for '${MS_NAME}'!\n\nVolume: ${BOOK_VOLUME_CLI}\nPath: ${NEW_DRAFT_DIR}\nActive Draft: Set to '${NEW_DRAFT_NAME}' in manifest."
+# 8. Build and synchronize DOCX files for new draft
+if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/lib/docx_sync.py" ]; then
+    python3 "${SCRIPT_DIR}/lib/docx_sync.py" build "${MANUSCRIPT_DIR}" --draft "${NEW_DRAFT_NAME}" 2>/dev/null || true
+fi
+
+MSG="Draft '${NEW_DRAFT_NAME}' successfully initialized for '${MS_NAME}'!\n\nVolume: ${BOOK_VOLUME_CLI}\nPath: ${NEW_DRAFT_DIR}\nActive Draft: Set to '${NEW_DRAFT_NAME}' in manifest.\nWord Processor DOCX: Synced in ${NEW_DRAFT_DIR}/${NEW_DRAFT_NAME}_Manuscript.docx"
 
 echo -e "\n[✓] ${MSG}\n"
 

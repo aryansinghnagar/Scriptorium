@@ -45,6 +45,7 @@ Options:
   -t, --title TITLE        Book title (default: world manifest or directory name)
   -a, --author NAME        Author name (default: world manifest or "Author Name")
   -b, --book VOLUME        Book volume to export (e.g., Book-01, Book-02, or "all")
+  -d, --draft DRAFT        Draft version to export (e.g., Draft-01, Draft-02; default: active or latest)
   -s, --paper-size SIZE    Paper trim size (us-trade, trade, pocket; default: us-trade)
   -f, --format FORMAT      Output format: book (PDF+EPUB), submission (DOCX), all (default: book)
   --submission, --docx     Shortcut for --format submission
@@ -64,6 +65,7 @@ USAGE
 BOOK_TITLE_CLI=""
 AUTHOR_NAME_CLI=""
 BOOK_VOLUME_CLI=""
+DRAFT_CLI=""
 PAPER_SIZE_CLI=""
 EXPORT_FORMAT_CLI="book"
 POSITIONAL=()
@@ -78,6 +80,9 @@ while [ $# -gt 0 ]; do
         -b|--book)
             [ $# -ge 2 ] || { echo "Error: --book requires a value." >&2; exit 2; }
             BOOK_VOLUME_CLI="$2"; shift 2 ;;
+        -d|--draft)
+            [ $# -ge 2 ] || { echo "Error: --draft requires a value." >&2; exit 2; }
+            DRAFT_CLI="$2"; shift 2 ;;
         -s|--paper-size)
             [ $# -ge 2 ] || { echo "Error: --paper-size requires a value." >&2; exit 2; }
             PAPER_SIZE_CLI="$2"; shift 2 ;;
@@ -150,6 +155,7 @@ AUTHOR_NAME="${AUTHOR_NAME_CLI:-}"
 MANIFEST="${TARGET_DIR}/manuscript.yaml"
 [ -f "${MANIFEST}" ] || MANIFEST="${TARGET_DIR}/arcanum.yaml"
 [ -f "${MANIFEST}" ] || MANIFEST="${TARGET_DIR}/scriptorium.yaml"
+ACTIVE_DRAFT_CONFIG=""
 if [ -f "${MANIFEST}" ]; then
     if [ -z "${BOOK_TITLE}" ]; then
         BOOK_TITLE=$(sed -n -E 's/^title:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -157,6 +163,7 @@ if [ -f "${MANIFEST}" ]; then
     if [ -z "${AUTHOR_NAME}" ]; then
         AUTHOR_NAME=$(sed -n -E 's/^author:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     fi
+    ACTIVE_DRAFT_CONFIG=$(sed -n -E 's/^active_draft:[[:space:]]*"?([^"#]+)"?[[:space:]]*(#.*)?$/\1/p' "${MANIFEST}" | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
 fi
 
 if has_gui && { [ -z "${BOOK_TITLE}" ] || [ -z "${AUTHOR_NAME}" ]; }; then
@@ -252,21 +259,68 @@ strip_nw_tags() {
     sed -E '/^@[A-Za-z0-9_-]+:/d; /^%/d' "$1"
 }
 
+# Resolve which directory within a book volume contains the active or desired draft
+resolve_volume_content_dir() {
+    local vdir="$1"
+    local req_draft="${DRAFT_CLI:-}"
+    
+    local drafts=()
+    while IFS= read -r -d '' d; do
+        drafts+=("$(basename "$d")")
+    done < <(find "$vdir" -mindepth 1 -maxdepth 1 -type d -name "Draft-*" -print0 2>/dev/null | sort -zV)
+
+    if [ ${#drafts[@]} -eq 0 ]; then
+        printf '%s' "$vdir"
+        return
+    fi
+
+    if [ -n "$req_draft" ]; then
+        if [ -d "$vdir/$req_draft" ]; then
+            printf '%s' "$vdir/$req_draft"
+            return
+        else
+            echo "[!] Warning: Draft '${req_draft}' not found in $(basename "$vdir"), falling back to active/latest draft." >&2
+        fi
+    fi
+
+    if [ -n "${ACTIVE_DRAFT_CONFIG:-}" ] && [ -d "$vdir/${ACTIVE_DRAFT_CONFIG}" ]; then
+        printf '%s' "$vdir/${ACTIVE_DRAFT_CONFIG}"
+        return
+    fi
+
+    local latest_idx=$((${#drafts[@]} - 1))
+    local latest_draft="${drafts[$latest_idx]}"
+    printf '%s' "$vdir/$latest_draft"
+}
+
 if [ "${SELECTED_VOLUME}" = "all" ]; then
-    find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" \
-        -path "*/Book-*/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
-        echo "" >> "${COMBINED_MD}"
-        strip_nw_tags "${file}" >> "${COMBINED_MD}"
-        echo -e "\n" >> "${COMBINED_MD}"
-    done
+    if [ ${#AVAILABLE_BOOKS[@]} -gt 0 ]; then
+        for bvol in "${AVAILABLE_BOOKS[@]}"; do
+            bpath="${MANUSCRIPT_DIR}/${bvol}"
+            cpath="$(resolve_volume_content_dir "${bpath}")"
+            find "${cpath}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
+                echo "" >> "${COMBINED_MD}"
+                strip_nw_tags "${file}" >> "${COMBINED_MD}"
+                echo -e "\n" >> "${COMBINED_MD}"
+            done
+        done
+    else
+        find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
+            echo "" >> "${COMBINED_MD}"
+            strip_nw_tags "${file}" >> "${COMBINED_MD}"
+            echo -e "\n" >> "${COMBINED_MD}"
+        done
+    fi
 elif [ "${SELECTED_VOLUME}" != "single" ] && [ -d "${MANUSCRIPT_DIR}/${SELECTED_VOLUME}" ]; then
-    find "${MANUSCRIPT_DIR}/${SELECTED_VOLUME}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
+    cpath="$(resolve_volume_content_dir "${MANUSCRIPT_DIR}/${SELECTED_VOLUME}")"
+    find "${cpath}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
         echo "" >> "${COMBINED_MD}"
         strip_nw_tags "${file}" >> "${COMBINED_MD}"
         echo -e "\n" >> "${COMBINED_MD}"
     done
 elif [ -d "${MANUSCRIPT_DIR}" ]; then
-    find "${MANUSCRIPT_DIR}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
+    cpath="$(resolve_volume_content_dir "${MANUSCRIPT_DIR}")"
+    find "${cpath}" -type f -name "*.md" ! -path "*/Outlines/*" -print0 | sort -zV | while IFS= read -r -d '' file; do
         echo "" >> "${COMBINED_MD}"
         strip_nw_tags "${file}" >> "${COMBINED_MD}"
         echo -e "\n" >> "${COMBINED_MD}"
@@ -486,9 +540,10 @@ if [ "${BUILD_EPUB}" -eq 1 ]; then
     fi
 fi
 
-# 8. Compile Standard Manuscript Submission Format (.docx) with Pandoc
+# 8. Compile Standard Manuscript Submission Format (.docx) with Pandoc / native engine
 if [ "${BUILD_DOCX}" -eq 1 ]; then
-    echo "Generating Standard Manuscript Submission document (.docx) with Pandoc..."
+    echo "Generating Standard Manuscript Submission document (.docx)..."
+    DOCX_COMPILED=0
     if command -v pandoc &> /dev/null; then
         PANDOC_DOCX_ARGS=(
             -f markdown-citations+smart
@@ -503,19 +558,33 @@ if [ "${BUILD_DOCX}" -eq 1 ]; then
         if pandoc "${PANDOC_DOCX_ARGS[@]}" 2>"${TEMP_WORK_DIR}/pandoc_docx_err.log"; then
             if [ -s "${DOCX_OUTPUT}" ]; then
                 echo "[✓] Submission manuscript generated at: ${DOCX_OUTPUT}"
-            else
-                echo "[!] Pandoc completed but DOCX artifact is empty (0 bytes)." >&2
-                EXIT_STATUS=1
+                DOCX_COMPILED=1
             fi
-        else
-            echo "[!] Pandoc DOCX export failed." >&2
-            if [ -s "${TEMP_WORK_DIR}/pandoc_docx_err.log" ]; then
-                cat "${TEMP_WORK_DIR}/pandoc_docx_err.log" >&2
-            fi
-            EXIT_STATUS=1
         fi
-    else
-        echo "[!] Pandoc not found. Skipping DOCX generation." >&2
+    fi
+
+    # Native Python OpenXML builder fallback if pandoc is missing or didn't run
+    if [ "${DOCX_COMPILED}" -eq 0 ] && command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/lib/docx_sync.py" ]; then
+        if python3 -c "
+from pathlib import Path
+import sys
+sys.path.insert(0, '${SCRIPT_DIR}/lib')
+from docx_sync import parse_markdown_to_paragraphs, build_docx_package, get_docx_config
+
+md_text = Path('${COMBINED_MD}').read_text(encoding='utf-8')
+paragraphs = parse_markdown_to_paragraphs(md_text)
+config = get_docx_config()
+build_docx_package(Path('${DOCX_OUTPUT}'), paragraphs, config, title='${BOOK_TITLE}', author='${AUTHOR_NAME}', is_full_manuscript=True)
+" 2>/dev/null; then
+            if [ -s "${DOCX_OUTPUT}" ]; then
+                echo "[✓] Submission manuscript generated with native engine at: ${DOCX_OUTPUT}"
+                DOCX_COMPILED=1
+            fi
+        fi
+    fi
+
+    if [ "${DOCX_COMPILED}" -eq 0 ]; then
+        echo "[!] DOCX export failed or generator missing." >&2
         EXIT_STATUS=1
     fi
 fi

@@ -37,6 +37,8 @@ Usage:
 
 ✍️  Core Authoring Workflow:
   write [TARGET]               Open writing workspace in novelWriter or Obsidian (alias: open)
+  word [MS]                    Open manuscript in Microsoft Word / LibreOffice (alias: writer)
+  docx <build|sync|import|open> Manage Word .docx manuscript synchronization
   new <type> <NAME> [opts]     Scaffold new project (type: manuscript | draft | world | universe | volume)
   draft <MS> [DRAFT_NAME]      Fork next manuscript draft version (alias: new draft, init-draft)
   compare <MS> [D_NEW] [D_OLD] Visual Redline changelog comparison between drafts (alias: diff, redline)
@@ -197,6 +199,12 @@ case "${COMMAND}" in
     # --- Manuscripts & Drafting ---
     manuscript|init-manuscript|novel)
         exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
+        ;;
+    docx|docx-sync|sync-docx)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/docx_sync.py" "$@"
+        ;;
+    word|writer|word-processor)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/docx_sync.py" open "$@"
         ;;
     draft|drafts|init-draft|new-draft|revision)
         exec bash "${PROJECT_ROOT}/scripts/init_draft.sh" "$@"

@@ -47,6 +47,9 @@ TAG_REGEXES = {
 
 WIKILINK_REGEX = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
 FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
+FENCED_CODE_REGEX = re.compile(r"```.*?```", re.DOTALL)
+WORD_REGEX = re.compile(r"\b\w+\b", re.UNICODE)
+NW_TAG_LINE_REGEX = re.compile(r"^@[A-Za-z0-9_-]+:")
 
 
 def get_cache_path(project_dir: str) -> Path:
@@ -99,19 +102,19 @@ def save_cache(project_dir: str, cache_data: dict) -> bool:
 def count_words(text: str) -> int:
     """ANA-01 canonical word count. All consumers must use this."""
     clean = FRONTMATTER_REGEX.sub("", text)
-    clean = re.sub(r"```.*?```", "", clean, flags=re.DOTALL)
+    clean = FENCED_CODE_REGEX.sub("", clean)
     # Drop scene-metadata and Typst comment lines (not prose).
     lines = []
     for ln in clean.splitlines():
         s = ln.strip()
         if not s:
             continue
-        if s.startswith("@") and re.match(r"^@[A-Za-z0-9_-]+:", s):
+        if s.startswith("@") and NW_TAG_LINE_REGEX.match(s):
             continue
         if s.startswith("%"):
             continue
         lines.append(ln)
-    return len(re.findall(r"\b\w+\b", "\n".join(lines), flags=re.UNICODE))
+    return len(WORD_REGEX.findall("\n".join(lines)))
 
 
 def parse_frontmatter(content: str) -> dict:

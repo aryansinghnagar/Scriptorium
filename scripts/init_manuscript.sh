@@ -292,6 +292,11 @@ mkdir -p "${MANUSCRIPTS_BASE}"
 mv "${STAGING_DIR}" "${TARGET_DIR}"
 SUCCESS=1
 
+# 4b. Initialize standard DOCX files for MS Word / Google Docs / LibreOffice
+if command -v python3 &>/dev/null && [ -f "${SCRIPT_DIR}/lib/docx_sync.py" ]; then
+    python3 "${SCRIPT_DIR}/lib/docx_sync.py" build "${TARGET_DIR}" 2>/dev/null || true
+fi
+
 # 5. Notify completion (REL-04: honest Git status)
 if [ "${GIT_HISTORY}" = "ok" ]; then
     GIT_LINE="• Discrete Git version control initialized!"
@@ -300,7 +305,7 @@ elif [ "${GIT_HISTORY}" = "missing" ]; then
 else
     GIT_LINE="• Created WITHOUT initial commit history (Git commit failed — repair with: git -C '${TARGET_DIR}/Book-01' commit -m 'Initial commit')."
 fi
-MSG="Manuscript Project '${MANUSCRIPT_NAME}' successfully created!\n\nLocation:\n${TARGET_DIR}\n\n• Open novelWriter -> Open project in '${MANUSCRIPT_NAME}/nwProject.nwx'\n• Open FocusWriter / markdown editor in '${MANUSCRIPT_NAME}/Book-01'\n• Linked World Lore: '${WORLD_NAME:-None}' [Universe: '${UNIVERSE_NAME:-None}']\n${GIT_LINE}"
+MSG="Manuscript Project '${MANUSCRIPT_NAME}' successfully created!\n\nLocation:\n${TARGET_DIR}\n\n• Open novelWriter -> Open project in '${MANUSCRIPT_NAME}/nwProject.nwx'\n• Open FocusWriter / markdown editor in '${MANUSCRIPT_NAME}/Book-01'\n• Open in MS Word / Google Docs / LibreOffice -> '${MANUSCRIPT_NAME}/Book-01/Draft-01_Manuscript.docx'\n• Linked World Lore: '${WORLD_NAME:-None}' [Universe: '${UNIVERSE_NAME:-None}']\n${GIT_LINE}"
 
 if has_gui; then
     zenity --info --title="Manuscript Created Successfully!" --text="${MSG}" --width=480

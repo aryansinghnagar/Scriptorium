@@ -13,10 +13,15 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 
 | Layer | Technology | Evidence (File & Line) |
 | :--- | :--- | :--- |
-| **Desktop Application GUI** | Python 3 + PyGObject (`Gtk 3.0`, `GLib`, `Gdk`, `Pango`) | [`scripts/arcanum_app.py#L1-L35`](file:///scripts/arcanum_app.py#L1-L35) |
+| **Desktop Application GUI** | Python 3 + PyGObject (`Gtk 3.0`, `GLib`, `Gdk`, `Pango`) | [`scripts/arcanum_app.py#L1-L35`](file:///scripts/arcanum_app.py#L1-L35), [`scripts/lib/ui_gtk3.py#L1-L60`](file:///scripts/lib/ui_gtk3.py#L1-L60) |
 | **Fallback Graphical Dialogs** | Zenity (GTK dialog utility) | [`scripts/control_center.sh#L1-L30`](file:///scripts/control_center.sh#L1-L30), [`scripts/lib/worlds.sh#L40-L45`](file:///scripts/lib/worlds.sh#L40-L45) |
-| **CLI Dispatcher & Tooling** | POSIX Shell / Bash 4+ | [`scripts/arcanum#L1-L20`](file:///scripts/arcanum#L1-L20), [`scripts/setup_arcanum.sh#L1-L30`](file:///scripts/setup_arcanum.sh#L1-L30) |
+| **CLI Dispatcher & Tooling** | POSIX Shell / Bash 4+ | [`scripts/arcanum#L1-L40`](file:///scripts/arcanum#L1-L40), [`scripts/setup_arcanum.sh#L1-L30`](file:///scripts/setup_arcanum.sh#L1-L30) |
 | **Shared Discovery Engine** | Modular Shell Library (`scripts/lib/worlds.sh`) | [`scripts/lib/worlds.sh#L1-L45`](file:///scripts/lib/worlds.sh#L1-L45) |
+| **Fast Performance Cache** | mtime-keyed JSON/SQLite Cache Engine | [`scripts/lib/cache.py#L1-L50`](file:///scripts/lib/cache.py#L1-L50) |
+| **Semantic Continuity Engine** | Offline Attribute & Lore Consistency Validator | [`scripts/lib/continuity.py#L1-L50`](file:///scripts/lib/continuity.py#L1-L50) |
+| **Multi-Draft & Redline Comparator** | Discrete Draft Manager + Difflib Visual Redline Engine | [`scripts/init_draft.sh#L1-L40`](file:///scripts/init_draft.sh#L1-L40), [`scripts/lib/manuscript_diff.py#L1-L60`](file:///scripts/lib/manuscript_diff.py#L1-L60), [`scripts/compare_drafts.sh#L1-L40`](file:///scripts/compare_drafts.sh#L1-L40) |
+| **Configuration & Secure Replication** | JSON Configuration Engine + Dual-Target Backup Manager | [`scripts/lib/config.py#L1-L40`](file:///scripts/lib/config.py#L1-L40), [`scripts/backup_world.sh#L1-L60`](file:///scripts/backup_world.sh#L1-L60) |
+| **Word Processor & DOCX Engine** | Pure Python OpenXML Generator & Bidirectional Sync Engine | [`scripts/lib/docx_sync.py#L1-L60`](file:///scripts/lib/docx_sync.py#L1-L60) |
 | **Typesetting & PDF Engine** | Typst `0.13.0` pinned (musl static binary) | [`docs/COMPATIBILITY.md#L9-L21`](file:///docs/COMPATIBILITY.md#L9-L21), [`scripts/export_book.sh#L340-L420`](file:///scripts/export_book.sh#L340-L420) |
 | **Document AST Converter** | Pandoc (`3.1.x` / `2.19.x`) | [`scripts/export_book.sh#L190-L330`](file:///scripts/export_book.sh#L190-L330), [`docs/COMPATIBILITY.md#L9-L16`](file:///docs/COMPATIBILITY.md#L9-L16) |
 | **World Bible Vault** | Obsidian (`md.obsidian.Obsidian` via Flathub) | [`docs/COMPATIBILITY.md#L28-L32`](file:///docs/COMPATIBILITY.md#L28-L32), [`templates/world-bible/.obsidian/`](file:///templates/world-bible/.obsidian/community-plugins.json#L1-L15) |
@@ -27,8 +32,8 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 
 ### 1.3 Entry Points
 
-1. **Desktop GUI Application**: [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py#L1-L50) (invoked via `arcanum-control-center.desktop` or `python3 scripts/arcanum_app.py`). Provides a 5-tab authoring dashboard with live word counts, Visual Scene Metadata Inspector, 1-click publishing, and diagnostics.
-2. **Unified CLI Facade**: [`scripts/arcanum`](file:///scripts/arcanum#L1-L60) (executable dispatcher routing subcommands: `universe`, `world`, `manuscript`, `add-volume`, `export`, `snapshot`, `backup`, `restore`, `concordance`, `doctor`, `control-center`, `verify`).
+1. **Desktop GUI Application**: [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py#L1-L50) / [`scripts/lib/ui_gtk3.py`](file:///scripts/lib/ui_gtk3.py#L1-L60) (invoked via `arcanum-control-center.desktop` or `python3 scripts/arcanum_app.py`). Provides a 5-tab authoring dashboard with live word counts, Visual Scene Metadata Inspector, Word Processor toolbar, Draft Revisions & Redline Comparator, 1-click publishing, and diagnostics.
+2. **Unified CLI Facade**: [`scripts/arcanum`](file:///scripts/arcanum#L1-L60) (executable dispatcher routing subcommands: `write`, `new`, `draft`, `compare`, `save`, `publish`, `words`, `word`, `docx`, `docx-sync`, `config`, `universe`, `world`, `concordance`, `continuity`, `backup`, `backup-dest`, `restore`, `doctor`, `cache`, `gui`, `verify`).
 3. **Zenity Fallback GUI**: [`scripts/control_center.sh`](file:///scripts/control_center.sh#L1-L40) (lightweight dialog menu invoked when GTK 3 is not present).
 4. **Desktop Application Launchers**: [`launchers/*.desktop`](file:///launchers/arcanum-control-center.desktop#L1-L15) installed to `~/Desktop` and `~/.local/share/applications/`.
 5. **System Installer**: [`scripts/setup_arcanum.sh`](file:///scripts/setup_arcanum.sh#L1-L50) (provisions packages, fonts, Typst musl binary, and desktop shortcuts).
@@ -44,6 +49,11 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 | `bash tests/test_deep_audit.sh` | Deep integration suite for schemas, Dataview DQL, and CLI | [`tests/test_deep_audit.sh#L1-L125`](file:///tests/test_deep_audit.sh#L1-L125) | Executed in CI ([`.github/workflows/ci.yml#L50-L55`](file:///.github/workflows/ci.yml#L50-L55)) |
 | `bash tests/test_concordance_edge_cases.sh` | Edge-case tests for concordance generator & multi-era dates | [`tests/test_concordance_edge_cases.sh#L1-L200`](file:///tests/test_concordance_edge_cases.sh#L1-L200) | Executed in CI ([`.github/workflows/ci.yml#L50-L55`](file:///.github/workflows/ci.yml#L50-L55)) |
 | `bash tests/test_audit_claude_improvements.sh` | Obsidian Git, WLD-108 name drift, and submission format tests | [`tests/test_audit_claude_improvements.sh#L1-L120`](file:///tests/test_audit_claude_improvements.sh#L1-L120) | Executed in CI ([`.github/workflows/ci.yml#L50-L55`](file:///.github/workflows/ci.yml#L50-L55)) |
+| `bash tests/test_continuity_engine.sh` | Semantic continuity trait and contradiction detection tests | [`tests/test_continuity_engine.sh#L1-L150`](file:///tests/test_continuity_engine.sh#L1-L150) | Executed in `verify.sh` Stage 6j |
+| `bash tests/test_performance_cache.sh` | Fast performance cache and mtime invalidation tests | [`tests/test_performance_cache.sh#L1-L140`](file:///tests/test_performance_cache.sh#L1-L140) | Executed in `verify.sh` Stage 6j |
+| `bash tests/test_drafts_and_diff.sh` | Multi-draft lifecycle, visual redline diff, and dual backup tests | [`tests/test_drafts_and_diff.sh#L1-L130`](file:///tests/test_drafts_and_diff.sh#L1-L130) | Executed in `verify.sh` Stage 6k |
+| `bash tests/test_docx_sync.sh` | OpenXML DOCX generation and bidirectional sync tests | [`tests/test_docx_sync.sh#L1-L130`](file:///tests/test_docx_sync.sh#L1-L130) | Executed in `verify.sh` Stage 6l |
+| `python3 -m unittest discover tests` | Python unit test suite for diff, config, docx, and cache engines | [`tests/test_*.py`](file:///tests/) | Executed in `verify.sh` Stage 1 |
 | `shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/arcanum` | Shell static analysis and linting (zero warnings enforced) | [`.github/workflows/ci.yml#L28-L36`](file:///.github/workflows/ci.yml#L28-L36) | Executed in CI lint step |
 | `python3 -m py_compile scripts/arcanum_app.py` | Python bytecode syntax and compilation check | [`.github/workflows/ci.yml#L37-L40`](file:///.github/workflows/ci.yml#L37-L40), [`scripts/verify.sh#L27-L33`](file:///scripts/verify.sh#L27-L33) | Executed in CI & `verify.sh` Stage 1 |
 | `bash -n scripts/*.sh scripts/lib/*.sh scripts/arcanum` | Bash syntax validation | [`scripts/verify.sh#L18-L26`](file:///scripts/verify.sh#L18-L26) | Executed in `verify.sh` Stage 1 |
@@ -60,7 +70,7 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 │   └── guides/            → Topic-specific deep guides (Backups, Typography, Plugins, Catalog)
 ├── launchers/             → FreeDesktop .desktop launcher files for desktop integration
 ├── scripts/               → Ars Arcanum CLI facade, GTK 3 desktop application, workflow scripts
-│   └── lib/               → Modular helper libraries (worlds.sh for project discovery)
+│   └── lib/               → Modular libraries (worlds.sh, docx_sync.py, manuscript_diff.py, config.py, cache.py, continuity.py)
 ├── templates/             → Scaffolding templates for World Bibles, Manuscripts, and Typst
 │   ├── manuscript/        → 3-Act volume hierarchies, outlines, and novelWriter XML schemas
 │   ├── typst/             → Publication-grade Typst novel templates and sample previews
@@ -487,7 +497,31 @@ graph TD
   - Implement ISO 8601 calendar date parsing (`YYYY-MM-DD`, `YYYY-MM`, `YYYY/MM/DD`) in `world_doctor.sh` (`WLD-104`).
   - Index all manuscript markdown files and outlines into `ms_index` in Pass 3 of `world_doctor.sh` to resolve intra-manuscript references without false-positive `WLD-108` findings.
   - Reload snapshot history after Quick Snapshots and preserve YAML frontmatter during scene tag updates in `arcanum_app.py`.
-- **Consequences**: Strict fail-closed binary installation security, flawless multi-tier universe/world vault discovery, robust ISO 8601 and fantasy era chronological validation, accurate manuscript-to-lore diagnostics without false positives, and rock-solid frontmatter preservation.
+### ADR-024: Discrete Multi-Draft Architecture & Accessible Visual Redline Comparator
+- **Context**: Authors require discrete draft version tracking (`Draft-01`, `Draft-02`, `Draft-03`) across novel revisions, clean draft forking without losing historical scenes, and word-processor-style visual redline comparison showing prose additions and deletions across drafts.
+- **Decision**:
+  - Implement `scripts/init_draft.sh` for multi-draft version scaffolding and automated Git milestone tagging.
+  - Implement `scripts/lib/manuscript_diff.py` and `scripts/compare_drafts.sh` using Python's `difflib` with word-level tokenization. Generate standalone, accessible HTML redline reports (with soft pastel colors `#f8d7da` / `#d4edda` meeting WCAG contrast ratios, dark/light theme toggle, and collapsible chapter sidebars), terminal changelog mode, JSON metrics, and a LibreOffice Writer bridge.
+  - Integrate Draft Revisions and Redline Comparator directly into GTK 3 Desktop UI Tab 2.
+  - Update `scripts/export_book.sh` and `scripts/wordcount_report.sh` to seamlessly resolve active draft hierarchies.
+- **Consequences**: 100% offline local diffing, zero proprietary lock-in, accessible WCAG-compliant redline visualization, and intuitive multi-draft lifecycle management.
+
+### ADR-025: Dual-Target Secure External & USB Backup Replication
+- **Context**: Relying solely on internal disk backups poses severe disaster recovery risks; authors need automated dual-target replication to external secure drives (USB disks, secondary drives, network mounts) with persistent configuration.
+- **Decision**:
+  - Implement `scripts/lib/config.py` for managing author preferences in `~/.config/ars-arcanum/config.json`.
+  - Enhance `scripts/backup_world.sh` with dual-target replication: whenever a backup archive is created and SHA-256 verified in the primary backup directory, it is automatically replicated to the configured external destination if available (or warned gracefully if unmounted).
+  - Provide CLI commands (`arcanum backup-dest <get|set|clear>`) and GTK UI configuration picker.
+- **Consequences**: Automated 3-2-1 backup compliance, zero data loss risk on primary drive failure, and seamless plug-and-play USB external drive synchronization.
+
+### ADR-026: Dual-Synchronized DOCX Architecture, Bidirectional Word Processor Sync Engine & Configurable Manuscript Formatting Presets
+- **Context**: While plain Markdown is ideal for local version control, authors frequently collaborate with editors, beta readers, and publishers using Microsoft Word, Google Docs, and LibreOffice Writer, or prefer drafting directly in standard word processors.
+- **Decision**:
+  - Implement a hybrid, dual-synchronized storage model maintaining both consolidated full-draft `.docx` (`Draft-01_Manuscript.docx`) and individual chapter `.docx` files (`01_Chapter.docx`) alongside Markdown.
+  - Build a 100% offline, pure Python OpenXML generator and synchronization engine (`scripts/lib/docx_sync.py`) that generates standard Word documents compliant with Microsoft Word (365 / latest), Google Docs, and LibreOffice Writer.
+  - Implement configurable submission formatting presets in `scripts/lib/config.py` (`Standard Submission / Shunn`, `Modern Manuscript`, `Classic Trade`, and `Custom`) adjustable via CLI (`arcanum config docx-preset`) and the GTK 3 Control Center.
+  - Strip visible scene metadata tags (`@pov:`, `@location:`, etc.) from `.docx` body text to keep prose distraction-free while preserving tags during bidirectional synchronization back to Markdown.
+- **Consequences**: Seamless interoperability with standard word processors, zero proprietary lock-in, effortless collaboration with editors, and customizable submission formatting.
 
 ---
 
@@ -496,7 +530,10 @@ graph TD
 | Claim Area | Confidence Level | Evidence / Verification Method |
 | :--- | :--- | :--- |
 | **Directory Scaffolding & Git Lifecycle** | **High** | Verified through 7-stage test harness (`verify.sh`) Stage 6 & `tests/test_audit_fixes.sh` Test 1. |
-| **Exit Code Standardization (0, 1, 2, 3)** | **High** | Verified through `tests/test_audit_fixes.sh` Test 11 across all 15 scripts. |
+| **Exit Code Standardization (0, 1, 2, 3)** | **High** | Verified through `tests/test_audit_fixes.sh` Test 11 across all scripts. |
+| **Multi-Draft & Redline Comparator** | **High** | Verified through `tests/test_drafts_and_diff.py` (21 unit tests) and `tests/test_drafts_and_diff.sh`. |
+| **DOCX Sync & Word Processor Integration** | **High** | Verified through `tests/test_docx_sync.py` (5 unit tests) and `tests/test_docx_sync.sh`. |
+| **Dual-Target Secure Backup Replication** | **High** | Verified via real tarball replication, SHA-256 validation, and config test cases. |
 | **Typesetting & Pandoc Compilation Bridge** | **High** | Verified through Typst preview compilation and Pandoc AST testing in `export_book.sh`. |
 | **Multi-Era & ISO 8601 Chronological Parsing** | **High** | Verified through unit test matrix in `tests/test_concordance_edge_cases.sh` Test 2 (17 permutations). |
 | **Shared Discovery Library (`lib/worlds.sh`)** | **High** | Verified across depth-2, depth-3, and legacy root paths in `tests/test_audit_fixes.sh` Test 15. |
@@ -509,16 +546,21 @@ graph TD
 ## Part 8 — Local File Citations & Footnotes
 
 1. [`scripts/arcanum`](file:///scripts/arcanum) — Unified CLI dispatcher handling subcommand routing and argument parsing.
-2. [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py) — Native Python 3 / GTK 3 desktop application with 5-tab author workflow and Visual Scene Inspector.
+2. [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py) / [`scripts/lib/ui_gtk3.py`](file:///scripts/lib/ui_gtk3.py) — Native Python 3 / GTK 3 desktop application with 5-tab author workflow and Visual Scene Inspector.
 3. [`scripts/lib/worlds.sh`](file:///scripts/lib/worlds.sh) — Canonical shared project discovery and resolution library.
-4. [`scripts/setup_arcanum.sh`](file:///scripts/setup_arcanum.sh) — OS-gated system installer with dry-run and fail-closed SHA-256 binary verification.
-5. [`scripts/export_book.sh`](file:///scripts/export_book.sh) — Multi-format publication compiler (Typst PDF, Pandoc EPUB, submission DOCX).
-6. [`scripts/generate_concordance.sh`](file:///scripts/generate_concordance.sh) — Automated Dramatis Personae and Glossary back-matter generator.
-7. [`scripts/world_doctor.sh`](file:///scripts/world_doctor.sh) — Multi-era timeline validator, schema linter, and lore drift diagnostic engine.
-8. [`scripts/backup_world.sh`](file:///scripts/backup_world.sh) — Standalone verified archive backup creator with SHA-256 checksums.
-9. [`scripts/restore_world.sh`](file:///scripts/restore_world.sh) — Secure archive restoration engine with path traversal protections.
-10. [`scripts/verify.sh`](file:///scripts/verify.sh) — 7-stage quality and regression test harness.
-11. [`templates/typst/book_template.typ`](file:///templates/typst/book_template.typ) — Professional publication typography layout rules for trade books.
-12. [`templates/world-bible/`](file:///templates/world-bible/) — Obsidian World Bible templates and 9 Metadata Menu `fileClasses` schemas.
-13. [`templates/manuscript/`](file:///templates/manuscript/) — Standalone manuscript project hierarchy, outlines, and novelWriter XML schema.
-14. [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) — GitHub Actions continuous integration quality gate.
+4. [`scripts/lib/cache.py`](file:///scripts/lib/cache.py) — High-throughput mtime-keyed performance cache and canonical word counter.
+5. [`scripts/lib/continuity.py`](file:///scripts/lib/continuity.py) — Local-first, privacy-preserving narrative continuity and trait contradiction engine.
+6. [`scripts/lib/manuscript_diff.py`](file:///scripts/lib/manuscript_diff.py) & [`scripts/compare_drafts.sh`](file:///scripts/compare_drafts.sh) — Word-level draft diffing and WCAG-compliant visual redline comparator.
+7. [`scripts/lib/config.py`](file:///scripts/lib/config.py) — Author preferences, DOCX presets, and secondary backup destination configuration manager.
+8. [`scripts/lib/docx_sync.py`](file:///scripts/lib/docx_sync.py) — Bidirectional DOCX synchronization engine and OpenXML manuscript generator.
+9. [`scripts/setup_arcanum.sh`](file:///scripts/setup_arcanum.sh) — OS-gated system installer with dry-run and fail-closed SHA-256 binary verification.
+10. [`scripts/export_book.sh`](file:///scripts/export_book.sh) — Multi-format publication compiler (Typst PDF, Pandoc EPUB, submission DOCX) with draft-aware resolution.
+11. [`scripts/generate_concordance.sh`](file:///scripts/generate_concordance.sh) — Automated Dramatis Personae and Glossary back-matter generator.
+12. [`scripts/world_doctor.sh`](file:///scripts/world_doctor.sh) — Multi-era timeline validator, schema linter, and lore drift diagnostic engine.
+13. [`scripts/backup_world.sh`](file:///scripts/backup_world.sh) — Dual-target standalone verified archive backup creator with SHA-256 checksums.
+14. [`scripts/restore_world.sh`](file:///scripts/restore_world.sh) — Secure archive restoration engine with path traversal protections.
+15. [`scripts/verify.sh`](file:///scripts/verify.sh) — Canonical 7-stage quality and regression test harness.
+16. [`templates/typst/book_template.typ`](file:///templates/typst/book_template.typ) — Professional publication typography layout rules for trade books.
+17. [`templates/world-bible/`](file:///templates/world-bible/) — Obsidian World Bible templates and 9 Metadata Menu `fileClasses` schemas.
+18. [`templates/manuscript/`](file:///templates/manuscript/) — Standalone manuscript project hierarchy, outlines, and novelWriter XML schema.
+19. [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) — GitHub Actions continuous integration quality gate.

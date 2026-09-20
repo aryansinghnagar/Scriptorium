@@ -24,16 +24,22 @@ import subprocess
 from pathlib import Path
 from typing import List, Dict, Tuple, Any, Optional
 
+NW_TAG_REGEX = re.compile(r"^@[A-Za-z0-9_-]+:")
+TOKEN_REGEX = re.compile(r"\S+|\s+")
+WORD_REGEX = re.compile(r"\b\w+\b", re.UNICODE)
+STEM_CLEAN_REGEX = re.compile(r"^\d+_")
+_FM = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
+_CODEBLOCK_REGEX = re.compile(r"```.*?```", re.DOTALL)
+
 try:
     from cache import count_words
 except ImportError:
-    _FM = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
     def count_words(text: str) -> int:
         clean = _FM.sub("", text)
-        clean = re.sub(r"```.*?```", "", clean, flags=re.DOTALL)
+        clean = _CODEBLOCK_REGEX.sub("", clean)
         kept = [ln for ln in clean.splitlines()
-                if ln.strip() and not (ln.strip().startswith("@") and re.match(r"^@[A-Za-z0-9_-]+:", ln.strip())) and not ln.strip().startswith("%")]
-        return len(re.findall(r"\b\w+\b", "\n".join(kept), flags=re.UNICODE))
+                if ln.strip() and not (ln.strip().startswith("@") and NW_TAG_REGEX.match(ln.strip())) and not ln.strip().startswith("%")]
+        return len(WORD_REGEX.findall("\n".join(kept)))
 
 
 def strip_nw_metadata(text: str) -> str:
@@ -42,7 +48,7 @@ def strip_nw_metadata(text: str) -> str:
     filtered = []
     for line in lines:
         stripped = line.strip()
-        if stripped.startswith("@") and re.match(r"^@[A-Za-z0-9_-]+:", stripped):
+        if stripped.startswith("@") and NW_TAG_REGEX.match(stripped):
             continue
         if stripped.startswith("%"):
             continue
@@ -52,7 +58,7 @@ def strip_nw_metadata(text: str) -> str:
 
 def tokenize_words(text: str) -> List[str]:
     """Splits text into words, whitespace, and punctuation tokens preserving full structure."""
-    return re.findall(r"\S+|\s+", text)
+    return TOKEN_REGEX.findall(text)
 
 
 def compute_word_diff(tokens_a: List[str], tokens_b: List[str]) -> Tuple[List[Dict[str, Any]], int, int]:
@@ -72,16 +78,16 @@ def compute_word_diff(tokens_a: List[str], tokens_b: List[str]) -> Tuple[List[Di
         sub_b = "".join(tokens_b[j1:j2])
 
         if tag == "insert":
-            words = len(re.findall(r"\b\w+\b", sub_b, flags=re.UNICODE))
+            words = len(WORD_REGEX.findall(sub_b))
             added_words += words
             chunks.append({"tag": "insert", "text": sub_b})
         elif tag == "delete":
-            words = len(re.findall(r"\b\w+\b", sub_a, flags=re.UNICODE))
+            words = len(WORD_REGEX.findall(sub_a))
             deleted_words += words
             chunks.append({"tag": "delete", "text": sub_a})
         elif tag == "replace":
-            w_a = len(re.findall(r"\b\w+\b", sub_a, flags=re.UNICODE))
-            w_b = len(re.findall(r"\b\w+\b", sub_b, flags=re.UNICODE))
+            w_a = len(WORD_REGEX.findall(sub_a))
+            w_b = len(WORD_REGEX.findall(sub_b))
             deleted_words += w_a
             added_words += w_b
             chunks.append({"tag": "delete", "text": sub_a})
@@ -119,7 +125,7 @@ def extract_chapter_title(file_path: Path, content: str) -> str:
             return line[3:].strip()
     # Fallback to readable filename
     stem = file_path.stem
-    clean = re.sub(r"^\d+_", "", stem).replace("_", " ").replace("-", " ")
+    clean = STEM_CLEAN_REGEX.sub("", stem).replace("_", " ").replace("-", " ")
     return clean.title()
 
 

@@ -128,13 +128,28 @@ def extract_lore_profiles(world_dir: Path) -> dict:
 
 SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
-# CNT-01: possessive binding — "<Name>'s <trait>" attributes the trait to
-# <Name> only, even when other characters share the sentence.
-_POSSESSIVE_TMPL = r"\b{0}(?:'s|'|’s)\b"
+_WORD_BOUNDARY_CACHE: dict = {}
+_POSSESSIVE_CACHE: dict = {}
+
+
+def _get_word_boundary_regex(word: str) -> re.Pattern:
+    pat = _WORD_BOUNDARY_CACHE.get(word)
+    if pat is None:
+        pat = re.compile(r"\b" + re.escape(word) + r"\b", re.IGNORECASE)
+        _WORD_BOUNDARY_CACHE[word] = pat
+    return pat
+
+
+def _get_possessive_regex(word: str) -> re.Pattern:
+    pat = _POSSESSIVE_CACHE.get(word)
+    if pat is None:
+        pat = re.compile(r"\b" + re.escape(word) + r"(?:'s|'|’s)\b", re.IGNORECASE)
+        _POSSESSIVE_CACHE[word] = pat
+    return pat
 
 
 def _chars_mentioned(text: str, candidates: list) -> list:
-    return [c for c in candidates if re.search(r"\b" + re.escape(c) + r"\b", text, re.IGNORECASE)]
+    return [c for c in candidates if _get_word_boundary_regex(c).search(text)]
 
 
 def attribute_sentence_trait(sentence: str, scene_chars: list, profiles: dict) -> list:
@@ -163,7 +178,7 @@ def attribute_sentence_trait(sentence: str, scene_chars: list, profiles: dict) -
 
     # 1. Possessive binding wins: "Alice's green eyes" -> Alice only.
     for c in canon:
-        if re.search(_POSSESSIVE_TMPL.format(re.escape(c)), sentence, re.IGNORECASE):
+        if _get_possessive_regex(c).search(sentence):
             return [(c, "high")]
 
     # 2. Exactly one known character in the sentence -> that character.
@@ -217,7 +232,7 @@ def scan_manuscript_scenes(manuscript_dir: Path, profiles: dict) -> list:
             if not scene_chars:
                 full_text = "\n".join(lines)
                 for entity in profiles:
-                    if re.search(r"\b" + re.escape(entity) + r"\b", full_text):
+                    if _get_word_boundary_regex(entity).search(full_text):
                         scene_chars.append(entity)
 
             # Analyze text for trait assertions (sentence-level, CNT-01)

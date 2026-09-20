@@ -60,6 +60,8 @@ bash tests/test_concordance_edge_cases.sh
 bash tests/test_audit_claude_improvements.sh
 bash tests/test_continuity_engine.sh
 bash tests/test_performance_cache.sh
+bash tests/test_drafts_and_diff.sh
+bash tests/test_docx_sync.sh
 python3 -m unittest discover tests
 ```
 

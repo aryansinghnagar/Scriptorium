@@ -21,14 +21,32 @@ from pathlib import Path
 logger = logging.getLogger("arcanum.ui_gtk3")
 
 try:
-    from lib.config import get_backup_dest, set_backup_dest, clear_backup_dest
+    from lib.config import (
+        get_backup_dest, set_backup_dest, clear_backup_dest,
+        get_docx_config, set_docx_preset, set_docx_option,
+        get_active_docx_preset_name, list_docx_presets
+    )
+    from lib.docx_sync import open_in_word_processor, sync_manuscript_docx, build_manuscript_docx
 except Exception:
     try:
-        from config import get_backup_dest, set_backup_dest, clear_backup_dest
+        from config import (
+            get_backup_dest, set_backup_dest, clear_backup_dest,
+            get_docx_config, set_docx_preset, set_docx_option,
+            get_active_docx_preset_name, list_docx_presets
+        )
+        from docx_sync import open_in_word_processor, sync_manuscript_docx, build_manuscript_docx
     except Exception:
         def get_backup_dest(): return ""
         def set_backup_dest(p): return True
         def clear_backup_dest(): return True
+        def get_docx_config(): return {}
+        def set_docx_preset(p): return True
+        def set_docx_option(k, v): return True
+        def get_active_docx_preset_name(): return "standard-submission"
+        def list_docx_presets(): return {}
+        def open_in_word_processor(p): return True
+        def sync_manuscript_docx(p, d=None): return {}
+        def build_manuscript_docx(p, d=None): return {}
 
 # Check GTK 3 availability
 try:
@@ -473,6 +491,28 @@ class ArcanumApp(Gtk.Window):
         diff_row.pack_start(btn_lo_diff, False, False, 0)
 
         rev_vbox.pack_start(diff_row, False, False, 0)
+
+        # Row 3: Word Processor & DOCX Synchronization
+        docx_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        docx_row.pack_start(Gtk.Label(label="<b>Word Processing:</b>", use_markup=True), False, False, 0)
+
+        btn_open_word = Gtk.Button(label="📝 Open in Word Processor")
+        btn_open_word.get_style_context().add_class("suggested-action")
+        btn_open_word.set_tooltip_text("Open active draft .docx in Microsoft Word, Google Docs, or LibreOffice")
+        btn_open_word.connect("clicked", self.on_open_word_processor_clicked)
+        docx_row.pack_start(btn_open_word, False, False, 0)
+
+        btn_sync_docx = Gtk.Button(label="🔄 Sync DOCX ↔ Markdown")
+        btn_sync_docx.set_tooltip_text("Perform bidirectional synchronization between .docx files and Markdown scenes")
+        btn_sync_docx.connect("clicked", self.on_sync_docx_clicked)
+        docx_row.pack_start(btn_sync_docx, False, False, 0)
+
+        btn_docx_settings = Gtk.Button(label="⚙️ DOCX Formatting...")
+        btn_docx_settings.set_tooltip_text("Customize manuscript typography, line spacing, margins, and submission presets")
+        btn_docx_settings.connect("clicked", self.on_docx_settings_clicked)
+        docx_row.pack_start(btn_docx_settings, False, False, 0)
+
+        rev_vbox.pack_start(docx_row, False, False, 0)
         box.pack_start(revisions_frame, False, False, 0)
 
         return scrolled
@@ -1852,6 +1892,177 @@ class ArcanumApp(Gtk.Window):
         clear_backup_dest()
         self.update_secure_dest_display()
         self.set_status("Secure backup destination cleared (local only).")
+
+    def on_open_word_processor_clicked(self, btn):
+        target = self.current_manuscript_path
+        if not target:
+            self.show_error("Please select an active manuscript first.")
+            return
+        vol = self.combo_draft_vol.get_active_id() or "Book-01"
+        draft = self.combo_draft_list.get_active_id()
+        mpath = Path(target)
+        draft_dir = mpath / "01-Manuscript" / vol / draft if (mpath / "01-Manuscript" / vol / draft).is_dir() else (mpath / vol / draft if (mpath / vol / draft).is_dir() else mpath)
+        
+        target_docx = None
+        if draft_dir.is_dir():
+            cons = list(draft_dir.glob("*_Manuscript.docx"))
+            if cons:
+                target_docx = cons[0]
+            else:
+                docxs = list(draft_dir.rglob("*.docx"))
+                if docxs:
+                    target_docx = docxs[0]
+                    
+        if not target_docx:
+            self.set_status("Compiling initial DOCX package...")
+            build_manuscript_docx(mpath, draft_name=draft)
+            if draft_dir.is_dir():
+                cons = list(draft_dir.glob("*_Manuscript.docx"))
+                if cons:
+                    target_docx = cons[0]
+                    
+        if target_docx and target_docx.is_file():
+            self.set_status(f"Opening {target_docx.name} in word processor...")
+            open_in_word_processor(target_docx)
+        else:
+            self.show_error("Could not find or generate .docx manuscript.")
+
+    def on_sync_docx_clicked(self, btn):
+        target = self.current_manuscript_path
+        if not target:
+            self.show_error("Please select an active manuscript first.")
+            return
+        draft = self.combo_draft_list.get_active_id()
+        self.set_status("Synchronizing DOCX and Markdown scenes...")
+        def _do_sync():
+            res = sync_manuscript_docx(Path(target), draft_name=draft)
+            def _done():
+                self.refresh_manuscript_analytics()
+                msg = f"DOCX Sync Complete: {len(res['md_to_docx'])} exported, {len(res['docx_to_md'])} imported."
+                self.set_status(msg)
+                dialog = Gtk.MessageDialog(
+                    transient_for=self, flags=0,
+                    message_type=Gtk.MessageType.INFO,
+                    buttons=Gtk.ButtonsType.OK,
+                    text="DOCX Synchronization Complete"
+                )
+                dialog.format_secondary_text(f"• Markdown -> DOCX updated: {len(res['md_to_docx'])}\n• DOCX -> Markdown imported: {len(res['docx_to_md'])}\n• Errors: {len(res['errors'])}")
+                dialog.run()
+                dialog.destroy()
+            GLib.idle_add(_done)
+        self._start_worker(_do_sync)
+
+    def on_docx_settings_clicked(self, btn):
+        dialog = Gtk.Dialog(title="DOCX Manuscript Formatting & Submission Presets", parent=self, flags=0)
+        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_APPLY, Gtk.ResponseType.APPLY)
+        dialog.set_default_size(520, 420)
+        box = dialog.get_content_area()
+        box.set_border_width(14)
+        box.set_spacing(10)
+
+        cfg = get_docx_config()
+        active_preset = get_active_docx_preset_name()
+        presets = list_docx_presets()
+
+        lbl_desc = Gtk.Label(label="<b>Configure standard Word (.docx) formatting for MS Word, Google Docs & Submission:</b>", use_markup=True)
+        lbl_desc.set_xalign(0)
+        box.pack_start(lbl_desc, False, False, 0)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(12)
+        grid.set_row_spacing(8)
+
+        # Preset Dropdown
+        grid.attach(Gtk.Label(label="Formatting Preset:", xalign=0), 0, 0, 1, 1)
+        combo_preset = Gtk.ComboBoxText()
+        for pid, pinfo in presets.items():
+            combo_preset.append(pid, pinfo["name"])
+        combo_preset.set_active_id(active_preset)
+        grid.attach(combo_preset, 1, 0, 1, 1)
+
+        # Font Family
+        grid.attach(Gtk.Label(label="Font Family:", xalign=0), 0, 1, 1, 1)
+        combo_font = Gtk.ComboBoxText()
+        for f in ["Times New Roman", "Georgia", "EB Garamond", "Libertinus Serif", "Courier Prime", "Arial"]:
+            combo_font.append(f, f)
+        combo_font.set_active_id(cfg.get("font_family", "Times New Roman"))
+        grid.attach(combo_font, 1, 1, 1, 1)
+
+        # Font Size
+        grid.attach(Gtk.Label(label="Font Size (pt):", xalign=0), 0, 2, 1, 1)
+        spin_sz = Gtk.SpinButton.new_with_range(9.0, 18.0, 0.5)
+        spin_sz.set_value(float(cfg.get("font_size_pt", 12.0)))
+        grid.attach(spin_sz, 1, 2, 1, 1)
+
+        # Line Spacing
+        grid.attach(Gtk.Label(label="Line Spacing:", xalign=0), 0, 3, 1, 1)
+        combo_ls = Gtk.ComboBoxText()
+        combo_ls.append("2.0", "2.0x (Double Spaced - Standard Submission)")
+        combo_ls.append("1.5", "1.5x (Classic Trade)")
+        combo_ls.append("1.35", "1.35x (Modern Editorial)")
+        combo_ls.append("1.0", "1.0x (Single Spaced)")
+        cur_ls = str(cfg.get("line_spacing", 2.0))
+        combo_ls.set_active_id(cur_ls if cur_ls in ("2.0", "1.5", "1.35", "1.0") else "2.0")
+        grid.attach(combo_ls, 1, 3, 1, 1)
+
+        # Margins
+        grid.attach(Gtk.Label(label="Margins (inches):", xalign=0), 0, 4, 1, 1)
+        spin_mg = Gtk.SpinButton.new_with_range(0.5, 2.0, 0.1)
+        spin_mg.set_value(float(cfg.get("margin_inches", 1.0)))
+        grid.attach(spin_mg, 1, 4, 1, 1)
+
+        # First Line Indent
+        grid.attach(Gtk.Label(label="Paragraph Indent (inches):", xalign=0), 0, 5, 1, 1)
+        spin_id = Gtk.SpinButton.new_with_range(0.0, 1.5, 0.05)
+        spin_id.set_value(float(cfg.get("first_line_indent_inches", 0.5)))
+        grid.attach(spin_id, 1, 5, 1, 1)
+
+        # Scene Break Symbol
+        grid.attach(Gtk.Label(label="Scene Break Symbol:", xalign=0), 0, 6, 1, 1)
+        entry_sb = Gtk.Entry()
+        entry_sb.set_text(str(cfg.get("scene_break_symbol", "#")))
+        grid.attach(entry_sb, 1, 6, 1, 1)
+
+        box.pack_start(grid, False, False, 0)
+
+        # Description Label
+        lbl_info = Gtk.Label()
+        lbl_info.set_line_wrap(True)
+        lbl_info.set_xalign(0)
+        def _update_info_label(c):
+            pid = c.get_active_id()
+            if pid in presets:
+                p = presets[pid]
+                lbl_info.set_markup(f"<i>{p['description']}</i>")
+                if pid != "custom":
+                    combo_font.set_active_id(p["font_family"])
+                    spin_sz.set_value(p["font_size_pt"])
+                    combo_ls.set_active_id(str(p["line_spacing"]))
+                    spin_mg.set_value(p["margin_inches"])
+                    spin_id.set_value(p["first_line_indent_inches"])
+                    entry_sb.set_text(p["scene_break_symbol"])
+        combo_preset.connect("changed", _update_info_label)
+        _update_info_label(combo_preset)
+        box.pack_start(lbl_info, False, False, 0)
+
+        dialog.show_all()
+        res = dialog.run()
+        if res == Gtk.ResponseType.APPLY:
+            chosen_preset = combo_preset.get_active_id()
+            if chosen_preset == "custom":
+                set_docx_option("font_family", combo_font.get_active_id() or "Times New Roman")
+                set_docx_option("font_size_pt", float(spin_sz.get_value()))
+                set_docx_option("line_spacing", float(combo_ls.get_active_id() or "2.0"))
+                set_docx_option("margin_inches", float(spin_mg.get_value()))
+                set_docx_option("first_line_indent_inches", float(spin_id.get_value()))
+                set_docx_option("scene_break_symbol", entry_sb.get_text().strip() or "#")
+            else:
+                set_docx_preset(chosen_preset)
+            self.set_status(f"DOCX formatting updated to preset: {chosen_preset}")
+            if self.current_manuscript_path:
+                draft = self.combo_draft_list.get_active_id()
+                build_manuscript_docx(Path(self.current_manuscript_path), draft_name=draft)
+        dialog.destroy()
 
     def show_error(self, message):
         dialog = Gtk.MessageDialog(

@@ -134,17 +134,24 @@ MS = os.environ["MANUSCRIPT_DIR"]
 MD = os.environ["MARKDOWN"] == "1"
 IS_JSON = os.environ["JSON_OUT"] == "1"
 
+STATUS_REGEX = re.compile(r"^@status:\s*(.+)$", re.MULTILINE | re.IGNORECASE)
+EXCLUDE_DIRS = {"Outlines", ".git", "node_modules", "target", "04-Publishing", "Exports", ".obsidian", ".trash", "trash"}
+
 rows = []  # (book, act, chapter, words, status)
 for root, dirs, files in os.walk(MS):
-    dirs[:] = sorted(d for d in dirs if d != "Outlines")
+    dirs[:] = sorted(d for d in dirs if not d.startswith(".") and d not in EXCLUDE_DIRS)
     for fname in sorted(files):
-        if not fname.endswith(".md"):
+        if not fname.endswith(".md") or fname.startswith("."):
             continue
         path = os.path.join(root, fname)
         rel = os.path.relpath(path, MS)
         parts = rel.split(os.sep)
         book = parts[0] if parts[0].startswith("Book-") else "(root)"
-        act = parts[1] if len(parts) >= 3 else "-"
+        if len(parts) >= 2 and parts[1].startswith("Draft-"):
+            draft = parts[1]
+            act = f"{draft}/{parts[2]}" if len(parts) >= 4 else draft
+        else:
+            act = parts[1] if len(parts) >= 3 else "-"
         stem = os.path.splitext(fname)[0]
         try:
             with open(path, "rb") as fh:
@@ -157,7 +164,7 @@ for root, dirs, files in os.walk(MS):
             data = data[:MAX_BYTES]
         text = data.decode("utf-8", "replace")
         words = canonical_count(text)
-        m = re.search(r"^@status:\s*(.+)$", text, re.M)
+        m = STATUS_REGEX.search(text)
         status = m.group(1).strip() if m else "Draft"
         rows.append((book, act, stem, words, status))
 
