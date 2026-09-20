@@ -10,18 +10,19 @@ Zero programming or terminal experience is required for daily writing. Everythin
 ## 📑 Table of Contents
 1. [The Ars Arcanum Philosophy & Architecture](#1-the-ars-arcanum-philosophy--architecture)
 2. [Quick Start: Your First 5 Minutes](#2-quick-start-your-first-5-minutes)
-3. [The Desktop Control Center Tour](#3-the-desktop-control-center-tour)
-   - [Tab 1: Cosmos & Projects](#tab-1-cosmos--projects)
-   - [Tab 2: Writing & Analytics](#tab-2-writing--analytics)
-   - [Tab 3: Publishing Studio](#tab-3-publishing-studio)
-   - [Tab 4: Vault Safety & Backups](#tab-4-vault-safety--backups)
-   - [Tab 5: Doctor Diagnostics](#tab-5-doctor-diagnostics)
+3. [The Desktop Control Center Tour (6 Studios)](#3-the-desktop-control-center-tour)
+   - [Studio 1: Cosmos & Worlds](#studio-1-cosmos--worlds)
+   - [Studio 2: Manuscripts & Drafting](#studio-2-manuscripts--drafting)
+   - [Studio 3: Speculative Fiction & Craft](#studio-3-speculative-fiction--craft)
+   - [Studio 4: Publishing & Typesetting](#studio-4-publishing--typesetting)
+   - [Studio 5: Vault Safety & Backups](#studio-5-vault-safety--backups)
+   - [Studio 6: Diagnostics & Doctor](#studio-6-diagnostics--doctor)
 4. [Worldbuilding in Obsidian (The 9 Core Lore Vaults)](#4-worldbuilding-in-obsidian-the-9-core-lore-vaults)
 5. [Drafting & Sprint Sessions](#5-drafting--sprint-sessions)
 6. [Typesetting & Book Publishing (Typst & Pandoc)](#6-typesetting--book-publishing-typst--pandoc)
 7. [Data Safety, Version History & The 3-2-1 Rule](#7-data-safety-version-history--the-3-2-1-rule)
 8. [Author's Quick Reference & Troubleshooting FAQ](#8-authors-quick-reference--troubleshooting-faq)
-9. [Speculative Fiction Authorial Workflow Suites](#9-speculative-fiction-authorial-workflow-suites)
+9. [Speculative Fiction Authorial Workflow Suites (Waves 1–12)](#9-speculative-fiction-authorial-workflow-suites)
    - [Wave 1: Astrophysics & Relativistic Spaceflight](#wave-1-astrophysics--relativistic-spaceflight)
    - [Wave 2: Hard Magic Systems & Arcane Constraint Matrix](#wave-2-hard-magic-systems--arcane-constraint-matrix)
    - [Wave 3: Dynastic Genealogies & Succession Lineage Graphs](#wave-3-dynastic-genealogies--succession-lineage-graphs)
@@ -34,6 +35,7 @@ Zero programming or terminal experience is required for daily writing. Everythin
    - [Wave 10: Planetary Climate, Orographic Biomes & Trophic Food-Webs](#wave-10-planetary-climate-orographic-biomes--trophic-food-webs)
    - [Wave 11: Earth-Eponym Scanner, Idiom De-Immersion & 6D Sensory Palette](#wave-11-earth-eponym-scanner-idiom-de-immersion--6d-sensory-palette)
    - [Wave 12: Inscriptions, In-World Ciphers & Prophecy Resolution](#wave-12-inscriptions-in-world-ciphers--prophecy-resolution)
+10. [Authorial Craft, Editorial Linters, Plotting & Publishing Tools](#10-authorial-craft-editorial-linters-plotting--publishing-tools)
 
 ---
 
@@ -910,6 +912,198 @@ arcanum cipher runes "Speak friend and enter" --alphabet futhark --svg rune_insc
 
 # Audit prophecy resolution and fulfillment lifecycle across world and manuscript
 arcanum prophecy Solaris-Prime Solaris-Rising
+```
+
+---
+
+## 10. Authorial Craft, Editorial Linters, Plotting & Publishing Tools
+
+Ars Arcanum includes a full suite of editorial linters, visual plotting matrix engines, publication pre-flight compliance checkers, interactive offline cartography, and auditory proofreaders.
+
+---
+
+### ✍️ Editorial Craft & Prose Stylistics
+
+#### 1. Dialogue Attribution & Mechanics Linter (`scripts/lib/stylistics.py`)
+Identifies common dialogue flaws before human editorial review:
+- **`DIA-101` (Said-Bookisms)**: Overly dramatic dialogue tags (*"he ejaculated"*, *"she chortled"*, *"he barked"*).
+- **`DIA-102` (Floating Dialogue)**: Consecutive dialogue lines without physical action beats or attributions.
+- **`DIA-103` (Adverb Overload)**: Weak dialogue tags modified by adverbs (*"she said furiously"*, *"he whispered softly"*).
+
+```bash
+# Audit dialogue mechanics across a manuscript
+arcanum audit dialogue Solaris-Rising
+```
+
+#### 2. Word Echo & Proximity Repetition Scanner (`scripts/lib/stylistics.py`)
+Scans sliding paragraph windows (1–10 paragraphs) for duplicate non-trivial root words to prevent subconscious vocabulary repetition.
+
+```bash
+# Scan for words repeated within 3 paragraphs
+arcanum audit echoes Solaris-Rising --window 3
+```
+
+#### 3. Character Voice Lexical Profiler (`scripts/lib/voice.py`)
+Extracts dialogue by character tag (`@char:`) and computes distinct lexical metrics:
+- Flesch-Kincaid & Coleman-Liau reading grade levels
+- Average sentence length & syllable complexity
+- Exclamation & question mark density
+- Unique vocabulary frequency & voice homogenization alerts (`VOI-101` / `VOI-102`)
+
+```bash
+# Analyze character voice distinctiveness
+arcanum audit voice Solaris-Rising
+```
+
+#### 4. Smart Typography & Punctuation Normalizer (`scripts/lib/typography_cleaner.py`)
+Batch normalizes straight quotes (`"` $\to$ `“`/`”`), double hyphens (`--` $\to$ `—`), ellipses (`...` $\to$ `…`), and inserts locale-aware non-breaking spaces before punctuation.
+
+```bash
+# Preview typographic changes safely
+arcanum polish typography Solaris-Rising --dry-run
+
+# Apply smart typography across manuscript
+arcanum polish typography Solaris-Rising
+```
+
+---
+
+### 📐 Narrative Plotting, Structure & Scene Ergonomics
+
+#### 1. Multi-Track Interactive Plot Grid (`scripts/lib/plot_matrix.py`)
+Generates a 2D interactive matrix mapping `@thread:` subplots across chapters and acts, displaying scene status pills and exporting standalone interactive HTML reports.
+
+```bash
+# Generate standalone interactive plot matrix HTML
+arcanum plot Solaris-Rising --html
+```
+
+#### 2. Story Paradigm Structure Enforcer (`scripts/lib/structure.py`)
+Validates whether manuscript plot points align with classic storytelling milestones:
+- **Supported Paradigms**: `save-the-cat` (15 beats), `heros-journey` (12 stages), `seven-point`, `story-circle`, `kishotenketsu`, `three-act-nine-block`.
+
+```bash
+# Check pacing alignment against Save the Cat beat sheet
+arcanum audit structure Solaris-Rising --template save-the-cat
+```
+
+#### 3. Scene Mechanics & MRU Analyzer (`scripts/lib/scene_mechanics.py`)
+Validates Dwight Swain / Jack Bickham Motivation-Reaction Units (Goal $\to$ Conflict $\to$ Disaster and Reaction $\to$ Dilemma $\to$ Decision).
+
+```bash
+# Audit scene turning points and character goal momentum
+arcanum audit scenes Solaris-Rising
+```
+
+#### 4. Procedural Ambient Focus Audio (`scripts/lib/ambient.py`)
+Generates distraction-free sound environments (Rain, Crackling Hearth, Library Hum, Cosmic Drone, Clockwork) with HTML5 WebAudio synthesis or offline WAV generation.
+
+```bash
+# Launch interactive browser ambient player
+arcanum ambient rain --html
+
+# Generate offline WAV audio file
+arcanum ambient hearth --wav hearth.wav --duration 300
+```
+
+---
+
+### 📚 Publishing Pre-Flight, Barcodes & Queries
+
+#### 1. Publication Pre-Flight Compliance Linter (`scripts/lib/preflight.py`)
+Validates print PDF and EPUB compliance: trim size dimensions (6x9, 5.5x8.5, 5x8), gutter margin ratios for target page count, unformatted straight quotes in prose, missing cover art, and metadata integrity.
+
+```bash
+# Run comprehensive pre-flight publication audit
+arcanum preflight Solaris-Rising
+```
+
+#### 2. ISBN-13 & EAN-13 Vector Barcode Engine (`scripts/lib/barcode.py`)
+Generates print-ready vector SVG and high-resolution PNG EAN-13 barcodes with dynamic ISBN prefixes (`978` or `979`) and optional 5-digit price extensions.
+
+```bash
+# Generate vector SVG barcode with price extension
+arcanum barcode 978-1-234567-89-0 --price 19.99 --output cover-barcode.svg
+```
+
+#### 3. Front & Back Matter Modular Builder (`scripts/lib/frontmatter_builder.py`)
+Generates standardized Copyright pages (Berne Convention, US Copyright, CC), Dedications, Epigraphs, Acknowledgments, Also-by-Author catalogs, and Reader Magnet CTAs.
+
+```bash
+# Generate publication front and back matter
+arcanum frontmatter Solaris-Rising --inject
+```
+
+#### 4. Publishing Submission Query & Synopsis Scaffolder (`scripts/init_query.py`)
+Scaffolds 1-Page Synopses, 3-Paragraph Query Letters, 250-Word Elevator Pitches, and Loglines from manuscript metadata.
+
+```bash
+# Generate agent query and pitch package
+arcanum query Solaris-Rising
+```
+
+---
+
+### 🗺️ Cartography, Codex & Series Continuity
+
+#### 1. Offline Interactive Vector Cartography (`scripts/lib/cartography.py`)
+Self-contained offline Leaflet/SVG interactive map viewer with lore pin layers (cities, borders, waypoints), distance measurements, and direct travel calculation piping into `journey.py`.
+
+```bash
+# Open interactive map or export standalone HTML
+arcanum map Solaris-Prime --export world_map.html
+```
+
+#### 2. Static World Lore Wiki / Reader Codex Exporter (`scripts/lib/codex_export.py`)
+Compiles the entire Obsidian World Lore Vault into a fast, searchable, responsive offline HTML static wiki with entity cards and spoiler toggles.
+
+```bash
+# Export static reader codex
+arcanum codex Solaris-Prime --output ~/Public/Codex/
+```
+
+#### 3. Cross-Book Series Continuity Tracker (`scripts/lib/series_continuity.py`)
+Validates character trait consistency, item lineages, and mortality invariants across multi-volume series (`Book-01`, `Book-02`, etc.).
+
+```bash
+# Audit cross-book continuity
+arcanum continuity --series Solaris-Cosmos
+```
+
+#### 4. Dynamic Tactical Combat Simulator (`scripts/lib/tactical_sim.py`)
+Combines Lanchester combat laws, terrain modifiers, and arcane fatigue to simulate multi-faction skirmishes.
+
+```bash
+# Simulate tactical battle
+arcanum sim battle -a 10000 -d 5000 --fort 2
+```
+
+---
+
+### 📦 Distribution Packaging & Audio Proofreading
+
+#### 1. Multi-Platform Distribution Packager (`scripts/package_distribution.py`)
+Packages ready-to-distribute bundles for Amazon KDP (with exact spine calculation), IngramSpark, Apple Books, Kobo, and direct sales.
+
+```bash
+# Package manuscript for all publishing platforms
+arcanum package Solaris-Rising --target all
+```
+
+#### 2. Executive Author Portfolio Dashboard (`scripts/lib/portfolio.py`)
+Scans all manuscripts and universes, providing wordcount velocity, stage breakdowns, and publication readiness scores.
+
+```bash
+# View portfolio executive summary
+arcanum portfolio
+```
+
+#### 3. Offline Neural Audio Proofreader (`scripts/lib/tts_reader.py`)
+Auditory proofreader using local Piper TTS / espeak-ng to read chapters aloud, catching cadence and rhythm hiccups by ear.
+
+```bash
+# Read chapter aloud at 1.25x speed
+arcanum read Solaris-Rising 01_Chapter.md --speed 1.25
 ```
 
 ---

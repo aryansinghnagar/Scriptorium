@@ -13,7 +13,7 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 
 | Layer | Technology | Evidence (File & Line) |
 | :--- | :--- | :--- |
-| **Desktop Application GUI** | Python 3 + PyGObject (`Gtk 3.0`, `GLib`, `Gdk`, `Pango`) | [`scripts/arcanum_app.py#L1-L35`](file:///scripts/arcanum_app.py#L1-L35), [`scripts/lib/ui_gtk3.py#L1-L60`](file:///scripts/lib/ui_gtk3.py#L1-L60) |
+| **Desktop Application GUI** | Python 3 + PyGObject (`Gtk 3.0`, `GLib`, `Gdk`, `Pango`) + GTK 4/Libadwaita | [`scripts/arcanum_app.py#L1-L50`](file:///scripts/arcanum_app.py#L1-L50), [`scripts/lib/ui_gtk3.py#L1-L60`](file:///scripts/lib/ui_gtk3.py#L1-L60), [`scripts/lib/ui_adw.py#L1-L60`](file:///scripts/lib/ui_adw.py#L1-L60) |
 | **Fallback Graphical Dialogs** | Zenity (GTK dialog utility) | [`scripts/control_center.sh#L1-L30`](file:///scripts/control_center.sh#L1-L30), [`scripts/lib/worlds.sh#L40-L45`](file:///scripts/lib/worlds.sh#L40-L45) |
 | **CLI Dispatcher & Tooling** | POSIX Shell / Bash 4+ | [`scripts/arcanum#L1-L40`](file:///scripts/arcanum#L1-L40), [`scripts/setup_arcanum.sh#L1-L30`](file:///scripts/setup_arcanum.sh#L1-L30) |
 | **Shared Discovery Engine** | Modular Shell Library (`scripts/lib/worlds.sh`) | [`scripts/lib/worlds.sh#L1-L45`](file:///scripts/lib/worlds.sh#L1-L45) |
@@ -22,6 +22,17 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 | **Multi-Draft & Redline Comparator** | Discrete Draft Manager + Difflib Visual Redline Engine | [`scripts/init_draft.sh#L1-L40`](file:///scripts/init_draft.sh#L1-L40), [`scripts/lib/manuscript_diff.py#L1-L60`](file:///scripts/lib/manuscript_diff.py#L1-L60), [`scripts/compare_drafts.sh#L1-L40`](file:///scripts/compare_drafts.sh#L1-L40) |
 | **Configuration & Secure Replication** | JSON Configuration Engine + Dual-Target Backup Manager | [`scripts/lib/config.py#L1-L40`](file:///scripts/lib/config.py#L1-L40), [`scripts/backup_world.sh#L1-L60`](file:///scripts/backup_world.sh#L1-L60) |
 | **Word Processor & DOCX Engine** | Pure Python OpenXML Generator & Bidirectional Sync Engine | [`scripts/lib/docx_sync.py#L1-L60`](file:///scripts/lib/docx_sync.py#L1-L60) |
+| **Prose Stylistics & Dialogue Linter** | AST Tokenizer, Dialogue Attribution & Echo Scanner | [`scripts/lib/stylistics.py#L1-L60`](file:///scripts/lib/stylistics.py#L1-L60) |
+| **Character Voice Profiler** | Lexical Fingerprint Analyzer & Grade Level Scorer | [`scripts/lib/voice.py#L1-L60`](file:///scripts/lib/voice.py#L1-L60) |
+| **Smart Typography Normalizer** | Locale-Aware Quotation & Punctuation Engine | [`scripts/lib/typography_cleaner.py#L1-L60`](file:///scripts/lib/typography_cleaner.py#L1-L60) |
+| **Plot Matrix & Structure Enforcer** | Multi-Track Plot Grid & Narrative Beat Alignment | [`scripts/lib/plot_matrix.py#L1-L60`](file:///scripts/lib/plot_matrix.py#L1-L60), [`scripts/lib/structure.py#L1-L60`](file:///scripts/lib/structure.py#L1-L60) |
+| **Scene Mechanics & Focus Engine** | Motivation-Reaction Units (MRU) & Ambient Audio Generator | [`scripts/lib/scene_mechanics.py#L1-L60`](file:///scripts/lib/scene_mechanics.py#L1-L60), [`scripts/lib/ambient.py#L1-L60`](file:///scripts/lib/ambient.py#L1-L60) |
+| **Publishing Pre-Flight & Barcodes** | PDF/EPUB Compliance Linter & EAN-13 Vector Barcode Generator | [`scripts/lib/preflight.py#L1-L60`](file:///scripts/lib/preflight.py#L1-L60), [`scripts/lib/barcode.py#L1-L60`](file:///scripts/lib/barcode.py#L1-L60) |
+| **Front/Back Matter & Query Builder** | Copyright/Catalog Builder & 1-Page Synopsis Scaffolder | [`scripts/lib/frontmatter_builder.py#L1-L60`](file:///scripts/lib/frontmatter_builder.py#L1-L60), [`scripts/init_query.py#L1-L60`](file:///scripts/init_query.py#L1-L60) |
+| **Cartography & Static Codex Wiki** | Offline Vector Map Scraper & Static HTML Reader Wiki | [`scripts/lib/cartography.py#L1-L60`](file:///scripts/lib/cartography.py#L1-L60), [`scripts/lib/codex_export.py#L1-L60`](file:///scripts/lib/codex_export.py#L1-L60) |
+| **Series Continuity & Tactical Sim** | Cross-Book Inventory/Canon & Lanchester Combat Simulator | [`scripts/lib/series_continuity.py#L1-L60`](file:///scripts/lib/series_continuity.py#L1-L60), [`scripts/lib/tactical_sim.py#L1-L60`](file:///scripts/lib/tactical_sim.py#L1-L60) |
+| **Distribution Packager & Portfolio** | KDP/Ingram Multi-Platform Bundler & Executive Portfolio | [`scripts/package_distribution.py#L1-L60`](file:///scripts/package_distribution.py#L1-L60), [`scripts/lib/portfolio.py#L1-L60`](file:///scripts/lib/portfolio.py#L1-L60) |
+| **Audio Proofreading Engine** | Offline Neural TTS Player (Piper/espeak-ng subprocess bridge) | [`scripts/lib/tts_reader.py#L1-L60`](file:///scripts/lib/tts_reader.py#L1-L60) |
 | **Astrophysics & Flight Engine** | Pure Python Relativistic Kinematics, Orbit & Comms Engine | [`scripts/lib/astrophysics.py#L1-L60`](file:///scripts/lib/astrophysics.py#L1-L60) |
 | **Hard Magic & Constraint Matrix** | Offline Arcane Rule, Reagent & Fatigue Diagnostic Engine | [`scripts/lib/magic_system.py#L1-L60`](file:///scripts/lib/magic_system.py#L1-L60) |
 | **Dynastic Genealogy Engine** | Family Tree DAG Builder, Succession & Paradox Validator | [`scripts/lib/genealogy.py#L1-L60`](file:///scripts/lib/genealogy.py#L1-L60) |
@@ -44,8 +55,8 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 
 ### 1.3 Entry Points
 
-1. **Desktop GUI Application**: [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py#L1-L50) / [`scripts/lib/ui_gtk3.py`](file:///scripts/lib/ui_gtk3.py#L1-L60) (invoked via `arcanum-control-center.desktop` or `python3 scripts/arcanum_app.py`). Provides a 5-tab authoring dashboard with live word counts, Visual Scene Metadata Inspector, Word Processor toolbar, Draft Revisions & Redline Comparator, 1-click publishing, speculative fiction tools (Arcane Matrix, Dynastic Trees, Conlang Studio, Expedition Modeler, Planetary Calendar, Astrophysics Flight, Tension Arc & Pacing), and diagnostics.
-2. **Unified CLI Facade**: [`scripts/arcanum`](file:///scripts/arcanum#L1-L60) (executable dispatcher routing subcommands: `write`, `new`, `draft`, `compare`, `save`, `publish`, `words`, `word`, `docx`, `docx-sync`, `config`, `universe`, `world`, `concordance`, `continuity`, `faction`, `economy`, `causality`, `ecology`, `climate`, `idioms`, `senses`, `cipher`, `prophecy`, `backup`, `backup-dest`, `restore`, `doctor`, `cache`, `calc`, `magic-check`, `magic-report`, `magic`, `genealogy`, `lineage`, `conlang`, `pace`, `tension`, `journey`, `calendar`, `gui`, `verify`).
+1. **Desktop GUI Application**: [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py#L1-L50) / [`scripts/lib/ui_gtk3.py`](file:///scripts/lib/ui_gtk3.py#L1-L60) / [`scripts/lib/ui_adw.py`](file:///scripts/lib/ui_adw.py#L1-L60). Provides a 6-studio authoring dashboard with live word counts, Visual Scene Metadata Inspector, Word Processor toolbar, Draft Revisions & Redline Comparator, 1-click publishing, 18 craft/speculative fiction tools, and diagnostics.
+2. **Unified CLI Facade**: [`scripts/arcanum`](file:///scripts/arcanum#L1-L60) (executable dispatcher routing subcommands: `write`, `new`, `draft`, `compare`, `save`, `publish`, `words`, `word`, `docx`, `docx-sync`, `config`, `universe`, `world`, `concordance`, `continuity`, `faction`, `economy`, `causality`, `ecology`, `climate`, `idioms`, `senses`, `cipher`, `prophecy`, `backup`, `backup-dest`, `restore`, `doctor`, `cache`, `calc`, `magic-check`, `magic-report`, `magic`, `genealogy`, `lineage`, `conlang`, `pace`, `tension`, `journey`, `calendar`, `gui`, `verify`, `audit`, `polish`, `plot`, `preflight`, `barcode`, `frontmatter`, `query`, `map`, `codex`, `package`, `portfolio`, `ambient`, `sim`, `read`).
 3. **Zenity Fallback GUI**: [`scripts/control_center.sh`](file:///scripts/control_center.sh#L1-L40) (lightweight dialog menu invoked when GTK 3 is not present).
 4. **Desktop Application Launchers**: [`launchers/*.desktop`](file:///launchers/arcanum-control-center.desktop#L1-L15) installed to `~/Desktop` and `~/.local/share/applications/`.
 5. **System Installer**: [`scripts/setup_arcanum.sh`](file:///scripts/setup_arcanum.sh#L1-L50) (provisions packages, fonts, Typst musl binary, and desktop shortcuts).
@@ -65,9 +76,9 @@ Ars Arcanum is a purpose-built, distraction-free authoring and speculative world
 | `bash tests/test_performance_cache.sh` | Fast performance cache and mtime invalidation tests | [`tests/test_performance_cache.sh#L1-L140`](file:///tests/test_performance_cache.sh#L1-L140) | Executed in `verify.sh` Stage 6j |
 | `bash tests/test_drafts_and_diff.sh` | Multi-draft lifecycle, visual redline diff, and dual backup tests | [`tests/test_drafts_and_diff.sh#L1-L130`](file:///tests/test_drafts_and_diff.sh#L1-L130) | Executed in `verify.sh` Stage 6k |
 | `bash tests/test_docx_sync.sh` | OpenXML DOCX generation and bidirectional sync tests | [`tests/test_docx_sync.sh#L1-L130`](file:///tests/test_docx_sync.sh#L1-L130) | Executed in `verify.sh` Stage 6l |
-| `python3 -m unittest discover tests` | Python unit test suite (131 tests across all 20 lib engines) | [`tests/test_*.py`](file:///tests/) | Executed in `verify.sh` Stage 1 |
+| `python -m unittest discover tests` | Python unit test suite (226 tests across 47 test modules) | [`tests/test_*.py`](file:///tests/) | Executed in `verify.sh` Stage 1 |
 | `shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/arcanum` | Shell static analysis and linting (zero warnings enforced) | [`.github/workflows/ci.yml#L28-L36`](file:///.github/workflows/ci.yml#L28-L36) | Executed in CI lint step |
-| `python3 -m py_compile scripts/arcanum_app.py` | Python bytecode syntax and compilation check | [`.github/workflows/ci.yml#L37-L40`](file:///.github/workflows/ci.yml#L37-L40), [`scripts/verify.sh#L27-L33`](file:///scripts/verify.sh#L27-L33) | Executed in CI & `verify.sh` Stage 1 |
+| `python3 -m py_compile scripts/arcanum_app.py scripts/lib/*.py` | Python bytecode syntax and compilation check | [`.github/workflows/ci.yml#L37-L40`](file:///.github/workflows/ci.yml#L37-L40), [`scripts/verify.sh#L27-L33`](file:///scripts/verify.sh#L27-L33) | Executed in CI & `verify.sh` Stage 1 |
 | `bash -n scripts/*.sh scripts/lib/*.sh scripts/arcanum` | Bash syntax validation | [`scripts/verify.sh#L18-L26`](file:///scripts/verify.sh#L18-L26) | Executed in `verify.sh` Stage 1 |
 
 *CI Enforcement Note*: GitHub Actions workflow [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) runs on every push and pull request to `main`. Required status check enforcement is managed via repository branch protection rules (GitHub Settings -> Branches -> Branch Protection Rules).
@@ -564,6 +575,60 @@ graph TD
   - Add world-bible templates and Metadata Menu schemas (`Economies/Economy-Template.md`, `Cosmology/Prophecy-Template.md`, `fileClasses/Economy.md`, `fileClasses/Prophecy.md`, upgraded `fileClasses/Faction.md` and `fileClasses/Creature.md`).
 - **Consequences**: Complete 12-suite speculative fiction toolchain operating 100% offline with zero external pip dependencies.
 
+### ADR-029: Editorial Craft, Dialogue Attribution & Proximity Echo Linters
+- **Context**: Authors require deep prose analysis to identify dialogue attribution mechanics (said-bookisms, floating dialogue, excessive adverbs), lexical voice variations per character, and word echo / proximity repetitions before sending manuscripts to human editors.
+- **Decision**:
+  - Implement `scripts/lib/stylistics.py` with dialogue AST tokenizer, said-bookism detector (`DIA-101`), floating dialogue linter (`DIA-102`), adverb overload monitor (`DIA-103`), and sliding-window word echo scanner (`ECH-101`).
+  - Implement `scripts/lib/voice.py` for character voice lexical profiling: extracts dialogue per `@char:` tag, computes Flesch-Kincaid / Coleman-Liau reading grade levels, sentence complexity, and voice homogeneity alerts (`VOI-101`/`VOI-102`).
+  - Implement `scripts/lib/typography_cleaner.py` for smart punctuation normalization (curly quotes, en/em-dashes, ellipses, non-breaking spaces).
+  - Expose CLI subcommands: `arcanum audit dialogue`, `arcanum audit echoes`, `arcanum audit voice`, `arcanum polish typography`.
+- **Consequences**: 100% offline stylistics diagnostics without external NLP dependencies or cloud telemetry.
+
+### ADR-030: Multi-Track Plot Matrix, Story Structure Paradigms & Scene Mechanics (MRU)
+- **Context**: Authors need visual plot tracking across concurrent subplots, alignment against standard storytelling paradigms, and scene-level Motivation-Reaction Unit (MRU) validation.
+- **Decision**:
+  - Implement `scripts/lib/plot_matrix.py` generating interactive 2D timeline grids mapping `@thread:` subplots across chapters with color-coded status pills and standalone HTML export.
+  - Implement `scripts/lib/structure.py` validating manuscript pacing against 6 narrative templates (Save the Cat, Hero's Journey, 7-Point Structure, Story Circle, Kishōtenketsu, 3-Act 9-Block) with interval-containment midpoint matching.
+  - Implement `scripts/lib/scene_mechanics.py` for Dwight Swain / Jack Bickham Goal-Conflict-Disaster validation.
+  - Implement `scripts/lib/ambient.py` procedural audio synthesizer with WebAudio HTML5 and offline WAV generation.
+- **Consequences**: Rich plot visualization and structural pacing enforcement running entirely locally.
+
+### ADR-031: Publication Pre-Flight Compliance Gate & Vector Barcode Generation
+- **Context**: Indie authors preparing for print and ebook publication require automated pre-flight checks (trim sizes, margins, straight quotes in prose, cover art) and standard EAN-13 barcodes with price extensions.
+- **Decision**:
+  - Implement `scripts/lib/preflight.py` checking PDF/EPUB trim size, gutter ratios, straight quote presence outside codeblocks, and metadata compliance.
+  - Implement `scripts/lib/barcode.py` generating pure vector SVG and high-resolution PNG EAN-13 barcodes with dynamic ISBN prefixes and 5-digit price extensions.
+  - Implement `scripts/lib/frontmatter_builder.py` and `scripts/init_query.py` for automated copyright pages, promotional catalogs, and publishing query submission packages.
+- **Consequences**: Publication-ready self-publishing compliance without proprietary desktop typesetting suites.
+
+### ADR-032: Offline Interactive Cartography & Static Lore Codex Wiki Exporter
+- **Context**: Worldbuilders need offline interactive map visualization linked to journey calculations, and the ability to export the entire Obsidian World Lore Vault into a reader-facing codex.
+- **Decision**:
+  - Implement `scripts/lib/cartography.py` providing self-contained offline Leaflet/SVG interactive map viewer with pin layers (cities, borders, waypoints), distance measurements, and direct piping into `journey.py`.
+  - Implement `scripts/lib/codex_export.py` compiling Markdown vaults into searchable, responsive offline HTML static wikis with spoiler filters.
+- **Consequences**: Sovereign cartography and reader codex distribution without cloud hosting requirements.
+
+### ADR-033: Cross-Book Series Continuity & Tactical Battle Simulator
+- **Context**: Multi-volume series require continuity validation for character traits, item ownership, and mortality across books, alongside tactical skirmish calculations.
+- **Decision**:
+  - Implement `scripts/lib/series_continuity.py` tracking character trait consistency, item lineages, and mortality invariants across `Book-01`, `Book-02`, etc.
+  - Implement `scripts/lib/tactical_sim.py` simulating multi-faction battles using Lanchester combat laws, terrain modifiers, and arcane fatigue.
+- **Consequences**: Automated series-level canon enforcement and combat simulation.
+
+### ADR-034: Multi-Platform Distribution Packager & Portfolio Executive Dashboard
+- **Context**: Authors managing multiple manuscripts and universes need platform-specific distribution bundles (Amazon KDP, IngramSpark, Apple Books, Kobo) with spine calculations and cross-project portfolio tracking.
+- **Decision**:
+  - Implement `scripts/package_distribution.py` generating distribution packages with exact spine width formulas based on page count and paper stock.
+  - Implement `scripts/lib/portfolio.py` scanning all manuscripts and universes to calculate aggregate wordcounts, velocity, and publication readiness.
+- **Consequences**: Streamlined indie author operations and multi-project visibility.
+
+### ADR-035: Sovereign Auditory Proofreading with Offline Neural TTS
+- **Context**: Authors catch typos, rhythm issues, and awkward syntax much more effectively by listening to their prose read aloud.
+- **Decision**:
+  - Implement `scripts/lib/tts_reader.py` bridging local neural TTS engines (Piper TTS / espeak-ng) via unprivileged subprocess pipes.
+  - Provide paragraph tracking, speed modulation (`0.75x` to `2.0x`), and offline WAV compilation via `arcanum read [ms] [chapter]`.
+- **Consequences**: Zero-cloud auditory proofreading preserving complete author privacy.
+
 ---
 
 ## Part 7 — Confidence Assessment Table
@@ -574,8 +639,14 @@ graph TD
 | **Exit Code Standardization (0, 1, 2, 3)** | **High** | Verified through `tests/test_audit_fixes.sh` Test 11 across all scripts. |
 | **Multi-Draft & Redline Comparator** | **High** | Verified through `tests/test_drafts_and_diff.py` (21 unit tests) and `tests/test_drafts_and_diff.sh`. |
 | **DOCX Sync & Word Processor Integration** | **High** | Verified through `tests/test_docx_sync.py` (5 unit tests) and `tests/test_docx_sync.sh`. |
-| **Speculative Fiction Workflow Suites (Waves 1–6)** | **High** | Verified through 48 dedicated unit tests (`tests/test_*.py`) and end-to-end CLI tests (Tests 26–31 in `tests/test_audit_fixes.sh`). |
-| **Speculative Fiction Workflow Suites (Waves 7–12)** | **High** | Verified through 44 dedicated unit tests (`tests/test_*.py`) and end-to-end CLI tests (Tests 32–37 in `tests/test_audit_fixes.sh`). Total 131 unit tests passing across 20 test modules. |
+| **Editorial Craft & Stylistics Linters** | **High** | Verified through `tests/test_stylistics.py`, `tests/test_voice.py`, `tests/test_typography_cleaner.py`. |
+| **Plot Matrix & Story Paradigms** | **High** | Verified through `tests/test_plot_matrix.py`, `tests/test_structure.py`, `tests/test_scene_mechanics.py`. |
+| **Pre-Flight Compliance & Barcodes** | **High** | Verified through `tests/test_preflight.py`, `tests/test_barcode.py`, `tests/test_frontmatter_builder.py`, `tests/test_query.py`. |
+| **Cartography & Static Codex Wiki** | **High** | Verified through `tests/test_cartography.py`, `tests/test_codex_export.py`. |
+| **Series Continuity & Tactical Sim** | **High** | Verified through `tests/test_series_continuity.py`, `tests/test_tactical_sim.py`. |
+| **Distribution Packaging & Portfolio** | **High** | Verified through `tests/test_package_distribution.py`, `tests/test_portfolio.py`. |
+| **Audio Proofreader & Ambient Engine** | **High** | Verified through `tests/test_tts_reader.py`, `tests/test_ambient.py`. |
+| **Speculative Fiction Workflow Suites (1–12)** | **High** | Verified through dedicated unit tests (`tests/test_*.py`). Total 226 unit tests passing across 47 test modules. |
 | **Dual-Target Secure Backup Replication** | **High** | Verified via real tarball replication, SHA-256 validation, and config test cases. |
 | **Typesetting & Pandoc Compilation Bridge** | **High** | Verified through Typst preview compilation and Pandoc AST testing in `export_book.sh`. |
 | **Multi-Era & ISO 8601 Chronological Parsing** | **High** | Verified through unit test matrix in `tests/test_concordance_edge_cases.sh` Test 2 (17 permutations). |
@@ -588,35 +659,49 @@ graph TD
 
 ## Part 8 — Local File Citations & Footnotes
 
-1. [`scripts/arcanum`](file:///scripts/arcanum) — Unified CLI dispatcher handling subcommand routing and argument parsing.
-2. [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py) / [`scripts/lib/ui_gtk3.py`](file:///scripts/lib/ui_gtk3.py) — Native Python 3 / GTK 3 desktop application with 5-tab author workflow, Visual Scene Inspector, and Speculative Fiction Suite integration.
+1. [`scripts/arcanum`](file:///scripts/arcanum) — Unified CLI dispatcher handling subcommand routing for all 18 craft, speculative, publishing, and diagnostic tools.
+2. [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py) / [`scripts/lib/ui_gtk3.py`](file:///scripts/lib/ui_gtk3.py) / [`scripts/lib/ui_adw.py`](file:///scripts/lib/ui_adw.py) — Desktop application with 6-studio author workflow, Visual Scene Inspector, and Speculative Fiction Suite integration.
 3. [`scripts/lib/worlds.sh`](file:///scripts/lib/worlds.sh) — Canonical shared project discovery and resolution library.
 4. [`scripts/lib/cache.py`](file:///scripts/lib/cache.py) — High-throughput mtime-keyed performance cache and canonical word counter.
 5. [`scripts/lib/continuity.py`](file:///scripts/lib/continuity.py) — Local-first, privacy-preserving narrative continuity and trait contradiction engine.
 6. [`scripts/lib/manuscript_diff.py`](file:///scripts/lib/manuscript_diff.py) & [`scripts/compare_drafts.sh`](file:///scripts/compare_drafts.sh) — Word-level draft diffing and WCAG-compliant visual redline comparator.
 7. [`scripts/lib/config.py`](file:///scripts/lib/config.py) — Author preferences, DOCX presets, and secondary backup destination configuration manager.
 8. [`scripts/lib/docx_sync.py`](file:///scripts/lib/docx_sync.py) — Bidirectional DOCX synchronization engine and OpenXML manuscript generator.
-9. [`scripts/lib/astrophysics.py`](file:///scripts/lib/astrophysics.py) — Relativistic spaceflight kinematics, orbital mechanics, comms latencies, and habitability calculations.
-10. [`scripts/lib/magic_system.py`](file:///scripts/lib/magic_system.py) — Brandon Sanderson-style hard magic constraint matrix, reagent validation, and fatigue tracking.
-11. [`scripts/lib/genealogy.py`](file:///scripts/lib/genealogy.py) — Dynastic family tree DAG builder, biological paradox validator, succession engine, and Mermaid/HTML exporter.
-12. [`scripts/lib/conlang.py`](file:///scripts/lib/conlang.py) — Conlang phonotactic word/name generator, historical sound-law mutation applier, and lexicon exporter.
-13. [`scripts/lib/pacing.py`](file:///scripts/lib/pacing.py) — Prose mode classification (dialogue/action/exposition), sentence rhythm, POV screen-time balance, and tension arc modeler.
-14. [`scripts/lib/journey.py`](file:///scripts/lib/journey.py) — Overland/naval expedition modeler with terrain friction, travel modes, ration/water tracking, and itineraries.
-15. [`scripts/lib/calendar.py`](file:///scripts/lib/calendar.py) — Custom planetary calendar arithmetic, multi-moon synodic phase tracker, syzygy and eclipse conjunction engine.
-16. [`scripts/lib/factions.py`](file:///scripts/lib/factions.py) — Geopolitical faction matrix, Lanchester battle calculator, and campaign logistics engine.
-17. [`scripts/lib/economy.py`](file:///scripts/lib/economy.py) — In-world economy, PPP conversion matrix, price anomaly detector, and tech era anachronism audit.
-18. [`scripts/lib/causality.py`](file:///scripts/lib/causality.py) — Causal DAG extractor, grandfather/bootstrap paradox detection, and multiverse branch engine.
-19. [`scripts/lib/climate.py`](file:///scripts/lib/climate.py) & [`scripts/lib/ecology.py`](file:///scripts/lib/ecology.py) — Planetary insolation/climate simulator, orographic rain shadow, and trophic food-web energy pyramid modeler.
-20. [`scripts/lib/idioms.py`](file:///scripts/lib/idioms.py) & [`scripts/lib/senses.py`](file:///scripts/lib/senses.py) — Earth-eponym immersion audit and 6D sensory distribution analyzer.
-21. [`scripts/lib/cipher.py`](file:///scripts/lib/cipher.py) & [`scripts/lib/prophecy.py`](file:///scripts/lib/prophecy.py) — In-world cipher encoder/decoder, phonetic rune translator with SVG cards, and prophecy resolution matrix.
-22. [`scripts/setup_arcanum.sh`](file:///scripts/setup_arcanum.sh) — OS-gated system installer with dry-run and fail-closed SHA-256 binary verification.
-23. [`scripts/export_book.sh`](file:///scripts/export_book.sh) — Multi-format publication compiler (Typst PDF, Pandoc EPUB, submission DOCX) with draft-aware resolution.
-24. [`scripts/generate_concordance.sh`](file:///scripts/generate_concordance.sh) — Automated Dramatis Personae and Glossary back-matter generator.
-25. [`scripts/world_doctor.sh`](file:///scripts/world_doctor.sh) — Multi-era timeline validator, schema linter, and lore drift diagnostic engine.
-26. [`scripts/backup_world.sh`](file:///scripts/backup_world.sh) — Dual-target standalone verified archive backup creator with SHA-256 checksums.
-27. [`scripts/restore_world.sh`](file:///scripts/restore_world.sh) — Secure archive restoration engine with path traversal protections.
-28. [`scripts/verify.sh`](file:///scripts/verify.sh) — Canonical 7-stage quality and regression test harness.
-29. [`templates/typst/book_template.typ`](file:///templates/typst/book_template.typ) — Professional publication typography layout rules for trade books.
-30. [`templates/world-bible/`](file:///templates/world-bible/) — Obsidian World Bible templates and 11 Metadata Menu `fileClasses` schemas.
-31. [`templates/manuscript/`](file:///templates/manuscript/) — Standalone manuscript project hierarchy, outlines, and novelWriter XML schema.
-32. [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) — GitHub Actions continuous integration quality gate.
+9. [`scripts/lib/stylistics.py`](file:///scripts/lib/stylistics.py) — Dialogue mechanics linter (`DIA-101` to `DIA-103`) and sliding-window word echo scanner (`ECH-101`).
+10. [`scripts/lib/voice.py`](file:///scripts/lib/voice.py) — Character voice lexical profiler, syllable complexity, and reading grade analyzer.
+11. [`scripts/lib/typography_cleaner.py`](file:///scripts/lib/typography_cleaner.py) — Locale-aware smart quotation, dash, and punctuation normalizer.
+12. [`scripts/lib/plot_matrix.py`](file:///scripts/lib/plot_matrix.py) — 2D storyline subplot matrix visualizer with standalone HTML export.
+13. [`scripts/lib/structure.py`](file:///scripts/lib/structure.py) — Story paradigm structure enforcer for 6 narrative models.
+14. [`scripts/lib/scene_mechanics.py`](file:///scripts/lib/scene_mechanics.py) — Goal-Conflict-Disaster and MRU structural analyzer.
+15. [`scripts/lib/ambient.py`](file:///scripts/lib/ambient.py) — Procedural WebAudio and offline WAV distraction-free sound generator.
+16. [`scripts/lib/preflight.py`](file:///scripts/lib/preflight.py) — Print PDF and EPUB pre-flight compliance linter.
+17. [`scripts/lib/barcode.py`](file:///scripts/lib/barcode.py) — Vector SVG and PNG ISBN-13/EAN-13 barcode engine.
+18. [`scripts/lib/frontmatter_builder.py`](file:///scripts/lib/frontmatter_builder.py) & [`scripts/init_query.py`](file:///scripts/init_query.py) — Copyright/catalog builder and query submission scaffolder.
+19. [`scripts/lib/cartography.py`](file:///scripts/lib/cartography.py) & [`scripts/lib/codex_export.py`](file:///scripts/lib/codex_export.py) — Offline interactive vector map viewer and static HTML reader codex generator.
+20. [`scripts/lib/series_continuity.py`](file:///scripts/lib/series_continuity.py) & [`scripts/lib/tactical_sim.py`](file:///scripts/lib/tactical_sim.py) — Cross-book series canon validator and tactical combat simulator.
+21. [`scripts/package_distribution.py`](file:///scripts/package_distribution.py) & [`scripts/lib/portfolio.py`](file:///scripts/lib/portfolio.py) — Multi-platform distribution packager and executive portfolio dashboard.
+22. [`scripts/lib/tts_reader.py`](file:///scripts/lib/tts_reader.py) — Offline neural auditory proofreading player.
+23. [`scripts/lib/astrophysics.py`](file:///scripts/lib/astrophysics.py) — Relativistic spaceflight kinematics, orbital mechanics, comms latencies, and habitability calculations.
+24. [`scripts/lib/magic_system.py`](file:///scripts/lib/magic_system.py) — Brandon Sanderson-style hard magic constraint matrix, reagent validation, and fatigue tracking.
+25. [`scripts/lib/genealogy.py`](file:///scripts/lib/genealogy.py) — Dynastic family tree DAG builder, biological paradox validator, succession engine, and Mermaid/HTML exporter.
+26. [`scripts/lib/conlang.py`](file:///scripts/lib/conlang.py) — Conlang phonotactic word/name generator, historical sound-law mutation applier, and lexicon exporter.
+27. [`scripts/lib/pacing.py`](file:///scripts/lib/pacing.py) — Prose mode classification (dialogue/action/exposition), sentence rhythm, POV screen-time balance, and tension arc modeler.
+28. [`scripts/lib/journey.py`](file:///scripts/lib/journey.py) — Overland/naval expedition modeler with terrain friction, travel modes, ration/water tracking, and itineraries.
+29. [`scripts/lib/calendar.py`](file:///scripts/lib/calendar.py) — Custom planetary calendar arithmetic, multi-moon synodic phase tracker, syzygy and eclipse conjunction engine.
+30. [`scripts/lib/factions.py`](file:///scripts/lib/factions.py) — Geopolitical faction matrix, Lanchester battle calculator, and campaign logistics engine.
+31. [`scripts/lib/economy.py`](file:///scripts/lib/economy.py) — In-world economy, PPP conversion matrix, price anomaly detector, and tech era anachronism audit.
+32. [`scripts/lib/causality.py`](file:///scripts/lib/causality.py) — Causal DAG extractor, grandfather/bootstrap paradox detection, and multiverse branch engine.
+33. [`scripts/lib/climate.py`](file:///scripts/lib/climate.py) & [`scripts/lib/ecology.py`](file:///scripts/lib/ecology.py) — Planetary insolation/climate simulator, orographic rain shadow, and trophic food-web energy pyramid modeler.
+34. [`scripts/lib/idioms.py`](file:///scripts/lib/idioms.py) & [`scripts/lib/senses.py`](file:///scripts/lib/senses.py) — Earth-eponym immersion audit and 6D sensory distribution analyzer.
+35. [`scripts/lib/cipher.py`](file:///scripts/lib/cipher.py) & [`scripts/lib/prophecy.py`](file:///scripts/lib/prophecy.py) — In-world cipher encoder/decoder, phonetic rune translator with SVG cards, and prophecy resolution matrix.
+36. [`scripts/setup_arcanum.sh`](file:///scripts/setup_arcanum.sh) — OS-gated system installer with dry-run and fail-closed SHA-256 binary verification.
+37. [`scripts/export_book.sh`](file:///scripts/export_book.sh) — Multi-format publication compiler (Typst PDF, Pandoc EPUB, submission DOCX) with draft-aware resolution.
+38. [`scripts/generate_concordance.sh`](file:///scripts/generate_concordance.sh) — Automated Dramatis Personae and Glossary back-matter generator.
+39. [`scripts/world_doctor.sh`](file:///scripts/world_doctor.sh) — Multi-era timeline validator, schema linter, and lore drift diagnostic engine.
+40. [`scripts/backup_world.sh`](file:///scripts/backup_world.sh) — Dual-target standalone verified archive backup creator with SHA-256 checksums.
+41. [`scripts/restore_world.sh`](file:///scripts/restore_world.sh) — Secure archive restoration engine with path traversal protections.
+42. [`scripts/verify.sh`](file:///scripts/verify.sh) — Canonical 7-stage quality and regression test harness.
+43. [`templates/typst/book_template.typ`](file:///templates/typst/book_template.typ) — Professional publication typography layout rules for trade books.
+44. [`templates/world-bible/`](file:///templates/world-bible/) — Obsidian World Bible templates and 11 Metadata Menu `fileClasses` schemas.
+45. [`templates/manuscript/`](file:///templates/manuscript/) — Standalone manuscript project hierarchy, outlines, and novelWriter XML schema.
+46. [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) — GitHub Actions continuous integration quality gate.

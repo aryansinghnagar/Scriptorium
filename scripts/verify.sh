@@ -593,6 +593,27 @@ bash scripts/arcanum calc climate --help >/dev/null
 bash scripts/arcanum audit idioms --help >/dev/null
 bash scripts/arcanum audit senses --help >/dev/null
 bash scripts/arcanum audit tech --help >/dev/null
+bash scripts/arcanum audit dialogue --help >/dev/null
+bash scripts/arcanum audit echoes --help >/dev/null
+bash scripts/arcanum audit voice --help >/dev/null
+bash scripts/arcanum audit scenes --help >/dev/null
+bash scripts/arcanum audit structure --help >/dev/null
+bash scripts/arcanum polish typography --help >/dev/null
+bash scripts/arcanum preflight --help >/dev/null
+bash scripts/arcanum barcode --help >/dev/null
+bash scripts/arcanum matter build --help >/dev/null
+bash scripts/arcanum query --help >/dev/null
+bash scripts/arcanum read --help >/dev/null
+bash scripts/arcanum tts --help >/dev/null
+bash scripts/arcanum plot --help >/dev/null
+bash scripts/arcanum structure --help >/dev/null
+bash scripts/arcanum ambient --help >/dev/null
+bash scripts/arcanum portfolio --help >/dev/null
+bash scripts/arcanum package --help >/dev/null
+bash scripts/arcanum map --help >/dev/null
+bash scripts/arcanum codex --help >/dev/null
+bash scripts/arcanum series --help >/dev/null
+bash scripts/arcanum sim battle --help >/dev/null
 bash scripts/ars-arcanum --version >/dev/null
 echo "  OK arcanum and ars-arcanum CLI entrypoints and subcommands"
 

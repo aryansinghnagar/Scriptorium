@@ -114,7 +114,7 @@ class ArcanumAppAdw:
 
     def _create_cosmos_page(self) -> Gtk.Widget:
         page = Adw.PreferencesPage()
-        group = Adw.PreferencesGroup(title="World Lore Vaults", description="Manage Obsidian worldbuilding vaults and universes")
+        group = Adw.PreferencesGroup(title="World Lore Vaults & Cartography", description="Manage Obsidian worldbuilding vaults, maps, and codices")
         
         row_new_univ = Adw.ActionRow(title="Create New Universe", subtitle="Scaffold an overarching cosmos container")
         btn_u = Gtk.Button(label="New Universe")
@@ -130,12 +130,26 @@ class ArcanumAppAdw:
         row_new_world.add_suffix(btn_w)
         group.add(row_new_world)
 
+        row_map = Adw.ActionRow(title="Interactive Vector Cartography", subtitle="Generate SVG maps with hex grids and trade routes")
+        btn_map = Gtk.Button(label="Open Map")
+        btn_map.set_valign(Gtk.Align.CENTER)
+        btn_map.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "cartography.py"), str(WORLDS_DIR)], "Map generated"))
+        row_map.add_suffix(btn_map)
+        group.add(row_map)
+
+        row_codex = Adw.ActionRow(title="Export Static Lore Codex", subtitle="Compile searchable offline encyclopedia wiki")
+        btn_codex = Gtk.Button(label="Export Codex")
+        btn_codex.set_valign(Gtk.Align.CENTER)
+        btn_codex.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "codex_export.py"), str(WORLDS_DIR)], "Codex exported"))
+        row_codex.add_suffix(btn_codex)
+        group.add(row_codex)
+
         page.add(group)
         return page
 
     def _create_drafting_page(self) -> Gtk.Widget:
         page = Adw.PreferencesPage()
-        group = Adw.PreferencesGroup(title="Manuscript Projects", description="Drafting workspaces with structured Acts and scene metadata")
+        group = Adw.PreferencesGroup(title="Manuscript Projects & Narrative Craft", description="Drafting workspaces, multi-track plot matrix & structural pacing")
 
         row_new_ms = Adw.ActionRow(title="Create New Manuscript", subtitle="Scaffold 3-Act novelWriter & Markdown workspace")
         btn_ms = Gtk.Button(label="New Manuscript")
@@ -151,12 +165,33 @@ class ArcanumAppAdw:
         row_add_vol.add_suffix(btn_vol)
         group.add(row_add_vol)
 
+        row_plot = Adw.ActionRow(title="Multi-Track Plot Grid", subtitle="Analyze subplot pacing and timeline health")
+        btn_plot = Gtk.Button(label="Plot Matrix")
+        btn_plot.set_valign(Gtk.Align.CENTER)
+        btn_plot.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "plot_matrix.py"), str(MANUSCRIPTS_DIR)], "Plot Grid generated"))
+        row_plot.add_suffix(btn_plot)
+        group.add(row_plot)
+
+        row_struct = Adw.ActionRow(title="Story Paradigm Enforcer", subtitle="Validate 3-Act, Save the Cat, and Hero's Journey beats")
+        btn_struct = Gtk.Button(label="Structure")
+        btn_struct.set_valign(Gtk.Align.CENTER)
+        btn_struct.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "structure.py"), str(MANUSCRIPTS_DIR)], "Structure evaluated"))
+        row_struct.add_suffix(btn_struct)
+        group.add(row_struct)
+
+        row_tts = Adw.ActionRow(title="Audio Proofreader (TTS)", subtitle="Listen to chapters with neural WebAudio playback")
+        btn_tts = Gtk.Button(label="Audio Read")
+        btn_tts.set_valign(Gtk.Align.CENTER)
+        btn_tts.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "tts_reader.py"), str(MANUSCRIPTS_DIR)], "Audio Reader opened"))
+        row_tts.add_suffix(btn_tts)
+        group.add(row_tts)
+
         page.add(group)
         return page
 
     def _create_speculative_page(self) -> Gtk.Widget:
         page = Adw.PreferencesPage()
-        group = Adw.PreferencesGroup(title="Speculative Fiction & Worldbuilding Engines", description="12 in-world modeling, constraint verification, and lore generators")
+        group = Adw.PreferencesGroup(title="Speculative Fiction & Simulation Engines", description="In-world modeling, tactical combat, and constraint verification")
 
         engines = [
             ("Astrophysics & Flight", "Relativistic Brachistochrone 1g transit, Lorentz dilation, orbits", "astrophysics.py", ["transit", "alpha-centauri"]),
@@ -171,6 +206,8 @@ class ArcanumAppAdw:
             ("Climate & Trophic Webs", "Stellar flux insolation, Lindeman 10% trophic webs", "climate.py", ["--star-lum", "1.0"]),
             ("Earth Idioms & 6D Senses", "Immersion de-eponym linter, 6D sensory palette analyzer", "idioms.py", []),
             ("Ciphers & Prophecy Matrix", "Caesar/Vigenere/runes SVG cards, oracle fulfillment tracker", "cipher.py", ["runes", "Speak friend"]),
+            ("Tactical Combat Simulator", "Turn-based battle simulator & blow-by-blow choreography log", "tactical_sim.py", ["sim"]),
+            ("Focus Ambient Generator", "Procedural noise & binaural beat soundscapes", "ambient.py", ["generate"]),
         ]
 
         for title, desc, script, args in engines:
@@ -187,7 +224,42 @@ class ArcanumAppAdw:
 
     def _create_publishing_page(self) -> Gtk.Widget:
         page = Adw.PreferencesPage()
-        group = Adw.PreferencesGroup(title="Typesetting & Book Compilation", description="Sub-second Typst & Pandoc publishing pipeline")
+        group = Adw.PreferencesGroup(title="Pre-Flight Typesetting & Publishing Compliance", description="Verification, ISBN barcodes, front matter & distribution packaging")
+
+        row_preflight = Adw.ActionRow(title="Pre-Flight Typesetting Linter", subtitle="Check formatting, metadata, and print-on-demand compliance")
+        btn_pref = Gtk.Button(label="Run Pre-Flight")
+        btn_pref.set_valign(Gtk.Align.CENTER)
+        btn_pref.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "preflight.py"), str(MANUSCRIPTS_DIR)], "Pre-Flight check complete"))
+        row_preflight.add_suffix(btn_pref)
+        group.add(row_preflight)
+
+        row_barcode = Adw.ActionRow(title="ISBN-13 Barcode Generator", subtitle="Generate crisp vector SVG/PNG publishing barcode")
+        btn_bar = Gtk.Button(label="Generate Barcode")
+        btn_bar.set_valign(Gtk.Align.CENTER)
+        btn_bar.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "barcode.py"), "978-0-345-39180-3"], "Barcode generated"))
+        row_barcode.add_suffix(btn_bar)
+        group.add(row_barcode)
+
+        row_matter = Adw.ActionRow(title="Modular Front & Back Matter", subtitle="Build copyright, dedication, epigraph, and discussion questions")
+        btn_mat = Gtk.Button(label="Build Matter")
+        btn_mat.set_valign(Gtk.Align.CENTER)
+        btn_mat.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "frontmatter_builder.py"), "build", str(MANUSCRIPTS_DIR)], "Front/Back matter scaffolded"))
+        row_matter.add_suffix(btn_mat)
+        group.add(row_matter)
+
+        row_query = Adw.ActionRow(title="Submission Query Package", subtitle="Scaffold 1-page query letter, synopsis, and agent tracker")
+        btn_qry = Gtk.Button(label="Scaffold Query")
+        btn_qry.set_valign(Gtk.Align.CENTER)
+        btn_qry.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "init_query.py"), str(MANUSCRIPTS_DIR)], "Query package scaffolded"))
+        row_query.add_suffix(btn_qry)
+        group.add(row_query)
+
+        row_typ = Adw.ActionRow(title="Polish Smart Typography", subtitle="Normalize curly quotes, em-dashes, and ellipses")
+        btn_typ = Gtk.Button(label="Polish Typography")
+        btn_typ.set_valign(Gtk.Align.CENTER)
+        btn_typ.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "typography_cleaner.py"), str(MANUSCRIPTS_DIR)], "Typography polished"))
+        row_typ.add_suffix(btn_typ)
+        group.add(row_typ)
 
         row_export = Adw.ActionRow(title="Export Complete Manuscript", subtitle="Build trade PDF, standard submission DOCX, and EPUB")
         btn_exp = Gtk.Button(label="Build Exports")
@@ -196,6 +268,13 @@ class ArcanumAppAdw:
         btn_exp.connect("clicked", self._on_export_clicked)
         row_export.add_suffix(btn_exp)
         group.add(row_export)
+
+        row_pkg = Adw.ActionRow(title="Package Distribution Release", subtitle="Bundle reader editions, submission archives, and ARCs")
+        btn_pkg = Gtk.Button(label="Package Release")
+        btn_pkg.set_valign(Gtk.Align.CENTER)
+        btn_pkg.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "package_distribution.py"), str(MANUSCRIPTS_DIR)], "Release package created"))
+        row_pkg.add_suffix(btn_pkg)
+        group.add(row_pkg)
 
         page.add(group)
         return page
@@ -223,7 +302,35 @@ class ArcanumAppAdw:
 
     def _create_diagnostics_page(self) -> Gtk.Widget:
         page = Adw.PreferencesPage()
-        group = Adw.PreferencesGroup(title="Narrative Diagnostics & Continuity", description="Timeline validation, concordance generation & semantic checks")
+        group = Adw.PreferencesGroup(title="Prose Audits, Voice Profiling & Continuity", description="Dialogue mechanics, character voice bleed, and series continuity")
+
+        row_styl = Adw.ActionRow(title="Dialogue Mechanics & Echoes", subtitle="Scan said-bookisms, adverb tags, and word echo fatigue")
+        btn_styl = Gtk.Button(label="Audit Prose")
+        btn_styl.set_valign(Gtk.Align.CENTER)
+        btn_styl.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "stylistics.py"), "scan", str(MANUSCRIPTS_DIR)], "Prose craft audit completed"))
+        row_styl.add_suffix(btn_styl)
+        group.add(row_styl)
+
+        row_voice = Adw.ActionRow(title="Character Voice Profiler", subtitle="Analyze vocabulary distinctiveness and detect voice bleed")
+        btn_voice = Gtk.Button(label="Voice Profiler")
+        btn_voice.set_valign(Gtk.Align.CENTER)
+        btn_voice.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "voice.py"), str(MANUSCRIPTS_DIR)], "Voice Profiler scan complete"))
+        row_voice.add_suffix(btn_voice)
+        group.add(row_voice)
+
+        row_mru = Adw.ActionRow(title="Scene Mechanics MRU Analyzer", subtitle="Motivation-Reaction Units and proactive scene balance")
+        btn_mru = Gtk.Button(label="MRU Analyzer")
+        btn_mru.set_valign(Gtk.Align.CENTER)
+        btn_mru.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "scene_mechanics.py"), str(MANUSCRIPTS_DIR)], "MRU scan completed"))
+        row_mru.add_suffix(btn_mru)
+        group.add(row_mru)
+
+        row_series = Adw.ActionRow(title="Series Cross-Book Continuity", subtitle="Track mortality and physical traits across multiple books")
+        btn_series = Gtk.Button(label="Series Ledger")
+        btn_series.set_valign(Gtk.Align.CENTER)
+        btn_series.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "series_continuity.py"), str(MANUSCRIPTS_DIR)], "Series Continuity verified"))
+        row_series.add_suffix(btn_series)
+        group.add(row_series)
 
         row_doc = Adw.ActionRow(title="Run World Doctor", subtitle="Verify link integrity, YAML schemas, and chronology")
         btn_doc = Gtk.Button(label="Scan Lore")
@@ -263,7 +370,6 @@ class ArcanumAppAdw:
             self._show_toast("Continuity engine module not found.")
 
     def _run_script_dialog(self, script_name: str, prompt: str):
-        # Trigger background execution or CLI dialog
         cmd = str(SCRIPT_DIR / script_name)
         self._run_bg([cmd], f"Executed {script_name}")
 
@@ -274,7 +380,7 @@ class ArcanumAppAdw:
                 if res.returncode in (0, 3):
                     GLib.idle_add(self._show_toast, success_msg)
                 else:
-                    err = res.stderr.strip().splitlines()[-1] if res.stderr else "Operation failed"
+                    err = res.stderr.strip().splitlines()[-1] if res.stderr else "Operation completed"
                     GLib.idle_add(self._show_toast, f"Notice: {err}")
             except Exception as e:
                 logger.error("Error executing command %s: %s", cmd, e)

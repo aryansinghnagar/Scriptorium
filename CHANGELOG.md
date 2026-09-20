@@ -6,7 +6,46 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
-### Added (Speculative Fiction Authorial Workflow Suites — Waves 7–12 / Phase 2)
+## [1.6.0] - 2026-09-20
+
+### Added (Authorial Craft, Plot Matrix, Publishing Pre-Flight, Cartography & Audio Suites — M22–M28)
+- **Milestone M22: Editorial Craft & Prose Stylistics (`scripts/lib/stylistics.py`, `scripts/lib/voice.py`, `scripts/lib/typography_cleaner.py`)**:
+  - Implemented dialogue mechanics linter detecting said-bookisms (`DIA-101`), floating dialogue without physical beats (`DIA-102`), and adverb overload (`DIA-103`).
+  - Added sliding-window word echo and proximity repetition scanner (`ECH-101`).
+  - Added character voice lexical profiler computing Flesch-Kincaid / Coleman-Liau grade levels, sentence length variance, syllable complexity, and voice homogeneity alerts (`VOI-101`/`VOI-102`).
+  - Added smart typography normalizer for curly quotes, en/em-dashes, ellipses, and locale-aware non-breaking spaces (`TYP-101` to `TYP-104`).
+  - CLI subcommands: `arcanum audit dialogue`, `arcanum audit echoes`, `arcanum audit voice`, `arcanum polish typography`.
+- **Milestone M23: Narrative Architecture, Plot Matrix & Scene Ergonomics (`scripts/lib/plot_matrix.py`, `scripts/lib/structure.py`, `scripts/lib/scene_mechanics.py`, `scripts/lib/ambient.py`)**:
+  - Implemented 2D interactive multi-track plot matrix mapping `@thread:` subplots across chapters and acts with standalone HTML export.
+  - Implemented story paradigm structure enforcer validating pacing against Save the Cat, Hero's Journey, 7-Point Structure, Story Circle, Kishōtenketsu, and 3-Act 9-Block (`STR-101` to `STR-103`).
+  - Implemented scene mechanics linter for Goal-Conflict-Disaster / Motivation-Reaction Units (`SCN-101` to `SCN-103`).
+  - Implemented procedural ambient audio generator for distraction-free focus (Rain, Crackling Hearth, Library Hum, Cosmic Drone, Clockwork) with HTML5 WebAudio player and offline WAV generator.
+  - CLI subcommands: `arcanum plot`, `arcanum audit structure`, `arcanum audit scenes`, `arcanum ambient`.
+- **Milestone M24: Pre-Flight Typesetting & Publishing Compliance (`scripts/lib/preflight.py`, `scripts/lib/barcode.py`, `scripts/lib/frontmatter_builder.py`, `scripts/init_query.py`)**:
+  - Implemented print PDF and EPUB pre-flight compliance linter for trim size, gutter ratios, straight quote detection, cover art, and metadata (`PRF-101` to `PRF-105`).
+  - Implemented pure vector SVG and high-resolution PNG ISBN-13/EAN-13 barcode generator with 5-digit price extensions.
+  - Implemented front and back matter builder generating standardized Copyright pages, Dedications, Epigraphs, Also-by-Author catalogs, and Reader Magnet CTAs.
+  - Implemented publishing query submission packager scaffolding 1-Page Synopsis, 3-Paragraph Query Letter, 250-Word Elevator Pitch, and Logline.
+  - CLI subcommands: `arcanum preflight`, `arcanum barcode`, `arcanum frontmatter`, `arcanum query`.
+- **Milestone M25: Interactive Cartography, Codex Wiki & Series Continuity (`scripts/lib/cartography.py`, `scripts/lib/codex_export.py`, `scripts/lib/series_continuity.py`, `scripts/lib/tactical_sim.py`)**:
+  - Implemented offline interactive vector cartography with lore pin layers, distance measurement, and direct calculation piping into `journey.py`.
+  - Implemented static world lore wiki & reader codex exporter compiling Markdown vaults into searchable offline HTML static wikis with spoiler filters.
+  - Implemented cross-book series continuity validator tracking character traits, item lineages, and mortality invariants across multi-volume series (`SER-101` to `SER-104`).
+  - Implemented dynamic tactical combat simulator combining Lanchester combat laws, terrain modifiers, and arcane fatigue.
+  - CLI subcommands: `arcanum map`, `arcanum codex`, `arcanum continuity --series`, `arcanum sim battle`.
+- **Milestone M26: Distribution Packaging & Portfolio Dashboard (`scripts/package_distribution.py`, `scripts/lib/portfolio.py`)**:
+  - Implemented direct-to-reader multi-platform distribution packager for Amazon KDP, IngramSpark, Apple Books, Kobo, and direct zip bundles with precise spine calculations.
+  - Implemented executive author portfolio dashboard calculating wordcount velocity, drafting phase distributions, and publication readiness scores.
+  - CLI subcommands: `arcanum package`, `arcanum portfolio`.
+- **Milestone M27: Desktop UI 6-Studio Layout & Modernization (`scripts/lib/ui_gtk3.py`, `scripts/lib/ui_adw.py`)**:
+  - Modernized GTK 3 desktop Control Center with 6 dedicated studios (Cosmos, Manuscripts, Speculative/Craft, Publishing, Safety, Doctor) and integrated tool dispatchers.
+  - Enhanced GTK 4 / Libadwaita presentation layer with adaptive viewports, dark mode sync, and toast notifications.
+- **Milestone M28: Sovereign Auditory Proofreading with Offline Neural TTS (`scripts/lib/tts_reader.py`)**:
+  - Implemented local auditory proofreading player bridging Piper TTS / espeak-ng subprocesses with paragraph tracking and speed modulation (`0.75x` to `2.0x`).
+  - CLI subcommand: `arcanum read [ms] [chapter]`.
+- **Automated Test Coverage**:
+  - Expanded Python unit test suite from 131 to 226 passing unit tests across 47 test modules.
+  - Verified 100% pass rate in canonical 7-stage verification harness (`scripts/verify.sh`).
 - **Wave 7: Geopolitical Faction Matrix & Campaign Logistics (`scripts/lib/factions.py`)**:
   - Implemented diplomatic relationship auditor and paradox detector (`FAC-101` to `FAC-104`).
   - Added Lanchester power-law combat casualty calculator supporting Square Law (ranged/aimed fire), Linear Law (unaimed/melee), fortification defense multipliers, and round-by-round force attrition curves.

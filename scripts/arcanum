@@ -24,7 +24,7 @@ if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ] && [ -f "${SCRIPT_DIR}/verify.sh
     fi
 fi
 
-VERSION="1.5.0"
+VERSION="1.6.0"
 
 usage() {
     cat << USAGE
@@ -35,7 +35,7 @@ Usage:
   arcanum <command> [arguments...]
   ars-arcanum <command> [arguments...]
 
-✍️  Core Authoring Workflow:
+✍️  Core Authoring & Editorial Craft:
   write [TARGET]               Open writing workspace in novelWriter or Obsidian (alias: open)
   word [MS]                    Open manuscript in Microsoft Word / LibreOffice (alias: writer)
   docx <build|sync|import|open> Manage Word .docx manuscript synchronization
@@ -44,13 +44,28 @@ Usage:
   compare <MS> [D_NEW] [D_OLD] Visual Redline changelog comparison between drafts (alias: diff, redline)
   save [TARGET] [-m "note"]    Save an instant Git version milestone (alias: snapshot)
   publish [MS] [options]       Compile to print PDF, EPUB, or DOCX (alias: export)
+  preflight [MS]               Pre-flight typesetting & compliance validator (PUB-101)
+  barcode <ISBN>               Generate publication-grade ISBN-13 vector SVG/PNG barcode (PUB-102)
+  matter build [MS]            Generate modular front matter and back matter files (PUB-103)
+  query [MS]                   Scaffold submission package: query letter, synopsis, tracker (PUB-106)
+  polish typography [TARGET]   Normalize smart curly quotes, em-dashes, and ellipses (PRO-104)
+  read [TARGET] [--speak|--html] Offline neural audio proofreading & WebAudio player (INT-101)
   words [MS] [--md|--json|--pov] Show live word counts and chapter analytics (alias: report, count)
   pace [MS] [--pov|--html]     Analyze dialogue/action density & prose rhythm
   tension [MS] [--html]        Model chapter tension curve & narrative arcs
+  plot [MS] [--html|--matrix]  Multi-track plot grid & subplot pacing matrix (PLT-101)
+  structure [MS] [-p PARADIGM] Story paradigm enforcer: 3-Act, Save the Cat, Hero's Journey (PLT-102)
+  ambient [PROFILE]            Focus noise & binaural beat synthesizer (PLT-106)
+  portfolio [DIR] [--html]     Multi-manuscript catalog dashboard & drafting velocity (OPS-103)
+  package [MS] [-t TARGET]     Multi-platform release packager: Reader, Submission, ARC (OPS-101)
 
-🪐 Universe & World Lore:
+🪐 Universe, World Lore & Series Continuity:
   universe [NAME] [--list]     Create or list narrative universes in ~/Universes/
   world <NAME> [-u UNIVERSE]   Scaffold an Obsidian World Lore Vault
+  map <WORLD> [--html|--svg]   Interactive offline vector cartography & map viewer (WOR-101)
+  codex <WORLD> [--html]       Compile static offline World Wiki encyclopedia (WOR-102)
+  series [TARGET] [--html]     Multi-book series continuity & character trait ledger (WOR-103)
+  sim battle [options]         Turn-based tactical skirmish & battle simulator (WOR-104)
   concordance <TARGET> [-b]    Generate Dramatis Personae & Glossary back-matter
   continuity [-w W -m MS]      Analyze character traits & narrative consistency (alias: check-continuity)
   faction [WORLD] [--html]     Geopolitical relationship matrix & diplomatic paradoxes
@@ -66,7 +81,7 @@ Usage:
   cipher <encode|decode|runes> In-world ciphers, Vigenere, Atbash & phonetic runes
   calendar [WORLD] [--phases]  Planetary calendar arithmetic & multi-moon syzygy
   calc <subcommand>            Astrophysics, climate, battle, logistics & journey calculator
-  audit <tech|idioms|senses>   Prose audits: technology anachronisms, Earth idioms, 6D senses
+  audit <subcommand>           Prose audits: dialogue, echoes, voice, scenes, structure, tech, idioms, senses
 
 🔒 Data Protection & Safety:
   backup <TARGET> [options]    Create a verified, standalone .tar.gz backup archive
@@ -86,19 +101,6 @@ Usage:
 Global Options:
   -v, --version                Display Ars Arcanum version
   -h, --help                   Display this help menu
-
-Quick Examples:
-  arcanum calc transit "alpha-centauri"       # 1g Brachistochrone relativistic flight
-  arcanum calc trade --buy 100 --sell 250     # Trade margin & interstellar ROI
-  arcanum calc battle -a 10000 -d 5000 --fort 2 # Lanchester power-law casualty curve
-  arcanum calc logistics --infantry 8000      # Campaign supply demand & wagon radius
-  arcanum calc climate --star-lum 1.2         # Planetary insolation & orographic biomes
-  arcanum faction "Eldoria" --html report.html # Geopolitical matrix & paradox audit
-  arcanum causality "Eldoria" "Manuscript"    # Multiverse branching & causal DAG
-  arcanum audit idioms "Manuscript"           # Scan Earth-eponyms & immersion leaks
-  arcanum audit senses "Manuscript"           # 6D sensory palette & white room check
-  arcanum cipher runes "Speak friend" --svg r.svg # Translate to phonetic Elder Futhark
-  arcanum magic-check "Eldoria" -m "Manuscript" # Verify spell tier & catalyst constraints
 USAGE
 }
 
@@ -108,12 +110,12 @@ interactive_menu() {
 ================================================================================
 🪐 ✍️  ARS ARCANUM — Unified Authorial Ecosystem Dashboard
 ================================================================================
-  [1] 🪐 Studio 1: Cosmos & Worlds (Universes, World Lore, Concordance)
-  [2] ✍️ Studio 2: Manuscripts & Drafting (Write, Word/DOCX, Drafts, Redline)
-  [3] 🔮 Studio 3: Speculative Fiction & Mechanics (Astrophysics, Magic, Factions...)
-  [4] 📚 Studio 4: Publishing & Typesetting (Typst PDF, Pandoc EPUB, Submission DOCX)
+  [1] 🪐 Studio 1: Cosmos & Worlds (Universes, World Lore, Map, Codex, Series)
+  [2] ✍️ Studio 2: Manuscripts & Drafting (Write, Word/DOCX, Drafts, Plot Grid)
+  [3] 🔮 Studio 3: Speculative Fiction & Mechanics (Astrophysics, Magic, Battle Sim...)
+  [4] 📚 Studio 4: Publishing & Typesetting (Preflight, Barcode, Matter, Exports)
   [5] 🔒 Studio 5: Vault Safety & Version History (Git Snapshots, Backup Archives)
-  [6] 🩺 Studio 6: Diagnostics & Doctor (Health, Lore Audits, 7-Stage Harness)
+  [6] 🩺 Studio 6: Diagnostics & Prose Audits (Dialogue, Voice, Echoes, Health)
   ------------------------------------------------------------------------------
   [g] 🖥️  Launch Desktop GUI Control Center
   [h] 📖 Display Full CLI Help Manual
@@ -128,14 +130,18 @@ MENU
                 echo "  1) List Universes"
                 echo "  2) Create New Universe"
                 echo "  3) Create New World"
-                echo "  4) Generate Concordance / Back-Matter"
+                echo "  4) Generate Vector Map"
+                echo "  5) Export Static Codex Wiki"
+                echo "  6) Check Series Continuity"
                 echo "  b) Back"
                 read -r -p "Choose action: " S1_CHOICE || break
                 case "${S1_CHOICE}" in
                     1) bash "${PROJECT_ROOT}/scripts/init_universe.sh" --list ;;
                     2) read -r -p "Universe name: " UNAME && [ -n "$UNAME" ] && bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$UNAME" ;;
                     3) read -r -p "World name: " WNAME && [ -n "$WNAME" ] && bash "${PROJECT_ROOT}/scripts/init_world.sh" "$WNAME" ;;
-                    4) read -r -p "Target (World/Manuscript): " TARG && [ -n "$TARG" ] && bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$TARG" ;;
+                    4) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/cartography.py" "$WDIR" ;;
+                    5) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/codex_export.py" "$WDIR" ;;
+                    6) read -r -p "Series path: " SDIR && [ -n "$SDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/series_continuity.py" "$SDIR" ;;
                     *) ;;
                 esac
                 ;;
@@ -145,16 +151,20 @@ MENU
                 echo "  1) Create New Manuscript"
                 echo "  2) Fork Next Draft Version"
                 echo "  3) Compare Drafts (Visual Redline Diff)"
-                echo "  4) Word Count & Analytics Report"
-                echo "  5) Sync DOCX / Word Manuscript"
+                echo "  4) Multi-Track Plot Grid"
+                echo "  5) Story Paradigm Enforcer"
+                echo "  6) Audio Proofreader (TTS)"
+                echo "  7) Portfolio Hub"
                 echo "  b) Back"
                 read -r -p "Choose action: " S2_CHOICE || break
                 case "${S2_CHOICE}" in
                     1) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$MNAME" ;;
                     2) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/init_draft.sh" "$MNAME" ;;
                     3) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/compare_drafts.sh" "$MNAME" ;;
-                    4) read -r -p "Target manuscript: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$MNAME" ;;
-                    5) read -r -p "Manuscript path: " MNAME && [ -n "$MNAME" ] && python3 "${PROJECT_ROOT}/scripts/lib/docx_sync.py" sync "$MNAME" ;;
+                    4) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/plot_matrix.py" "$MDIR" ;;
+                    5) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/structure.py" "$MDIR" ;;
+                    6) read -r -p "Chapter path: " CPATH && [ -n "$CPATH" ] && python3 "${PROJECT_ROOT}/scripts/lib/tts_reader.py" "$CPATH" ;;
+                    7) python3 "${PROJECT_ROOT}/scripts/lib/portfolio.py" ;;
                     *) ;;
                 esac
                 ;;
@@ -163,29 +173,44 @@ MENU
                 echo "--- Studio 3: Speculative Fiction & Mechanics ---"
                 echo "  1) Astrophysics & Orbital Flight"
                 echo "  2) Hard Magic System Verification"
-                echo "  3) Geopolitical Faction Matrix"
-                echo "  4) Macroeconomics & PPP Trade Currency"
+                echo "  3) Tactical Combat Simulator"
+                echo "  4) Geopolitical Faction Matrix"
                 echo "  5) Causal DAGs & Timeline Branching"
-                echo "  6) Conlang & Phonology Generator"
+                echo "  6) Focus Ambient Generator"
                 echo "  b) Back"
                 read -r -p "Choose action: " S3_CHOICE || break
                 case "${S3_CHOICE}" in
                     1) python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" transit --help ;;
                     2) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/magic_system.py" check "$WDIR" ;;
-                    3) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/factions.py" "$WDIR" ;;
-                    4) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/economy.py" "$WDIR" ;;
+                    3) python3 "${PROJECT_ROOT}/scripts/lib/tactical_sim.py" sim ;;
+                    4) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/factions.py" "$WDIR" ;;
                     5) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/causality.py" "$WDIR" ;;
-                    6) python3 "${PROJECT_ROOT}/scripts/lib/conlang.py" gen --help ;;
+                    6) python3 "${PROJECT_ROOT}/scripts/lib/ambient.py" generate --help ;;
                     *) ;;
                 esac
                 ;;
             4)
                 echo ""
                 echo "--- Studio 4: Publishing & Typesetting ---"
-                read -r -p "Manuscript to export: " MNAME
-                if [ -n "$MNAME" ]; then
-                    bash "${PROJECT_ROOT}/scripts/export_book.sh" "$MNAME"
-                fi
+                echo "  1) Pre-Flight Typesetting Linter"
+                echo "  2) Generate ISBN-13 Barcode"
+                echo "  3) Build Modular Front & Back Matter"
+                echo "  4) Scaffold Query Submission Package"
+                echo "  5) Polish Typography (Quotes & Dashes)"
+                echo "  6) Export Complete Book (PDF/EPUB/DOCX)"
+                echo "  7) Package Distribution Release"
+                echo "  b) Back"
+                read -r -p "Choose action: " S4_CHOICE || break
+                case "${S4_CHOICE}" in
+                    1) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/preflight.py" "$MDIR" ;;
+                    2) read -r -p "ISBN number: " ISBN && [ -n "$ISBN" ] && python3 "${PROJECT_ROOT}/scripts/lib/barcode.py" "$ISBN" ;;
+                    3) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/frontmatter_builder.py" build "$MDIR" ;;
+                    4) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/init_query.py" "$MDIR" ;;
+                    5) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/typography_cleaner.py" "$TARG" -i ;;
+                    6) read -r -p "Manuscript to export: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/export_book.sh" "$MNAME" ;;
+                    7) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/package_distribution.py" "$MDIR" ;;
+                    *) ;;
+                esac
                 ;;
             5)
                 echo ""
@@ -206,16 +231,22 @@ MENU
                 ;;
             6)
                 echo ""
-                echo "--- Studio 6: Diagnostics & Doctor ---"
+                echo "--- Studio 6: Diagnostics & Prose Audits ---"
                 echo "  1) System Health & Toolchain Doctor"
-                echo "  2) World Bible Lore Consistency Check"
-                echo "  3) Run Full 7-Stage Test Verification"
+                echo "  2) Dialogue Mechanics & Said-Bookisms"
+                echo "  3) Character Voice Profiler"
+                echo "  4) Word Echoes Repetition Scanner"
+                echo "  5) Scene Mechanics MRU Analyzer"
+                echo "  6) Run Full 7-Stage Test Verification"
                 echo "  b) Back"
                 read -r -p "Choose action: " S6_CHOICE || break
                 case "${S6_CHOICE}" in
                     1) bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" ;;
-                    2) read -r -p "World path or name: " WNAME && [ -n "$WNAME" ] && bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$WNAME" ;;
-                    3) bash "${PROJECT_ROOT}/scripts/verify.sh" ;;
+                    2) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" dialogue "$TARG" ;;
+                    3) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/voice.py" "$TARG" ;;
+                    4) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" echoes "$TARG" ;;
+                    5) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/scene_mechanics.py" "$TARG" ;;
+                    6) bash "${PROJECT_ROOT}/scripts/verify.sh" ;;
                     *) ;;
                 esac
                 ;;
@@ -350,6 +381,15 @@ case "${COMMAND}" in
     world|init-world|init)
         exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
         ;;
+    map|cartography)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/cartography.py" "$@"
+        ;;
+    codex|wiki)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/codex_export.py" "$@"
+        ;;
+    series|series-continuity)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/series_continuity.py" "$@"
+        ;;
     concordance|glossary|dramatis-personae)
         exec bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$@"
         ;;
@@ -408,7 +448,7 @@ case "${COMMAND}" in
         exec python3 "${PROJECT_ROOT}/scripts/lib/calendar.py" "$@"
         ;;
 
-    # --- Speculative Calculations & Mechanics ---
+    # --- Speculative Calculations & Simulation ---
     calc|calculator)
         if [ $# -eq 0 ]; then
             echo "Usage: arcanum calc <transit|time-dilation|orbit|comms|habitability|journey|battle|logistics|climate> [args...]" >&2
@@ -452,6 +492,15 @@ case "${COMMAND}" in
                 ;;
         esac
         ;;
+    sim|simulate)
+        if [ $# -gt 0 ] && [ "$1" = "battle" ]; then
+            shift
+        fi
+        exec python3 "${PROJECT_ROOT}/scripts/lib/tactical_sim.py" sim "$@"
+        ;;
+    ambient|soundscape|noise)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/ambient.py" generate "$@"
+        ;;
     journey|expedition)
         exec python3 "${PROJECT_ROOT}/scripts/lib/journey.py" "$@"
         ;;
@@ -478,6 +527,42 @@ case "${COMMAND}" in
     export|publish|build|compile)
         exec bash "${PROJECT_ROOT}/scripts/export_book.sh" "$@"
         ;;
+    preflight|pre-flight)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/preflight.py" "$@"
+        ;;
+    barcode|isbn)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/barcode.py" "$@"
+        ;;
+    matter|frontmatter|backmatter)
+        if [ $# -gt 0 ] && [ "$1" = "build" ]; then
+            shift
+        fi
+        exec python3 "${PROJECT_ROOT}/scripts/lib/frontmatter_builder.py" build "$@"
+        ;;
+    query|synopsis|agent)
+        exec python3 "${PROJECT_ROOT}/scripts/init_query.py" "$@"
+        ;;
+    polish|typography|clean-typography)
+        if [ $# -gt 0 ] && [ "$1" = "typography" ]; then
+            shift
+        fi
+        exec python3 "${PROJECT_ROOT}/scripts/lib/typography_cleaner.py" "$@"
+        ;;
+    read|tts|listen|audio-proof)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/tts_reader.py" "$@"
+        ;;
+    plot|plot-matrix|subplot)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/plot_matrix.py" "$@"
+        ;;
+    structure|paradigm)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/structure.py" "$@"
+        ;;
+    portfolio|catalog)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/portfolio.py" "$@"
+        ;;
+    package|dist|bundle)
+        exec python3 "${PROJECT_ROOT}/scripts/package_distribution.py" "$@"
+        ;;
     report|wordcount|words|count|stats)
         exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
         ;;
@@ -486,6 +571,9 @@ case "${COMMAND}" in
         ;;
     tension|tension-arc)
         exec python3 "${PROJECT_ROOT}/scripts/lib/pacing.py" tension "$@"
+        ;;
+    voice|voice-profiler)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/voice.py" "$@"
         ;;
     cache|cache-engine)
         exec python3 "${PROJECT_ROOT}/scripts/lib/cache.py" "$@"
@@ -519,6 +607,34 @@ case "${COMMAND}" in
         if [ $# -gt 0 ]; then
             AUDIT_SUB="$1"
             case "${AUDIT_SUB}" in
+                dialogue|tags|said-bookisms)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" dialogue "$@"
+                    ;;
+                echoes|echo|repetition)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" echoes "$@"
+                    ;;
+                voice|voice-bleed)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/voice.py" "$@"
+                    ;;
+                scenes|scene|mru)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/scene_mechanics.py" "$@"
+                    ;;
+                structure|paradigm)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/structure.py" "$@"
+                    ;;
+                rhythm|readability)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" rhythm "$@"
+                    ;;
+                prose|stylistics)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" scan "$@"
+                    ;;
                 idioms|idiom|eponyms)
                     shift
                     exec python3 "${PROJECT_ROOT}/scripts/lib/idioms.py" "$@"
@@ -578,13 +694,15 @@ import difflib
 cmd = sys.argv[1]
 known_commands = [
     "write", "open", "new", "create", "save", "snapshot", "publish", "export",
-    "draft", "drafts", "compare", "diff", "redline", "changelog",
+    "preflight", "barcode", "matter", "query", "polish", "typography", "read",
+    "tts", "plot", "structure", "ambient", "portfolio", "package", "map", "codex",
+    "series", "sim", "draft", "drafts", "compare", "diff", "redline", "changelog",
     "words", "count", "report", "universe", "world", "manuscript", "volume",
     "add-volume", "concordance", "continuity", "check-continuity", "doctor",
     "check", "world-doctor", "backup", "backup-dest", "config", "restore", "cache",
     "calc", "magic-check", "magic-report", "genealogy", "lineage", "conlang",
     "faction", "economy", "causality", "ecology", "climate", "idioms", "senses",
-    "cipher", "prophecy", "audit", "pace", "tension", "calendar", "journey",
+    "cipher", "prophecy", "audit", "pace", "tension", "voice", "calendar", "journey",
     "gui", "control-center", "menu", "interactive", "verify", "setup", "uninstall", "version", "help"
 ]
 

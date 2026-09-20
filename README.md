@@ -4,7 +4,7 @@
 > Built for authors on Linux Mint (XFCE) & Debian. Everything in sovereign Markdown & OpenXML. Zero terminal required for daily writing.
 
 [![Status: Production Ready](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)](#)
-[![Unit Tests: 131 Passing](https://img.shields.io/badge/Unit%20Tests-131%2F131%20Passing-brightgreen.svg)](#)
+[![Unit Tests: 226 Passing](https://img.shields.io/badge/Unit%20Tests-226%2F226%20Passing-brightgreen.svg)](#)
 [![Integration: 37 Stages](https://img.shields.io/badge/Integration-37%2F37%20Stages-brightgreen.svg)](#)
 [![Verification: 7/7 Stages](https://img.shields.io/badge/Verification-ALL--CHECKS--PASS-blue.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -13,7 +13,7 @@
 > ### 🛡️ PRODUCTION-READY & AUDIT-VERIFIED
 > Ars Arcanum is a fully verified, local-first authoring platform tested across Tier 1 Linux distributions (**Linux Mint 21/22 XFCE** and **Debian 12/13 XFCE**).
 >
-> - **100% Verified Quality Gate**: 131 automated Python unit tests, 37 targeted integration tests, and the canonical 7-stage verification harness (`scripts/verify.sh`) pass with zero errors.
+> - **100% Verified Quality Gate**: 226 automated Python unit tests, 37 targeted integration tests, and the canonical 7-stage verification harness (`scripts/verify.sh`) pass with zero errors.
 > - **100% Offline Privacy & Zero Telemetry**: Operates strictly on your local machine with zero network calls, zero tracking, and pure Python standard library simulation engines.
 > - **Fail-Closed Security Posture**: Automated SHA-256 binary digest checks, transactional directory staging, path-traversal prevention, and unprivileged daily authoring.
 > - **Zero Vendor Lock-In**: Plain Markdown files (`.md`), standard OpenXML (`.docx`), YAML manifests, and local multi-tier Git version tracking.
@@ -84,24 +84,24 @@ If you have booted into Linux Mint XFCE or Debian:
 
 ---
 
-## 🛠️ Core Toolchain
+## 🛠️ Core Toolchain & Studios
 
 | Creative Phase | Tool | Format | Role & Setup |
 | :--- | :--- | :--- | :--- |
-| **Desktop Control Center** | **Ars Arcanum App** | Native GTK 3 / Zenity | 5-tab author dashboard with global Universe, World Lore, and Manuscript selectors, Visual Scene Metadata Inspector, live word counts, Word Processor toolbar, 1-click Typst/Pandoc publishing, Git version snapshots, 12 speculative fiction tools, and Doctor diagnostics. |
+| **Desktop Control Center** | **Ars Arcanum App** | Native GTK 3 / Zenity / Libadwaita | 6-studio author dashboard with Universe/World/Manuscript navigation, Visual Scene Metadata Inspector, word counts, Word Processor toolbar, 1-click Typst/Pandoc publishing, Git snapshots, and 18 craft/speculative engines. |
 | **World Bible & Wiki** | **Obsidian** | Markdown (`.md`) | Open `<WorldName>` directly as Vault. Comes pre-configured with **Longform**, **Dataview**, **Metadata Menu**, **Calendarium**, **Storyteller Suite**, **Storyline**, **Novel Word Count**, and **Obsidian Git** (10-min auto-commits). (See [Plugin Guide](docs/guides/OBSIDIAN_PLUGINS.md)) |
 | **Outlining & Drafting** | **novelWriter** / **Longform** | Markdown (`.md`) + `nwProject.nwx` | Open `~/Manuscripts/<Manuscript>` to draft with novelWriter's structured project tree, status badges (`Draft`, `Revision`, `Finished`), and scene annotations (`@pov:`, `@location:`, `@char:`, `@thread:`, `@time:`, `@status:`). |
 | **Word Processor Drafting** | **Microsoft Word / Google Docs / LibreOffice** | Standard OpenXML (`.docx`) | Dual-synchronized `.docx` drafting for authors and editors. Pure Python zero-dependency OpenXML engine with bidirectional tag-preserving sync. |
-| **Deep Sprint Canvas** | **FocusWriter** | Plaintext (`.txt` / `.md`) | Minimalist full-screen distraction-free distraction sprint sessions (`F11`). |
+| **Deep Sprint Canvas** | **FocusWriter** | Plaintext (`.txt` / `.md`) | Minimalist full-screen distraction-free distraction sprint sessions (`F11`) with procedural ambient audio generator. |
 | **Revisions & Collaboration**| **LibreOffice Writer** | `.odt` / `.docx` | Track changes with professional editors and redlining. |
 | **Ebook Compilation** | **Calibre** | `.epub` / `.mobi` | Graphical EPUB inspection, metadata tagging, and e-reader sync. |
 | **Typesetting & Print PDF** | **Typst + Pandoc** | `.typ` / Vector PDF | Compiles sub-second, publication-grade print PDFs with trade margins, alternating running headers, ornamental breaks, and front matter (half-title, title, copyright, dedication). |
 
 ---
 
-## 🔮 12-Suite Speculative Fiction Authorial Engine
+## 🔮 18-Suite Speculative & Authorial Craft Engines
 
-Ars Arcanum includes 12 zero-dependency Python standard library engines tailored for science fiction, space opera, hard fantasy, grimdark, alternate history, and time travel authors:
+Ars Arcanum includes 18 zero-dependency Python standard library engines tailored for science fiction, epic fantasy, space opera, grimdark, alternate history, and novel craftsmanship:
 
 | # | Domain & Engine | Key CLI Commands | Primary Capabilities |
 |---|-----------------|------------------|----------------------|
@@ -117,6 +117,12 @@ Ars Arcanum includes 12 zero-dependency Python standard library engines tailored
 | **10** | **Climate, Biomes & Trophic Webs** | `arcanum calc climate`, `arcanum ecology [world]` | Stellar insolation ($W/m^2$), atmospheric circulation cells (Hadley/Ferrel), orographic rain shadow modeler, Bestiary trophic profiler, Lindeman 10% energy pyramid validator. |
 | **11** | **Earth-Eponyms & Sensory Palette** | `arcanum audit idioms [ms]`, `arcanum audit senses [ms]` | Earth-eponym scanner (*Achilles heel*, *Pandora's box*, *boycott*, *diesel*) with custom whitelist, 6D sensory balance analyzer (Visual, Auditory, Olfactory, Gustatory, Tactile, Kinesthetic) to flag "white room" scenes. |
 | **12** | **Ciphers, Runes & Prophecy Matrix** | `arcanum cipher encode|decode|runes`, `arcanum prophecy [world] [ms]` | Classical ciphers (Caesar, Atbash, Vigenère, Rail Fence), Elder Futhark rune vector SVG renderer, prophecy clause lifecycle tracker (`Cosmology/Prophecies/*.md`) auditing resolution across chapters. |
+| **13** | **Prose Stylistics & Dialogue Linter** | `arcanum audit dialogue [ms]`, `arcanum audit echoes [ms]` | Dialogue mechanics linter (`DIA-101` said-bookisms, `DIA-102` floating dialogue, `DIA-103` adverb overload), sliding-window word echo and repetition scanner (`ECH-101`). |
+| **14** | **Character Voice Profiler** | `arcanum audit voice [ms]` | Lexical fingerprint analyzer isolating character dialogue by `@char:` tags: sentence complexity, syllable count, Flesch-Kincaid grade, and voice divergence checks. |
+| **15** | **Story Paradigm & Scene Mechanics** | `arcanum audit structure [ms]`, `arcanum audit scenes [ms]` | Pacing validation against 6 narrative paradigms (Save the Cat, Hero's Journey, 7-Point, Story Circle, Kishōtenketsu, 3-Act 9-Block) and Motivation-Reaction Units (MRU). |
+| **16** | **Publishing Pre-Flight & Barcodes** | `arcanum preflight [ms]`, `arcanum barcode <isbn>` | Automated print PDF/EPUB compliance linter (trim size, gutter ratio, straight quotes), vector SVG/PNG ISBN-13/EAN-13 barcode generator with 5-digit price extensions. |
+| **17** | **Cartography & Static Codex Wiki** | `arcanum map [world]`, `arcanum codex [world]` | Offline interactive Leaflet/SVG vector map with lore pin layers and travel routing; static HTML/CSS reader codex exporter with searchable lore cards and spoiler toggles. |
+| **18** | **Audio Proofreading & Distribution** | `arcanum read [ms] [ch]`, `arcanum package [ms]` | Offline neural auditory proofreader with Piper TTS / espeak-ng; multi-platform distribution packager for Amazon KDP, IngramSpark (precise spine calc), Apple Books, and Kobo. |
 
 ---
 
@@ -124,12 +130,13 @@ Ars Arcanum includes 12 zero-dependency Python standard library engines tailored
 
 Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (`arcanum` or `ars-arcanum`):
 
-1. **`Ars Arcanum Control Center` (`arcanum control-center`)**: Native Python/GTK 3 dashboard with 5 tabs:
-   - **🪐 Universes & Worlds**: Universe and World Lore Vault management, creation wizards, toolchain launchers.
-   - **✍️ Manuscripts & Drafting**: Manuscript hierarchy tree, live word counts, **Word Processing Toolbar** ("Open in Word Processor", "Sync DOCX ↔ Markdown", "DOCX Formatting Settings"), **Manuscript Draft Revisions & Redline Comparator** (fork drafts, visual diff, LibreOffice bridge), and the **Visual Scene Metadata Inspector** for `@pov`, `@char`, `@location`, `@thread`, `@time`, `@status`.
-   - **📚 Publishing & Exports**: 1-Click Typst PDF, Pandoc EPUB, and submission DOCX export, automated Back-Matter Concordance & Dramatis Personae generator, volume selector (`Book-01`, `Book-02`, Omnibus), trim size presets (6x9, 5.5x8.5, 5x8), live PDF viewer.
-   - **🔒 Snapshots & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, **Dual-Target Secure External/USB Backup destination manager**, restore drill wizard.
-   - **🩺 Diagnostics & Doctor**: Ars Arcanum toolchain status badges, World Bible lore consistency checks (`world-doctor`), 7-stage verification trigger.
+1. **`Ars Arcanum Control Center` (`arcanum control-center`)**: Native Python/GTK 3 dashboard with 6 studios:
+   - **🪐 Cosmos & Worlds**: Universe and World Lore Vault management, creation wizards, interactive cartography, and codex exports.
+   - **✍️ Manuscripts & Drafting**: Manuscript hierarchy tree, live word counts, **Word Processing Toolbar** ("Open in Word Processor", "Sync DOCX ↔ Markdown"), **Draft Revisions & Redline Comparator** (fork drafts, visual diff, LibreOffice bridge), and **Visual Scene Metadata Inspector**.
+   - **🔮 Speculative Fiction & Craft**: Astrophysics, hard magic, dynastic trees, conlangs, pacing, factions, economy, causal DAGs, climate, idioms, 6D senses, ciphers, and prophecy trackers.
+   - **📚 Publishing & Typesetting**: 1-Click Typst PDF, Pandoc EPUB, submission DOCX export, Pre-Flight publication compliance linter, ISBN-13 barcode generator, Front/Back matter builder, and Query package generator.
+   - **🔒 Vault Safety & Backups**: 1-Click Git version snapshot button with log viewer, standalone `.tar.gz` + SHA-256 backup creator, **Dual-Target Secure External/USB Backup destination manager**, restore drill wizard.
+   - **🩺 Diagnostics & Doctor**: Ars Arcanum toolchain status badges, World Bible lore consistency checks (`world-doctor`), and 7-stage verification trigger.
 2. **`Write & Open Workspace` (`arcanum write [target]`)**: Opens novelWriter (for manuscripts) or Obsidian (for world lore) directly without terminal management.
 3. **`Word Processor Drafting & Sync` (`arcanum word [ms]` / `arcanum docx <build|sync|import|open> [ms]`)**:
    - `arcanum word [ms]`: Opens active manuscript draft in Microsoft Word, Google Docs, or LibreOffice Writer.
@@ -139,7 +146,6 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
 5. **`Manuscript Drafts & Redline Comparison` (`arcanum draft <ms>` / `arcanum compare <ms> <target_draft> <prior_draft>`)**:
    - `arcanum draft <ms> [name]`: Atomically forks existing prose into discrete draft folders (`Draft-01`, `Draft-02`, `Draft-03`), updates active draft pointer, and tags Git milestone.
    - `arcanum compare <ms> [d2] [d1] --browser`: Generates accessible, high-contrast standalone HTML Redline reports with soft pastel deletion/addition styling, word delta metrics, chapter navigation sidebar, and search filtering.
-   - `arcanum compare <ms> [d2] [d1] --libreoffice`: Launches native LibreOffice Writer Track Changes comparison.
 6. **`Save Snapshot` (`arcanum save [target] [-m "note"]` / `arcanum snapshot`)**: Records an instant timestamped Git version snapshot.
 7. **`Dual-Target Secure Backups` (`arcanum backup [target]` / `arcanum backup-dest set <path>`)**:
    - `arcanum backup-dest set /media/usb/backups`: Configures a persistent secure secondary destination (USB, encrypted vault, external mount).
@@ -147,8 +153,7 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
 8. **`Publish & Export` (`arcanum publish [manuscript] [--format book|submission|all]` / `arcanum export`)**: Compiles print PDF (Typst), distribution EPUB (Pandoc), and standard submission DOCX in one command.
 9. **`Words & Analytics` (`arcanum words [manuscript]` / `arcanum report`)**: Shows live word counts, chapter metrics, and status breakdowns.
 10. **`Back-Matter Concordance` (`arcanum concordance <world> --manuscript <ms>`)**: Compiles publication-ready Dramatis Personae and Glossary back-matter.
-11. **`Health & Diagnostics` (`arcanum check` / `arcanum doctor` / `arcanum continuity`)**: Runs system diagnostics, toolchain verification, character consistency audits, and all 12 speculative fiction lore checks.
-12. **`Fast Performance Cache` (`arcanum cache <scan|wordcounts|clear> [path]`)**: Manages mtime-keyed in-memory caching for sub-millisecond analytics.
+11. **`Health & Diagnostics` (`arcanum check` / `arcanum doctor` / `arcanum continuity`)**: Runs system diagnostics, toolchain verification, character consistency audits, and all 18 craft/speculative fiction checks.
 
 ---
 
@@ -158,7 +163,9 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
    - Install **LeechBlock NG** from the [Firefox Add-ons Store](https://addons.mozilla.org/firefox/addon/leechblock-ng/).
    - Open LeechBlock Options -> **Import** -> Select `configs/leechblock_arcanum_rules.json`.
    - Blocks YouTube, Reddit, Twitter/X, TikTok, and social media during writing hours (09:00–13:00 and 14:00–17:00).
-2. **OS Notification Muting**:
+2. **Procedural Ambient Focus**:
+   - Run `arcanum ambient rain --html` or `arcanum ambient hearth` for procedural synthesized sound masking during deep drafting sprints.
+3. **OS Notification Muting**:
    - Click the Notification Bell icon in the Linux Mint panel and toggle **Do Not Disturb**.
    - See [XFCE DND Guide](docs/guides/DISTRACTION_CONTROL.md) for custom keyboard shortcut setup.
 
@@ -183,7 +190,7 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
 ## 📚 Complete Resource Index
 
 - [Author's Field Manual](docs/AUTHOR_MANUAL.md) — Visual plain-English handbook for novel writing, worldbuilding, and publishing.
-- [Technical Architecture & ADRs](docs/ARCHITECTURE.md) — System blueprint, technical deep-dives, exit codes, and Architectural Decision Records (ADR-001 through ADR-028).
+- [Technical Architecture & ADRs](docs/ARCHITECTURE.md) — System blueprint, technical deep-dives, exit codes, and Architectural Decision Records (ADR-001 through ADR-035).
 - [Software Catalog & Download Links](docs/guides/SOFTWARE_CATALOG.md) — Exact packages, Flatpak IDs, ISOs, and commands.
 - [Optional Extras Guide](docs/guides/OPTIONAL_EXTRAS.md) — Azgaar maps, Krita, Inkscape, Gramps, PolyGlot, Sigil, Kiwix, and native standard library tools.
 - [Typography & Fonts Guide](docs/guides/TYPOGRAPHY_AND_FONTS.md) — Free literary typefaces (Linux Libertine, EB Garamond, Alegreya), DOCX styling presets, and Typst formatting rules.
@@ -192,7 +199,7 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
 - [Automated Backup Guide](docs/guides/BACKUP_SETUP.md) — 3-2-1 backup strategy with Déjà Dup and native dual-target replication.
 - [Typst Book Template](templates/typst/book_template.typ) — Reusable novel layout engine.
 - [Obsidian World Bible Index Dashboard](templates/world-bible/Templates/World-Bible-Index.md) — Dataview queries and lore hub.
-- [Roadmap & Milestones](docs/ROADMAP.md) — Project charter, hardware baselines, milestones (M0–M21), and operational status.
+- [Roadmap & Milestones](docs/ROADMAP.md) — Project charter, hardware baselines, milestones (M0–M28), and operational status.
 
 ---
 
@@ -200,10 +207,10 @@ Ars Arcanum provides both intuitive GUI launchers and a unified CLI dispatcher (
 
 | Doc | What it is |
 | :--- | :--- |
-| [docs/AUTHOR_MANUAL.md](docs/AUTHOR_MANUAL.md) | Comprehensive Author's Field Manual for daily writing, lore building, DOCX dual-sync, 12 speculative engines, and publication |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical architecture, invariants, exit codes, and full ADR catalog (ADR-001 through ADR-028) |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Project charter, milestones (M0–M21), hardware baseline, and real-time status queues |
-| [CHANGELOG.md](CHANGELOG.md) | Notable changes: audit remediation series, separated architecture, multi-drafts, DOCX sync, and 12 speculative fiction engines |
+| [docs/AUTHOR_MANUAL.md](docs/AUTHOR_MANUAL.md) | Comprehensive Author's Field Manual for daily writing, lore building, DOCX dual-sync, 18 craft engines, cartography, and publication |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical architecture, invariants, exit codes, and full ADR catalog (ADR-001 through ADR-035) |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Project charter, milestones (M0–M28), hardware baseline, and real-time status queues |
+| [CHANGELOG.md](CHANGELOG.md) | Notable changes: audit remediation series, separated architecture, multi-drafts, DOCX sync, 18 craft engines, preflight, barcodes, and cartography |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute: ground rules, exit-code contract, quality gate, commit style, submission flow |
 | [SECURITY.md](SECURITY.md) | Security scope, installer privilege surface disclosure, and private vulnerability reporting |
 | [PRIVACY.md](PRIVACY.md) | Privacy policy, offline data minimization, and zero telemetry guarantee |
