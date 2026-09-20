@@ -59,3 +59,8 @@ All Flatpak packages are sourced from the official Flathub remote repository (`h
 | **Manuscript Scaffold** | novelWriter | `fileVersion 1.5` | `templates/manuscript/nwProject.nwx` |
 | **World Manifest** | World Lore Manifest | `schema v1` (flat key-value) | `~/Universes/<UniverseName>/<WorldName>/world.yaml` |
 | **Manuscript Manifest** | Manuscript Manifest | `schema v1` (flat key-value) | `~/Manuscripts/<ManuscriptName>/manuscript.yaml` |
+| **Earth Idioms Whitelist** | Immersion Linter | `schema v1` (JSON keyword whitelist) | `configs/idioms.json` |
+| **Faction Lore Schema** | Faction Matrix Engine | YAML Frontmatter (`FAC-101` validator) | `templates/world-bible/Factions/Faction-Template.md` |
+| **Economy Lore Schema** | Economy & PPP Engine | YAML Frontmatter (`ECO-101` validator) | `templates/world-bible/Economies/Economy-Template.md` |
+| **Trophic Ecology Schema** | Ecosystem Food-Web Engine | YAML Frontmatter (`ECO-301` validator) | `templates/world-bible/Bestiary/Creature-Flora-Fauna-Template.md` |
+| **Prophecy Matrix Schema** | Foretelling Tracker | YAML Frontmatter (`PRP-101` validator) | `templates/world-bible/Cosmology/Prophecy-Template.md` |

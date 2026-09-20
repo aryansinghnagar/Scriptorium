@@ -7,8 +7,14 @@ tags:
   - status/active
 classification: "Beast / Monster / Flora / Construct / Apex Predator"
 threat_level: "Harmless / Low / Moderate / Lethal / Calamity"
+trophic_level: 2 # 1=Producer/Flora, 2=Primary Consumer/Herbivore, 3=Secondary Consumer/Carnivore, 4=Apex Predator, 5=Decomposer
+dietary_prey:
+  - "[[Prey-Species]]"
+biomass_kg: 80
+daily_caloric_demand: 3000
+population_density: 15.0 # Individuals per km^2
 habitat: "[[Location-Name]]"
-diet: "Herbivore / Carnivore / Omnivore / Essence Feeder"
+diet: "Herbivore / Carnivore / Omnivore / Autotroph"
 domesticated: "Wild / Trainable / Domesticated / Untamable"
 rarity: "Ubiquitous / Common / Rare / Legendary"
 ---
@@ -20,17 +26,18 @@ rarity: "Ubiquitous / Common / Rare / Legendary"
 ---
 
 ## 1. Physical Anatomy & Senses
-- **Size, Scale & Weight**:
+- **Size, Scale & Weight**: Average biomass ~80 kg.
 - **Distinctive Features** (Fangs, chitin, plumage, luminescent organs):
 - **Locomotion & Speed**:
 - **Sensory Capabilities** (Thermal vision, echo-location, magical resonance):
 
 ---
 
-## 2. Habitat & Ecological Niche
+## 2. Habitat & Trophic Food-Web Niche
 - **Native Environment & Range**: See [[Location-Name]]
-- **Dietary Habits & Prey**:
-- **Predators & Competitors**:
+- **Trophic Level & Lindeman Energy Pyramid**: Level 2 Primary Consumer / Herbivore.
+- **Dietary Prey / Primary Food Source**: See [[Prey-Species]]
+- **Natural Predators & Competitors**:
 - **Seasonal Behavior & Migration Patterns**:
 
 ---

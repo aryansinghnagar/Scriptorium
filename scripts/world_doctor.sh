@@ -176,7 +176,8 @@ TYPED_REF_FIELDS = {
     "faction", "origin", "current_location", "leader", "headquarters",
     "dominant_faction", "realm_region", "region", "rival", "ally", "mentor",
     "magic_ability", "key_landmarks", "habitat", "creator", "current_bearer",
-    "associated_faction", "primary_location",
+    "associated_faction", "primary_location", "allies", "rivals", "vassals",
+    "overlord", "treaties", "oracle", "target_entity", "dietary_prey",
 }
 
 REQUIRED_BY_TYPE = {
@@ -189,6 +190,8 @@ REQUIRED_BY_TYPE = {
     "creature": ("name",),
     "artifact": ("name",),
     "cosmology": ("name",),
+    "economy": ("name",),
+    "prophecy": ("name",),
 }
 
 def read_capped(path):
@@ -581,7 +584,7 @@ if MANUSCRIPT and os.path.isdir(MANUSCRIPT):
 
             for line in text.splitlines():
                 stripped = line.strip()
-                m_tag = re.match(r"^@(pov|char|character|location|focus|faction|item|artifact):\s*(.+)$", stripped, re.IGNORECASE)
+                m_tag = re.match(r"^@(pov|char|character|location|focus|faction|item|artifact|prophecy):\s*(.+)$", stripped, re.IGNORECASE)
                 if m_tag:
                     tag_type = m_tag.group(1).lower()
                     raw_val = m_tag.group(2).strip()

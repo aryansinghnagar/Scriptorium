@@ -142,21 +142,30 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] **Wave 6: Overland/Naval Journey Modeler & Custom Planetary Calendars** (`scripts/lib/journey.py`, `scripts/lib/calendar.py`, `arcanum journey`, `arcanum calendar`): 14 terrain friction coefficients, 8 travel modes, ration/water burn rates, day-by-day itineraries, custom planetary calendar arithmetic, multi-moon synodic phase cycles, syzygies, and eclipses.
 - [x] Full GTK 3 Control Center GUI integration in Tab 1 and Tab 2 (`scripts/lib/ui_gtk3.py`).
 - [x] 100% standard library implementation with zero external pip dependencies and 100% offline privacy.
-- [x] Comprehensive test suites (82 unit tests across `tests/test_*.py` + end-to-end CLI tests 26–31 in `tests/test_audit_fixes.sh`).
+- [x] Comprehensive test suites (48 unit tests across `tests/test_*.py` + end-to-end CLI tests 26–31 in `tests/test_audit_fixes.sh`).
+
+### M21: Speculative Fiction Authorial Workflow Suites (Waves 7–12 / Phase 2)
+- [x] **Wave 7: Geopolitical Faction Matrix & Campaign Logistics** (`scripts/lib/factions.py`, `arcanum faction`, `arcanum calc battle`, `arcanum calc logistics`): Diplomatic alliance/rivalry paradox detection (`FAC-101` to `FAC-104`), Lanchester power-law combat calculator (square and linear laws, wall fortification multipliers), military campaign supply train and wagon radius calculator, Mermaid/HTML visualizers.
+- [x] **Wave 8: In-World Economy, Commodity PPP & Tech Era Anachronisms** (`scripts/lib/economy.py`, `arcanum economy`, `arcanum audit tech`, `arcanum calc trade`): Multi-currency commodity basket Purchasing Power Parity (PPP), manuscript price outlier audit (`ECO-101`/`ECO-102`), historical technological era anachronism audit (`ECO-201`), trade route freight and tariff margin calculator.
+- [x] **Wave 9: Causal DAGs, Time Travel Loops & Multiverse Branching** (`scripts/lib/causality.py`, `arcanum causality`, `arcanum causality branch`): Event causal graph extractor, cycle/paradox detection for grandfather (`CAU-101`) and bootstrap (`CAU-102`) paradoxes, Novikov self-consistency, multiverse timeline branch coordinate generator, Mermaid DAG exporter.
+- [x] **Wave 10: Planetary Climate, Orographic Biomes & Trophic Food-Webs** (`scripts/lib/climate.py`, `scripts/lib/ecology.py`, `arcanum calc climate`, `arcanum ecology`): Stellar insolation ($W/m^2$), equilibrium temperature and habitability, atmospheric circulation cell derived Coriolis, adiabatic orographic rain shadow and leeward desert modeler, Bestiary trophic profiler, and Lindeman 10% energy pyramid validator (`ECO-301` to `ECO-304`).
+- [x] **Wave 11: Earth-Eponym Scanner, Idiom De-Immersion & 6D Sensory Palette** (`scripts/lib/idioms.py`, `scripts/lib/senses.py`, `arcanum audit idioms`, `arcanum audit senses`): Earth-eponym scanner (`IDM-101` to `IDM-103`), 6-dimensional sensory distribution analyzer (visual, auditory, olfactory, gustatory, tactile/thermal, kinesthetic/vestibular), White Room syndrome (`SNS-101`), sensory monotony alerts (`SNS-102`).
+- [x] **Wave 12: Inscriptions, In-World Ciphers & Prophecy Resolution** (`scripts/lib/cipher.py`, `scripts/lib/prophecy.py`, `arcanum cipher`, `arcanum prophecy`): Historical ciphers (Caesar, Atbash, Vigenère, Rail Fence, Columnar), Elder Futhark / Anglo-Saxon Futhorc phonetic rune translation, standalone vector SVG inscription cards, prophecy clause resolution lifecycle tracking (`PRP-101` to `PRP-103`).
+- [x] Complete test suites across 20 test modules (131 unit tests across `tests/test_*.py` + 37 end-to-end integration tests in `tests/test_audit_fixes.sh`).
 
 ---
 
 ## 5. Real-Time Operational Status & Momentum Queues
 
 ### Operational State
-- **Active Status**: Production-Ready / All 20 Milestones Complete & Verified (Grade A).
-- **Verification**: 100% Pass Rate across all test harnesses (`scripts/verify.sh`, `tests/test_audit_fixes.sh`, `tests/test_deep_audit.sh`, `tests/test_concordance_edge_cases.sh`, `tests/test_audit_claude_improvements.sh`, `tests/test_performance_cache.sh`, `tests/test_continuity_engine.sh`, `tests/test_drafts_and_diff.py`, `tests/test_drafts_and_diff.sh`, `tests/test_docx_sync.py`, `tests/test_docx_sync.sh`, `tests/test_astrophysics.py`, `tests/test_magic_system.py`, `tests/test_genealogy.py`, `tests/test_conlang.py`, `tests/test_pacing.py`, `tests/test_journey.py`, `tests/test_calendar.py`).
+- **Active Status**: Production-Ready / All 21 Milestones Complete & Verified (Grade A).
+- **Verification**: 100% Pass Rate across all test harnesses (`scripts/verify.sh`, `tests/test_audit_fixes.sh`, `tests/test_deep_audit.sh`, `tests/test_concordance_edge_cases.sh`, `tests/test_audit_claude_improvements.sh`, `tests/test_performance_cache.sh`, `tests/test_continuity_engine.sh`, `tests/test_drafts_and_diff.py`, `tests/test_drafts_and_diff.sh`, `tests/test_docx_sync.py`, `tests/test_docx_sync.sh`, `tests/test_astrophysics.py`, `tests/test_magic_system.py`, `tests/test_genealogy.py`, `tests/test_conlang.py`, `tests/test_pacing.py`, `tests/test_journey.py`, `tests/test_calendar.py`, `tests/test_factions.py`, `tests/test_economy.py`, `tests/test_causality.py`, `tests/test_climate.py`, `tests/test_ecology.py`, `tests/test_idioms.py`, `tests/test_senses.py`, `tests/test_cipher.py`, `tests/test_prophecy.py`).
 - **Code Quality**: Zero ShellCheck warnings, zero Python syntax errors, valid XML/JSON schemas, pre-compiled regex performance optimizations.
 
 ### Momentum Queues
 
 #### `now` (Immediate Focus)
-- [x] Modernize and synchronize all repository documentation, C4 architecture diagrams, and complete ADR-001 through ADR-027 catalog.
+- [x] Modernize and synchronize all repository documentation, C4 architecture diagrams, and complete ADR-001 through ADR-028 catalog.
 - [x] Pass all automated test suites and quality gates.
 
 #### `next` (Ready to Execute)

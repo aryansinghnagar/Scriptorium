@@ -38,7 +38,8 @@ The default Ars Arcanum environment is kept lean and focused. When specialized c
 ## 2. Worldbuilding & Lore Systems
 
 ### Gramps (Genealogy & Dynasties)
-- **Use Case**: Tracking royal bloodlines, multi-generation family trees, dynastic houses, and birth/death dates across centuries.
+- **Use Case**: Advanced standalone desktop genealogy tracking across thousands of family entities.
+- **Native Ars Arcanum Alternative**: `arcanum genealogy <House>` and `arcanum lineage <House>` compile accessible Mermaid.js family tree diagrams into Obsidian notes, render interactive HTML/SVG trees, and audit chronological/biological paradoxes without external apps.
 - **Website**: [https://gramps-project.org/](https://gramps-project.org/)
 - **Flatpak ID**: `org.gramps_project.Gramps`
 - **Installation**:
@@ -47,7 +48,8 @@ The default Ars Arcanum environment is kept lean and focused. When specialized c
   ```
 
 ### PolyGlot (Conlang & Language Construction)
-- **Use Case**: Inventing fantasy languages, tracking phonetic inventories, grammar rules, dictionary definitions, and orthography scripts.
+- **Use Case**: Advanced desktop conlang construction studio with audio pronunciation modeling.
+- **Native Ars Arcanum Alternative**: `arcanum conlang generate <Lang>`, `arcanum conlang mutate <Lang>`, and `arcanum conlang lexicon <Lang>` generate phonotactically consistent names and apply historical sound-change shift laws directly from Obsidian `Languages/*.md` inventories.
 - **Website**: [https://draque-press.itch.io/polyglot](https://draque-press.itch.io/polyglot)
 - **GitHub**: [https://github.com/DraqueT/PolyGlot](https://github.com/DraqueT/PolyGlot)
 - **Linux Setup**: Java `.jar` / Linux release package executable with OpenJDK.

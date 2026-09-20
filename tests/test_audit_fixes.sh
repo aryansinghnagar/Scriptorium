@@ -531,4 +531,117 @@ bash scripts/arcanum calendar "${WORLD_PATH}" --phases --json > "${TMP_DIR}/cale
 python3 -c "import json; d = json.load(open('${TMP_DIR}/calendar.json')); assert len(d['moons']) >= 1; assert 'day' in d"
 echo "  OK Test 31 passed: Journey route calculation and Planetary calendar verified"
 
+echo "[Test 32] Geopolitical Faction Matrix & Campaign Logistics..."
+cat > "${WORLD_PATH}/Factions/Solar_Empire.md" << 'EOF'
+---
+name: "Solar Empire"
+type: faction
+military_strength: 50000
+allies: ["[[Lunar Dominion]]"]
+---
+EOF
+cat > "${WORLD_PATH}/Factions/Lunar_Dominion.md" << 'EOF'
+---
+name: "Lunar Dominion"
+type: faction
+military_strength: 35000
+allies: ["[[Solar Empire]]"]
+---
+EOF
+bash scripts/arcanum faction "${WORLD_PATH}" --json > "${TMP_DIR}/factions.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/factions.json')); assert d['factions_count'] >= 2; assert d['findings_count'] == 0"
+bash scripts/arcanum calc battle -a 10000 -d 5000 --json > "${TMP_DIR}/battle.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/battle.json')); assert d['victor'] == 'Attacker'"
+bash scripts/arcanum calc logistics --infantry 5000 --json > "${TMP_DIR}/logistics.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/logistics.json')); assert d['logistics_requirements']['wagons_required'] > 0"
+echo "  OK Test 32 passed: Geopolitical Faction Matrix & Lanchester / Logistics engines verified"
+
+echo "[Test 33] In-World Economy, Commodity PPP & Tech Era Anachronisms..."
+cat > "${WORLD_PATH}/Economies/Imperial_Standard.md" << 'EOF'
+---
+name: "Imperial Standard"
+base_currency: "Crown"
+tech_era: "medieval"
+commodity_basket:
+  - "loaf_of_bread: 2"
+---
+EOF
+bash scripts/arcanum economy "${WORLD_PATH}" --json > "${TMP_DIR}/economy.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/economy.json')); assert d['economies_count'] >= 1"
+bash scripts/arcanum audit tech "${MS_PATH}" --era medieval --json > "${TMP_DIR}/tech_audit.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/tech_audit.json')); assert 'findings' in d"
+echo "  OK Test 33 passed: In-World Economy & Tech Era Anachronism audit verified"
+
+echo "[Test 34] Causal DAGs, Time Travel Loops & Multiverse Branching..."
+cat > "${WORLD_PATH}/History/Great_Convergence.md" << 'EOF'
+---
+name: "Great Convergence"
+id: convergence
+timeline: prime
+causes: [first-contact]
+---
+EOF
+cat > "${MS_PATH}/Book-01/01_Act_I/04_ConvergenceScene.md" << 'EOF'
+# Chapter 4
+@event: first-contact
+@timeline: prime
+@causal-origin: convergence
+EOF
+bash scripts/arcanum causality "${WORLD_PATH}" "${MS_PATH}" --json > "${TMP_DIR}/causality.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/causality.json')); assert d['events_count'] >= 2; assert d['findings_count'] == 0"
+rm -f "${MS_PATH}/Book-01/01_Act_I/04_ConvergenceScene.md"
+echo "  OK Test 34 passed: Causal DAG and timeline extraction verified"
+
+echo "[Test 35] Planetary Climate & Trophic Food-Web Simulator..."
+bash scripts/arcanum calc climate --star-lum 1.0 --distance-au 1.0 --json > "${TMP_DIR}/climate.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/climate.json')); assert d['insolation']['liquid_water_habitable'] is True"
+cat > "${WORLD_PATH}/Bestiary/Ancient_Fern.md" << 'EOF'
+---
+name: "Ancient Fern"
+trophic_level: 1
+habitat: "Forest"
+biomass_kg: 50000
+---
+EOF
+cat > "${WORLD_PATH}/Bestiary/Forest_Elk.md" << 'EOF'
+---
+name: "Forest Elk"
+trophic_level: 2
+habitat: "Forest"
+biomass_kg: 100
+population_density: 20
+dietary_prey: ["[[Ancient Fern]]"]
+---
+EOF
+bash scripts/arcanum ecology "${WORLD_PATH}" --json > "${TMP_DIR}/ecology.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/ecology.json')); assert d['species_count'] >= 2; assert d['findings_count'] == 0"
+echo "  OK Test 35 passed: Climate simulator and Trophic Food-Web verified"
+
+echo "[Test 36] Earth-Eponym Scanner & 6D Sensory Palette..."
+set +e
+bash scripts/arcanum audit idioms "${MS_PATH}" --json > "${TMP_DIR}/idioms.json"
+bash scripts/arcanum audit senses "${MS_PATH}" --json > "${TMP_DIR}/senses.json"
+set -e
+python3 -c "import json; d = json.load(open('${TMP_DIR}/idioms.json')); assert 'findings' in d"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/senses.json')); assert 'overall_percentages' in d"
+echo "  OK Test 36 passed: Idiom immersion audit and 6D Sensory Palette verified"
+
+echo "[Test 37] Inscriptions, In-World Ciphers & Prophecy Matrix..."
+bash scripts/arcanum cipher encode "SECRET VAULT" --type vigenere --key "LORE" --json > "${TMP_DIR}/cipher.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/cipher.json')); assert d['ciphertext'] != 'SECRET VAULT'"
+bash scripts/arcanum cipher runes "Thor" --json > "${TMP_DIR}/runes.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/runes.json')); assert len(d['runes']) > 0"
+cat > "${WORLD_PATH}/Cosmology/Prophecies/Sun_Prophecy.md" << 'EOF'
+---
+name: "Sun Prophecy"
+type: prophecy
+status: unfulfilled
+clauses:
+  - "When the twin suns rise"
+---
+EOF
+bash scripts/arcanum prophecy "${WORLD_PATH}" --json > "${TMP_DIR}/prophecy.json"
+python3 -c "import json; d = json.load(open('${TMP_DIR}/prophecy.json')); assert d['prophecies_count'] >= 1"
+echo "  OK Test 37 passed: Ciphers, Runes & Prophecy Matrix verified"
+
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

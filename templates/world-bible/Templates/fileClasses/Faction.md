@@ -15,6 +15,7 @@ fields:
     options:
       values:
         - Empire / Realm
+        - Kingdom / Duchy
         - Guild / Order
         - Religious Cult / Sect
         - Rebel / Resistance
@@ -33,6 +34,16 @@ fields:
         - Regional
         - Local
         - Underground
+  military_strength:
+    type: Number
+  allies:
+    type: List
+  rivals:
+    type: List
+  vassals:
+    type: List
+  treaties:
+    type: List
 ---
 # Faction FileClass Schema
-Defines structured frontmatter fields and controlled input validation for factions via Metadata Menu.
+Defines structured frontmatter fields, diplomatic allegiances, and military strength validation for factions via Metadata Menu.

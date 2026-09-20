@@ -9,6 +9,15 @@ faction_type: "Empire / Realm / Guild / Order / Religious Cult / Sect / Rebel / 
 leader: "[[Leader-Character]]"
 headquarters: "[[Location-Name]]"
 influence_level: "Dominant / Regional / Local / Underground"
+military_strength: 10000
+allies:
+  - "[[Allied-Faction]]"
+rivals:
+  - "[[Rival-Faction]]"
+vassals: []
+overlord: ""
+treaties:
+  - "[[Treaty-Name]]"
 symbols_colors: "Silver Hawk on Indigo / Crimson Dragon"
 motto: "In Ferro Veritas"
 ---
@@ -28,7 +37,7 @@ What is this organization, why was it formed, and what power does it wield in th
 - **Public Stated Goal**: What they claim to fight for.
 - **Hidden / True Agenda**: What the high council or leadership actually seeks.
 - **Primary Foes & Rival Factions**: See [[Rival-Faction]]
-- **Key Alliances**:
+- **Key Alliances**: See [[Allied-Faction]]
 
 ---
 
@@ -42,11 +51,11 @@ What is this organization, why was it formed, and what power does it wield in th
 
 ---
 
-## 4. Resources & Assets
-- **Military & Martial Strength**:
-- **Financial & Commercial Wealth**:
-- **Magic / Technological Assets**:
-- **Intelligence & Espionage Network**:
+## 4. Resources & Campaign Logistics
+- **Military & Martial Strength**: Active personnel, standing army, fleet assets.
+- **Financial & Commercial Wealth**: Currencies, trade monopolies, treasury.
+- **Magic / Technological Assets**: Arcane armaments, artifacts.
+- **Intelligence & Espionage Network**: Informants, spy rings.
 
 ---
 

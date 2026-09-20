@@ -101,7 +101,7 @@ for p in required_plugins:
     assert p in plugins, f"Missing required plugin in pre-configured suite: {p}"
 
 # Validate fileClasses schemas
-for fc in ("Character", "Location", "Faction", "TimelineEvent", "Creature", "Artifact", "Cosmology", "MagicSystem", "Language"):
+for fc in ("Character", "Location", "Faction", "TimelineEvent", "Creature", "Artifact", "Cosmology", "MagicSystem", "Language", "Economy", "Prophecy"):
     fc_path = f"templates/world-bible/Templates/fileClasses/{fc}.md"
     assert os.path.isfile(fc_path), f"Missing fileClass schema: {fc_path}"
     with open(fc_path, 'r', encoding='utf-8') as f:
@@ -567,6 +567,21 @@ bash scripts/arcanum conlang --help >/dev/null
 bash scripts/arcanum pace --help >/dev/null
 bash scripts/arcanum tension --help >/dev/null
 bash scripts/arcanum calendar --help >/dev/null
+bash scripts/arcanum faction --help >/dev/null
+bash scripts/arcanum economy --help >/dev/null
+bash scripts/arcanum causality --help >/dev/null
+bash scripts/arcanum ecology --help >/dev/null
+bash scripts/arcanum climate --help >/dev/null
+bash scripts/arcanum idioms --help >/dev/null
+bash scripts/arcanum senses --help >/dev/null
+bash scripts/arcanum cipher --help >/dev/null
+bash scripts/arcanum prophecy --help >/dev/null
+bash scripts/arcanum calc battle --help >/dev/null
+bash scripts/arcanum calc logistics --help >/dev/null
+bash scripts/arcanum calc climate --help >/dev/null
+bash scripts/arcanum audit idioms --help >/dev/null
+bash scripts/arcanum audit senses --help >/dev/null
+bash scripts/arcanum audit tech --help >/dev/null
 bash scripts/ars-arcanum --version >/dev/null
 echo "  OK arcanum and ars-arcanum CLI entrypoints and subcommands"
 

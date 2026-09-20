@@ -38,7 +38,10 @@ Your Ars Arcanum World Lore Vaults come pre-configured with a premier, modular s
      - `Cosmology.md`: Name, concept type, domain, plane of origin, worship status, associated faction.
      - `MagicSystem.md`: Name, classification, power source, prevalence, danger/cost.
      - `Language.md`: Name, language family, spoken by, status, writing system.
+     - `Economy.md`: Base currency, denominations, commodity basket PPP rates, trade routes.
+     - `Prophecy.md`: Oracle/source, era given, prophecy clauses, fulfillment status, intended resolution.
 
 3. **Pure Lore Vault Structure**:
-   - `Characters/`, `Locations/`, `Factions/`, `Magic-Technology/`, `History/`, `Languages/`, `Bestiary/`, `Artifacts/`, `Cosmology/` provide dedicated domain folders.
+   - `Characters/`, `Locations/`, `Factions/`, `Economies/`, `Magic-Technology/`, `History/`, `Languages/`, `Bestiary/`, `Artifacts/`, `Cosmology/` provide dedicated domain folders.
    - `Templates/` houses quickstart notes, fileClasses, and the central `World-Bible-Index.md` Dataview dashboard.
+   - All frontmatter properties are automatically validated by `arcanum doctor` and `arcanum world_doctor` for semantic continuity, timeline paradoxes, and lore consistency.

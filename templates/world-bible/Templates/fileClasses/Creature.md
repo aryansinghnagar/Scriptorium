@@ -28,6 +28,23 @@ fields:
         - Moderate
         - Lethal
         - Calamity
+  trophic_level:
+    type: Select
+    options:
+      values:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+  dietary_prey:
+    type: List
+  biomass_kg:
+    type: Number
+  daily_caloric_demand:
+    type: Number
+  population_density:
+    type: Number
   habitat:
     type: File
     path: Locations
@@ -39,6 +56,7 @@ fields:
         - Carnivore
         - Omnivore
         - Essence Feeder
+        - Autotroph
   domesticated:
     type: Select
     options:

@@ -53,13 +53,20 @@ Usage:
   world <NAME> [-u UNIVERSE]   Scaffold an Obsidian World Lore Vault
   concordance <TARGET> [-b]    Generate Dramatis Personae & Glossary back-matter
   continuity [-w W -m MS]      Analyze character traits & narrative consistency (alias: check-continuity)
+  faction [WORLD] [--html]     Geopolitical relationship matrix & diplomatic paradoxes
+  economy [WORLD] [-m MS]      Macroeconomic currencies, commodity baskets & PPP rates
+  causality [WORLD] [MS]       Causal DAGs, time-travel loop & multiverse branching engine
+  ecology [WORLD] [--html]     Trophic energy pyramids (10% rule) & bestiary food-web
   magic-check [-w W -m MS]     Verify hard magic system constraints & tier limits
   magic-report [-w W]          Export comprehensive arcane constraint report
+  prophecy [WORLD] [-m MS]     Prophecy lifecycle clauses & fulfillment verification
   genealogy <House|Char>       Compile dynastic lineage trees & Mermaid flowcharts
   lineage <House>              Display succession rank roster & claimants
   conlang <gen|mut|lex> <Lang> Conlang phonotactics, sound-law shift & lexicon
+  cipher <encode|decode|runes> In-world ciphers, Vigenere, Atbash & phonetic runes
   calendar [WORLD] [--phases]  Planetary calendar arithmetic & multi-moon syzygy
-  calc <subcommand>            Astrophysics & journey mechanics calculator
+  calc <subcommand>            Astrophysics, climate, battle, logistics & journey calculator
+  audit <tech|idioms|senses>   Prose audits: technology anachronisms, Earth idioms, 6D senses
 
 🔒 Data Protection & Safety:
   backup <TARGET> [options]    Create a verified, standalone .tar.gz backup archive
@@ -67,7 +74,7 @@ Usage:
   restore <ARCHIVE> [options]  Restore a project from a verified backup archive
 
 🩺 System Health & Tools:
-  doctor [options]             Run unified health & toolchain diagnostics (alias: check, audit)
+  doctor [options]             Run unified health & toolchain diagnostics (alias: check)
   world-doctor <WORLD> [opts]  Run deep World Bible lore consistency checks
   cache <scan|wordcounts|clear> Manage mtime-keyed fast performance cache
   gui                          Launch desktop Control Center (aliases: app, control-center)
@@ -81,11 +88,15 @@ Global Options:
 
 Quick Examples:
   arcanum calc transit "alpha-centauri"       # 1g Brachistochrone relativistic flight
+  arcanum calc battle -a 10000 -d 5000 --fort 2 # Lanchester power-law casualty curve
+  arcanum calc logistics --infantry 8000      # Campaign supply demand & wagon radius
+  arcanum calc climate --star-lum 1.2         # Planetary insolation & orographic biomes
+  arcanum faction "Eldoria" --html report.html # Geopolitical matrix & paradox audit
+  arcanum causality "Eldoria" "Manuscript"    # Multiverse branching & causal DAG
+  arcanum audit idioms "Manuscript"           # Scan Earth-eponyms & immersion leaks
+  arcanum audit senses "Manuscript"           # 6D sensory palette & white room check
+  arcanum cipher runes "Speak friend" --svg r.svg # Translate to phonetic Elder Futhark
   arcanum magic-check "Eldoria" -m "Manuscript" # Verify spell tier & catalyst constraints
-  arcanum genealogy "House Stark"             # Render dynastic family tree
-  arcanum conlang generate "High Valen" -n 5  # Generate phonotactically valid names
-  arcanum pace "The-Last-Archon"              # Analyze scene pacing & dialogue ratio
-  arcanum calendar "Eldoria" --phases         # Check moon phases and conjunctions
 USAGE
 }
 
@@ -200,6 +211,33 @@ case "${COMMAND}" in
     continuity|check-continuity)
         exec python3 "${PROJECT_ROOT}/scripts/lib/continuity.py" "$@"
         ;;
+    faction|factions|geopolitics)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/factions.py" "$@"
+        ;;
+    economy|economies|ppp)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/economy.py" "$@"
+        ;;
+    causality|causal|timeline-dag|multiverse)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/causality.py" "$@"
+        ;;
+    ecology|trophic|food-web)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/ecology.py" "$@"
+        ;;
+    climate|weather)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/climate.py" "$@"
+        ;;
+    idioms|idiom|eponyms|immersion)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/idioms.py" "$@"
+        ;;
+    senses|sensory|palette)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/senses.py" "$@"
+        ;;
+    cipher|ciphers|runes|inscription)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/cipher.py" "$@"
+        ;;
+    prophecy|prophecies|oracle)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/prophecy.py" "$@"
+        ;;
     world-doctor|lore-doctor)
         exec bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$@"
         ;;
@@ -228,7 +266,7 @@ case "${COMMAND}" in
     # --- Speculative Calculations & Mechanics ---
     calc|calculator)
         if [ $# -eq 0 ]; then
-            echo "Usage: arcanum calc <transit|time-dilation|orbit|comms|habitability|journey> [args...]" >&2
+            echo "Usage: arcanum calc <transit|time-dilation|orbit|comms|habitability|journey|battle|logistics|climate> [args...]" >&2
             exit 2
         fi
         CALC_SUB="$1"
@@ -236,6 +274,15 @@ case "${COMMAND}" in
         case "${CALC_SUB}" in
             journey|travel|overland)
                 exec python3 "${PROJECT_ROOT}/scripts/lib/journey.py" "$@"
+                ;;
+            battle|lanchester|siege)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/factions.py" battle "$@"
+                ;;
+            logistics|supply|wagon)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/factions.py" logistics "$@"
+                ;;
+            climate|insolation|weather)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/climate.py" "$@"
                 ;;
             transit|flight|brachistochrone)
                 exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" transit "$@"
@@ -319,8 +366,28 @@ case "${COMMAND}" in
         exec bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$@"
         ;;
 
-    # --- System Diagnostics & GUI ---
-    doctor|check|audit)
+    # --- System Diagnostics & Prose Audits ---
+    audit)
+        if [ $# -gt 0 ]; then
+            AUDIT_SUB="$1"
+            case "${AUDIT_SUB}" in
+                idioms|idiom|eponyms)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/idioms.py" "$@"
+                    ;;
+                senses|sensory|palette)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/senses.py" "$@"
+                    ;;
+                tech|technology|anachronisms)
+                    shift
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/economy.py" tech "$@"
+                    ;;
+            esac
+        fi
+        exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
+        ;;
+    doctor|check)
         exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
         ;;
     control-center|dashboard|gui|app|ui)
@@ -364,7 +431,8 @@ known_commands = [
     "add-volume", "concordance", "continuity", "check-continuity", "doctor",
     "check", "world-doctor", "backup", "backup-dest", "config", "restore", "cache",
     "calc", "magic-check", "magic-report", "genealogy", "lineage", "conlang",
-    "pace", "tension", "calendar", "journey",
+    "faction", "economy", "causality", "ecology", "climate", "idioms", "senses",
+    "cipher", "prophecy", "audit", "pace", "tension", "calendar", "journey",
     "gui", "control-center", "verify", "setup", "uninstall", "version", "help"
 ]
 

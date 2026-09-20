@@ -6,6 +6,48 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
+### Added (Speculative Fiction Authorial Workflow Suites — Waves 7–12 / Phase 2)
+- **Wave 7: Geopolitical Faction Matrix & Campaign Logistics (`scripts/lib/factions.py`)**:
+  - Implemented diplomatic relationship auditor and paradox detector (`FAC-101` to `FAC-104`).
+  - Added Lanchester power-law combat casualty calculator supporting Square Law (ranged/aimed fire), Linear Law (unaimed/melee), fortification defense multipliers, and round-by-round force attrition curves.
+  - Added campaign logistics modeler for infantry, cavalry, and camp followers, computing daily grain/water burn rates and wagon supply radii.
+  - Added Obsidian Mermaid.js chord graphs and standalone interactive HTML network visualizer.
+  - CLI subcommands: `arcanum faction [world]`, `arcanum calc battle`, `arcanum calc logistics`.
+- **Wave 8: In-World Economy, Commodity PPP & Tech Era Anachronisms (`scripts/lib/economy.py`)**:
+  - Implemented multi-currency Purchasing Power Parity (PPP) rate calculator using normalized commodity baskets.
+  - Added manuscript price anomaly detector (`ECO-101`: extreme outlier $> 5\times$, `ECO-102`: unknown currency denomination).
+  - Added historical technological era anachronism scanner (`ECO-201`) supporting 10 distinct technology tiers (`stone_age` through `space_age`).
+  - Added trade route freight margin and tariff calculator.
+  - CLI subcommands: `arcanum economy [world]`, `arcanum audit tech [ms]`, `arcanum calc trade`.
+- **Wave 9: Causal DAGs, Time Travel Loops & Multiverse Branching (`scripts/lib/causality.py`)**:
+  - Implemented causal event graph extractor and DFS cycle detector for grandfather (`CAU-101`) and bootstrap (`CAU-102`) paradoxes.
+  - Added Novikov self-consistency validation (`CAU-103`) and orphan timeline divergence checks (`CAU-104`).
+  - Added multiverse timeline branch coordinate generator and Obsidian Mermaid DAG exporter.
+  - CLI subcommands: `arcanum causality [world] [ms]`, `arcanum causality branch <name>`.
+- **Wave 10: Planetary Climate, Orographic Biomes & Trophic Food-Webs (`scripts/lib/climate.py`, `scripts/lib/ecology.py`)**:
+  - Implemented planetary insolation ($W/m^2$), Stefan-Boltzmann equilibrium temperature, greenhouse warming offsets, and liquid-water habitable zone bounds.
+  - Implemented Coriolis atmospheric circulation cell count derivation (Hadley, Ferrel, Polar).
+  - Implemented adiabatic lapse rate orographic rain shadow and leeward desert simulation.
+  - Implemented Bestiary trophic level profiler (1: Producers, 2: Herbivores, 3: Carnivores, 4: Apex Predators) with Lindeman 10% energy pyramid validation (`ECO-301` to `ECO-304`).
+  - CLI subcommands: `arcanum calc climate`, `arcanum ecology [world]`.
+- **Wave 11: Earth-Eponym Scanner, Idiom De-Immersion & 6D Sensory Palette (`scripts/lib/idioms.py`, `scripts/lib/senses.py`)**:
+  - Implemented Earth-eponym and myth/cliché scanner (`configs/idioms.json`) detecting immersion leaks (`IDM-101` to `IDM-103`).
+  - Implemented 6-dimensional sensory distribution analyzer (Visual, Auditory, Olfactory, Gustatory, Tactile/Thermal, Kinesthetic/Vestibular).
+  - Added White Room syndrome (`SNS-101`) and sensory monotony (`SNS-102`) scene diagnostics.
+  - CLI subcommands: `arcanum audit idioms [ms]`, `arcanum audit senses [ms]`.
+- **Wave 12: Inscriptions, In-World Ciphers & Prophecy Resolution (`scripts/lib/cipher.py`, `scripts/lib/prophecy.py`)**:
+  - Implemented classical ciphers (Caesar, Atbash, Vigenère, Rail Fence, Columnar) with encode/decode pipelines.
+  - Implemented phonetic Elder Futhark and Anglo-Saxon Futhorc rune transliterator with standalone vector SVG inscription card generator.
+  - Implemented prophecy resolution matrix tracking oracle clauses against scene annotations (`PRP-101` to `PRP-103`).
+  - CLI subcommands: `arcanum cipher encode|decode|runes`, `arcanum prophecy [world] [ms]`.
+- **Templates & FileClasses Enrichment**:
+  - Created `Economies/Economy-Template.md`, `Cosmology/Prophecy-Template.md`.
+  - Created Metadata Menu schemas `fileClasses/Economy.md`, `fileClasses/Prophecy.md`.
+  - Upgraded `fileClasses/Faction.md` and `fileClasses/Creature.md` with trophic and alliance fields.
+- **Automated Test Coverage**:
+  - Added 44 unit tests across `tests/test_factions.py`, `tests/test_economy.py`, `tests/test_causality.py`, `tests/test_climate.py`, `tests/test_ecology.py`, `tests/test_idioms.py`, `tests/test_senses.py`, `tests/test_cipher.py`, `tests/test_prophecy.py` (131 total unit tests).
+  - Added integration tests 32–37 in `tests/test_audit_fixes.sh` (37 total integration tests passing).
+
 ### Added (Speculative Fiction Authorial Workflow Suites — Waves 1–6)
 - **Wave 1: Astrophysics & Relativistic Spaceflight (`scripts/lib/astrophysics.py`)**:
   - Implemented exact relativistic Brachistochrone 1g constant-acceleration trajectory calculator ($\tau$ proper vs $t$ coordinate time, peak $v/c$, Lorentz factor $\gamma$, fuel mass ratios via relativistic Tsiolkovsky equations).

@@ -28,6 +28,12 @@ Zero programming or terminal experience is required for daily writing. Everythin
    - [Wave 4: Conlang Phonotactics, Lexicography & Sound-Change Applier](#wave-4-conlang-phonotactics-lexicography--sound-change-applier)
    - [Wave 5: Narrative Pacing, POV Balance & Tension Arc Analytics](#wave-5-narrative-pacing-pov-balance--tension-arc-analytics)
    - [Wave 6: Overland/Naval Journey Modeler & Custom Planetary Calendars](#wave-6-overlandnaval-journey-modeler--custom-planetary-calendars)
+   - [Wave 7: Geopolitical Faction Matrix & Campaign Logistics](#wave-7-geopolitical-faction-matrix--campaign-logistics)
+   - [Wave 8: In-World Economy, Commodity PPP & Tech Era Anachronisms](#wave-8-in-world-economy-commodity-ppp--tech-era-anachronisms)
+   - [Wave 9: Causal DAGs, Time Travel Loops & Multiverse Branching](#wave-9-causal-dags-time-travel-loops--multiverse-branching)
+   - [Wave 10: Planetary Climate, Orographic Biomes & Trophic Food-Webs](#wave-10-planetary-climate-orographic-biomes--trophic-food-webs)
+   - [Wave 11: Earth-Eponym Scanner, Idiom De-Immersion & 6D Sensory Palette](#wave-11-earth-eponym-scanner-idiom-de-immersion--6d-sensory-palette)
+   - [Wave 12: Inscriptions, In-World Ciphers & Prophecy Resolution](#wave-12-inscriptions-in-world-ciphers--prophecy-resolution)
 
 ---
 
@@ -676,4 +682,237 @@ arcanum calendar -w Scadrial --html -o planetary_calendar.html
 
 ---
 
+### Wave 7: Geopolitical Faction Matrix & Campaign Logistics
+
+The geopolitical and military campaign engine (`scripts/lib/factions.py` / `arcanum faction`, `arcanum calc battle`, `arcanum calc logistics`) evaluates diplomatic relationship consistency across in-world factions and simulates realistic Lanchester combat attrition and march logistics.
+
+#### World Lore Faction Profile:
+Define your faction in `Factions/<Faction-Name>.md`:
+```yaml
+---
+name: "Solar Empire"
+type: faction
+sphere_of_influence: "Inner Rim"
+military_strength: 50000
+allies: ["[[Lunar Dominion]]"]
+rivals: ["[[Void Syndicate]]"]
+vassals: []
+treaties:
+  - "Solar-Lunar Mutual Defense Pact"
+---
+```
+
+#### Key Capabilities & Diagnostics:
+- **Diplomatic Paradox Detection**:
+  - `FAC-101`: Reciprocal Ally Contradiction (A considers B an ally, but B considers A a rival).
+  - `FAC-102`: Asymmetric Alliance / Vassalage (A lists B as an ally, but B does not reciprocate).
+  - `FAC-103`: Self-Relation (Faction listed as its own ally or rival).
+  - `FAC-104`: Missing / Broken Faction Reference (Target wikilink note does not exist).
+- **Lanchester Power-Law Combat Calculator**:
+  - Simulates Lanchester Square Law (ranged/aimed fire) and Linear Law (unaimed/melee combat).
+  - Computes force attrition, defender fortification multipliers ($1.0$ to $5.0\times$), combat effectiveness ratios, and round-by-round casualty curves.
+- **Military Supply & Wagon Radius Modeler**:
+  - Calculates daily grain/water consumption for infantry, cavalry, and camp followers.
+  - Models wagon payload limits ($1{,}000\text{ kg}$), draft horse feed consumption, and the classical campaign supply radius before food exhaustion.
+- **Visual Visualizers**: Exports Obsidian Mermaid chord graphs and standalone interactive HTML network diagrams.
+
+#### Example Usage:
+```bash
+# Run geopolitical relationship audit across all world factions
+arcanum faction Solaris-Prime
+
+# Calculate Lanchester battle outcome (10,000 attackers vs 5,000 defenders behind 1.5x walls)
+arcanum calc battle -a 10000 -d 5000 --fort 1.5 --law square
+
+# Compute supply train and wagon requirements for 12,000 troops marching 250 km
+arcanum calc logistics --infantry 10000 --cavalry 2000 --distance 250
+```
+
+---
+
+### Wave 8: In-World Economy, Commodity PPP & Tech Era Anachronisms
+
+The economic and anachronism suite (`scripts/lib/economy.py` / `arcanum economy`, `arcanum audit tech`, `arcanum calc trade`) models currency exchange rates, purchasing power parity (PPP), manuscript pricing consistency, and historical technological era constraints.
+
+#### World Lore Economy Profile:
+Define your currency in `Economies/<Economy-Name>.md`:
+```yaml
+---
+name: "Imperial Standard"
+base_currency: "Crown"
+tech_era: "medieval"
+exchange_rate_to_standard: 1.0
+denominations:
+  - "1 Crown = 10 Shillings"
+  - "1 Shilling = 12 Pence"
+commodity_basket:
+  - "loaf_of_bread: 2"
+  - "pint_of_ale: 1"
+  - "horse: 500"
+  - "sword: 150"
+---
+```
+
+#### Key Capabilities & Diagnostics:
+- **Commodity PPP & Exchange Rate Matrix**: Normalizes market purchasing power across distinct regional currencies using a standardized commodity basket.
+- **Manuscript Price Anomaly Audit**:
+  - `ECO-101`: Extreme Price Outlier (Manuscript price deviates $> 5.0\times$ from in-world lore baseline).
+  - `ECO-102`: Unknown Currency Mentioned (Prose mentions a currency denomination not defined in world lore).
+- **Technological Era Anachronism Scanner**:
+  - `ECO-201`: Out-of-Era Technological Leak (Flags items like "telescope", "printing press", "gunpowder", "steam engine", or "radar" in eras where they do not belong: `stone_age`, `bronze_age`, `iron_age`, `classical`, `medieval`, `renaissance`, `steampunk`, `modern`, `cyberpunk`, `space_age`).
+- **Trade Route Freight Calculator**: Models transport costs, transit distances, cargo payloads, and regional tariffs to determine profitable trade margins.
+
+#### Example Usage:
+```bash
+# Display Purchasing Power Parity matrix across all world economies
+arcanum economy Solaris-Prime
+
+# Audit draft manuscript for out-of-era technological anachronisms (e.g. medieval baseline)
+arcanum audit tech Solaris-Rising --era medieval
+
+# Calculate trade route profitability (buy @ 10, sell @ 25, 100 tons over 500 km)
+arcanum calc trade --buy 10 --sell 25 --cargo 100 --distance 500
+```
+
+---
+
+### Wave 9: Causal DAGs, Time Travel Loops & Multiverse Branching
+
+The causality engine (`scripts/lib/causality.py` / `arcanum causality`, `arcanum causality branch`) tracks causal timelines, detects time-travel paradoxes, enforces Novikov self-consistency, and organizes multiverse timeline divergences.
+
+#### Scene & History Causal Annotations:
+Annotate scene Markdown with causal metadata:
+```markdown
+# Chapter 12: The Grand Paradox
+@event: assassination-attempt
+@timeline: timeline-alpha
+@causal-origin: prime-timeline-split
+@causes: [war-outbreak, treaty-collapse]
+```
+
+#### Diagnostic Rules:
+- **`CAU-101`**: Grandfather Paradox / Destructive Causal Cycle (An effect causally precedes or negates its own cause).
+- **`CAU-102`**: Bootstrap / Ontological Paradox (Information or an object exists in a closed causal loop with no uncaused origin).
+- **`CAU-103`**: Novikov Self-Consistency Violation (Contradictory state changes within a closed timelike curve).
+- **`CAU-104`**: Orphan Divergence (Timeline branches from an unknown coordinate).
+- **Visual DAGs**: Generates Obsidian Mermaid Directed Acyclic Graphs and standalone HTML interactive timeline charts.
+
+#### Example Usage:
+```bash
+# Check manuscript and history for causal paradoxes and circular loops
+arcanum causality Solaris-Prime Solaris-Rising
+
+# Scaffold a new divergent multiverse timeline branch
+arcanum causality branch "timeline-beta" --from-timeline "prime" --at-coord "Year 1042"
+```
+
+---
+
+### Wave 10: Planetary Climate, Orographic Biomes & Trophic Food-Webs
+
+The planetary ecology and climate suite (`scripts/lib/climate.py`, `scripts/lib/ecology.py` / `arcanum calc climate`, `arcanum ecology`) simulates planetary insolation, atmospheric circulation cells, orographic rain shadows, and trophic energy pyramids.
+
+#### Planetary Climate & Orographic Simulator:
+- **Stellar Insolation & Equilibrium Temperature**: Calculates stellar flux ($W/m^2$), Stefan-Boltzmann equilibrium temperature, greenhouse warming offsets, and liquid-water habitable zone bounds.
+- **Atmospheric Circulation**: Derives Coriolis deflection and Hadley/Ferrel/Polar circulation cell counts based on planetary rotation velocity.
+- **Orographic Rain Shadows**: Models adiabatic lapse rate temperature changes, moist air condensation, windward oceanic cloud forest precipitation, and leeward arid desert rain shadows.
+
+#### Trophic Food-Web & Predator-Prey Balance:
+- **Bestiary Trophic Roster**: Tracks trophic levels (1: Producers, 2: Herbivores, 3: Carnivores, 4: Apex Predators).
+- **Lindeman 10% Energy Pyramid Rule**: Enforces the ecological rule where each successive trophic level sustains $\le 10\%$ of the lower tier's biomass.
+- **Diagnostic Rules**:
+  - `ECO-301`: Missing Primary Producers (No basal flora/plant biomass to support herbivores).
+  - `ECO-302`: Unsustainable Predation (Prey species biomass is insufficient for predator population).
+  - `ECO-303`: Trophic Inversion (Higher tier biomass exceeds lower tier energy bounds).
+  - `ECO-304`: Isolated / Orphan Species (Creature has no recorded prey or predators).
+
+#### Example Usage:
+```bash
+# Calculate planetary temperature and orographic rain shadow behind a 3000m ridge
+arcanum calc climate --star-lum 1.0 --distance-au 1.0 --mountain-elevation 3000
+
+# Validate ecosystem food web and trophic biomass pyramid in world lore
+arcanum ecology Solaris-Prime
+```
+
+---
+
+### Wave 11: Earth-Eponym Scanner, Idiom De-Immersion & 6D Sensory Palette
+
+The immersion and sensory palette suite (`scripts/lib/idioms.py`, `scripts/lib/senses.py` / `arcanum audit idioms`, `arcanum audit senses`) identifies Earth-bound idioms that shatter reader immersion and balances sensory engagement across draft prose.
+
+#### Earth Eponym & Immersion Scanner:
+Scans draft manuscripts against a curated database of Earth eponyms, mythology, and geographic metaphors:
+- **`IDM-101`**: Earth Eponyms (e.g. *cardigan*, *silhouette*, *boycott*, *guillotine*, *diesel*, *bowler hat*, *galvanize*, *sandwich*, *pasteurize*).
+- **`IDM-102`**: Earth Mythological / Biblical Idioms (e.g. *Achilles' heel*, *Trojan horse*, *Pandora's box*, *Spartan*, *Draconian*, *Pyrrhic victory*, *babel*, *Good Samaritan*).
+- **`IDM-103`**: Earth Clichés / Earth Fauna-Flora (e.g. *let the cat out of the bag*, *barking up the wrong tree*, *red herring*, *crocodile tears*).
+
+#### 6-Dimensional Sensory Palette:
+Analyzes sensory immersion across 6 distinct sensory modalities:
+1. 👁️ **Visual** (Color, illumination, shape, silhouette)
+2. 👂 **Auditory** (Volume, pitch, acoustics, timbre)
+3. 👃 **Olfactory** (Aromas, scents, rot, ozone, incense)
+4. 👅 **Gustatory** (Sweet, bitter, salty, metallic, sour)
+5. ✋ **Tactile / Thermal** (Texture, temperature, pressure, dampness)
+6. 🤸 **Kinesthetic / Vestibular** (Balance, vertigo, acceleration, tension)
+
+- **`SNS-101`**: White Room Syndrome (Scenes lacking physical sensory grounding).
+- **`SNS-102`**: Sensory Monotony (Over-reliance on pure visual description with zero auditory/tactile/olfactory anchoring).
+
+#### Example Usage:
+```bash
+# Audit draft manuscript for immersion-breaking Earth eponyms
+arcanum audit idioms Solaris-Rising
+
+# Analyze 6D sensory distribution and detect White Room scenes
+arcanum audit senses Solaris-Rising
+```
+
+---
+
+### Wave 12: Inscriptions, In-World Ciphers & Prophecy Resolution
+
+The in-world cipher and prophecy suite (`scripts/lib/cipher.py`, `scripts/lib/prophecy.py` / `arcanum cipher`, `arcanum prophecy`) encodes and translates ancient inscriptions into phonetic runes and tracks prophecy fulfillment across the narrative.
+
+#### In-World Cipher & Phonetic Rune Engine:
+- **Historical Cipher Algorithms**: Caesar shift, Atbash reflection, Vigenère polyalphabetic cipher, Rail Fence transposition, Columnar transposition.
+- **Phonetic Runes**: Translates Latin script into authentic Elder Futhark (`ᚠᚢᚦᚨᚱᚲ`) and Anglo-Saxon Futhorc (`ᚠᚢᚦⲟᚱᚳ`).
+- **Vector Inscription Cards**: Generates high-resolution standalone SVG artifact inscription cards for inclusion in World Bibles and reader-facing notes.
+
+#### Prophecy Resolution Matrix:
+Tracks ancient oracles and prophecies in `Cosmology/Prophecies/<Prophecy-Name>.md`:
+```yaml
+---
+name: "Prophecy of the Eclipse"
+type: prophecy
+oracle: "Oracle of Delphi"
+target_entity: "Prince Kael"
+status: unfulfilled
+clauses:
+  - "When the twin suns align in the sixth month"
+  - "The broken blade shall be reforged in dragonfire"
+  - "The rightful heir shall reclaim the Solar Throne"
+---
+```
+- **Manuscript Resolution Tracking**: Uses scene tags (`@prophecy: "Prophecy of the Eclipse", clause=1, status=fulfilled`) to verify that all prophecy clauses are satisfied before the novel concludes.
+- **Diagnostic Rules**:
+  - `PRP-101`: Unfulfilled Dangling Prophecy (Marked fulfilled in lore but never referenced in draft prose).
+  - `PRP-102`: Premature / Contradictory Resolution (Resolved out of sequence or contradictory to established lore).
+  - `PRP-103`: Missing Prophecy Reference (Scene references a prophecy that does not exist in lore).
+
+#### Example Usage:
+```bash
+# Encode secret message using Vigenère cipher with an arcane keyword
+arcanum cipher encode "THE VAULT OPENS AT MIDNIGHT" --type vigenere --key "SOLARIS"
+
+# Translate text to phonetic Elder Futhark runes and export vector SVG card
+arcanum cipher runes "Speak friend and enter" --alphabet futhark --svg rune_inscription.svg
+
+# Audit prophecy resolution and fulfillment lifecycle across world and manuscript
+arcanum prophecy Solaris-Prime Solaris-Rising
+```
+
+---
+
 *Ars Arcanum — Built with passion for speculative worldbuilders and novelists.*
+
