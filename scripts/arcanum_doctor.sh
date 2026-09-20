@@ -194,7 +194,18 @@ for label, app_id in flatpak_apps.items():
 desktop_dir = os.path.expanduser("~/Desktop")
 app_dir = os.path.expanduser("~/.local/share/applications")
 
-launchers = ["init-world.desktop", "init-manuscript.desktop", "export-book.desktop", "save-snapshot.desktop", "arcanum-control-center.desktop"]
+launchers = [
+    "arcanum-control-center.desktop",
+    "arcanum-worldbuilding.desktop",
+    "arcanum-drafting.desktop",
+    "arcanum-publishing.desktop",
+    "arcanum-comparator.desktop",
+    "arcanum-doctor.desktop",
+    "init-world.desktop",
+    "init-manuscript.desktop",
+    "export-book.desktop",
+    "save-snapshot.desktop"
+]
 installed_launchers = [lf for lf in launchers if os.path.isfile(os.path.join(app_dir, lf)) or os.path.isfile(os.path.join(desktop_dir, lf))]
 
 leechblock_json = os.path.join(PROJECT_ROOT, "configs", "leechblock_arcanum_rules.json")

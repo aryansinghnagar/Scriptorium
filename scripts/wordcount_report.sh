@@ -55,7 +55,7 @@ JSON_OUT=0
 POV_OUT=0
 while [ $# -gt 0 ]; do
     case "$1" in
-        --markdown) MARKDOWN=1; shift ;;
+        --markdown|--md) MARKDOWN=1; shift ;;
         --json) JSON_OUT=1; shift ;;
         --pov) POV_OUT=1; shift ;;
         -h|--help) usage; exit 0 ;;

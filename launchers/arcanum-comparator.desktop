@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Ars Arcanum Draft Redline Comparator
+GenericName=Draft Revision Diff Comparator
+Comment=Visual HTML redline changelog and LibreOffice track changes comparator between manuscript drafts
+Exec=bash "__PROJECT_ROOT__/scripts/arcanum" compare
+TryExec=bash
+Icon=document-page-setup
+Terminal=false
+Categories=Office;WordProcessor;Publishing;
+Keywords=Compare;Diff;Redline;Revision;Changelog;Drafts;
+StartupNotify=true

@@ -18,34 +18,37 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
 
-def try_launch_adw() -> bool:
+def try_launch_adw(active_tab: str | None = None) -> bool:
     """Attempts to launch modern Libadwaita / GTK 4 interface."""
     try:
         from lib.ui_adw import HAS_ADW, run_adw_app
         if HAS_ADW:
-            return run_adw_app() == 0
+            return run_adw_app(active_tab=active_tab) == 0
     except Exception as e:
         logger.debug("Failed to launch Libadwaita / GTK 4 UI: %s", e)
     return False
 
 
-def try_launch_gtk3() -> bool:
+def try_launch_gtk3(active_tab: str | None = None) -> bool:
     """Attempts to launch standard GTK 3 interface."""
     try:
         from lib.ui_gtk3 import HAS_GTK, run_gtk3_app
         if HAS_GTK:
-            return run_gtk3_app()
+            return run_gtk3_app(active_tab=active_tab)
     except Exception as e:
         logger.debug("Failed to launch GTK 3 UI: %s", e)
     return False
 
 
-def fallback_zenity() -> int:
+def fallback_zenity(active_tab: str | None = None) -> int:
     """Invokes lightweight Zenity dialog control dashboard."""
     zenity_script = SCRIPT_DIR / "control_center.sh"
     if zenity_script.is_file():
         import subprocess
-        res = subprocess.run(["bash", str(zenity_script)])
+        args = ["bash", str(zenity_script)]
+        if active_tab:
+            args.extend(["--tab", active_tab])
+        res = subprocess.run(args)
         return res.returncode
     print("[!] PyGObject / GTK is not installed in the current Python environment.", file=sys.stderr)
     print("[i] Run 'bash scripts/control_center.sh' for the graphical Zenity dashboard.", file=sys.stderr)
@@ -57,6 +60,19 @@ def main():
     parser.add_argument("--gtk3", action="store_true", help="Force GTK 3 presentation layer")
     parser.add_argument("--adw", "--gtk4", action="store_true", help="Force GTK 4 / Libadwaita presentation layer")
     parser.add_argument("--check-ui", action="store_true", help="Probe and print available UI backends")
+    parser.add_argument(
+        "--tab", "-t",
+        choices=[
+            "cosmos", "universe", "universes", "world", "worlds",
+            "drafting", "manuscript", "manuscripts", "novel", "writing", "write",
+            "worldbuilding", "speculative", "engines", "lore", "magic",
+            "publishing", "typesetting", "export", "publish",
+            "safety", "backups", "snapshots", "backup", "snapshot", "git",
+            "doctor", "diagnostics", "health", "check",
+            "comparator", "diff", "compare", "redline"
+        ],
+        help="Open specific studio workflow tab on launch"
+    )
     args, unknown = parser.parse_known_args()
 
     if args.check_ui:
@@ -78,15 +94,15 @@ def main():
 
     # 1. If GTK 4 / Libadwaita forced or default
     if not args.gtk3:
-        if try_launch_adw():
+        if try_launch_adw(active_tab=args.tab):
             sys.exit(0)
 
     # 2. GTK 3 Fallback
-    if try_launch_gtk3():
+    if try_launch_gtk3(active_tab=args.tab):
         sys.exit(0)
 
     # 3. Headless / Zenity Fallback
-    rc = fallback_zenity()
+    rc = fallback_zenity(active_tab=args.tab)
     sys.exit(rc)
 
 

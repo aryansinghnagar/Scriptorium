@@ -15,8 +15,11 @@ import shutil
 import threading
 import re
 import logging
+import webbrowser
+import tempfile
 from datetime import datetime
 from pathlib import Path
+
 
 logger = logging.getLogger("arcanum.ui_gtk3")
 
@@ -69,13 +72,30 @@ LIB_DIR = Path(__file__).resolve().parent
 SCRIPT_DIR = LIB_DIR.parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 
+# OPT-04: Module-level tool-lookup cache. shutil.which() is a filesystem
+# syscall; caching avoids 4 repeated calls on every refresh_all_discovery().
+# Call _flush_tool_cache() from run_diagnostics() to force re-check.
+_TOOL_CACHE: dict[str, str | None] = {}
+
+def _cached_which(cmd: str) -> str | None:
+    if cmd not in _TOOL_CACHE:
+        _TOOL_CACHE[cmd] = shutil.which(cmd)
+    return _TOOL_CACHE[cmd]
+
+def _flush_tool_cache() -> None:
+    _TOOL_CACHE.clear()
+
+# OPT-09: CSS singleton guard — load styles only once per process.
+_CSS_LOADED = False
+
+
 class ArcanumApp(Gtk.Window):
-    def __init__(self):
-        super().__init__(title="Ars Arcanum — Author & Worldbuilder Studio")
-        self.set_default_size(1060, 720)
+    def __init__(self, active_tab: str | None = None):
+        super().__init__(title="Ars Arcanum — Sovereign Author & Worldbuilder Studio")
+        self.set_default_size(1080, 740)
         self.set_position(Gtk.WindowPosition.CENTER)
 
-        # Apply basic modern styling
+        # Apply basic modern styling (OPT-09: CSS singleton guard)
         self.setup_styles()
 
         self.current_universe = None
@@ -92,6 +112,13 @@ class ArcanumApp(Gtk.Window):
         self.combo_diff_a = None
         self.combo_diff_b = None
         self.lbl_secure_dest = None
+
+        # OPT-03: World lore count cache keyed by (world_path, mtime).
+        self._world_lore_counts: dict = {}
+        # OPT-07: Engine dialog singleton cache – keyed by method name.
+        self._dialog_cache: dict = {}
+        # OPT-08: Git log cache keyed by (wpath_str, head_mtime).
+        self._git_history_cache: dict = {}
 
         # Main vertical container
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -121,33 +148,83 @@ class ArcanumApp(Gtk.Window):
         selector_bar = self.create_selector_bar()
         main_box.pack_start(selector_bar, False, False, 0)
 
-        # 5-Tab Notebook
+        # 6-Studio Workspace Notebook
         self.notebook = Gtk.Notebook()
         self.notebook.set_tab_pos(Gtk.PositionType.TOP)
         main_box.pack_start(self.notebook, True, True, 0)
 
-        # Create the 5 tabs
+        # Create the 6 primary workflow studios
         self.tab_cosmos = self.create_cosmos_tab()
         self.tab_manuscript = self.create_manuscript_tab()
+        self.tab_speculative = self.create_speculative_tab()
         self.tab_publishing = self.create_publishing_tab()
         self.tab_safety = self.create_safety_tab()
         self.tab_doctor = self.create_doctor_tab()
 
-        self.notebook.append_page(self.tab_cosmos, Gtk.Label(label="🪐 Universes & Worlds"))
+        self.notebook.append_page(self.tab_cosmos, Gtk.Label(label="🪐 Cosmos & Worlds"))
         self.notebook.append_page(self.tab_manuscript, Gtk.Label(label="✍️ Manuscripts & Drafting"))
+        self.notebook.append_page(self.tab_speculative, Gtk.Label(label="🔮 Speculative Studio"))
         self.notebook.append_page(self.tab_publishing, Gtk.Label(label="📚 Publishing & Exports"))
         self.notebook.append_page(self.tab_safety, Gtk.Label(label="🔒 Snapshots & Backups"))
         self.notebook.append_page(self.tab_doctor, Gtk.Label(label="🩺 Diagnostics & Doctor"))
 
-        # Bottom Status Bar
+        if active_tab:
+            tab_clean = active_tab.lower().strip()
+            tab_map = {
+                "cosmos": 0, "universe": 0, "universes": 0, "world": 0, "worlds": 0,
+                "drafting": 1, "manuscript": 1, "manuscripts": 1, "novel": 1, "writing": 1, "write": 1,
+                "comparator": 1, "diff": 1, "compare": 1, "redline": 1,
+                "worldbuilding": 2, "speculative": 2, "engines": 2, "lore": 2, "magic": 2,
+                "publishing": 3, "typesetting": 3, "export": 3, "publish": 3,
+                "safety": 4, "backups": 4, "snapshots": 4, "backup": 4, "snapshot": 4, "git": 4,
+                "doctor": 5, "diagnostics": 5, "health": 5, "check": 5
+            }
+            if tab_clean in tab_map:
+                self.notebook.set_current_page(tab_map[tab_clean])
+
+        # OPT-10: Bottom bar with status + pulse progress bar for long ops.
+        bottom_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.statusbar = Gtk.Statusbar()
         self.status_context = self.statusbar.get_context_id("main")
-        main_box.pack_start(self.statusbar, False, False, 0)
+        bottom_bar.pack_start(self.statusbar, True, True, 0)
 
-        self.refresh_all_discovery()
+        self._progress_bar = Gtk.ProgressBar()
+        self._progress_bar.set_pulse_step(0.05)
+        self._progress_bar.set_no_show_all(True)  # Hidden until needed
+        bottom_bar.pack_start(self._progress_bar, False, False, 0)
+        main_box.pack_start(bottom_bar, False, False, 0)
+
+        # OPT-01: Run discovery off the GTK main thread so startup is instant.
+        self._start_worker(self._async_refresh_all_discovery)
         self.check_first_run()
 
+    def _show_progress(self) -> None:
+        """OPT-10: Show pulse progress bar and start pulsing every 80ms."""
+        if not HAS_GTK:
+            return
+        self._progress_bar.show()
+        if not getattr(self, "_pulse_timer_id", None):
+            self._pulse_timer_id = GLib.timeout_add(80, self._pulse_tick)
+
+    def _hide_progress(self) -> None:
+        """OPT-10: Stop pulsing and hide the progress bar."""
+        if not HAS_GTK:
+            return
+        self._progress_bar.hide()
+        timer_id = getattr(self, "_pulse_timer_id", None)
+        if timer_id:
+            GLib.source_remove(timer_id)
+            self._pulse_timer_id = None
+
+    def _pulse_tick(self) -> bool:
+        """OPT-10: GLib timeout callback — advance one pulse step."""
+        self._progress_bar.pulse()
+        return True  # Keep ticking
+
     def setup_styles(self):
+        global _CSS_LOADED
+        if _CSS_LOADED:
+            return
         css_provider = Gtk.CssProvider()
         css = b"""
         .title-label { font-size: 15px; font-weight: bold; }
@@ -162,8 +239,10 @@ class ArcanumApp(Gtk.Window):
             screen = Gdk.Screen.get_default()
             if screen:
                 Gtk.StyleContext.add_provider_for_screen(screen, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+            _CSS_LOADED = True
         except Exception as e:
             logger.debug("Could not apply GTK CSS styling: %s", e)
+
 
     def set_status(self, message):
         self.statusbar.pop(self.status_context)
@@ -575,7 +654,148 @@ class ArcanumApp(Gtk.Window):
         return frame
 
     # -------------------------------------------------------------------------
-    # TAB 3: Publishing Studio
+    # TAB 3: Speculative Fiction & Worldbuilding Studio Hub (12 Engines)
+    # -------------------------------------------------------------------------
+    def create_speculative_tab(self):
+        scrolled = Gtk.ScrolledWindow()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        box.set_border_width(16)
+        scrolled.add(box)
+
+        # Header
+        lbl_h = Gtk.Label()
+        lbl_h.set_markup("<span size='large' weight='bold'>🔮 Speculative Fiction & Worldbuilding Studio Hub</span>")
+        lbl_h.set_xalign(0)
+        box.pack_start(lbl_h, False, False, 0)
+
+        lbl_sub = Gtk.Label(label="12 integrated in-world modeling engines with interactive parameter dialogs, hard constraint solvers, and standalone 1-click HTML/SVG visual reports.")
+        lbl_sub.set_xalign(0)
+        box.pack_start(lbl_sub, False, False, 0)
+
+        # 12 Engines Grid Frame
+        grid_frame = Gtk.Frame(label=" Speculative Modeling & Constraint Engines ")
+        grid_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        grid_vbox.set_border_width(12)
+        grid_frame.add(grid_vbox)
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(12)
+        grid.set_row_spacing(12)
+        grid.set_row_homogeneous(True)
+        grid.set_column_homogeneous(True)
+
+        engine_cards = [
+            (
+                "🌌 Astrophysics & Flight",
+                "1g Brachistochrone trajectory, Lorentz time dilation, Hohmann orbits, and light-lag comms.",
+                self.open_astrophysics_dialog,
+                "⚡ Launch Flight Modeler"
+            ),
+            (
+                "✨ Hard Magic Constraints",
+                "Affinity tier validation, reagent checks, fatigue curves, and comprehensive constraint ledgers.",
+                self.open_magic_dialog,
+                "⚡ Launch Magic Studio"
+            ),
+            (
+                "👑 Dynastic Genealogies",
+                "Mermaid/SVG dynastic family trees, succession claim validator, and house lineage rosters.",
+                self.open_genealogy_dialog,
+                "⚡ Launch Genealogy Studio"
+            ),
+            (
+                "🗣️ Conlang Phonotactics",
+                "Syllable word generator, historical sound shifts, and conlang lexicon explorer.",
+                self.open_conlang_dialog,
+                "⚡ Launch Conlang Studio"
+            ),
+            (
+                "📈 Pacing & Tension Arcs",
+                "Prose rhythm analyzer, POV screen-time balance, and interactive chapter tension curves.",
+                self.open_pacing_dialog,
+                "⚡ Launch Pacing Studio"
+            ),
+            (
+                "🗺️ Journeys & Calendars",
+                "Overland expedition route calculator and multi-moon planetary calendar with syzygies.",
+                self.open_journey_calendar_dialog,
+                "⚡ Launch Journey & Calendar"
+            ),
+            (
+                "⚔️ Factions & Logistics",
+                "Alliance chord diagrams, Lanchester combat casualty modeler, and supply wagon radii.",
+                self.open_factions_logistics_dialog,
+                "⚡ Launch Faction & Logistics"
+            ),
+            (
+                "💰 Economy & Tech Eras",
+                "PPP currency baskets, commodity price outlier scanner, tech era linter, and trade margins.",
+                self.open_economy_tech_dialog,
+                "⚡ Launch Economy Studio"
+            ),
+            (
+                "⏳ Causal DAGs & Multiverse",
+                "Timeline DAG visualizer, Novikov self-consistency paradox checker, and branch generator.",
+                self.open_causality_dialog,
+                "⚡ Launch Causality Studio"
+            ),
+            (
+                "🌿 Climate & Trophic Webs",
+                "Stellar flux insolation, orographic rain shadows, and Lindeman 10% trophic webs.",
+                self.open_climate_ecology_dialog,
+                "⚡ Launch Climate & Ecology"
+            ),
+            (
+                "🧭 Earth Idioms & 6D Senses",
+                "Immersion de-eponym linter and 6D sensory balance radar analyzer (sight, sound, smell...).",
+                self.open_idioms_senses_dialog,
+                "⚡ Launch Prose Immersion"
+            ),
+            (
+                "📜 Ciphers & Prophecy Matrix",
+                "Caesar/Vigenere/runes SVG cards, and oracle prophecy clause fulfillment tracker.",
+                self.open_cipher_prophecy_dialog,
+                "⚡ Launch Cipher & Prophecy"
+            ),
+        ]
+
+        for i, (title, desc, cb, btn_lbl) in enumerate(engine_cards):
+            card = self.create_engine_card(title, desc, cb, btn_lbl)
+            row = i // 3
+            col = i % 3
+            grid.attach(card, col, row, 1, 1)
+
+        grid_vbox.pack_start(grid, True, True, 0)
+        box.pack_start(grid_frame, False, False, 0)
+
+        return scrolled
+
+    def create_engine_card(self, title, desc, callback, btn_label="⚡ Launch Modeler"):
+        frame = Gtk.Frame()
+        frame.get_style_context().add_class("card-box")
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        box.set_border_width(10)
+        frame.add(box)
+
+        lbl_t = Gtk.Label(label=f"<b>{title}</b>", use_markup=True)
+        lbl_t.set_xalign(0)
+        box.pack_start(lbl_t, False, False, 0)
+
+        lbl_d = Gtk.Label(label=desc)
+        lbl_d.set_xalign(0)
+        lbl_d.set_line_wrap(True)
+        lbl_d.set_vexpand(True)
+        box.pack_start(lbl_d, True, True, 0)
+
+        btn = Gtk.Button(label=btn_label)
+        btn.get_style_context().add_class("suggested-action")
+        btn.connect("clicked", lambda b: callback())
+        box.pack_start(btn, False, False, 0)
+
+        return frame
+
+    # -------------------------------------------------------------------------
+    # TAB 4: Publishing Studio
     # -------------------------------------------------------------------------
     def create_publishing_tab(self):
         scrolled = Gtk.ScrolledWindow()
@@ -841,13 +1061,97 @@ class ArcanumApp(Gtk.Window):
     # -------------------------------------------------------------------------
     # Discovery & State Updates
     # -------------------------------------------------------------------------
+    def _async_refresh_all_discovery(self) -> None:
+        """OPT-01: Run full discovery off the GTK main thread.
+        Collects data in local vars, then schedules GUI updates via idle_add.
+        """
+        # --- Universes ---
+        discovered_universes: list[str] = []
+        if UNIVERSES_DIR.is_dir():
+            for p in sorted(UNIVERSES_DIR.iterdir()):
+                if p.is_dir() and not p.name.startswith("."):
+                    discovered_universes.append(p.name)
+
+        # --- Worlds for first universe ---
+        first_universe = discovered_universes[0] if discovered_universes else "Default-Universe"
+        discovered_worlds: list[tuple[str, str, str]] = []
+        u_dir = UNIVERSES_DIR / first_universe
+        if u_dir.is_dir():
+            for w in sorted(u_dir.iterdir()):
+                if w.is_dir() and not w.name.startswith(".") and w.name not in ("Worlds", ".git"):
+                    discovered_worlds.append((w.name, str(w), f"[{first_universe}] {w.name}"))
+            u_worlds = u_dir / "Worlds"
+            if u_worlds.is_dir():
+                for w in sorted(u_worlds.iterdir()):
+                    if w.is_dir() and not w.name.startswith("."):
+                        discovered_worlds.append((w.name, str(w), f"[{first_universe}] {w.name}"))
+        if WORLDS_DIR.is_dir():
+            for w in sorted(WORLDS_DIR.iterdir()):
+                if w.is_dir() and not w.name.startswith("."):
+                    discovered_worlds.append((w.name, str(w), f"[Legacy] {w.name}"))
+
+        # --- Manuscripts ---
+        discovered_manuscripts: list[tuple[str, str, str]] = []
+        if MANUSCRIPTS_DIR.is_dir():
+            for m in sorted(MANUSCRIPTS_DIR.iterdir()):
+                if m.is_dir() and not m.name.startswith("."):
+                    discovered_manuscripts.append((m.name, str(m), m.name))
+
+        # --- Tool checks (OPT-04: pre-warm cache off main thread) ---
+        for tool in ("git", "pandoc", "typst", "python3"):
+            _cached_which(tool)
+
+        def _apply():
+            # Apply universe results
+            self.discovered_universes = discovered_universes
+            self.combo_universe.remove_all()
+            if not discovered_universes:
+                self.combo_universe.append("Default-Universe", "Default-Universe")
+                self.current_universe = "Default-Universe"
+            else:
+                for name in discovered_universes:
+                    self.combo_universe.append(name, name)
+                if not self.current_universe or self.current_universe not in discovered_universes:
+                    self.current_universe = discovered_universes[0]
+                self.combo_universe.set_active_id(self.current_universe)
+
+            # Apply world results
+            self.discovered_worlds = discovered_worlds
+            self.combo_world.remove_all()
+            for wname, wpath, label in discovered_worlds:
+                self.combo_world.append(wpath, label)
+            if discovered_worlds:
+                self.combo_world.set_active(0)
+                self.current_world_path = discovered_worlds[0][1]
+            else:
+                self.current_world_path = None
+
+            # Apply manuscript results
+            self.discovered_manuscripts = discovered_manuscripts
+            self.combo_manuscript.remove_all()
+            for mname, mpath, label in discovered_manuscripts:
+                self.combo_manuscript.append(mpath, label)
+            if discovered_manuscripts:
+                self.combo_manuscript.set_active(0)
+                self.current_manuscript_path = discovered_manuscripts[0][1]
+            else:
+                self.current_manuscript_path = None
+
+            self.update_active_world_display()
+            self.update_active_manuscript_display()
+            self.update_toolchain_badges()
+
+        GLib.idle_add(_apply)
+
     def refresh_all_discovery(self):
+        """Synchronous discovery — used by explicit refresh button."""
         self.refresh_universes()
         self.refresh_worlds_for_universe()
         self.refresh_manuscripts()
         self.update_active_world_display()
         self.update_active_manuscript_display()
         self.update_toolchain_badges()
+
 
     def refresh_universes(self):
         self.discovered_universes = []
@@ -941,26 +1245,45 @@ class ArcanumApp(Gtk.Window):
             wname = wpath.name
             self.lbl_cosmos_heading.set_markup(f"<span size='large' weight='bold'>World Lore Vault: {wname}</span>")
             self.lbl_cosmos_path.set_text(str(wpath))
-
-            # Count registered lore entities
-            counts = {}
-            for folder in ("Characters", "Locations", "Factions", "Magic-Technology", "Bestiary", "Artifacts", "Cosmology", "History", "Languages"):
-                fdir = wpath / folder
-                if not fdir.is_dir() and (wpath / "00-World-Bible" / folder).is_dir():
-                    fdir = wpath / "00-World-Bible" / folder
-                if fdir.is_dir():
-                    c = len([f for f in fdir.rglob("*.md") if not f.name.startswith(".") and "Template" not in f.name])
-                    counts[folder] = c
-                else:
-                    counts[folder] = 0
-
-            stats_str = "  •  ".join([f"<b>{k}</b>: {v}" for k, v in counts.items()])
-            self.lbl_lore_stats.set_markup(f"<b>Registered Lore Entities:</b>\n{stats_str}")
+            self.lbl_lore_stats.set_text("Counting lore entities…")
             self.set_status(f"Active World: {wname}")
+
+            def _count_lore():
+                # OPT-03: Use mtime of world root as cache key to skip re-scan.
+                try:
+                    vault_mtime = wpath.stat().st_mtime
+                except OSError:
+                    vault_mtime = 0.0
+                cache_key = (str(wpath), vault_mtime)
+                if cache_key in self._world_lore_counts:
+                    counts = self._world_lore_counts[cache_key]
+                else:
+                    counts = {}
+                    for folder in ("Characters", "Locations", "Factions", "Magic-Technology",
+                                   "Bestiary", "Artifacts", "Cosmology", "History", "Languages"):
+                        fdir = wpath / folder
+                        if not fdir.is_dir() and (wpath / "00-World-Bible" / folder).is_dir():
+                            fdir = wpath / "00-World-Bible" / folder
+                        if fdir.is_dir():
+                            c = len([f for f in fdir.rglob("*.md")
+                                     if not f.name.startswith(".") and "Template" not in f.name])
+                            counts[folder] = c
+                        else:
+                            counts[folder] = 0
+                    self._world_lore_counts[cache_key] = counts
+
+                stats_str = "  •  ".join([f"<b>{k}</b>: {v}" for k, v in counts.items()])
+                GLib.idle_add(
+                    self.lbl_lore_stats.set_markup,
+                    f"<b>Registered Lore Entities:</b>\n{stats_str}"
+                )
+
+            self._start_worker(_count_lore)
         else:
             self.lbl_cosmos_heading.set_markup("<span size='large' weight='bold'>No World Lore Selected</span>")
             self.lbl_cosmos_path.set_text("Create a new world lore vault to begin worldbuilding.")
             self.lbl_lore_stats.set_text("No world lore vault active.")
+
 
     def update_active_manuscript_display(self):
         if self.current_manuscript_path and Path(self.current_manuscript_path).is_dir():
@@ -1004,10 +1327,17 @@ class ArcanumApp(Gtk.Window):
             self.combo_pub_volume.set_active(0)
 
     def refresh_manuscript_analytics(self):
+        """OPT-02: Word-count walk runs on a background thread.
+        Shows pulse progress bar so user knows work is in progress.
+        """
         self.manuscript_store.clear()
         target = self.current_manuscript_path or self.current_world_path
         if not target:
             return
+
+        self.card_total_words.val_label.set_text("…")
+        self.card_chapters.val_label.set_text("…")
+        GLib.idle_add(self._show_progress)
 
         # ANA-01: canonical counter shared with cache.py / wordcount_report.sh.
         try:
@@ -1028,74 +1358,142 @@ class ArcanumApp(Gtk.Window):
 
         tpath = Path(target)
         ms_dir = tpath / "01-Manuscript" if (tpath / "01-Manuscript").is_dir() else tpath
-        total_words = 0
-        total_chapters = 0
 
-        def _process_act_dir(act_dir, parent_iter):
-            nonlocal total_chapters
-            act_words = 0
-            a_iter = self.manuscript_store.append(parent_iter, [act_dir.name, "Act / Section", "", str(act_dir)])
-            for ch_file in sorted(act_dir.glob("*.md")):
-                if ch_file.is_file() and not ch_file.name.startswith("."):
-                    try:
-                        content = ch_file.read_text(encoding="utf-8", errors="replace")
-                        wc = _canonical_count(content)
-                        act_words += wc
-                        total_chapters += 1
-                        self.manuscript_store.append(a_iter, [ch_file.name, "Scene / Chapter", f"{wc:,} words", str(ch_file)])
-                    except Exception as e:
-                        logger.warning("Error calculating scene word count for %s: %s", ch_file, e)
-            self.manuscript_store.set_value(a_iter, 2, f"{act_words:,} words")
-            return act_words
+        def _worker():
+            # Collect all data off main thread, then apply via idle_add
+            rows: list[tuple] = []  # (level, parent_key, key, item, type_, wc, filepath)
+            total_words = 0
+            total_chapters = 0
 
-        if ms_dir.is_dir():
-            for book_dir in sorted(ms_dir.glob("Book-*")):
-                if book_dir.is_dir():
+            if ms_dir.is_dir():
+                for book_dir in sorted(ms_dir.glob("Book-*")):
+                    if not book_dir.is_dir():
+                        continue
                     book_words = 0
-                    b_iter = self.manuscript_store.append(None, [book_dir.name, "Volume", "Calculating...", str(book_dir)])
-                    
+                    book_key = book_dir.name
+                    rows.append(("book", None, book_key, book_dir.name, "Volume", 0, str(book_dir)))
+
                     draft_dirs = sorted([d for d in book_dir.glob("Draft-*") if d.is_dir()])
                     if draft_dirs:
                         for draft_dir in draft_dirs:
                             d_words = 0
-                            d_iter = self.manuscript_store.append(b_iter, [draft_dir.name, "Draft Version", "", str(draft_dir)])
+                            d_key = f"{book_key}/{draft_dir.name}"
+                            rows.append(("draft", book_key, d_key, draft_dir.name, "Draft Version", 0, str(draft_dir)))
                             for sub in sorted(draft_dir.iterdir()):
                                 if sub.is_dir() and not sub.name.startswith("."):
-                                    d_words += _process_act_dir(sub, d_iter)
-                            self.manuscript_store.set_value(d_iter, 2, f"{d_words:,} words")
+                                    act_words = 0
+                                    a_key = f"{d_key}/{sub.name}"
+                                    rows.append(("act", d_key, a_key, sub.name, "Act / Section", 0, str(sub)))
+                                    for ch_file in sorted(sub.glob("*.md")):
+                                        if ch_file.is_file() and not ch_file.name.startswith("."):
+                                            try:
+                                                content = ch_file.read_text(encoding="utf-8", errors="replace")
+                                                wc = _canonical_count(content)
+                                                act_words += wc
+                                                total_chapters += 1
+                                                rows.append(("ch", a_key, None, ch_file.name, "Scene / Chapter", wc, str(ch_file)))
+                                            except Exception as ex:
+                                                logger.warning("Error counting %s: %s", ch_file, ex)
+                                    # Update act total
+                                    for i, r in enumerate(rows):
+                                        if r[2] == a_key:
+                                            rows[i] = (r[0], r[1], r[2], r[3], r[4], act_words, r[6])
+                                    d_words += act_words
+                            # Update draft total
+                            for i, r in enumerate(rows):
+                                if r[2] == d_key:
+                                    rows[i] = (r[0], r[1], r[2], r[3], r[4], d_words, r[6])
                             book_words += d_words
                     else:
                         for act_dir in sorted(book_dir.iterdir()):
                             if act_dir.is_dir() and not act_dir.name.startswith(".") and act_dir.name != "Outlines":
-                                book_words += _process_act_dir(act_dir, b_iter)
-
-                    self.manuscript_store.set_value(b_iter, 2, f"{book_words:,} words")
+                                act_words = 0
+                                a_key = f"{book_key}/{act_dir.name}"
+                                rows.append(("act", book_key, a_key, act_dir.name, "Act / Section", 0, str(act_dir)))
+                                for ch_file in sorted(act_dir.glob("*.md")):
+                                    if ch_file.is_file() and not ch_file.name.startswith("."):
+                                        try:
+                                            content = ch_file.read_text(encoding="utf-8", errors="replace")
+                                            wc = _canonical_count(content)
+                                            act_words += wc
+                                            total_chapters += 1
+                                            rows.append(("ch", a_key, None, ch_file.name, "Scene / Chapter", wc, str(ch_file)))
+                                        except Exception as ex:
+                                            logger.warning("Error counting %s: %s", ch_file, ex)
+                                for i, r in enumerate(rows):
+                                    if r[2] == a_key:
+                                        rows[i] = (r[0], r[1], r[2], r[3], r[4], act_words, r[6])
+                                book_words += act_words
+                    # Update book total
+                    for i, r in enumerate(rows):
+                        if r[2] == book_key:
+                            rows[i] = (r[0], r[1], r[2], r[3], r[4], book_words, r[6])
                     total_words += book_words
 
-        self.card_total_words.val_label.set_text(f"{total_words:,}")
-        self.card_chapters.val_label.set_text(str(total_chapters))
-        self.manuscript_tree.expand_all()
+            def _apply():
+                self.manuscript_store.clear()
+                iter_map: dict[str, object] = {}
+                for level, parent_key, key, item, type_, wc, filepath in rows:
+                    parent_iter = iter_map.get(parent_key) if parent_key else None
+                    wc_str = f"{wc:,} words" if wc else ""
+                    it = self.manuscript_store.append(parent_iter, [item, type_, wc_str, filepath])
+                    if key:
+                        iter_map[key] = it
+                self.card_total_words.val_label.set_text(f"{total_words:,}")
+                self.card_chapters.val_label.set_text(str(total_chapters))
+                self.manuscript_tree.expand_all()
+                self._hide_progress()
+
+            GLib.idle_add(_apply)
+
+        self._start_worker(_worker)
+
 
     def refresh_snapshot_history(self):
+        """OPT-08: Cache git log output keyed by (wpath, HEAD mtime) to avoid
+        re-running git log on every manuscript switch when nothing changed.
+        """
         self.history_store.clear()
         target = self.current_manuscript_path or self.current_world_path
         if not target:
             return
         wpath = Path(target)
-        if (wpath / ".git").is_dir():
+        git_dir = wpath / ".git"
+        if not git_dir.is_dir():
+            return
+
+        # Build cache key from HEAD file mtime
+        head_file = git_dir / "HEAD"
+        try:
+            head_mtime = head_file.stat().st_mtime if head_file.exists() else 0.0
+        except OSError:
+            head_mtime = 0.0
+        cache_key = (str(wpath), head_mtime)
+
+        if cache_key in self._git_history_cache:
+            lines = self._git_history_cache[cache_key]
+        else:
             try:
                 res = subprocess.run(
-                    ["git", "-C", str(wpath), "log", "-n", "15", "--pretty=format:%h|%ad|%s", "--date=short"],
+                    ["git", "-C", str(wpath), "log", "-n", "15",
+                     "--pretty=format:%h|%ad|%s", "--date=short"],
                     capture_output=True, text=True, check=True, timeout=15
                 )
-                for line in res.stdout.splitlines():
-                    parts = line.split("|", 2)
-                    if len(parts) == 3:
-                        self.history_store.append([parts[0], parts[1], parts[2]])
+                lines = res.stdout.splitlines()
+                self._git_history_cache[cache_key] = lines
             except Exception as e:
                 logger.debug("Could not fetch git history: %s", e)
+                lines = []
+
+        for line in lines:
+            parts = line.split("|", 2)
+            if len(parts) == 3:
+                self.history_store.append([parts[0], parts[1], parts[2]])
 
     def update_toolchain_badges(self):
+        """OPT-04: Use module-level _cached_which() instead of calling
+        shutil.which() on every refresh (4 filesystem syscalls per call).
+        """
         tools = [
             ("git", self.lbl_tool_git),
             ("pandoc", self.lbl_tool_pandoc),
@@ -1103,11 +1501,13 @@ class ArcanumApp(Gtk.Window):
             ("python3", self.lbl_tool_python),
         ]
         for cmd, badge in tools:
-            path = shutil.which(cmd)
+            path = _cached_which(cmd)
             if path:
                 badge.status_label.set_markup("<span color='#2e7d32'><b>✓ Installed</b></span>")
             else:
                 badge.status_label.set_markup("<span color='#d32f2f'><b>✗ Missing</b></span>")
+
+
 
     # -------------------------------------------------------------------------
     # Visual Scene Metadata Inspector Logic
@@ -1601,228 +2001,1059 @@ class ArcanumApp(Gtk.Window):
         self.refresh_volume_options()
         self.refresh_manuscript_analytics()
 
-    def _show_text_result_dialog(self, title: str, text: str):
-        """Displays formatted text results in a resizable scrolled dialog."""
+    def _create_dialog_shell(self, title, width=820, height=600):
         dialog = Gtk.Dialog(title=title, parent=self, flags=0)
-        dialog.set_default_size(720, 520)
+        dialog.set_default_size(width, height)
         dialog.add_button(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
-
         box = dialog.get_content_area()
-        box.set_border_width(8)
+        box.set_border_width(12)
+        box.set_spacing(10)
+        return dialog, box
 
+    def _create_dialog_output_view(self):
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_hexpand(True)
         scrolled.set_vexpand(True)
+        scrolled.set_min_content_height(220)
+        view = Gtk.TextView()
+        view.set_editable(False)
+        view.set_cursor_visible(False)
+        view.set_monospace(True)
+        view.set_left_margin(10)
+        view.set_right_margin(10)
+        view.set_top_margin(10)
+        view.set_bottom_margin(10)
+        scrolled.add(view)
+        return scrolled, view.get_buffer()
 
-        text_view = Gtk.TextView()
-        text_view.set_editable(False)
-        text_view.set_cursor_visible(False)
-        text_view.set_monospace(True)
-        text_view.set_left_margin(12)
-        text_view.set_right_margin(12)
-        text_view.set_top_margin(10)
-        text_view.set_bottom_margin(10)
-        text_view.get_buffer().set_text(text)
+    def _open_html_in_browser(self, filepath: str):
+        # OPT-05: webbrowser is imported at module level
+        path_obj = Path(filepath).resolve()
+        try:
+            webbrowser.open(path_obj.as_uri())
+        except Exception:
+            self._launch_detached(["xdg-open", str(path_obj)])
 
-        scrolled.add(text_view)
+
+    def _run_dialog_cmd(self, cmd, buffer_obj, status_msg="Running model..."):
+        """OPT-10+12: Show progress bar, and emit a 'still computing' heartbeat
+        after 5 s so the user knows the app hasn't frozen.
+        """
+        self.set_status(status_msg)
+        GLib.idle_add(self._show_progress)
+        buffer_obj.set_text(f"Executing: {' '.join(str(x) for x in cmd)}\n\n")
+        started_at = datetime.now()
+
+        def _worker():
+            # OPT-12: heartbeat timer — append a dot every 5 s while running
+            heartbeat_id = GLib.timeout_add(
+                5000,
+                lambda: GLib.idle_add(
+                    lambda: buffer_obj.insert(
+                        buffer_obj.get_end_iter(),
+                        f"\n[{int((datetime.now() - started_at).total_seconds())}s] Still computing…"
+                    )
+                ) or True
+            )
+            try:
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                out = res.stdout
+                if res.stderr:
+                    out = (out + "\n" if out else "") + res.stderr
+                elapsed = f"  [{(datetime.now() - started_at).total_seconds():.1f}s]"
+                GLib.idle_add(buffer_obj.set_text, (out or "Done (no output).") + elapsed)
+                GLib.idle_add(self.set_status, "Execution complete.")
+            except subprocess.TimeoutExpired:
+                GLib.idle_add(buffer_obj.set_text, "Error: command timed out after 120 s.")
+                GLib.idle_add(self.set_status, "Timed out.")
+            except Exception as e:
+                GLib.idle_add(buffer_obj.set_text, f"Error: {e}")
+                GLib.idle_add(self.set_status, f"Error: {e}")
+            finally:
+                GLib.source_remove(heartbeat_id)
+                GLib.idle_add(self._hide_progress)
+
+        self._start_worker(_worker)
+
+    def _run_dialog_html_cmd(self, base_cmd, is_svg=False, status_msg="Generating visual report..."):
+        """OPT-05: Uses top-level tempfile import. OPT-10: shows progress bar."""
+        # tempfile is now a top-level import (OPT-05)
+        suffix = ".svg" if is_svg else ".html"
+        fd, tmp_path = tempfile.mkstemp(prefix="arcanum_report_", suffix=suffix)
+        os.close(fd)
+        flag = "--svg" if is_svg else "--html"
+        cmd = list(base_cmd) + [flag, tmp_path]
+        self.set_status(status_msg)
+        GLib.idle_add(self._show_progress)
+
+        def _worker():
+            try:
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                if res.returncode == 0 and os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 0:
+                    GLib.idle_add(self._open_html_in_browser, tmp_path)
+                    GLib.idle_add(self.set_status, "Report opened in browser.")
+                else:
+                    err = res.stderr or res.stdout or "Failed to generate report"
+                    GLib.idle_add(self.show_error, f"Report generation failed:\n{err}")
+            except Exception as e:
+                GLib.idle_add(self.show_error, f"Error generating report: {e}")
+            finally:
+                GLib.idle_add(self._hide_progress)
+
+        self._start_worker(_worker)
+
+
+
+    def _show_text_result_dialog(self, title: str, text: str):
+        dialog, box = self._create_dialog_shell(title, 720, 520)
+        scrolled, buf = self._create_dialog_output_view()
+        buf.set_text(text)
         box.pack_start(scrolled, True, True, 0)
         dialog.show_all()
         dialog.run()
         dialog.destroy()
 
-    def on_magic_check_clicked(self, btn):
-        target = self.current_world_path
-        if not target:
-            self.show_error("Please select an active world lore vault first.")
-            return
-        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "magic_system.py"), "check", target]
-        if self.current_manuscript_path:
-            cmd.extend(["-m", self.current_manuscript_path])
-        self.set_status("Running Arcane Constraint Matrix checks...")
+    # -------------------------------------------------------------------------
+    # 12 Speculative Engine Interactive Dialogs
+    # -------------------------------------------------------------------------
+    def open_astrophysics_dialog(self):
+        dialog, box = self._create_dialog_shell("Astrophysics & Relativistic Spaceflight Modeler", 840, 620)
+        
+        form_grid = Gtk.Grid()
+        form_grid.set_column_spacing(10)
+        form_grid.set_row_spacing(8)
 
-        def _worker():
-            res = subprocess.run(cmd, capture_output=True, text=True)
-            out = res.stdout or res.stderr
-            GLib.idle_add(self._show_text_result_dialog, "Arcane Constraint Matrix Diagnostics", out)
-            GLib.idle_add(self.set_status, "Arcane consistency check completed.")
+        form_grid.attach(Gtk.Label(label="Mode / Problem:", xalign=0), 0, 0, 1, 1)
+        combo_mode = Gtk.ComboBoxText()
+        combo_mode.append("transit", "Brachistochrone 1g Constant-Acceleration Transit")
+        combo_mode.append("time-dilation", "Lorentz Time Dilation (Velocity Fraction c)")
+        combo_mode.append("orbit", "Hohmann Planetary Orbital Transfer")
+        combo_mode.append("comms", "Light-Lag Communication Latency")
+        combo_mode.append("habitability", "Stellar Flux & Planetary Insolation")
+        combo_mode.set_active_id("transit")
+        form_grid.attach(combo_mode, 1, 0, 2, 1)
 
-        self._start_worker(_worker)
-
-    def on_genealogy_clicked(self, btn):
-        target = self.current_world_path
-        if not target:
-            self.show_error("Please select an active world lore vault first.")
-            return
-
-        dialog = Gtk.Dialog(title="Dynastic Genealogy Explorer", parent=self, flags=0)
-        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
-        box = dialog.get_content_area()
-        box.set_border_width(12)
-        box.pack_start(Gtk.Label(label="Enter House or Character name to build genealogy tree:"), False, False, 6)
-        entry = Gtk.Entry()
-        entry.set_text("House")
-        box.pack_start(entry, False, False, 6)
-        dialog.show_all()
-
-        if dialog.run() == Gtk.ResponseType.OK:
-            query = entry.get_text().strip()
-            if query:
-                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "genealogy.py"), "tree", query, "-w", target]
-                self.set_status(f"Compiling genealogy tree for '{query}'...")
-
-                def _worker():
-                    res = subprocess.run(cmd, capture_output=True, text=True)
-                    out = res.stdout or res.stderr
-                    GLib.idle_add(self._show_text_result_dialog, f"Dynastic Genealogy: {query}", out)
-                    GLib.idle_add(self.set_status, "Genealogy tree compiled.")
-
-                self._start_worker(_worker)
-        dialog.destroy()
-
-    def on_conlang_clicked(self, btn):
-        target = self.current_world_path
-        if not target:
-            self.show_error("Please select an active world lore vault first.")
-            return
-
-        dialog = Gtk.Dialog(title="Conlang Phonotactics & Generator", parent=self, flags=0)
-        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
-        box = dialog.get_content_area()
-        box.set_border_width(12)
-        box.pack_start(Gtk.Label(label="Enter Language name (matches Languages/<Lang>.md):"), False, False, 4)
-        entry = Gtk.Entry()
-        entry.set_text("Solar Tongue")
-        box.pack_start(entry, False, False, 6)
-        dialog.show_all()
-
-        if dialog.run() == Gtk.ResponseType.OK:
-            lang = entry.get_text().strip()
-            if lang:
-                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "generate", lang, "-w", target, "-n", "12"]
-                self.set_status(f"Generating conlang vocabulary for '{lang}'...")
-
-                def _worker():
-                    res = subprocess.run(cmd, capture_output=True, text=True)
-                    out = res.stdout or res.stderr
-                    GLib.idle_add(self._show_text_result_dialog, f"Conlang Generator: {lang}", out)
-                    GLib.idle_add(self.set_status, "Conlang generated.")
-
-                self._start_worker(_worker)
-        dialog.destroy()
-
-    def on_calendar_clicked(self, btn):
-        target = self.current_world_path
-        if not target:
-            self.show_error("Please select an active world lore vault first.")
-            return
-
-        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "calendar.py"), target, "--phases"]
-        self.set_status("Calculating planetary calendar & moon phases...")
-
-        def _worker():
-            res = subprocess.run(cmd, capture_output=True, text=True)
-            out = res.stdout or res.stderr
-            GLib.idle_add(self._show_text_result_dialog, "Planetary Calendar & Celestial Syzygy", out)
-            GLib.idle_add(self.set_status, "Calendar rendered.")
-
-        self._start_worker(_worker)
-
-    def on_astrophysics_clicked(self, btn):
-        dialog = Gtk.Dialog(title="Relativistic Brachistochrone Flight Calculator", parent=self, flags=0)
-        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
-        box = dialog.get_content_area()
-        box.set_border_width(12)
-        box.pack_start(Gtk.Label(label="Enter distance (e.g., 'alpha-centauri', '1.5 AU', '4.2 ly', '54 mkm'):"), False, False, 4)
-        entry = Gtk.Entry()
-        entry.set_text("alpha-centauri")
-        box.pack_start(entry, False, False, 6)
-        dialog.show_all()
-
-        if dialog.run() == Gtk.ResponseType.OK:
-            dist = entry.get_text().strip()
-            if dist:
-                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "transit", dist]
-                self.set_status(f"Calculating relativistic trajectory to '{dist}'...")
-
-                def _worker():
-                    res = subprocess.run(cmd, capture_output=True, text=True)
-                    out = res.stdout or res.stderr
-                    GLib.idle_add(self._show_text_result_dialog, f"Relativistic Flight: {dist}", out)
-                    GLib.idle_add(self.set_status, "Trajectory calculation complete.")
-
-                self._start_worker(_worker)
-        dialog.destroy()
-
-    def on_journey_clicked(self, btn):
-        dialog = Gtk.Dialog(title="Overland & Expedition Route Modeler", parent=self, flags=0)
-        dialog.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OK, Gtk.ResponseType.OK)
-        box = dialog.get_content_area()
-        box.set_border_width(12)
-        box.pack_start(Gtk.Label(label="Enter journey distance (e.g., '150 km', '80 miles'):"), False, False, 4)
+        form_grid.attach(Gtk.Label(label="Target Distance / Destination:", xalign=0), 0, 1, 1, 1)
         entry_dist = Gtk.Entry()
-        entry_dist.set_text("150 km")
-        box.pack_start(entry_dist, False, False, 4)
+        entry_dist.set_text("alpha-centauri")
+        form_grid.attach(entry_dist, 1, 1, 2, 1)
 
-        box.pack_start(Gtk.Label(label="Terrain type (road, trail, plains, hills, mountains, swamp, desert, ocean):"), False, False, 4)
-        entry_terr = Gtk.Entry()
-        entry_terr.set_text("mountain-pass")
-        box.pack_start(entry_terr, False, False, 4)
+        form_grid.attach(Gtk.Label(label="Acceleration (g):", xalign=0), 0, 2, 1, 1)
+        spin_accel = Gtk.SpinButton.new_with_range(0.1, 10.0, 0.1)
+        spin_accel.set_value(1.0)
+        form_grid.attach(spin_accel, 1, 2, 2, 1)
+
+        box.pack_start(form_grid, False, False, 0)
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Calculate Trajectory")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive HTML Report in Browser")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            mode = combo_mode.get_active_id() or "transit"
+            dist = entry_dist.get_text().strip() or "alpha-centauri"
+            accel = str(spin_accel.get_value())
+            if mode == "transit":
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "transit", dist, "--accel", accel]
+            elif mode == "time-dilation":
+                v = dist if any(c.isdigit() for c in dist) else "0.99"
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "time-dilation", v]
+            elif mode == "orbit":
+                bodies = [b.strip() for b in re.split(r"[, ]+", dist) if b.strip()]
+                b1 = bodies[0] if len(bodies) > 0 else "earth"
+                b2 = bodies[1] if len(bodies) > 1 else "mars"
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "orbit", b1, b2]
+            elif mode == "comms":
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "comms", dist]
+            else:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "habitability", "--star-lum", "1.0", "--mass", "1.0", "--radius", "1.0"]
+            self._run_dialog_cmd(cmd, out_buf, f"Calculating flight trajectory ({mode})...")
+
+        def _do_html():
+            mode = combo_mode.get_active_id() or "transit"
+            dist = entry_dist.get_text().strip() or "alpha-centauri"
+            accel = str(spin_accel.get_value())
+            if mode == "transit":
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "transit", dist, "--accel", accel]
+            elif mode == "time-dilation":
+                v = dist if any(c.isdigit() for c in dist) else "0.99"
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "time-dilation", v]
+            elif mode == "orbit":
+                bodies = [b.strip() for b in re.split(r"[, ]+", dist) if b.strip()]
+                b1 = bodies[0] if len(bodies) > 0 else "earth"
+                b2 = bodies[1] if len(bodies) > 1 else "mars"
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "orbit", b1, b2]
+            elif mode == "comms":
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "comms", dist]
+            else:
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "astrophysics.py"), "habitability", "--star-lum", "1.0", "--mass", "1.0", "--radius", "1.0"]
+            self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Astrophysics visual report...")
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
 
         dialog.show_all()
-
-        if dialog.run() == Gtk.ResponseType.OK:
-            dist = entry_dist.get_text().strip()
-            terr = entry_terr.get_text().strip()
-            if dist:
-                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "journey.py"), dist, "-t", terr]
-                self.set_status(f"Modeling expedition journey ({dist})...")
-
-                def _worker():
-                    res = subprocess.run(cmd, capture_output=True, text=True)
-                    out = res.stdout or res.stderr
-                    GLib.idle_add(self._show_text_result_dialog, f"Expedition Route Plan: {dist}", out)
-                    GLib.idle_add(self.set_status, "Expedition plan generated.")
-
-                self._start_worker(_worker)
+        _do_calc()
+        dialog.run()
         dialog.destroy()
 
-    def on_pacing_clicked(self, btn):
-        target = self.current_manuscript_path
-        if not target:
+    def open_magic_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("Hard Magic Systems & Arcane Constraints", 840, 620)
+        
+        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        info_box.pack_start(Gtk.Label(label=f"<b>World Bible:</b> <code>{Path(target_world).name}</code>", use_markup=True, xalign=0), False, False, 0)
+        if self.current_manuscript_path:
+            info_box.pack_start(Gtk.Label(label=f"<b>Manuscript Draft:</b> <code>{Path(self.current_manuscript_path).name}</code>", use_markup=True, xalign=0), False, False, 0)
+        box.pack_start(info_box, False, False, 0)
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_check = Gtk.Button(label="⚡ Verify Arcane Constraints")
+        btn_check.get_style_context().add_class("suggested-action")
+        btn_report = Gtk.Button(label="📊 Full Arcane Ledger Report")
+        btn_html = Gtk.Button(label="🌐 Open Interactive HTML Report in Browser")
+        btn_box.pack_start(btn_check, True, True, 0)
+        btn_box.pack_start(btn_report, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_check():
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "magic_system.py"), "check", target_world]
+            if self.current_manuscript_path:
+                cmd.extend(["-m", self.current_manuscript_path])
+            self._run_dialog_cmd(cmd, out_buf, "Checking magic constraints...")
+
+        def _do_report():
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "magic_system.py"), "report", target_world]
+            self._run_dialog_cmd(cmd, out_buf, "Generating magic ledger report...")
+
+        def _do_html():
+            base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "magic_system.py"), "report", target_world]
+            self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Magic System report...")
+
+        btn_check.connect("clicked", lambda b: _do_check())
+        btn_report.connect("clicked", lambda b: _do_report())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_check()
+        dialog.run()
+        dialog.destroy()
+
+    def open_genealogy_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("Dynastic Genealogies & Lineage Trees", 840, 620)
+        
+        form_grid = Gtk.Grid()
+        form_grid.set_column_spacing(10)
+        form_grid.set_row_spacing(8)
+
+        form_grid.attach(Gtk.Label(label="House / Character Name:", xalign=0), 0, 0, 1, 1)
+        entry_query = Gtk.Entry()
+        entry_query.set_text("House")
+        form_grid.attach(entry_query, 1, 0, 1, 1)
+
+        form_grid.attach(Gtk.Label(label="Mode:", xalign=0), 0, 1, 1, 1)
+        combo_mode = Gtk.ComboBoxText()
+        combo_mode.append("tree", "Family Tree (Mermaid / ASCII Hierarchy)")
+        combo_mode.append("lineage", "Succession Claim & Precedence Roster")
+        combo_mode.set_active_id("tree")
+        form_grid.attach(combo_mode, 1, 1, 1, 1)
+
+        form_grid.attach(Gtk.Label(label="Max Depth:", xalign=0), 0, 2, 1, 1)
+        spin_depth = Gtk.SpinButton.new_with_range(1, 15, 1)
+        spin_depth.set_value(6)
+        form_grid.attach(spin_depth, 1, 2, 1, 1)
+
+        box.pack_start(form_grid, False, False, 0)
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_run = Gtk.Button(label="⚡ Compile Genealogy")
+        btn_run.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive Mermaid HTML in Browser")
+        btn_box.pack_start(btn_run, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_run():
+            q = entry_query.get_text().strip() or "House"
+            m = combo_mode.get_active_id() or "tree"
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "genealogy.py"), m, q, "-w", target_world]
+            self._run_dialog_cmd(cmd, out_buf, f"Compiling genealogy for '{q}'...")
+
+        def _do_html():
+            q = entry_query.get_text().strip() or "House"
+            base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "genealogy.py"), "tree", q, "-w", target_world]
+            self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Compiling Genealogy Mermaid diagram...")
+
+        btn_run.connect("clicked", lambda b: _do_run())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_run()
+        dialog.run()
+        dialog.destroy()
+
+    def open_conlang_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("Conlang Phonotactics & Sound Law Studio", 840, 620)
+        
+        form_grid = Gtk.Grid()
+        form_grid.set_column_spacing(10)
+        form_grid.set_row_spacing(8)
+
+        form_grid.attach(Gtk.Label(label="Language Name (in World Bible):", xalign=0), 0, 0, 1, 1)
+        entry_lang = Gtk.Entry()
+        entry_lang.set_text("Solar Tongue")
+        form_grid.attach(entry_lang, 1, 0, 2, 1)
+
+        form_grid.attach(Gtk.Label(label="Words to Generate:", xalign=0), 0, 1, 1, 1)
+        spin_n = Gtk.SpinButton.new_with_range(1, 100, 1)
+        spin_n.set_value(15)
+        form_grid.attach(spin_n, 1, 1, 2, 1)
+
+        form_grid.attach(Gtk.Label(label="Sound Shift Rule (e.g. p>f, k>sh):", xalign=0), 0, 2, 1, 1)
+        entry_rule = Gtk.Entry()
+        entry_rule.set_text("p>f, k>sh, th>d")
+        form_grid.attach(entry_rule, 1, 2, 2, 1)
+
+        box.pack_start(form_grid, False, False, 0)
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_gen = Gtk.Button(label="⚡ Generate Syllables")
+        btn_gen.get_style_context().add_class("suggested-action")
+        btn_mut = Gtk.Button(label="🔀 Apply Sound Shifts")
+        btn_lex = Gtk.Button(label="📖 Explore Lexicon")
+        btn_box.pack_start(btn_gen, True, True, 0)
+        btn_box.pack_start(btn_mut, True, True, 0)
+        btn_box.pack_start(btn_lex, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_gen():
+            l = entry_lang.get_text().strip() or "Solar Tongue"
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "generate", l, "-w", target_world, "-n", str(int(spin_n.get_value()))]
+            self._run_dialog_cmd(cmd, out_buf, f"Generating conlang words for '{l}'...")
+
+        def _do_mut():
+            l = entry_lang.get_text().strip() or "Solar Tongue"
+            r = entry_rule.get_text().strip() or "p>f"
+            rules = [s.strip() for s in r.split(",") if s.strip()]
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "mutate", l, "Aethelgard", "-w", target_world]
+            for rule in rules:
+                cmd.extend(["-r", rule])
+            self._run_dialog_cmd(cmd, out_buf, f"Mutating words for '{l}'...")
+
+        def _do_lex():
+            l = entry_lang.get_text().strip() or "Solar Tongue"
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "lexicon", l, "-w", target_world]
+            self._run_dialog_cmd(cmd, out_buf, f"Fetching lexicon for '{l}'...")
+
+        btn_gen.connect("clicked", lambda b: _do_gen())
+        btn_mut.connect("clicked", lambda b: _do_mut())
+        btn_lex.connect("clicked", lambda b: _do_lex())
+
+        dialog.show_all()
+        _do_gen()
+        dialog.run()
+        dialog.destroy()
+
+    def open_pacing_dialog(self):
+        target_ms = self.current_manuscript_path
+        if not target_ms:
             self.show_error("Please select an active manuscript project first.")
             return
 
-        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "pacing.py"), "pace", target]
-        self.set_status("Analyzing narrative pacing and prose tension curves...")
+        dialog, box = self._create_dialog_shell("Narrative Pacing & Tension Arcs Studio", 840, 620)
+        
+        form_grid = Gtk.Grid()
+        form_grid.set_column_spacing(10)
+        form_grid.set_row_spacing(8)
 
-        def _worker():
-            res = subprocess.run(cmd, capture_output=True, text=True)
-            out = res.stdout or res.stderr
-            GLib.idle_add(self._show_text_result_dialog, "Narrative Pacing & Tension Report", out)
-            GLib.idle_add(self.set_status, "Pacing analysis complete.")
+        form_grid.attach(Gtk.Label(label="Analysis Mode:", xalign=0), 0, 0, 1, 1)
+        combo_mode = Gtk.ComboBoxText()
+        combo_mode.append("pace", "Prose Mode Rhythm (Dialogue / Action / Narrative Density)")
+        combo_mode.append("tension", "Chapter Tension Curve & Narrative Arcs")
+        combo_mode.append("pov", "POV Screen-Time Balance & Starvation Audit")
+        combo_mode.set_active_id("pace")
+        form_grid.attach(combo_mode, 1, 0, 2, 1)
 
-        self._start_worker(_worker)
+        box.pack_start(form_grid, False, False, 0)
 
-    def on_pov_clicked(self, btn):
-        target = self.current_manuscript_path
-        if not target:
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_run = Gtk.Button(label="⚡ Analyze Prose Pacing")
+        btn_run.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive Tension Arc in Browser")
+        btn_box.pack_start(btn_run, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_run():
+            m = combo_mode.get_active_id() or "pace"
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "pacing.py"), m, target_ms]
+            self._run_dialog_cmd(cmd, out_buf, f"Analyzing {m}...")
+
+        def _do_html():
+            m = combo_mode.get_active_id() or "tension"
+            base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "pacing.py"), "tension" if m == "tension" else "pace", target_ms]
+            self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Interactive Tension Arc report...")
+
+        btn_run.connect("clicked", lambda b: _do_run())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_run()
+        dialog.run()
+        dialog.destroy()
+
+    def open_journey_calendar_dialog(self):
+        dialog, box = self._create_dialog_shell("Overland Journeys & Planetary Calendars", 840, 620)
+        
+        notebook = Gtk.Notebook()
+        box.pack_start(notebook, False, False, 0)
+
+        # Tab A: Overland Expedition
+        box_j = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_j.set_border_width(8)
+        grid_j = Gtk.Grid()
+        grid_j.set_column_spacing(10)
+        grid_j.set_row_spacing(6)
+
+        grid_j.attach(Gtk.Label(label="Journey Distance:", xalign=0), 0, 0, 1, 1)
+        entry_j_dist = Gtk.Entry()
+        entry_j_dist.set_text("150 km")
+        grid_j.attach(entry_j_dist, 1, 0, 1, 1)
+
+        grid_j.attach(Gtk.Label(label="Terrain:", xalign=0), 0, 1, 1, 1)
+        combo_terr = Gtk.ComboBoxText()
+        for t in ["road", "trail", "plains", "hills", "mountain-pass", "swamp", "desert", "forest", "ocean"]:
+            combo_terr.append(t, t.capitalize())
+        combo_terr.set_active_id("mountain-pass")
+        grid_j.attach(combo_terr, 1, 1, 1, 1)
+
+        box_j.pack_start(grid_j, False, False, 0)
+        notebook.append_page(box_j, Gtk.Label(label="🗺️ Overland Expedition"))
+
+        # Tab B: Planetary Calendar
+        box_c = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_c.set_border_width(8)
+        grid_c = Gtk.Grid()
+        grid_c.set_column_spacing(10)
+        grid_c.set_row_spacing(6)
+
+        grid_c.attach(Gtk.Label(label="Target World:", xalign=0), 0, 0, 1, 1)
+        lbl_w = Gtk.Label(label=Path(self.current_world_path).name if self.current_world_path else "Default World", xalign=0)
+        grid_c.attach(lbl_w, 1, 0, 1, 1)
+
+        grid_c.attach(Gtk.Label(label="Include Moon Phases:", xalign=0), 0, 1, 1, 1)
+        chk_phases = Gtk.CheckButton(label="Calculate multi-moon synodic cycles & syzygies")
+        chk_phases.set_active(True)
+        grid_c.attach(chk_phases, 1, 1, 1, 1)
+
+        box_c.pack_start(grid_c, False, False, 0)
+        notebook.append_page(box_c, Gtk.Label(label="📅 Planetary Calendar"))
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Calculate / Model")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive HTML in Browser")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                dist = entry_j_dist.get_text().strip() or "150 km"
+                terr = combo_terr.get_active_id() or "mountain-pass"
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "journey.py"), dist, "-t", terr]
+                self._run_dialog_cmd(cmd, out_buf, f"Modeling expedition journey ({dist})...")
+            else:
+                w = self.current_world_path or str(PROJECT_ROOT / "templates" / "world")
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "calendar.py"), w]
+                if chk_phases.get_active():
+                    cmd.append("--phases")
+                self._run_dialog_cmd(cmd, out_buf, "Calculating planetary calendar...")
+
+        def _do_html():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                dist = entry_j_dist.get_text().strip() or "150 km"
+                terr = combo_terr.get_active_id() or "mountain-pass"
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "journey.py"), dist, "-t", terr]
+                self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Journey report...")
+            else:
+                w = self.current_world_path or str(PROJECT_ROOT / "templates" / "world")
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "calendar.py"), w, "--phases"]
+                self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Calendar report...")
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_calc()
+        dialog.run()
+        dialog.destroy()
+
+    def open_factions_logistics_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("Geopolitical Faction Matrix & Military Logistics", 840, 620)
+        notebook = Gtk.Notebook()
+        box.pack_start(notebook, False, False, 0)
+
+        # Tab A: Factions
+        box_f = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_f.set_border_width(8)
+        lbl_f_info = Gtk.Label(label="Analyze diplomatic paradoxes, alliance treaties, and geopolitical tension indices.", xalign=0)
+        box_f.pack_start(lbl_f_info, False, False, 0)
+        notebook.append_page(box_f, Gtk.Label(label="⚔️ Geopolitical Matrix"))
+
+        # Tab B: Lanchester Battle & Logistics
+        box_b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_b.set_border_width(8)
+        grid_b = Gtk.Grid()
+        grid_b.set_column_spacing(10)
+        grid_b.set_row_spacing(6)
+
+        grid_b.attach(Gtk.Label(label="Attacker Troops:", xalign=0), 0, 0, 1, 1)
+        spin_att = Gtk.SpinButton.new_with_range(100, 1000000, 500)
+        spin_att.set_value(10000)
+        grid_b.attach(spin_att, 1, 0, 1, 1)
+
+        grid_b.attach(Gtk.Label(label="Defender Troops:", xalign=0), 2, 0, 1, 1)
+        spin_def = Gtk.SpinButton.new_with_range(100, 1000000, 500)
+        spin_def.set_value(5000)
+        grid_b.attach(spin_def, 3, 0, 1, 1)
+
+        grid_b.attach(Gtk.Label(label="Fortification (0-3):", xalign=0), 0, 1, 1, 1)
+        spin_fort = Gtk.SpinButton.new_with_range(0, 3, 1)
+        spin_fort.set_value(2)
+        grid_b.attach(spin_fort, 1, 1, 1, 1)
+
+        box_b.pack_start(grid_b, False, False, 0)
+        notebook.append_page(box_b, Gtk.Label(label="🛡️ Combat & Logistics"))
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Calculate / Audit")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive Chord Matrix in Browser")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "factions.py"), "check", target_world]
+                self._run_dialog_cmd(cmd, out_buf, "Auditing geopolitical alliances...")
+            else:
+                att = str(int(spin_att.get_value()))
+                d = str(int(spin_def.get_value()))
+                f = str(int(spin_fort.get_value()))
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "factions.py"), "battle", "-a", att, "-d", d, "--fort", f]
+                self._run_dialog_cmd(cmd, out_buf, "Simulating Lanchester combat...")
+
+        def _do_html():
+            base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "factions.py"), "matrix", target_world]
+            self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Factions matrix report...")
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_calc()
+        dialog.run()
+        dialog.destroy()
+
+    def open_economy_tech_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("In-World Economy & Tech Era Anachronisms", 840, 620)
+        notebook = Gtk.Notebook()
+        box.pack_start(notebook, False, False, 0)
+
+        # Tab A: PPP Economy
+        box_e = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_e.set_border_width(8)
+        lbl_e_info = Gtk.Label(label="Check commodity basket parity (PPP), currency exchange rates, and price outliers.", xalign=0)
+        box_e.pack_start(lbl_e_info, False, False, 0)
+        notebook.append_page(box_e, Gtk.Label(label="💰 Macroeconomic PPP"))
+
+        # Tab B: Tech Era Anachronisms
+        box_t = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_t.set_border_width(8)
+        grid_t = Gtk.Grid()
+        grid_t.set_column_spacing(10)
+        grid_t.set_row_spacing(6)
+
+        grid_t.attach(Gtk.Label(label="Baseline Era:", xalign=0), 0, 0, 1, 1)
+        combo_era = Gtk.ComboBoxText()
+        for era in ["stone", "bronze", "iron", "medieval", "renaissance", "industrial", "modern", "atomic", "information", "space"]:
+            combo_era.append(era, era.capitalize())
+        combo_era.set_active_id("medieval")
+        grid_t.attach(combo_era, 1, 0, 1, 1)
+
+        box_t.pack_start(grid_t, False, False, 0)
+        notebook.append_page(box_t, Gtk.Label(label="⚙️ Tech Era Linter"))
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Run Audit")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive HTML in Browser")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "economy.py"), "check", target_world]
+                if self.current_manuscript_path:
+                    cmd.extend(["-m", self.current_manuscript_path])
+                self._run_dialog_cmd(cmd, out_buf, "Auditing commodity economy & prices...")
+            else:
+                era = combo_era.get_active_id() or "medieval"
+                ms = self.current_manuscript_path or str(PROJECT_ROOT / "templates" / "manuscript")
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "economy.py"), "tech", ms, "-w", target_world, "--era", era]
+                self._run_dialog_cmd(cmd, out_buf, f"Scanning out-of-era technology leaks ({era})...")
+
+        def _do_html():
+            base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "economy.py"), "check", target_world]
+            if self.current_manuscript_path:
+                base_cmd.extend(["-m", self.current_manuscript_path])
+            self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Economy report...")
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_calc()
+        dialog.run()
+        dialog.destroy()
+
+    def open_causality_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("Causal DAGs & Multiverse Timelines", 840, 620)
+        notebook = Gtk.Notebook()
+        box.pack_start(notebook, False, False, 0)
+
+        # Tab A: Causal Paradoxes
+        box_c = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_c.set_border_width(8)
+        lbl_c_info = Gtk.Label(label="Validate Novikov self-consistency, scan grandfather paradox loops, and audit event DAG dependencies.", xalign=0)
+        box_c.pack_start(lbl_c_info, False, False, 0)
+        notebook.append_page(box_c, Gtk.Label(label="⏳ Causal DAG & Novikov"))
+
+        # Tab B: Multiverse Branch Generator
+        box_b = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_b.set_border_width(8)
+        grid_b = Gtk.Grid()
+        grid_b.set_column_spacing(10)
+        grid_b.set_row_spacing(6)
+
+        grid_b.attach(Gtk.Label(label="Parent Timeline ID:", xalign=0), 0, 0, 1, 1)
+        entry_parent = Gtk.Entry()
+        entry_parent.set_text("Prime")
+        grid_b.attach(entry_parent, 1, 0, 1, 1)
+
+        grid_b.attach(Gtk.Label(label="Divergence Event ID:", xalign=0), 0, 1, 1, 1)
+        entry_event = Gtk.Entry()
+        entry_event.set_text("EVT-001")
+        grid_b.attach(entry_event, 1, 1, 1, 1)
+
+        grid_b.attach(Gtk.Label(label="Timestamp:", xalign=0), 0, 2, 1, 1)
+        entry_time = Gtk.Entry()
+        entry_time.set_text("1422-03-14")
+        grid_b.attach(entry_time, 1, 2, 1, 1)
+
+        grid_b.attach(Gtk.Label(label="New Branch Name:", xalign=0), 0, 3, 1, 1)
+        entry_branch = Gtk.Entry()
+        entry_branch.set_text("Divergent-Alpha")
+        grid_b.attach(entry_branch, 1, 3, 1, 1)
+
+        box_b.pack_start(grid_b, False, False, 0)
+        notebook.append_page(box_b, Gtk.Label(label="🌿 Multiverse Branch Generator"))
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Audit Paradoxes / Branch")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive Timeline DAG in Browser")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                ms = self.current_manuscript_path or str(PROJECT_ROOT / "templates" / "manuscript")
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "causality.py"), "check", target_world, ms]
+                self._run_dialog_cmd(cmd, out_buf, "Auditing causal consistency...")
+            else:
+                p = entry_parent.get_text().strip() or "Prime"
+                t = entry_time.get_text().strip() or "1422-03-14"
+                nb = entry_branch.get_text().strip() or "Divergent-Alpha"
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "causality.py"), "branch", nb, "--from-timeline", p, "--at-coord", t]
+                self._run_dialog_cmd(cmd, out_buf, f"Forking multiverse branch '{nb}'...")
+
+        def _do_html():
+            ms = self.current_manuscript_path or str(PROJECT_ROOT / "templates" / "manuscript")
+            base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "causality.py"), "dag", target_world, ms]
+            self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Causal DAG report...")
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_calc()
+        dialog.run()
+        dialog.destroy()
+
+    def open_climate_ecology_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("Planetary Climate & Trophic Food-Webs", 840, 620)
+        notebook = Gtk.Notebook()
+        box.pack_start(notebook, False, False, 0)
+
+        # Tab A: Climate
+        box_c = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_c.set_border_width(8)
+        grid_c = Gtk.Grid()
+        grid_c.set_column_spacing(10)
+        grid_c.set_row_spacing(6)
+
+        grid_c.attach(Gtk.Label(label="Stellar Luminosity (L☉):", xalign=0), 0, 0, 1, 1)
+        spin_lum = Gtk.SpinButton.new_with_range(0.01, 100.0, 0.1)
+        spin_lum.set_value(1.0)
+        grid_c.attach(spin_lum, 1, 0, 1, 1)
+
+        grid_c.attach(Gtk.Label(label="Orbital Distance (AU):", xalign=0), 2, 0, 1, 1)
+        spin_orb = Gtk.SpinButton.new_with_range(0.1, 50.0, 0.1)
+        spin_orb.set_value(1.0)
+        grid_c.attach(spin_orb, 3, 0, 1, 1)
+
+        box_c.pack_start(grid_c, False, False, 0)
+        notebook.append_page(box_c, Gtk.Label(label="☀️ Climate & Insolation"))
+
+        # Tab B: Ecology & Trophic Webs
+        box_e = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_e.set_border_width(8)
+        lbl_e_info = Gtk.Label(label="Audit Lindeman 10% trophic energy pyramids, biomass scaling, and predator-prey food-webs.", xalign=0)
+        box_e.pack_start(lbl_e_info, False, False, 0)
+        notebook.append_page(box_e, Gtk.Label(label="🌿 Trophic Food-Web"))
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Calculate / Audit")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive HTML in Browser")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                l = str(spin_lum.get_value())
+                r = str(spin_orb.get_value())
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "climate.py"), "--star-lum", l, "--distance-au", r]
+                self._run_dialog_cmd(cmd, out_buf, "Calculating planetary climate...")
+            else:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "ecology.py"), "check", target_world]
+                self._run_dialog_cmd(cmd, out_buf, "Auditing trophic food-web...")
+
+        def _do_html():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                l = str(spin_lum.get_value())
+                r = str(spin_orb.get_value())
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "climate.py"), "--star-lum", l, "--distance-au", r]
+                self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Climate report...")
+            else:
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "ecology.py"), "check", target_world]
+                self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Ecology report...")
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_calc()
+        dialog.run()
+        dialog.destroy()
+
+    def open_idioms_senses_dialog(self):
+        target_ms = self.current_manuscript_path
+        if not target_ms:
             self.show_error("Please select an active manuscript project first.")
             return
 
-        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "pacing.py"), "pov", target]
-        self.set_status("Calculating POV character screen-time allocation...")
+        dialog, box = self._create_dialog_shell("Earth-Eponym Scanner & 6D Sensory Palette", 840, 620)
+        notebook = Gtk.Notebook()
+        box.pack_start(notebook, False, False, 0)
 
-        def _worker():
-            res = subprocess.run(cmd, capture_output=True, text=True)
-            out = res.stdout or res.stderr
-            GLib.idle_add(self._show_text_result_dialog, "POV Screen-Time & Balance Analytics", out)
-            GLib.idle_add(self.set_status, "POV balance calculation complete.")
+        # Tab A: Idioms
+        box_i = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_i.set_border_width(8)
+        lbl_i_info = Gtk.Label(label="Scan for Earth-specific idioms, Latinisms, and real-world geographic eponyms that break immersion.", xalign=0)
+        box_i.pack_start(lbl_i_info, False, False, 0)
+        notebook.append_page(box_i, Gtk.Label(label="🧭 Earth-Eponym Scanner"))
 
-        self._start_worker(_worker)
+        # Tab B: Senses
+        box_s = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_s.set_border_width(8)
+        lbl_s_info = Gtk.Label(label="Measure 6D sensory prose balance: Visual, Auditory, Olfactory, Gustatory, Tactile, and Proprioceptive.", xalign=0)
+        box_s.pack_start(lbl_s_info, False, False, 0)
+        notebook.append_page(box_s, Gtk.Label(label="👁️ 6D Sensory Palette"))
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Run Prose Audit")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Interactive HTML in Browser")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "idioms.py"), target_ms]
+                self._run_dialog_cmd(cmd, out_buf, "Scanning Earth-specific eponyms...")
+            else:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "senses.py"), target_ms]
+                self._run_dialog_cmd(cmd, out_buf, "Analyzing 6D sensory balance...")
+
+        def _do_html():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "idioms.py"), target_ms]
+                self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Idioms report...")
+            else:
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "senses.py"), target_ms]
+                self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Sensory report...")
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_calc()
+        dialog.run()
+        dialog.destroy()
+
+    def open_cipher_prophecy_dialog(self):
+        target_world = self.current_world_path
+        if not target_world:
+            self.show_error("Please select an active world lore vault first.")
+            return
+
+        dialog, box = self._create_dialog_shell("Inscriptions, In-World Ciphers & Prophecy Matrix", 840, 620)
+        notebook = Gtk.Notebook()
+        box.pack_start(notebook, False, False, 0)
+
+        # Tab A: Ciphers
+        box_c = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_c.set_border_width(8)
+        grid_c = Gtk.Grid()
+        grid_c.set_column_spacing(10)
+        grid_c.set_row_spacing(6)
+
+        grid_c.attach(Gtk.Label(label="Message Text:", xalign=0), 0, 0, 1, 1)
+        entry_text = Gtk.Entry()
+        entry_text.set_text("THE ARCHIVES ARE SEALED")
+        grid_c.attach(entry_text, 1, 0, 2, 1)
+
+        grid_c.attach(Gtk.Label(label="Cipher Algorithm:", xalign=0), 0, 1, 1, 1)
+        combo_c_type = Gtk.ComboBoxText()
+        for ct in ["caesar", "atbash", "vigenere", "railfence", "columnar"]:
+            combo_c_type.append(ct, ct.capitalize())
+        combo_c_type.set_active_id("caesar")
+        grid_c.attach(combo_c_type, 1, 1, 1, 1)
+
+        grid_c.attach(Gtk.Label(label="Shift / Key:", xalign=0), 0, 2, 1, 1)
+        entry_key = Gtk.Entry()
+        entry_key.set_text("3")
+        grid_c.attach(entry_key, 1, 2, 1, 1)
+
+        box_c.pack_start(grid_c, False, False, 0)
+        notebook.append_page(box_c, Gtk.Label(label="🔒 In-World Ciphers"))
+
+        # Tab B: Runes
+        box_r = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_r.set_border_width(8)
+        grid_r = Gtk.Grid()
+        grid_r.set_column_spacing(10)
+        grid_r.set_row_spacing(6)
+
+        grid_r.attach(Gtk.Label(label="Inscription Plaintext:", xalign=0), 0, 0, 1, 1)
+        entry_rune_text = Gtk.Entry()
+        entry_rune_text.set_text("Speak friend and enter")
+        grid_r.attach(entry_rune_text, 1, 0, 1, 1)
+
+        grid_r.attach(Gtk.Label(label="Rune Alphabet:", xalign=0), 0, 1, 1, 1)
+        combo_rune_alpha = Gtk.ComboBoxText()
+        combo_rune_alpha.append("futhark", "Elder Futhark")
+        combo_rune_alpha.append("futhorc", "Anglo-Saxon Futhorc")
+        combo_rune_alpha.set_active_id("futhark")
+        grid_r.attach(combo_rune_alpha, 1, 1, 1, 1)
+
+        box_r.pack_start(grid_r, False, False, 0)
+        notebook.append_page(box_r, Gtk.Label(label="ᚠ Phonetic Runes"))
+
+        # Tab C: Prophecy Matrix
+        box_p = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box_p.set_border_width(8)
+        lbl_p_info = Gtk.Label(label="Verify prophecy conditions, fulfillment status, and lifecycle events across scenes.", xalign=0)
+        box_p.pack_start(lbl_p_info, False, False, 0)
+        notebook.append_page(box_p, Gtk.Label(label="📜 Prophecy Matrix"))
+
+        btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        btn_calc = Gtk.Button(label="⚡ Encode / Translate / Check")
+        btn_calc.get_style_context().add_class("suggested-action")
+        btn_html = Gtk.Button(label="🌐 Open Report / Export SVG")
+        btn_box.pack_start(btn_calc, True, True, 0)
+        btn_box.pack_start(btn_html, True, True, 0)
+        box.pack_start(btn_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        def _do_calc():
+            page_idx = notebook.get_current_page()
+            if page_idx == 0:
+                txt = entry_text.get_text().strip() or "SECRET"
+                ct = combo_c_type.get_active_id() or "caesar"
+                k = entry_key.get_text().strip() or "3"
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "cipher.py"), "encode", txt, "--type", ct]
+                if ct == "caesar" and k.isdigit():
+                    cmd.extend(["--shift", k])
+                elif ct in ("vigenere", "columnar"):
+                    cmd.extend(["--key", k])
+                self._run_dialog_cmd(cmd, out_buf, f"Encoding cipher ({ct})...")
+            elif page_idx == 1:
+                txt = entry_rune_text.get_text().strip() or "Speak friend"
+                alpha = combo_rune_alpha.get_active_id() or "futhark"
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "cipher.py"), "runes", txt, "--alphabet", alpha]
+                self._run_dialog_cmd(cmd, out_buf, f"Translating runes ({alpha})...")
+            else:
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "prophecy.py"), "check", target_world]
+                if self.current_manuscript_path:
+                    cmd.extend(["-m", self.current_manuscript_path])
+                self._run_dialog_cmd(cmd, out_buf, "Auditing prophecy matrix...")
+
+        def _do_html():
+            page_idx = notebook.get_current_page()
+            if page_idx == 1:
+                txt = entry_rune_text.get_text().strip() or "Speak friend"
+                alpha = combo_rune_alpha.get_active_id() or "futhark"
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "cipher.py"), "runes", txt, "--alphabet", alpha]
+                self._run_dialog_html_cmd(base_cmd, is_svg=True, status_msg="Exporting Rune Vector SVG card...")
+            elif page_idx == 2:
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "prophecy.py"), "check", target_world]
+                if self.current_manuscript_path:
+                    base_cmd.extend(["-m", self.current_manuscript_path])
+                self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Prophecy report...")
+            else:
+                _do_calc()
+
+        btn_calc.connect("clicked", lambda b: _do_calc())
+        btn_html.connect("clicked", lambda b: _do_html())
+
+        dialog.show_all()
+        _do_calc()
+        dialog.run()
+        dialog.destroy()
+
+    # Legacy callback aliases
+    def on_magic_check_clicked(self, btn=None):
+        self.open_magic_dialog()
+
+    def on_genealogy_clicked(self, btn=None):
+        self.open_genealogy_dialog()
+
+    def on_conlang_clicked(self, btn=None):
+        self.open_conlang_dialog()
+
+    def on_calendar_clicked(self, btn=None):
+        self.open_journey_calendar_dialog()
+
+    def on_astrophysics_clicked(self, btn=None):
+        self.open_astrophysics_dialog()
+
+    def on_journey_clicked(self, btn=None):
+        self.open_journey_calendar_dialog()
+
+    def on_pacing_clicked(self, btn=None):
+        self.open_pacing_dialog()
+
+    def on_pov_clicked(self, btn=None):
+        self.open_pacing_dialog()
 
     def run_diagnostics(self):
         self.doc_log_buffer.set_text("Running Ars Arcanum & World Doctor diagnostics...\n")
         self.set_status("Running diagnostics...")
+        # OPT-04: Flush cached tool paths so doctor always sees current installs.
+        _flush_tool_cache()
+        GLib.idle_add(self._show_progress)
 
         def _worker():
             cmd1 = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum_doctor.sh")]
@@ -1833,6 +3064,7 @@ class ArcanumApp(Gtk.Window):
                 GLib.idle_add(self._append_log, self.doc_log_buffer, res1.stdout + "\n" + res1.stderr)
             except subprocess.TimeoutExpired:
                 GLib.idle_add(self.set_status, "Diagnostics timed out after 90s.")
+                GLib.idle_add(self._hide_progress)
                 return
 
             if self.current_world_path:
@@ -1843,12 +3075,16 @@ class ArcanumApp(Gtk.Window):
                 except subprocess.TimeoutExpired:
                     GLib.idle_add(self._append_log, self.doc_log_buffer, "[!] world_doctor timed out after 120s; try --fast.\n")
             GLib.idle_add(self.set_status, "Diagnostics complete.")
+            GLib.idle_add(self._hide_progress)
+            # Refresh badges now that tool cache was flushed
+            GLib.idle_add(self.update_toolchain_badges)
 
         self._start_worker(_worker)
 
     def run_verify_harness(self):
         self.doc_log_buffer.set_text("Running full 7-stage verification suite...\n")
         self.set_status("Running verification harness...")
+        GLib.idle_add(self._show_progress)
 
         def _worker():
             cmd = ["bash", str(PROJECT_ROOT / "scripts" / "verify.sh")]
@@ -1856,8 +3092,10 @@ class ArcanumApp(Gtk.Window):
             self._stream_process_to_log(proc, self.doc_log_buffer, self._append_log)
             proc.wait()
             GLib.idle_add(self.set_status, "Verification run complete.")
+            GLib.idle_add(self._hide_progress)
 
         self._start_worker(_worker)
+
 
     def on_generate_demo_clicked(self, btn):
         demo_uni = "Cosmere-Prime"
@@ -2363,10 +3601,10 @@ class ArcanumApp(Gtk.Window):
 # Compatibility alias
 ScriptoriumApp = ArcanumApp
 
-def run_gtk3_app():
+def run_gtk3_app(active_tab: str | None = None):
     if not HAS_GTK:
         return False
-    app = ArcanumApp()
+    app = ArcanumApp(active_tab=active_tab)
     app.connect("destroy", Gtk.main_quit)
     app.show_all()
     Gtk.main()

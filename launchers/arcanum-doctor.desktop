@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Ars Arcanum Doctor Diagnostics
+GenericName=System & Lore Diagnostics
+Comment=Full-spectrum world lore audits, toolchain diagnostics, and 7-stage verification test harness
+Exec=bash "__PROJECT_ROOT__/scripts/arcanum" doctor
+TryExec=bash
+Icon=system-search
+Terminal=false
+Categories=Office;WordProcessor;Publishing;
+Keywords=Doctor;Diagnostics;Verify;Lore;Health;Toolchain;Audit;
+StartupNotify=true

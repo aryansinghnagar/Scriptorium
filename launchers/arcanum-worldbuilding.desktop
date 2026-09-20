@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Ars Arcanum Worldbuilding & Speculative Studio
+GenericName=Worldbuilding & Speculative Engines
+Comment=12 speculative fiction engines: astrophysics, magic, conlangs, genealogies, factions, and timelines
+Exec=bash "__PROJECT_ROOT__/scripts/arcanum" gui --tab worldbuilding
+TryExec=bash
+Icon=applications-science
+Terminal=false
+Categories=Office;WordProcessor;Publishing;
+Keywords=Worldbuilding;Lore;Speculative;Magic;Conlang;Astrophysics;Genealogy;Timeline;
+StartupNotify=true

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Ars Arcanum Novel Drafting & Word Sync
+GenericName=Manuscripts & Drafting Studio
+Comment=Manuscript hierarchy, live word count, visual scene metadata inspector, and MS Word/LibreOffice sync
+Exec=bash "__PROJECT_ROOT__/scripts/arcanum" gui --tab drafting
+TryExec=bash
+Icon=accessories-text-editor
+Terminal=false
+Categories=Office;WordProcessor;Publishing;
+Keywords=Writing;Novel;Drafting;WordCount;Metadata;DOCX;novelWriter;
+StartupNotify=true

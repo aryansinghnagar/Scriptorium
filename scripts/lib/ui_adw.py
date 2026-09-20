@@ -33,7 +33,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent.parent
 class ArcanumAppAdw:
     """Modern Libadwaita desktop application for Ars Arcanum."""
 
-    def __init__(self, application=None):
+    def __init__(self, application=None, active_tab: str | None = None):
         if not HAS_ADW:
             raise RuntimeError("Libadwaita / GTK 4 is not available.")
 
@@ -74,15 +74,30 @@ class ArcanumAppAdw:
         # Pages in ViewStack
         self.page_cosmos = self._create_cosmos_page()
         self.page_drafting = self._create_drafting_page()
+        self.page_speculative = self._create_speculative_page()
         self.page_publishing = self._create_publishing_page()
         self.page_safety = self._create_safety_page()
         self.page_diagnostics = self._create_diagnostics_page()
 
         self.view_stack.add_titled_with_icon(self.page_cosmos, "cosmos", "Universes", "folder-symbolic")
         self.view_stack.add_titled_with_icon(self.page_drafting, "drafting", "Drafting", "document-edit-symbolic")
+        self.view_stack.add_titled_with_icon(self.page_speculative, "worldbuilding", "Speculative", "applications-science-symbolic")
         self.view_stack.add_titled_with_icon(self.page_publishing, "publishing", "Publishing", "applications-office-symbolic")
         self.view_stack.add_titled_with_icon(self.page_safety, "safety", "Safety & Git", "security-high-symbolic")
         self.view_stack.add_titled_with_icon(self.page_diagnostics, "diagnostics", "Doctor", "system-search-symbolic")
+
+        if active_tab:
+            tab_clean = active_tab.lower().strip()
+            tab_map = {
+                "cosmos": "cosmos", "universe": "cosmos", "universes": "cosmos", "world": "cosmos", "worlds": "cosmos",
+                "drafting": "drafting", "manuscript": "drafting", "manuscripts": "drafting", "novel": "drafting", "writing": "drafting", "write": "drafting", "comparator": "drafting", "diff": "drafting", "compare": "drafting",
+                "worldbuilding": "worldbuilding", "speculative": "worldbuilding", "engines": "worldbuilding", "lore": "worldbuilding", "magic": "worldbuilding",
+                "publishing": "publishing", "typesetting": "publishing", "export": "publishing", "publish": "publishing",
+                "safety": "safety", "backups": "safety", "snapshots": "safety", "backup": "safety", "snapshot": "safety", "git": "safety",
+                "doctor": "diagnostics", "diagnostics": "diagnostics", "health": "diagnostics", "check": "diagnostics"
+            }
+            if tab_clean in tab_map:
+                self.view_stack.set_visible_child_name(tab_map[tab_clean])
 
         main_box.append(self.view_stack)
         main_box.append(view_switcher_bar)
@@ -135,6 +150,37 @@ class ArcanumAppAdw:
         btn_vol.connect("clicked", lambda x: self._run_script_dialog("add_book.sh", "Target Manuscript:"))
         row_add_vol.add_suffix(btn_vol)
         group.add(row_add_vol)
+
+        page.add(group)
+        return page
+
+    def _create_speculative_page(self) -> Gtk.Widget:
+        page = Adw.PreferencesPage()
+        group = Adw.PreferencesGroup(title="Speculative Fiction & Worldbuilding Engines", description="12 in-world modeling, constraint verification, and lore generators")
+
+        engines = [
+            ("Astrophysics & Flight", "Relativistic Brachistochrone 1g transit, Lorentz dilation, orbits", "astrophysics.py", ["transit", "alpha-centauri"]),
+            ("Hard Magic Constraints", "Affinity tier validation, reagent checks, fatigue curves", "magic_system.py", ["report"]),
+            ("Dynastic Genealogies", "Mermaid family trees, succession claim validation", "genealogy.py", ["lineage", "House"]),
+            ("Conlang Phonotactics", "Syllable word generator, historical sound shifts", "conlang.py", ["generate", "Solar Tongue"]),
+            ("Pacing & Tension Arcs", "Prose mode analyzer, POV balance, tension curves", "pacing.py", ["pace"]),
+            ("Journeys & Calendars", "Expedition calculator, multi-moon synodic cycles", "journey.py", ["150 km"]),
+            ("Geopolitical Factions", "Alliance chord diagrams, Lanchester combat modeler", "factions.py", ["matrix"]),
+            ("Economy & Tech Eras", "PPP commodity basket, price outlier scanner, tech era linter", "economy.py", ["check"]),
+            ("Causal DAGs & Multiverse", "Timeline DAG visualizer, Novikov paradox checker", "causality.py", ["check"]),
+            ("Climate & Trophic Webs", "Stellar flux insolation, Lindeman 10% trophic webs", "climate.py", ["--star-lum", "1.0"]),
+            ("Earth Idioms & 6D Senses", "Immersion de-eponym linter, 6D sensory palette analyzer", "idioms.py", []),
+            ("Ciphers & Prophecy Matrix", "Caesar/Vigenere/runes SVG cards, oracle fulfillment tracker", "cipher.py", ["runes", "Speak friend"]),
+        ]
+
+        for title, desc, script, args in engines:
+            row = Adw.ActionRow(title=title, subtitle=desc)
+            btn = Gtk.Button(label="Launch")
+            btn.set_valign(Gtk.Align.CENTER)
+            cmd = [sys.executable, str(SCRIPT_DIR / "lib" / script)] + args
+            btn.connect("clicked", lambda x, c=cmd, t=title: self._run_bg(c, f"{t} executed"))
+            row.add_suffix(btn)
+            group.add(row)
 
         page.add(group)
         return page
@@ -240,13 +286,13 @@ class ArcanumAppAdw:
         self.window.present()
 
 
-def run_adw_app():
+def run_adw_app(active_tab: str | None = None):
     if not HAS_ADW:
         return False
     app = Adw.Application(application_id="org.arsarcanum.ArsArcanum")
     
     def on_activate(application):
-        win = ArcanumAppAdw(application)
+        win = ArcanumAppAdw(application, active_tab=active_tab)
         win.present()
 
     app.connect("activate", on_activate)

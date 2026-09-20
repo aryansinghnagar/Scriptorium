@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Ars Arcanum Publishing Studio
+GenericName=Book Typesetter & Compiler
+Comment=1-Click compile to print Typst PDF, Pandoc EPUB, submission DOCX, and back-matter concordance
+Exec=bash "__PROJECT_ROOT__/scripts/arcanum" gui --tab publishing
+TryExec=bash
+Icon=document-print
+Terminal=false
+Categories=Office;WordProcessor;Publishing;
+Keywords=Publishing;Export;Typst;Pandoc;EPUB;PDF;DOCX;Typesetting;
+StartupNotify=true

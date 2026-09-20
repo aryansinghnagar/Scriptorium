@@ -32,6 +32,11 @@ override_dh_auto_install:
 	    base=$$(basename "$$f"); \
 	    case "$$base" in \
 	        arcanum-control-center.desktop|ars-arcanum-control-center.desktop|scriptorium-control-center.desktop) sub="control-center";; \
+	        arcanum-worldbuilding.desktop) sub="gui --tab worldbuilding";; \
+	        arcanum-drafting.desktop) sub="gui --tab drafting";; \
+	        arcanum-publishing.desktop) sub="gui --tab publishing";; \
+	        arcanum-comparator.desktop) sub="compare";; \
+	        arcanum-doctor.desktop) sub="doctor";; \
 	        init-world.desktop) sub="world";; \
 	        init-manuscript.desktop) sub="manuscript";; \
 	        export-book.desktop) sub="export";; \

@@ -209,6 +209,13 @@ import re
 import sys
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 bible_dir = Path(os.environ["BIBLE_DIR"])
 ms_dir = Path(os.environ["MANUSCRIPT_DIR"])
 target_book = os.environ.get("TARGET_BOOK", "").strip()

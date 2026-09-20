@@ -65,11 +65,16 @@ DESKTOP_DIR="$(xdg-user-dir DESKTOP 2>/dev/null || echo "${HOME}/Desktop")"
 APP_DIR="${HOME}/.local/share/applications"
 
 LAUNCHER_FILES=(
+    "arcanum-control-center.desktop"
+    "arcanum-worldbuilding.desktop"
+    "arcanum-drafting.desktop"
+    "arcanum-publishing.desktop"
+    "arcanum-comparator.desktop"
+    "arcanum-doctor.desktop"
     "init-world.desktop"
     "init-manuscript.desktop"
     "export-book.desktop"
     "save-snapshot.desktop"
-    "arcanum-control-center.desktop"
     "scriptorium-control-center.desktop"
 )
 
