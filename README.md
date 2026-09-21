@@ -3,18 +3,17 @@
 > **A low-effort, beginner-friendly system for novels and speculative worldbuilding.**  
 > Built for authors on Linux Mint (XFCE) & Debian. Everything in sovereign Markdown & OpenXML. Zero terminal required for daily writing.
 
-[![Status: Production Ready](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)](#)
-[![Unit Tests: 226 Passing](https://img.shields.io/badge/Unit%20Tests-226%2F226%20Passing-brightgreen.svg)](#)
-[![Integration: 37 Stages](https://img.shields.io/badge/Integration-37%2F37%20Stages-brightgreen.svg)](#)
-[![Verification: 7/7 Stages](https://img.shields.io/badge/Verification-ALL--CHECKS--PASS-blue.svg)](#)
+[![Status: Beta (Experimental)](https://img.shields.io/badge/Status-Beta%20(Experimental)-yellow.svg)](#)
+[![Ars Arcanum CI](https://github.com/aryansinghnagar/Scriptorium/actions/workflows/ci.yml/badge.svg)](https://github.com/aryansinghnagar/Scriptorium/actions/workflows/ci.yml)
+[![Unit Tests: 227 Passing](https://img.shields.io/badge/Unit%20Tests-227%2F227%20Passing-brightgreen.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > [!NOTE]
-> ### 🛡️ PRODUCTION-READY & AUDIT-VERIFIED
-> Ars Arcanum is a fully verified, local-first authoring platform tested across Tier 1 Linux distributions (**Linux Mint 21/22 XFCE** and **Debian 12/13 XFCE**).
+> ### 🧪 BETA (EXPERIMENTAL) & LOCAL-FIRST AUTHORING
+> Ars Arcanum is a sovereign, local-first authoring platform actively engineered for Linux distributions (**Linux Mint 21/22 XFCE** and **Debian 12/13 XFCE**).
 >
-> - **100% Verified Quality Gate**: 226 automated Python unit tests, 37 targeted integration tests, and the canonical 7-stage verification harness (`scripts/verify.sh`) pass with zero errors.
-> - **100% Offline Privacy & Zero Telemetry**: Operates strictly on your local machine with zero network calls, zero tracking, and pure Python standard library simulation engines.
+> - **Comprehensive Test Suite**: Automated Python unit tests, targeted integration tests, and the 7-stage verification harness (`scripts/verify.sh`).
+> - **Offline Privacy & Zero Telemetry**: Operates strictly on your local machine with no user tracking and pure Python standard library simulation engines.
 > - **Fail-Closed Security Posture**: Automated SHA-256 binary digest checks, transactional directory staging, path-traversal prevention, and unprivileged daily authoring.
 > - **Zero Vendor Lock-In**: Plain Markdown files (`.md`), standard OpenXML (`.docx`), YAML manifests, and local multi-tier Git version tracking.
 

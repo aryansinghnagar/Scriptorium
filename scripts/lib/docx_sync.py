@@ -12,6 +12,8 @@ Zero external dependencies; operates 100% offline.
 import sys
 import os
 import re
+import json
+import hashlib
 import zipfile
 import shutil
 import subprocess
@@ -20,6 +22,17 @@ import argparse
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
+
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(data, encoding=encoding)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -579,8 +592,35 @@ def build_manuscript_docx(manuscript_dir: Path, draft_name: str = None, preset_n
     return results
 
 
+def get_file_sha256(path: Path) -> str:
+    """Calculates SHA-256 hash of a file."""
+    if not path.is_file():
+        return ""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def load_sync_state(draft_dir: Path) -> dict:
+    state_file = draft_dir / ".sync_state.json"
+    if state_file.is_file():
+        try:
+            with open(state_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.debug("Failed to read sync state %s: %s", state_file, e)
+    return {}
+
+
+def save_sync_state(draft_dir: Path, state: dict) -> None:
+    state_file = draft_dir / ".sync_state.json"
+    atomic_write(state_file, json.dumps(state, indent=2))
+
+
 def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
-    """Performs bidirectional synchronization between .md and .docx files in a manuscript."""
+    """Performs 3-way hash-verified bidirectional synchronization between .md and .docx files."""
     mpath = Path(manuscript_dir).resolve()
     draft_dir = resolve_active_draft_dir(mpath, draft_name)
     config = get_docx_config()
@@ -594,6 +634,9 @@ def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
         "errors": []
     }
     
+    state = load_sync_state(draft_dir)
+    state_updated = False
+    
     # 1. Discover all pairs
     md_files = {f.stem: f for f in draft_dir.rglob("*.md") if not f.name.startswith(".") and "Outlines" not in f.parts}
     docx_files = {f.stem: f for f in draft_dir.rglob("*.docx") if not f.name.startswith(".") and not f.stem.endswith("_Manuscript")}
@@ -603,6 +646,9 @@ def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
     for stem in sorted(all_stems):
         md_path = md_files.get(stem)
         docx_path = docx_files.get(stem)
+        stem_state = state.get(stem, {})
+        stored_md_hash = stem_state.get("md_sha256")
+        stored_docx_hash = stem_state.get("docx_sha256")
         
         if md_path and not docx_path:
             # MD exists, DOCX missing -> Build DOCX
@@ -615,6 +661,12 @@ def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
                     parsed.insert(0, {"type": "heading1", "text": clean_title})
                 if build_docx_package(target_docx, parsed, config, title=mpath.name, is_full_manuscript=False):
                     sync_report["md_to_docx"].append(str(target_docx.relative_to(mpath)).replace("\\", "/"))
+                    state[stem] = {
+                        "md_sha256": get_file_sha256(md_path),
+                        "docx_sha256": get_file_sha256(target_docx),
+                        "synced_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    state_updated = True
             except Exception as e:
                 sync_report["errors"].append(f"Error compiling {target_docx}: {e}")
                 
@@ -623,26 +675,61 @@ def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
             target_md = docx_path.with_suffix(".md")
             try:
                 prose = convert_docx_to_markdown(docx_path)
-                target_md.write_text(prose, encoding="utf-8")
+                atomic_write(target_md, prose)
                 sync_report["docx_to_md"].append(str(target_md.relative_to(mpath)).replace("\\", "/"))
+                state[stem] = {
+                    "md_sha256": get_file_sha256(target_md),
+                    "docx_sha256": get_file_sha256(docx_path),
+                    "synced_at": datetime.now(timezone.utc).isoformat()
+                }
+                state_updated = True
             except Exception as e:
                 sync_report["errors"].append(f"Error importing {docx_path}: {e}")
                 
         elif md_path and docx_path:
-            # Both exist -> Check mtimes
-            md_mtime = md_path.stat().st_mtime
-            docx_mtime = docx_path.stat().st_mtime
+            cur_md_hash = get_file_sha256(md_path)
+            cur_docx_hash = get_file_sha256(docx_path)
             
-            # Allow 2 second threshold for filesystem precision
-            if docx_mtime > md_mtime + 2.0:
+            md_changed = (stored_md_hash is not None and cur_md_hash != stored_md_hash)
+            docx_changed = (stored_docx_hash is not None and cur_docx_hash != stored_docx_hash)
+            
+            # Initial baseline when no state was recorded
+            if stored_md_hash is None or stored_docx_hash is None:
+                md_mtime = md_path.stat().st_mtime
+                docx_mtime = docx_path.stat().st_mtime
+                if docx_mtime > md_mtime + 2.0:
+                    docx_changed = True
+                elif md_mtime > docx_mtime + 2.0:
+                    md_changed = True
+                else:
+                    state[stem] = {
+                        "md_sha256": cur_md_hash,
+                        "docx_sha256": cur_docx_hash,
+                        "synced_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    state_updated = True
+                    continue
+            
+            if md_changed and docx_changed:
+                # Conflict detected! Do not overwrite either file.
+                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                conflict_md = md_path.parent / f"{md_path.stem}.conflict_{ts}.md"
+                new_prose = convert_docx_to_markdown(docx_path)
+                atomic_write(conflict_md, f"<!-- SYNC CONFLICT from {docx_path.name} -->\n\n{new_prose}")
+                sync_report["conflicts"].append({
+                    "stem": stem,
+                    "md_file": str(md_path.relative_to(mpath)).replace("\\", "/"),
+                    "docx_file": str(docx_path.relative_to(mpath)).replace("\\", "/"),
+                    "conflict_file": str(conflict_md.relative_to(mpath)).replace("\\", "/")
+                })
+                logger.warning("Sync conflict on %s: both Markdown and DOCX modified independently.", stem)
+            elif docx_changed:
                 # DOCX was updated in Word Processor -> Update MD prose while preserving tags
                 try:
                     old_content = md_path.read_text(encoding="utf-8", errors="replace")
                     _, _, raw_headers = strip_scene_tags_and_frontmatter(old_content)
-                    
                     new_prose = convert_docx_to_markdown(docx_path)
                     
-                    # Prepend preserved scene tags
                     combined_lines = []
                     if raw_headers:
                         combined_lines.extend(raw_headers)
@@ -650,14 +737,17 @@ def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
                     combined_lines.append(new_prose.strip())
                     combined_lines.append("")
                     
-                    md_path.write_text("\n".join(combined_lines), encoding="utf-8")
-                    # Match mtimes so they are in sync
-                    os.utime(md_path, (docx_mtime, docx_mtime))
+                    atomic_write(md_path, "\n".join(combined_lines))
+                    state[stem] = {
+                        "md_sha256": get_file_sha256(md_path),
+                        "docx_sha256": cur_docx_hash,
+                        "synced_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    state_updated = True
                     sync_report["docx_to_md"].append(str(md_path.relative_to(mpath)).replace("\\", "/"))
                 except Exception as e:
                     sync_report["errors"].append(f"Error syncing {docx_path} -> {md_path}: {e}")
-                    
-            elif md_mtime > docx_mtime + 2.0:
+            elif md_changed:
                 # MD was updated in editor -> Rebuild DOCX
                 try:
                     content = md_path.read_text(encoding="utf-8", errors="replace")
@@ -666,11 +756,25 @@ def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
                         clean_title = re.sub(r"^\d+\s*", "", md_path.stem.replace("_", " ").replace("-", " "))
                         parsed.insert(0, {"type": "heading1", "text": clean_title})
                     if build_docx_package(docx_path, parsed, config, title=mpath.name, is_full_manuscript=False):
-                        os.utime(docx_path, (md_mtime, md_mtime))
+                        state[stem] = {
+                            "md_sha256": cur_md_hash,
+                            "docx_sha256": get_file_sha256(docx_path),
+                            "synced_at": datetime.now(timezone.utc).isoformat()
+                        }
+                        state_updated = True
                         sync_report["md_to_docx"].append(str(docx_path.relative_to(mpath)).replace("\\", "/"))
                 except Exception as e:
                     sync_report["errors"].append(f"Error syncing {md_path} -> {docx_path}: {e}")
-                    
+            else:
+                state[stem] = {
+                    "md_sha256": cur_md_hash,
+                    "docx_sha256": cur_docx_hash,
+                    "synced_at": stem_state.get("synced_at") or datetime.now(timezone.utc).isoformat()
+                }
+                
+    if state_updated:
+        save_sync_state(draft_dir, state)
+        
     # Update consolidated manuscript DOCX
     build_manuscript_docx(mpath, draft_name=draft_dir.name)
     return sync_report
@@ -763,7 +867,7 @@ def main():
             prose = convert_docx_to_markdown(Path(args.docx_file))
             target_path = Path(args.to)
             target_path.parent.mkdir(parents=True, exist_ok=True)
-            target_path.write_text(prose, encoding="utf-8")
+            atomic_write(target_path, prose)
             print(f"[✓] Successfully imported {args.docx_file} -> {args.to}")
             sys.exit(0)
         except Exception as e:

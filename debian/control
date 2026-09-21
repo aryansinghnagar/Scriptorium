@@ -1,12 +1,12 @@
 Source: ars-arcanum
 Section: text
 Priority: optional
-Maintainer: Ars Arcanum Maintainers <maintainers@arsarcanum.local>
+Maintainer: Aryan Singh Nagar <https://github.com/aryansinghnagar/Scriptorium>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.6.2
-Homepage: https://github.com/aryansinghnagar/Ars-Arcanum
-Vcs-Browser: https://github.com/aryansinghnagar/Ars-Arcanum
-Vcs-Git: https://github.com/aryansinghnagar/Ars-Arcanum.git
+Homepage: https://github.com/aryansinghnagar/Scriptorium
+Vcs-Browser: https://github.com/aryansinghnagar/Scriptorium
+Vcs-Git: https://github.com/aryansinghnagar/Scriptorium.git
 Rules-Requires-Root: no
 
 Package: ars-arcanum

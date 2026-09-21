@@ -113,6 +113,7 @@ mkdir -p "${TARGET_UNIVERSE_DIR}"
 # Create universe manifest & index note
 cat << EOF > "${TARGET_UNIVERSE_DIR}/universe.yaml"
 # Ars Arcanum Universe Manifest
+schema_version: "1.0"
 name: "${UNIVERSE_NAME}"
 created_at: "$(date +%Y-%m-%d)"
 description: "Narrative Universe housing interconnected worlds and lore."
@@ -155,7 +156,7 @@ if command -v git &> /dev/null; then
         cd "${TARGET_UNIVERSE_DIR}"
         git init -q
         git add .
-        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial Ars Arcanum universe repository: ${UNIVERSE_NAME}" 2>/dev/null
+        git_commit_safe "Initial Ars Arcanum universe repository: ${UNIVERSE_NAME}"
     ); then
         echo "[!] Warning: universe initial Git commit failed. Universe created without initial history." >&2
         echo "    Repair with: git -C '${TARGET_UNIVERSE_DIR}' commit -m 'Initial commit'" >&2

@@ -278,7 +278,7 @@ if command -v git &>/dev/null; then
         cd "${BOOK_DIR}"
         if [ -d ".git" ]; then
             git add . 2>/dev/null || true
-            git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initialize ${NEW_DRAFT_NAME} milestone for ${BOOK_VOLUME_CLI}" 2>/dev/null || true
+            git_commit_safe "Initialize ${NEW_DRAFT_NAME} milestone for ${BOOK_VOLUME_CLI}" || true
             git tag -a "v-${BOOK_VOLUME_CLI}-${NEW_DRAFT_NAME}" -m "Draft milestone: ${NEW_DRAFT_NAME}" 2>/dev/null || true
         fi
     )
@@ -286,7 +286,7 @@ if command -v git &>/dev/null; then
         cd "${MANUSCRIPT_DIR}"
         if [ -d ".git" ]; then
             git -c advice.addEmbeddedRepo=false add . 2>/dev/null || true
-            git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Forked ${NEW_DRAFT_NAME} in ${BOOK_VOLUME_CLI}" 2>/dev/null || true
+            git_commit_safe "Forked ${NEW_DRAFT_NAME} in ${BOOK_VOLUME_CLI}" || true
         fi
     )
 fi

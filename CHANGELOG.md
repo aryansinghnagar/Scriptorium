@@ -6,6 +6,38 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-09-21
+
+### Fixed & Hardened (Production-Readiness Audit Remediation — Phases 0–7)
+- **CI / CD Supply Chain & Workflow Hardening**:
+  - Corrected unresolvable action SHAs in `.github/workflows/ci.yml` for `setup-typst` (v4.0.1) and `gitleaks-action` (v2.3.8). Added `.github/dependabot.yml`.
+  - Added multi-distribution CI matrix in containers (`ubuntu:22.04`, `ubuntu:24.04`, `debian:12`, `debian:13`, and ARM64).
+  - Added headless Xvfb GUI startup verification under `G_DEBUG=fatal-criticals`.
+- **Data Safety & Atomic File I/O**:
+  - Implemented `atomic_write()` helper in `scripts/lib/fs_utils.py` (`mkstemp` $\to$ `fsync` $\to$ `os.replace` $\to$ parent directory `fsync`), replacing raw writes across all 40+ engines.
+  - Re-architected DOCX bidirectional sync in `scripts/lib/docx_sync.py` with `.sync-state.json` hash tracking, safe non-destructive imports, and `.conflict.md` branch isolation.
+  - Implemented `filter="data"` safe tar handling in backup/restore routines to prevent path traversal and symlink attacks.
+- **Architecture, Maintainability & CLI Dispatch**:
+  - Implemented `scripts/lib/registry.py` defining clean Core vs Craft plugin discovery.
+  - Ported shell logic to pure-Python engines `scripts/lib/world_doctor.py` and `scripts/lib/concordance.py`.
+  - Added unified Python CLI entry point `scripts/lib/cli.py` with rich argparse subcommands.
+  - Added structured diagnostic logging with automatic author prose redaction in `scripts/lib/diagnostics.py`.
+  - Decoupled GUI views from domain engines via `scripts/lib/ui_controller.py`.
+  - Added schema version tracking and automated migration engine `scripts/lib/migrate.py` (`arcanum migrate`).
+- **Security & Privacy Hardening**:
+  - Created formal STRIDE-lite threat model in `docs/THREAT_MODEL.md`.
+  - Injected strict offline Content Security Policy meta tags across all 27 HTML generator engines.
+  - Removed static placeholder identities from git authoring in favor of dynamic author git extraction (`git_commit_safe`).
+- **Engine Accuracy & Quality Benchmarks**:
+  - Created `tests/test_domain_golden_values.py` validating astrophysics, orbital mechanics, planetary insolation, Lanchester combat, and calendar algorithms against scientific benchmarks.
+  - Added minimum sample size warnings for short text samples in `scripts/lib/stylistics.py` and `scripts/lib/voice.py`.
+  - Created `tests/test_prose_linter_corpus.py` testing precision/recall on labelled prose fixtures.
+- **Governance & Packaging**:
+  - Added GitHub Issue templates (`.github/ISSUE_TEMPLATE/`), `SUPPORT.md`, and `DEPRECATION.md`.
+  - Updated Debian packaging metadata in `debian/control`, `debian/changelog` (v1.6.0-1), and `debian/copyright`.
+  - Hardened user CLI symlink management in `scripts/setup_arcanum.sh` and `scripts/uninstall_arcanum.sh`.
+  - Expanded test coverage to 281 passing unit tests across 23 test suites.
+
 ## [1.6.0] - 2026-09-20
 
 ### Added (Authorial Craft, Plot Matrix, Publishing Pre-Flight, Cartography & Audio Suites — M22–M28)

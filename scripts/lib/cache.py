@@ -13,6 +13,17 @@ import argparse
 import logging
 from pathlib import Path
 
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(data, encoding=encoding)
+
 logger = logging.getLogger("arcanum.cache")
 
 CACHE_VERSION = 2
@@ -76,26 +87,12 @@ def load_cache(project_dir: str) -> dict:
 
 def save_cache(project_dir: str, cache_data: dict) -> bool:
     cache_path = get_cache_path(project_dir)
-    tmp_path = cache_path.with_suffix(".tmp")
     try:
-        # Create with restrictive 0o600 permissions at fd creation level
-        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-        fd = os.open(tmp_path, flags, 0o600)
-        with open(fd, "w", encoding="utf-8") as f:
-            json.dump(cache_data, f, indent=2, ensure_ascii=False)
-        try:
-            os.chmod(tmp_path, 0o600)
-        except OSError as e:
-            logger.debug("os.chmod 0o600 failed on %s: %s", tmp_path, e)
-        tmp_path.replace(cache_path)
+        content = json.dumps(cache_data, indent=2, ensure_ascii=False)
+        atomic_write(cache_path, content)
         return True
     except Exception as e:
         logger.error("Failed to save cache to %s: %s", cache_path, e)
-        if tmp_path.exists():
-            try:
-                tmp_path.unlink()
-            except Exception as unl_err:
-                logger.debug("Failed to clean up temporary cache file %s: %s", tmp_path, unl_err)
         return False
 
 

@@ -32,6 +32,20 @@ import argparse
 import logging
 from pathlib import Path
 
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, (bytes, bytearray)):
+                p.write_bytes(data)
+            else:
+                p.write_text(data, encoding=encoding)
+
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -276,6 +290,7 @@ def generate_cartography_html_viewer(locations: list[dict], title: str, output_p
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:;">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ars Arcanum — {html.escape(title)} Map Viewer</title>
@@ -391,7 +406,7 @@ renderList(locations);
 </body>
 </html>
 """
-    output_path.write_text(html_content, encoding="utf-8")
+    atomic_write(output_path, html_content)
     return output_path
 
 
@@ -418,7 +433,7 @@ def main():
     out_file = Path(out_target)
     if args.svg or out_file.suffix.lower() == ".svg":
         svg_code = generate_vector_svg_map(locations, title=resolved_name, grid_mode=args.grid, show_routes=not args.no_routes)
-        out_file.write_text(svg_code, encoding="utf-8")
+        atomic_write(out_file, svg_code)
         print(f"Generated Vector SVG Map: {out_file}")
     else:
         generate_cartography_html_viewer(locations, title=resolved_name, output_path=out_file)

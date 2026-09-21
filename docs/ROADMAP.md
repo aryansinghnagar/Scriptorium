@@ -26,7 +26,7 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 
 ---
 
-## 4. Master Milestone Roadmap (M0–M19)
+## 4. Master Milestone Roadmap (M0–M28)
 
 ### M0: Governance & Architecture Freeze
 - [x] Security vulnerability disclosure policy (`SECURITY.md`).
@@ -179,21 +179,28 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 ### M28: Sovereign Privacy-First Audio Proofreader (Intelligence)
 - [x] Offline neural audio proofreading player (`scripts/lib/tts_reader.py`, `arcanum read`): Local auditory proofreading engine with Piper TTS / espeak-ng subprocess bridge, paragraph tracking, speed modulation (`0.75x` to `2.0x`), and WAV compilation.
 
+### M29: Production Hardening, Audit Remediation & Release Gate (Phases 0–7)
+- [x] **CI & Supply Chain Hardening**: Fixed pinned action SHAs (`setup-typst` v4.0.1, `gitleaks-action` v2.3.8), weekly Dependabot, multi-distro container CI matrix (`ubuntu:22.04`, `ubuntu:24.04`, `debian:12`, `debian:13`, ARM64), and automated Xvfb headless GUI startup verification (`G_DEBUG=fatal-criticals`).
+- [x] **Data Safety Architecture**: Implemented `atomic_write()` across all 40+ engines, 3-way DOCX hash synchronization with `.conflict.md` branching, safe tar extraction (`filter="data"`), and schema evolution (`scripts/lib/migrate.py`).
+- [x] **Modular Architecture**: Decoupled Core vs Craft engines (`scripts/lib/registry.py`), pure Python World Doctor and Concordance engines, unified Python CLI (`scripts/lib/cli.py`), structured logging (`scripts/lib/diagnostics.py`), and UI Controller (`scripts/lib/ui_controller.py`).
+- [x] **Security & Privacy**: Formal STRIDE-lite threat model (`docs/THREAT_MODEL.md`), strict offline Content Security Policy meta tags across all 27 HTML generators, and dynamic Git author identity extraction.
+- [x] **Scientific & Linter Benchmarks**: Domain golden values test suite (`tests/test_domain_golden_values.py`), sample size guardrails in stylistics/voice, labelled prose linter corpus (`tests/test_prose_linter_corpus.py`), and complete governance templates (`SUPPORT.md`, `DEPRECATION.md`, `.github/ISSUE_TEMPLATE/`).
+
 ---
 
 ## 5. Real-Time Operational Status & Momentum Queues
 
 ### Operational State
-- **Active Status**: Production-Ready / All 28 Milestones Complete & Verified (Grade A+).
-- **Verification**: 100% Pass Rate across 226 Python unit tests and the canonical 7-stage verification harness (`scripts/verify.sh`).
+- **Active Status**: Production-Hardened Release Gate (v1.6.1).
+- **Verification**: 100% Pass Rate across **281 Python unit tests** and the canonical 7-stage verification harness (`scripts/verify.sh`).
 - **Code Quality**: Zero ShellCheck warnings, zero Python syntax errors, 100% pure Python standard library core engines, zero external pip dependencies.
 
 ---
 
 ## 6. Definition of Done
 
-- `bash scripts/verify.sh` prints `ALL-CHECKS-PASS` across all 7 verification stages.
-- `python -m unittest discover -s tests -p "test_*.py"` passes 226/226 tests with 0 failures and 0 errors.
+- `bash scripts/verify.sh` passes across all 7 verification stages.
+- `python -m unittest discover -s tests -p "test_*.py"` passes 281/281 tests with 0 failures and 0 errors.
 - `python3 -m py_compile scripts/arcanum_app.py scripts/lib/*.py` compiles without syntax errors.
-- All 18 craft, speculative, publishing, and diagnostic tools execute cleanly via `arcanum <subcommand>`.
+- All craft, speculative, publishing, and diagnostic tools execute cleanly via `arcanum <subcommand>`.
 - Test universes, pure world lore vaults, and standalone manuscripts scaffold, export (PDF, EPUB, DOCX), snapshot, and restore cleanly without data loss.

@@ -389,6 +389,12 @@ else
         fi
     done
 
+    # Create user-local CLI symlinks in ~/.local/bin
+    mkdir -p "${HOME}/.local/bin"
+    ln -sf "${PROJECT_ROOT}/scripts/arcanum" "${HOME}/.local/bin/arcanum"
+    ln -sf "${PROJECT_ROOT}/scripts/ars-arcanum" "${HOME}/.local/bin/ars-arcanum"
+    echo "  [✓] Linked CLI commands to ${HOME}/.local/bin/arcanum"
+
     # Trust desktop launchers in XFCE / Mint desktop if gio is available
     if command -v gio &> /dev/null; then
         for df in "${DESKTOP_DIR}/"*.desktop; do

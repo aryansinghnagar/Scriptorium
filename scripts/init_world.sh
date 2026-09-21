@@ -174,7 +174,7 @@ EOF
                 cd "${UNIVERSE_DIR}"
                 git init -q
                 git add .
-                git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial universe repository: ${UNIVERSE_NAME}" 2>/dev/null || true
+                git_commit_safe "Initial universe repository: ${UNIVERSE_NAME}" || true
             )
         fi
     fi
@@ -268,6 +268,7 @@ EOF
 
 cat << EOF > "${STAGING_DIR}/world.yaml"
 # Ars Arcanum World Lore Vault Manifest
+schema_version: "1.0"
 name: "${WORLD_NAME}"
 universe: "${UNIVERSE_NAME}"
 created_at: "$(date +%Y-%m-%d)"
@@ -295,7 +296,7 @@ if command -v git &> /dev/null; then
         git init -q
         git config advice.addEmbeddedRepo false
         git -c advice.addEmbeddedRepo=false add . 2>/dev/null
-        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial Ars Arcanum world lore repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]" 2>/dev/null
+        git_commit_safe "Initial Ars Arcanum world lore repository: ${WORLD_NAME} [Universe: ${UNIVERSE_NAME}]"
     ); then
         echo "[!] Warning: world initial Git commit failed. World created without initial history." >&2
         echo "    Repair with: git -C \"\$HOME/Universes/<Universe>/${WORLD_NAME}\" commit -m 'Initial commit'" >&2
@@ -315,7 +316,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ] && [ -d "${UNIVERSE_DIR}/.git" ] && command -v 
     if ! (
         cd "${UNIVERSE_DIR}"
         git add "${WORLD_NAME}" 2>/dev/null
-        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'" 2>/dev/null
+        git_commit_safe "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'"
     ); then
         echo "[!] Warning: universe tracking commit failed for '${WORLD_NAME}'. World itself is intact." >&2
         [ "${GIT_HISTORY}" = "ok" ] && GIT_HISTORY="failed"

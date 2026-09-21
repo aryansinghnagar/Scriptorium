@@ -24,6 +24,20 @@ import subprocess
 from pathlib import Path
 from typing import List, Dict, Tuple, Any, Optional
 
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, (bytes, bytearray)):
+                p.write_bytes(data)
+            else:
+                p.write_text(data, encoding=encoding)
+
 NW_TAG_REGEX = re.compile(r"^@[A-Za-z0-9_-]+:")
 TOKEN_REGEX = re.compile(r"\S+|\s+")
 WORD_REGEX = re.compile(r"\b\w+\b", re.UNICODE)
@@ -369,6 +383,7 @@ class ManuscriptComparator:
         html_template = f"""<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manuscript Redline Diff: {esc_label_a} vs {esc_label_b} | Ars Arcanum</title>
@@ -846,8 +861,8 @@ class ManuscriptComparator:
 
         src_a = tmp_dir / "draft_a.md"
         src_b = tmp_dir / "draft_b.md"
-        src_a.write_text(text_a, encoding="utf-8")
-        src_b.write_text(text_b, encoding="utf-8")
+        atomic_write(src_a, text_a)
+        atomic_write(src_b, text_b)
 
         # Convert to ODT with pandoc
         try:
@@ -896,7 +911,7 @@ def main():
     elif args.html:
         out_path = Path(args.html).expanduser().resolve()
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(comparator.to_html(), encoding="utf-8")
+        atomic_write(out_path, comparator.to_html(), encoding="utf-8")
         print(f"[✓] Redline HTML report generated at: {out_path}")
     elif args.libreoffice:
         comparator.open_in_libreoffice()

@@ -32,6 +32,17 @@ import html
 import argparse
 import logging
 from pathlib import Path
+
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(data, encoding=encoding)
 from collections import defaultdict, deque
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -430,15 +441,15 @@ def generate_mermaid_flowchart(chars: dict, target_query: str = None) -> str:
 
 
 def generate_genealogy_html_report(title: str, mermaid_code: str, lineage: list, findings: list, output_file: Path):
-    """Generates an interactive HTML tree report with embedded Mermaid.js rendering."""
+    """Generates a 100% offline HTML tree report with embedded lineage tables and Mermaid flowchart source."""
+    raw_mermaid = mermaid_code.replace('```mermaid', '').replace('```', '').strip()
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:;">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)} — Ars Arcanum Dynastic Genealogy</title>
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({{startOnLoad:true, theme:'dark'}});</script>
 <style>
   :root {{
     --bg: #0d1117;
@@ -468,7 +479,7 @@ def generate_genealogy_html_report(title: str, mermaid_code: str, lineage: list,
   th, td {{ padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }}
   th {{ color: #8b949e; font-weight: 600; }}
   td {{ color: #f0f6fc; }}
-  .mermaid-box {{ background: #0b0f14; border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-x: auto; text-align: center; }}
+  .mermaid-box {{ background: #0b0f14; border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; font-family: monospace; font-size: 13px; color: var(--accent); white-space: pre-wrap; }}
   footer {{ text-align: center; font-size: 12px; color: #8b949e; margin-top: 40px; border-top: 1px solid var(--border); padding-top: 16px; }}
 </style>
 </head>
@@ -480,12 +491,8 @@ def generate_genealogy_html_report(title: str, mermaid_code: str, lineage: list,
   </header>
 
   <div class="card">
-    <h2>Dynastic Family Tree Flowchart</h2>
-    <div class="mermaid-box">
-      <div class="mermaid">
-{mermaid_code.replace('```mermaid', '').replace('```', '').strip()}
-      </div>
-    </div>
+    <h2>Dynastic Flowchart Specification (Mermaid)</h2>
+    <div class="mermaid-box">{html.escape(raw_mermaid)}</div>
   </div>
 
   <div class="card">
@@ -527,7 +534,7 @@ def generate_genealogy_html_report(title: str, mermaid_code: str, lineage: list,
 </body>
 </html>
 """
-    output_file.write_text(html_content, encoding="utf-8")
+    atomic_write(output_file, html_content)
 
 
 def print_terminal_tree(chars: dict, root_name: str, prefix: str = "", visited: set = None):

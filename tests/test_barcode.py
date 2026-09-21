@@ -83,6 +83,20 @@ class TestBarcodeEngine(unittest.TestCase):
         self.assertGreater(svg_file.stat().st_size, 500)
         self.assertGreater(png_file.stat().st_size, 500)
 
+    def test_barcode_cli_json(self):
+        import subprocess
+        import json
+        res = subprocess.run(
+            [sys.executable, str(REPO_ROOT / "scripts" / "lib" / "barcode.py"), "9780306406157", "--json"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        data = json.loads(res.stdout)
+        self.assertTrue(data.get("valid"))
+        self.assertEqual(data.get("normalized_isbn13"), "9780306406157")
+        self.assertEqual(data.get("checksum"), 7)
+
 
 if __name__ == "__main__":
     unittest.main()

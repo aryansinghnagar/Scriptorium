@@ -56,6 +56,23 @@ sanitize_name() {
     printf '%s' "${safe}"
 }
 
+# git_commit_safe MSG -> commits using author's configured Git identity or clean local tool fallback
+git_commit_safe() {
+    local msg="$1"
+    local author_args=()
+    if [ -z "$(git config user.name 2>/dev/null || true)" ]; then
+        author_args+=(-c "user.name=Ars Arcanum Studio")
+    fi
+    if [ -z "$(git config user.email 2>/dev/null || true)" ]; then
+        author_args+=(-c "user.email=arcanum@local")
+    fi
+    if [ ${#author_args[@]} -gt 0 ]; then
+        git "${author_args[@]}" commit -q -m "${msg}"
+    else
+        git commit -q -m "${msg}"
+    fi
+}
+
 # warn_if_legacy_root WORLD_PATH -> prints deprecation note to stderr if in legacy ~/Worlds
 warn_if_legacy_root() {
     local target="${1:-}"

@@ -5,6 +5,31 @@
 # ==============================================================================
 set -euo pipefail
 
+REQUIRE_TOOLS="${REQUIRE_TOOLS:-0}"
+for arg in "$@"; do
+    case "$arg" in
+        --require-tools)
+            REQUIRE_TOOLS=1
+            ;;
+    esac
+done
+
+PASS_COUNT=0
+SKIP_COUNT=0
+FAIL_COUNT=0
+
+record_pass() {
+    PASS_COUNT=$((PASS_COUNT + 1))
+}
+
+record_skip() {
+    SKIP_COUNT=$((SKIP_COUNT + 1))
+    if [ "${REQUIRE_TOOLS}" = "1" ]; then
+        echo "  (FAIL: required tool missing under --require-tools)" >&2
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+}
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
@@ -153,8 +178,10 @@ if command -v pandoc >/dev/null; then
         exit 1
     fi
     echo "  OK pandoc conversion"
+    record_pass
 else
     echo "  SKIP pandoc missing on this host"
+    record_skip
 fi
 
 echo "[4/7] Typst compile smoke test (if installed)..."
@@ -164,9 +191,11 @@ if command -v typst >/dev/null; then
         exit 1
     fi
     echo "  OK typst compile"
+    record_pass
     ls -lh "${TMP_VERIFY}/preview.pdf"
 else
     echo "  SKIP typst missing on this host (install per docs/guides/SOFTWARE_CATALOG.md)"
+    record_skip
 fi
 
 echo "[5/7] Desktop launcher validation..."
@@ -308,8 +337,10 @@ assert "1899-03-14" not in b1_txt, "novelWriter @time tag leaked into Book-01 ex
 
 print("  OK multi-volume isolation + omnibus inclusion + tag stripping verified in EPUB")
 PYEOF
+    record_pass
 else
     echo "  SKIP full PDF/EPUB/DOCX export build (typst/pandoc not installed in local environment)"
+    record_skip
 fi
 
 # 6f. Multi-Era World Doctor consistency check
@@ -616,5 +647,23 @@ bash scripts/arcanum series --help >/dev/null
 bash scripts/arcanum sim battle --help >/dev/null
 bash scripts/ars-arcanum --version >/dev/null
 echo "  OK arcanum and ars-arcanum CLI entrypoints and subcommands"
+record_pass
 
-echo "ALL-CHECKS-PASS"
+echo ""
+echo "=== Verification Summary ==="
+echo "PASS: ${PASS_COUNT} | SKIP: ${SKIP_COUNT} | FAIL: ${FAIL_COUNT}"
+
+if [ "${FAIL_COUNT}" -eq 0 ] && [ "${SKIP_COUNT}" -eq 0 ]; then
+    echo "ALL-CHECKS-PASS"
+    exit 0
+elif [ "${FAIL_COUNT}" -eq 0 ]; then
+    echo "PASS (with ${SKIP_COUNT} skips — run with full toolchain for full gate)"
+    if [ "${REQUIRE_TOOLS}" = "1" ]; then
+        echo "ERROR: --require-tools was requested but ${SKIP_COUNT} tools were skipped." >&2
+        exit 1
+    fi
+    exit 0
+else
+    echo "FAIL (${FAIL_COUNT} errors encountered)" >&2
+    exit 1
+fi

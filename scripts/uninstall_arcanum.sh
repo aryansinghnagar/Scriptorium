@@ -101,6 +101,18 @@ for lf in "${LAUNCHER_FILES[@]}"; do
     fi
 done
 
+# Remove user-local CLI symlinks
+for bin in "${HOME}/.local/bin/arcanum" "${HOME}/.local/bin/ars-arcanum"; do
+    if [ -L "${bin}" ] || [ -f "${bin}" ]; then
+        if [ "${DRY_RUN}" -eq 1 ]; then
+            echo "  [DRY-RUN] Would remove CLI symlink: ${bin}"
+        else
+            rm -f "${bin}"
+            echo "  [✓] Removed CLI symlink ${bin}"
+        fi
+    fi
+done
+
 echo "[2/3] Checking Typst binary..."
 if [ -f "/usr/local/bin/typst" ]; then
     if [ "${DRY_RUN}" -eq 1 ]; then

@@ -1,8 +1,9 @@
-ars-arcanum (1.5.0-1) unstable; urgency=medium
+ars-arcanum (1.6.0-1) unstable; urgency=medium
 
-  * Initial Debian packaging release for Ars Arcanum.
-  * Packaged unified CLI dispatcher (arcanum, ars-arcanum) and GTK control center.
-  * Added templates and configuration schemas.
-  * Included FreeDesktop launcher specifications.
+  * Production readiness and modular architecture release.
+  * Packaged unified Python CLI dispatcher and plugin registry.
+  * Added atomic storage write safety, 3-way DOCX hash sync, and schema migrations.
+  * Hardened World Bible doctor, concordance back-matter engine, and diagnostics.
+  * Included FreeDesktop launcher specifications and headless GUI support.
 
- -- Ars Arcanum Maintainers <maintainers@arsarcanum.local>  Thu, 17 Sep 2026 18:30:00 +0530
+ -- Aryan Singh Nagar <https://github.com/aryansinghnagar/Scriptorium>  Sun, 21 Sep 2026 12:00:00 +0530

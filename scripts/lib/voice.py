@@ -19,6 +19,7 @@ Capabilities (PRO-103):
 3. Voice Bleed / Character Homogeneity Detector:
    - Computes cosine similarity of character dialogue vocabulary vectors
    - Warns when distinct characters sound identical or suffer from author voice bleed
+
 4. Standalone HTML/SVG report with interactive voice fingerprint cards and similarity matrix.
 
 Zero external dependencies; 100% offline privacy.
@@ -34,6 +35,21 @@ import argparse
 import logging
 from pathlib import Path
 from collections import Counter, defaultdict
+
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, (bytes, bytearray)):
+                p.write_bytes(data)
+            else:
+                p.write_text(data, encoding=encoding)
+
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -211,6 +227,10 @@ def compute_voice_profile(utterances: list[str], all_characters_corpus: dict[str
         scored_words.sort(key=lambda x: x[2], reverse=True)
         distinctive_words = [{"word": w, "count": c, "score": round(s, 2)} for w, c, s in scored_words[:8]]
 
+    warning = None
+    if total_words < 100:
+        warning = "Dialogue corpus contains fewer than 100 words. Voice fingerprint metrics may be statistically noisy."
+
     return {
         "utterance_count": u_count,
         "total_words": total_words,
@@ -224,6 +244,7 @@ def compute_voice_profile(utterances: list[str], all_characters_corpus: dict[str
         "ellipsis_ratio": round(el_ratio, 3),
         "interruption_ratio": round(dash_ratio, 3),
         "formality_score": formality,
+        "sample_size_warning": warning,
         "distinctive_words": distinctive_words
     }
 
@@ -355,6 +376,7 @@ def generate_voice_html_report(report: dict, output_path: Path) -> Path:
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:;">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ars Arcanum — Character Voice Profiler</title>
@@ -387,7 +409,7 @@ def generate_voice_html_report(report: dict, output_path: Path) -> Path:
 </body>
 </html>
 """
-    output_path.write_text(html_content, encoding="utf-8")
+    atomic_write(output_path, html_content)
     return output_path
 
 

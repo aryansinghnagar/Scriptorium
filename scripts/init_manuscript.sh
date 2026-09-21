@@ -236,6 +236,7 @@ YAML_UNIVERSE="$(yaml_escape "${UNIVERSE_NAME}")"
 YAML_WORLD="$(yaml_escape "${WORLD_NAME}")"
 cat << EOF > "${STAGING_DIR}/manuscript.yaml"
 # Ars Arcanum Manuscript Project Manifest
+schema_version: "1.0"
 title: "${YAML_TITLE}"
 author: "${YAML_AUTHOR}"
 universe: "${YAML_UNIVERSE}"
@@ -265,7 +266,7 @@ if command -v git &> /dev/null; then
         cd "${STAGING_DIR}/Book-01"
         git init -q
         git add .
-        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial drafting repository for Book-01 in ${MANUSCRIPT_NAME}" 2>/dev/null
+        git_commit_safe "Initial drafting repository for Book-01 in ${MANUSCRIPT_NAME}"
     ); then
         echo "[!] Warning: Book-01 initial Git commit failed (lock contention or identity issue). Volume created without initial history." >&2
         GIT_HISTORY="failed"
@@ -277,7 +278,7 @@ if command -v git &> /dev/null; then
         git init -q
         git config advice.addEmbeddedRepo false
         git -c advice.addEmbeddedRepo=false add . 2>/dev/null
-        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial Ars Arcanum manuscript repository: ${MANUSCRIPT_NAME}" 2>/dev/null
+        git_commit_safe "Initial Ars Arcanum manuscript repository: ${MANUSCRIPT_NAME}"
     ); then
         echo "[!] Warning: manuscript root initial Git commit failed. Project created without initial history." >&2
         echo "    Repair with: git -C '${STAGING_DIR}/Book-01' commit -m 'Initial commit' (after move: git -C \"\$HOME/Manuscripts/${MANUSCRIPT_NAME}/Book-01\" commit)" >&2

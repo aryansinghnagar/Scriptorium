@@ -20,6 +20,20 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, (bytes, bytearray)):
+                p.write_bytes(data)
+            else:
+                p.write_text(data, encoding=encoding)
+
 
 logger = logging.getLogger("arcanum.ui_gtk3")
 
@@ -1669,7 +1683,7 @@ class ArcanumApp(Gtk.Window):
             import tempfile as _tf
             backup_path = file_path.with_name(file_path.name + ".pre-tag-save.bak")
             try:
-                backup_path.write_text(content, encoding="utf-8")
+                atomic_write(backup_path, content)
             except Exception:
                 pass
             fd, tmp_name = _tf.mkstemp(dir=str(file_path.parent), prefix=file_path.name + ".", suffix=".tmp")

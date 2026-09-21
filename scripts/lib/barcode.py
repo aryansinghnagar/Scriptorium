@@ -24,11 +24,26 @@ Zero external dependencies; 100% offline privacy.
 import sys
 import os
 import re
+import json
 import zlib
 import struct
 import argparse
 import logging
 from pathlib import Path
+
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, (bytes, bytearray)):
+                p.write_bytes(data)
+            else:
+                p.write_text(data, encoding=encoding)
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -257,13 +272,13 @@ def export_barcode(isbn_raw: str, output_path: Path, scale: float = 1.0) -> Path
 
     if suffix == ".png":
         png_bytes = generate_png_barcode(isbn13, scale=max(1, int(scale * 3)))
-        output_path.write_bytes(png_bytes)
+        atomic_write(output_path, png_bytes)
     else:
         # Default SVG
         if suffix != ".svg":
             output_path = output_path.with_suffix(".svg")
         svg_str = generate_svg_barcode(isbn13, scale=scale)
-        output_path.write_text(svg_str, encoding="utf-8")
+        atomic_write(output_path, svg_str)
 
     return output_path
 

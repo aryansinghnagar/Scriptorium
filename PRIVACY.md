@@ -2,7 +2,7 @@
 
 **Last Updated:** September 2026  
 **Project:** Ars Arcanum  
-**Maintainers:** Ars Arcanum Maintainers (<maintainers@arsarcanum.local>)
+**Repository:** https://github.com/aryansinghnagar/Scriptorium
 
 ---
 
@@ -61,8 +61,7 @@ The diagnostic toolchain (`arcanum doctor` / `scripts/world_doctor.sh`):
 ## 5. Security & Vulnerability Disclosures
 
 Security inquiries and vulnerability reports are managed without exposing personal maintainer or contributor private details. Please report security issues via:
-- **GitHub Private Vulnerability Advisories:** [https://github.com/aryansinghnagar/Ars-Arcanum/security/advisories/new](https://github.com/aryansinghnagar/Ars-Arcanum/security/advisories/new)
-- **Maintainer Contact:** `maintainers@arsarcanum.local`
+- **GitHub Private Vulnerability Advisories:** [https://github.com/aryansinghnagar/Scriptorium/security/advisories/new](https://github.com/aryansinghnagar/Scriptorium/security/advisories/new)
 
 ---
 

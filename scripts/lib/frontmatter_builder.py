@@ -33,6 +33,20 @@ import argparse
 import logging
 from pathlib import Path
 
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, (bytes, bytearray)):
+                p.write_bytes(data)
+            else:
+                p.write_text(data, encoding=encoding)
+
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -199,7 +213,7 @@ def scaffold_matter(manuscript_path: Path, metadata: dict, force: bool = False) 
         if fp.is_file() and not force:
             skipped.append(str(fp))
         else:
-            fp.write_text(content, encoding="utf-8")
+            atomic_write(fp, content)
             created.append(str(fp))
 
     for name, content in back_files.items():
@@ -207,7 +221,7 @@ def scaffold_matter(manuscript_path: Path, metadata: dict, force: bool = False) 
         if fp.is_file() and not force:
             skipped.append(str(fp))
         else:
-            fp.write_text(content, encoding="utf-8")
+            atomic_write(fp, content)
             created.append(str(fp))
 
     return {

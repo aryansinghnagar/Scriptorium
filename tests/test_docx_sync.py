@@ -236,12 +236,45 @@ The trees shouted loudly in the wild tempest.
         cons_docx = ms_dir / "Book-01" / "Draft-01" / "Draft-01_Manuscript.docx"
         self.assertTrue(cons_docx.is_file())
 
-        # Perform sync
         res_sync = sync_manuscript_docx(ms_dir)
-        # Verify Draft-01_Manuscript.md was NOT created
         cons_md = ms_dir / "Book-01" / "Draft-01" / "Draft-01_Manuscript.md"
         self.assertFalse(cons_md.exists())
         self.assertNotIn("Book-01/Draft-01/Draft-01_Manuscript.md", res_sync["docx_to_md"])
+
+    def test_sync_conflict_branching(self):
+        """Test that conflicting modifications in both MD and DOCX create a conflict branch without overwriting."""
+        ms_dir = self.root / "ConflictNovel"
+        draft_dir = ms_dir / "Book-01" / "Draft-01" / "01_Act_I"
+        draft_dir.mkdir(parents=True, exist_ok=True)
+
+        (ms_dir / "manuscript.yaml").write_text("title: \"Conflict Novel\"\nauthor: \"Writer\"\n", encoding="utf-8")
+        scene = draft_dir / "01_Chapter_01.md"
+        scene.write_text("# Chapter 1\n\nOriginal scene prose.\n", encoding="utf-8")
+
+        # 1. Initial build creates DOCX and sync state
+        build_manuscript_docx(ms_dir)
+        sync_manuscript_docx(ms_dir)
+
+        # 2. Modify MD
+        scene.write_text("# Chapter 1\n\nModified in text editor.\n", encoding="utf-8")
+
+        # 3. Modify DOCX independently
+        chapter_docx = draft_dir / "01_Chapter_01.docx"
+        new_paras = [{"type": "heading1", "text": "Chapter 1"}, {"type": "paragraph", "text": "Modified in MS Word independently."}]
+        build_docx_package(chapter_docx, new_paras, get_docx_config(), title="Conflict Novel")
+
+        # 4. Run sync -> Conflict should be detected
+        res_sync = sync_manuscript_docx(ms_dir)
+        self.assertEqual(len(res_sync["conflicts"]), 1)
+        self.assertEqual(res_sync["conflicts"][0]["stem"], "01_Chapter_01")
+
+        # Ensure MD file was NOT overwritten
+        self.assertIn("Modified in text editor.", scene.read_text(encoding="utf-8"))
+
+        # Ensure conflict file was created
+        conflict_files = list(draft_dir.glob("01_Chapter_01.conflict_*.md"))
+        self.assertEqual(len(conflict_files), 1)
+        self.assertIn("Modified in MS Word independently.", conflict_files[0].read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

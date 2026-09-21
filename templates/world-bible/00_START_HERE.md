@@ -55,3 +55,11 @@ As your narrative unfolds, create new lore notes when they appear in your draft:
 - **Auto-Rosters**: When you set `faction: "[[Faction-Name]]"` in a character note, that character automatically appears in that faction's member table on the [[Templates/World-Bible-Index|World Bible Index]].
 - **Consistency Checking**: Run `arcanum doctor` or click **Doctor Diagnostics** in the Control Center anytime to check for broken links or typos in character names.
 
+---
+
+## ⚙️ First-Time Obsidian Vault Setup Note
+When opening this vault for the first time in Obsidian:
+1. When prompted about **Restricted Mode**, click **"Turn on community plugins"**.
+2. All plugin configurations (`dataview`, `storyline`, `calendarium`, `obsidian-git`) are already pre-configured in `.obsidian/plugins/` to work seamlessly.
+
+

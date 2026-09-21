@@ -172,6 +172,20 @@ if printf '%s\n' "${ARCHIVE_MEMBERS}" | grep -E '/\.git/hooks/[^/]+$' | grep -vq
     exit 1
 fi
 
+# S-05: Reject symlinks, hardlinks, FIFOs, device nodes, or non-regular archive members
+if command -v python3 &>/dev/null; then
+    if ! python3 -c '
+import sys, tarfile
+with tarfile.open(sys.argv[1], "r:*") as tf:
+    for m in tf.getmembers():
+        if not (m.isreg() or m.isdir()):
+            sys.exit(f"refusing unsafe non-regular member: {m.name}")
+' "${ARCHIVE_PATH}" 2>"${STAGING_DIR}/member_check.err"; then
+        echo "Error: $(cat "${STAGING_DIR}/member_check.err")" >&2
+        exit 1
+    fi
+fi
+
 tar -xzf "${ARCHIVE_PATH}" -C "${STAGING_DIR}" --no-same-owner --no-same-permissions
 
 EXTRACTED_DIR="$(find "${STAGING_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)"

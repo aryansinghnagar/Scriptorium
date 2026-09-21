@@ -1,0 +1,69 @@
+name: "Bug Report"
+description: "Report a reproducible bug, crash, or unexpected behavior in Ars Arcanum."
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue with Ars Arcanum! Please check existing issues before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: "Ars Arcanum Version"
+      description: "Run `arcanum --version` or check the About dialog."
+      placeholder: "v1.6.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Operating System & Distribution"
+      options:
+        - "Ubuntu 24.04 LTS"
+        - "Ubuntu 22.04 LTS"
+        - "Debian 12 (Bookworm)"
+        - "Debian 13 (Trixie)"
+        - "Linux Mint 21 / 22"
+        - "Fedora 39 / 40"
+        - "Arch Linux"
+        - "Other Linux"
+    validations:
+      required: true
+  - type: dropdown
+    id: interface
+    attributes:
+      label: "Interface Used"
+      options:
+        - "CLI (`arcanum` / `scripts/arcanum`)"
+        - "GTK 4 / Libadwaita GUI"
+        - "GTK 3 GUI"
+        - "Automated Script / Hook"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "Describe the Bug"
+      description: "A clear and concise description of what the bug is."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "Steps to Reproduce"
+      description: "Step-by-step commands or actions to reproduce the issue."
+      placeholder: |
+        1. Run `arcanum init manuscript my-novel`
+        2. Execute `arcanum export pdf`
+        3. See error output...
+    validations:
+      required: true
+  - type: textarea
+    id: doctor_report
+    attributes:
+      label: "Diagnostic Doctor Report (`arcanum doctor --report`)"
+      description: "Please run `arcanum doctor --report` (redacted of personal prose) and paste the diagnostics summary here."
+      render: shell
+    validations:
+      required: false

@@ -402,7 +402,7 @@ case "${COMMAND}" in
     economy|economies|ppp)
         exec python3 "${PROJECT_ROOT}/scripts/lib/economy.py" "$@"
         ;;
-    causality|causal|timeline-dag|multiverse)
+    causality|causal|timeline-dag)
         exec python3 "${PROJECT_ROOT}/scripts/lib/causality.py" "$@"
         ;;
     ecology|trophic|food-web)
@@ -563,6 +563,9 @@ case "${COMMAND}" in
     package|dist|bundle)
         exec python3 "${PROJECT_ROOT}/scripts/package_distribution.py" "$@"
         ;;
+    migrate|upgrade)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/migrate.py" "$@"
+        ;;
     report|wordcount|words|count|stats)
         exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
         ;;
@@ -653,6 +656,9 @@ case "${COMMAND}" in
         ;;
     doctor|check)
         exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
+        ;;
+    engines|plugins)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/cli.py" engines "$@"
         ;;
     menu|dashboard-cli|interactive)
         interactive_menu

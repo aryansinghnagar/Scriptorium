@@ -205,7 +205,7 @@ if command -v git &> /dev/null; then
         cd "${TARGET_VOL_DIR}"
         git init -q
         git add .
-        git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial manuscript drafting repository for ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
+        git_commit_safe "Initial manuscript drafting repository for ${VOLUME_NAME} in ${MANUSCRIPT_NAME}"
     ); then
         echo "[!] Warning: volume initial Git commit failed. Volume created without initial history." >&2
         GIT_HISTORY="failed"
@@ -217,7 +217,7 @@ if command -v git &> /dev/null; then
             cd "${MANUSCRIPT_DIR}"
             git config advice.addEmbeddedRepo false
             git -c advice.addEmbeddedRepo=false add "${TARGET_VOL_DIR#"${MANUSCRIPT_DIR}/"}" 2>/dev/null
-            git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}" 2>/dev/null
+            git_commit_safe "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}"
         ); then
             echo "[!] Warning: manuscript tracking commit failed for '${VOLUME_NAME}'. Volume itself is intact." >&2
             [ "${GIT_HISTORY}" = "ok" ] && GIT_HISTORY="failed"

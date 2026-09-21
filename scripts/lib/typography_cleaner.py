@@ -17,6 +17,7 @@ Capabilities (PRO-104):
    - Converts three dots (`...` or `. . .`) to unicode ellipsis (`…`)
 4. Whitespace & Scene Break Cleanliness:
    - Removes trailing whitespace from line ends
+
    - Collapses multiple redundant spaces inside sentences
    - Standardizes ornamental scene break indicators
 5. Dry-run diffing, backup creation, and directory batch processing.
@@ -32,6 +33,21 @@ import difflib
 import argparse
 import logging
 from pathlib import Path
+
+try:
+    from lib.fs_utils import atomic_write
+except ImportError:
+    try:
+        from fs_utils import atomic_write
+    except ImportError:
+        def atomic_write(path, data, encoding="utf-8"):
+            p = Path(path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, (bytes, bytearray)):
+                p.write_bytes(data)
+            else:
+                p.write_text(data, encoding=encoding)
+
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -152,8 +168,8 @@ def clean_file(file_path: Path, in_place: bool = False, make_backup: bool = True
         if in_place:
             if make_backup:
                 bak_path = file_path.with_suffix(file_path.suffix + ".bak")
-                bak_path.write_text(content, encoding="utf-8")
-            file_path.write_text(cleaned, encoding="utf-8")
+                atomic_write(bak_path, content)
+            atomic_write(file_path, cleaned)
 
     return stats, diff
 

@@ -172,8 +172,8 @@ Exports/
 04-Publishing/
 EOF
     git -c advice.addEmbeddedRepo=false add .
-    if ! git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Initial repository creation for ${WORLD_NAME}" 2>/dev/null; then
-        echo "[!] Initial commit skipped (git identity missing). Files staged."
+    if ! git_commit_safe "Initial repository creation for ${WORLD_NAME}"; then
+        echo "[!] Initial commit skipped. Files staged."
     fi
 fi
 
@@ -188,8 +188,8 @@ for ms_repo in Book-*/ 01-Manuscript/*/; do
             wait_for_git_lock "."
             git add -A
             if ! git diff --cached --quiet; then
-                if ! git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "Volume snapshot: $(date '+%Y-%m-%d %H:%M')" 2>/dev/null; then
-                    echo "[!] Warning: volume commit skipped for '${ms_repo}' (git lock contention or identity missing); world snapshot may reference a stale state." >&2
+                if ! git_commit_safe "Volume snapshot: $(date '+%Y-%m-%d %H:%M')"; then
+                    echo "[!] Warning: volume commit skipped for '${ms_repo}' (git lock contention); world snapshot may reference a stale state." >&2
                 fi
             fi
         )
@@ -224,11 +224,9 @@ if git diff --cached --quiet; then
     exit 0
 fi
 
-if ! git commit -q -m "${NOTE}" 2>/dev/null; then
-    if ! git -c user.name="Ars Arcanum Maintainers" -c user.email="maintainers@arsarcanum.local" commit -q -m "${NOTE}"; then
-        echo "[!] Snapshot failed: git commit rejected the change." >&2
-        exit 1
-    fi
+if ! git_commit_safe "${NOTE}"; then
+    echo "[!] Snapshot failed: git commit rejected the change." >&2
+    exit 1
 fi
 
 MSG="Snapshot saved successfully for '${WORLD_NAME}'!\n\nNote: ${NOTE}"
