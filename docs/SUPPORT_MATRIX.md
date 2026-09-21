@@ -10,11 +10,12 @@ This document defines the formal compatibility, architecture tiers, and display 
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Linux Mint** | 22 (Wilma) | XFCE (Primary) | x86_64 | **Tier 1** | Target Reference Platform |
 | **Linux Mint** | 21.x (Vanessa–Virginia) | XFCE | x86_64 | **Tier 1** | Fully Supported |
+| **Ubuntu Desktop** | 24.04 LTS (Noble) | XFCE / GNOME | x86_64 | **Tier 1** | CI Reference & Fully Supported |
 | **Debian** | 13 (Trixie) | XFCE | x86_64 | **Tier 1** | Fully Supported |
 | **Debian** | 12 (Bookworm) | XFCE | x86_64 | **Tier 1** | Fully Supported |
-| **Ubuntu Desktop** | 24.04 / 22.04 LTS | XFCE / GNOME | x86_64 | **Tier 2** | Compatible (requires `--force`) |
+| **Ubuntu Desktop** | 22.04 LTS | XFCE / GNOME | x86_64 | **Tier 2** | Compatible (requires `--force`) |
 | **Debian Derivatives** | Rolling / Sid | Any | x86_64 | **Tier 2** | Community Tested (`--force`) |
-| **Linux (ARM)** | Mint / Debian | XFCE | aarch64 (ARM64) | **Tier 2** | Precompiled Typst musl supported |
+| **Linux (ARM)** | Mint / Debian / Ubuntu | XFCE | aarch64 (ARM64) | **Tier 2** | Precompiled Typst musl supported |
 | **Non-Linux (Windows/macOS)** | Any | N/A | Any | **Unsupported** | Linux native tools required |
 
 ### Tier Definitions

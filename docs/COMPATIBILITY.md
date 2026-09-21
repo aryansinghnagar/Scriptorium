@@ -64,3 +64,23 @@ All Flatpak packages are sourced from the official Flathub remote repository (`h
 | **Economy Lore Schema** | Economy & PPP Engine | YAML Frontmatter (`ECO-101` validator) | `templates/world-bible/Economies/Economy-Template.md` |
 | **Trophic Ecology Schema** | Ecosystem Food-Web Engine | YAML Frontmatter (`ECO-301` validator) | `templates/world-bible/Bestiary/Creature-Flora-Fauna-Template.md` |
 | **Prophecy Matrix Schema** | Foretelling Tracker | YAML Frontmatter (`PRP-101` validator) | `templates/world-bible/Cosmology/Prophecy-Template.md` |
+
+---
+
+## 5. Vendored Obsidian Community Plugins
+
+All 10 community plugins are fully vendored offline in `templates/world-bible/.obsidian/plugins/<id>/` (`manifest.json`, `main.js`, `styles.css`) with exact release tags and SHA-256 digests recorded in `dependencies.lock`:
+
+| Plugin ID | Pinned Tag / Version | Upstream Repository | Assets Verified |
+| :--- | :--- | :--- | :--- |
+| **`dataview`** | `0.5.67` | `blacksmithgu/obsidian-dataview` | `main.js`, `manifest.json`, `styles.css` |
+| **`templater-obsidian`** | `2.9.2` | `SilentVoid13/Templater` | `main.js`, `manifest.json`, `styles.css` |
+| **`longform`** | `2.0.8` | `kevboh/longform` | `main.js`, `manifest.json`, `styles.css` |
+| **`metadata-menu`** | `0.8.20` | `mdelobelle/metadatamenu` | `main.js`, `manifest.json`, `styles.css` |
+| **`calendarium`** | `1.1.20` | `javalent/calendarium` | `main.js`, `manifest.json`, `styles.css` |
+| **`storyline`** | `0.4.1` | `pixerojan/obsidian-storyline` | `main.js`, `manifest.json`, `styles.css` |
+| **`storyteller-suite`** | `1.0.0` | `maws7140/obsidian-storyteller-suite` | `main.js`, `manifest.json`, `styles.css` |
+| **`novel-word-count`** | `3.10.1` | `isaaclyman/novel-word-count-obsidian` | `main.js`, `manifest.json`, `styles.css` |
+| **`obsidian-git`** | `2.27.0` | `denolehs/obsidian-git` | `main.js`, `manifest.json`, `styles.css` |
+| **`obsidian-style-settings`** | `1.0.9` | `mgmeyers/obsidian-style-settings` | `main.js`, `manifest.json`, `styles.css` |
+

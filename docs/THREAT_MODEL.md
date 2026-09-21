@@ -76,9 +76,9 @@ Ars Arcanum operates exclusively as a **local-first desktop platform**. It does 
 * **Threat D2: Large File Read Exhaustion.**
   - *Risk:* Extremely large files causing out-of-memory errors in linters or parsers.
   - *Mitigation:* `read_capped()` enforces a 2MB per-file read threshold across analysis engines with user-facing warnings upon truncation.
-* **Threat D3: XML Entity Expansion (Billion Laughs / Quadratic Blowup).**
-  - *Risk:* Malicious DOCX XML files containing recursive entity definitions.
-  - *Mitigation:* Safe standard XML extraction without external entity resolution, combined with file size verification.
+* **Threat D3: XML Entity Expansion & Zip Bombs (Billion Laughs / Quadratic Blowup).**
+  - *Risk:* Malicious or corrupted DOCX XML files containing recursive entity definitions (`<!DOCTYPE`, `<!ENTITY`) or highly compressed zip payloads designed to exhaust memory.
+  - *Mitigation:* `scripts/lib/docx_sync.py` imposes strict size ceilings (20MB total `.docx` file limit and 50MB uncompressed XML stream threshold) and scans the raw byte stream before parsing, immediately aborting if any `<!DOCTYPE` or `<!ENTITY` definitions are present. Safe standard library XML extraction is used (`xml.etree.ElementTree` with `# noqa: S314` triage) without adding unvetted external pip dependencies.
 
 ### 6. Elevation of Privilege (E)
 * **Threat E1: Installer Privilege Abuse.**
