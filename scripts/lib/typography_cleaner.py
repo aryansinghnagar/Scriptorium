@@ -26,7 +26,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import difflib
@@ -75,7 +74,6 @@ def normalize_typography_text(text: str) -> tuple[str, dict]:
     new_lines = []
 
     for line in lines:
-        orig = line
 
         # 1. Trailing whitespace
         clean_end = line.rstrip("\r\n \t")
@@ -265,7 +263,7 @@ def main():
                     print(f["diff"][:1000] + ("\n... [truncated]" if len(f["diff"]) > 1000 else ""))
 
     if not args.in_place and summary["files_modified"] > 0:
-        print(f"\nTip: Run with -i / --in-place to apply these changes to disk.")
+        print("\nTip: Run with -i / --in-place to apply these changes to disk.")
 
 
 if __name__ == "__main__":

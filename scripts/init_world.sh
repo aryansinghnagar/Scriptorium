@@ -112,7 +112,7 @@ if [ "${USE_LEGACY_DIR}" -eq 0 ]; then
                 fi
             else
                 UNIVERSE_NAME=$(zenity --entry --title="Ars Arcanum — Universe Context" \
-                    --text="Enter the Universe for this world lore vault (e.g., 'Cosmere', 'Solaris-Prime'):" \
+                    --text="Enter the Universe for this world lore vault (e.g., 'Eldoria-Cosmos', 'Solaris-Prime'):" \
                     --entry-text="Default-Universe" || true)
             fi
         fi

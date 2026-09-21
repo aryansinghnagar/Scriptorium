@@ -142,15 +142,14 @@ He whispered to [[Kaelen]]: "Wait here."
         doc = self.test_dir / "chapter.md"
         doc.write_text("# Chapter\n\nFirst paragraph here.\n\nSecond paragraph here.", encoding="utf-8")
 
-        with patch("sys.argv", ["tts_reader.py", str(doc), "--json"]):
-            with patch("builtins.print") as mock_print:
-                main()
-                mock_print.assert_called()
-                printed_str = mock_print.call_args[0][0]
-                data = json.loads(printed_str)
-                self.assertEqual(len(data["paragraphs"]), 3)
-                self.assertEqual(data["paragraphs"][0], "Chapter")
-                self.assertEqual(data["paragraphs"][1], "First paragraph here.")
+        with patch("sys.argv", ["tts_reader.py", str(doc), "--json"]), patch("builtins.print") as mock_print:
+            main()
+            mock_print.assert_called()
+            printed_str = mock_print.call_args[0][0]
+            data = json.loads(printed_str)
+            self.assertEqual(len(data["paragraphs"]), 3)
+            self.assertEqual(data["paragraphs"][0], "Chapter")
+            self.assertEqual(data["paragraphs"][1], "First paragraph here.")
 
 
 if __name__ == "__main__":

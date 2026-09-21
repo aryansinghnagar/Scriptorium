@@ -8,7 +8,7 @@ This document pins the exact tool baselines, package versions, and supply chain 
 
 | Tool | Tested Baseline | Min. Version | Installation Source | Checksum / Verification |
 | :--- | :--- | :--- | :--- | :--- |
-| **Typst** | `0.13.0` (pinned; see `dependencies.lock`) | `>= 0.11.0` | GitHub Releases (musl binary) | SHA-256 asset digest verified against hardcoded digests in `scripts/setup_arcanum.sh` |
+| **Typst** | `0.14.2` (pinned; see `dependencies.lock`) | `>= 0.11.0` | GitHub Releases (musl binary) | SHA-256 asset digest verified against hardcoded digests in `scripts/setup_arcanum.sh` |
 | **Pandoc** | `3.1.x` / `2.19.x` | `>= 2.16.0` | APT package (`pandoc`) | Standard distro package verification (GPG) |
 | **Git** | `2.43.x` | `>= 2.34.0` | APT package (`git`) | Standard distro package verification (GPG) |
 | **Python** | `3.12.x` | `>= 3.10.0` | APT package (`python3`) | Standard distro package verification (GPG) |

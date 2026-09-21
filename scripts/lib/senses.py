@@ -21,7 +21,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -141,7 +140,7 @@ def audit_manuscript_senses(manuscript_dir: Path) -> dict:
         try:
             content = md_file.read_text(encoding="utf-8", errors="ignore")
             # Strip tag lines
-            clean_lines = [l for l in content.splitlines() if not l.strip().startswith("@")]
+            clean_lines = [line_str for line_str in content.splitlines() if not line_str.strip().startswith("@")]
             clean_text = "\n".join(clean_lines)
 
             stats = analyze_text_senses(clean_text)
@@ -374,7 +373,7 @@ def main():
     if args.json:
         print(json.dumps(audit_data, indent=2))
     else:
-        print(f"\n\033[1;35m=== Ars Arcanum 6-Dimensional Sensory Palette ===\033[0m")
+        print("\n\033[1;35m=== Ars Arcanum 6-Dimensional Sensory Palette ===\033[0m")
         print(f"Manuscript: \033[1m{ms_path.name}\033[0m | Words: {audit_data['total_words']:,} | Sensory Anchors: {audit_data['total_sensory_anchors']:,}\n")
 
         pct = audit_data["overall_percentages"]

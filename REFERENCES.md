@@ -1,15 +1,16 @@
 # References, Creator Attributions & Asset Provenance
 
 **Project:** Ars Arcanum  
-**Maintainers:** Ars Arcanum Maintainers (<maintainers@arsarcanum.local>)  
-**License Policy:** Open-Source (GPL-3.0 / MIT / OFL / CC-BY-SA) & Human-Crafted Only
+**Maintainers:** Aryan Singh Nagar ([Security Advisories](https://github.com/aryansinghnagar/Scriptorium/security/advisories))  
+**License Policy:** Open-Source (GPL-3.0 / MIT / OFL / CC-BY-SA)
 
 ---
 
-## 1. Provenance Statement & AI Asset Policy
+## 1. Provenance Statement & Development Policy
 
-- **No AI-Generated Assets:** Ars Arcanum strictly prohibits the inclusion of AI-generated assets (including AI-generated text, art, textures, or code blobs). All templates, code, schemas, and assets within this repository have been created and maintained by human contributors.
-- **Open-Source & Creative Commons Compliance:** All software tools, fonts, libraries, and plugins recommended or integrated by Ars Arcanum are licensed under verified Free and Open Source Software (FOSS) or Creative Commons licenses allowing non-commercial and commercial creative authoring.
+- **Creative Assets & Human Authorship:** All narrative templates, worldbuilding taxonomies, story paradigm structures, and world lore schemas within this repository are human-curated creative frameworks authored under CC BY-SA 4.0.
+- **Codebase Development:** Implementation, refactoring, and test harnesses across Ars Arcanum were engineered using modern AI-assisted development environments (including GitHub Copilot and Google DeepMind agentic coding workflows) and verified against automated Python and shell test suites.
+- **Open-Source & Creative Commons Compliance:** All integrated software tools, fonts, libraries, and plugins are licensed under verified Free and Open Source Software (FOSS) or Creative Commons licenses allowing personal and commercial creative authoring.
 - **Creator Credits:** This document provides comprehensive credit, upstream repository links, and licensing information for all upstream tools and resources utilized across the Ars Arcanum platform.
 
 ---
@@ -58,14 +59,14 @@ All recommended typefaces are licensed under the [SIL Open Font License (OFL)](h
 | :--- | :--- | :--- | :--- |
 | **Dataview** | Michael Brenan (@blacksmithgu) | [github.com/blacksmithgu/obsidian-dataview](https://github.com/blacksmithgu/obsidian-dataview) | MIT |
 | **Templater** | @SilentVoid13 | [github.com/SilentVoid13/Templater](https://github.com/SilentVoid13/Templater) | MIT |
-| **Longform** | Kevin Barrett (@CattailNu) | [github.com/CattailNu/obsidian-longform](https://github.com/CattailNu/obsidian-longform) | MIT |
+| **Longform** | Kevin Barrett (@kevboh) | [github.com/kevboh/longform](https://github.com/kevboh/longform) | MIT |
 | **Metadata Menu** | @mdelobelle | [github.com/mdelobelle/metadatamenu](https://github.com/mdelobelle/metadatamenu) | MIT |
-| **Calendarium (Fantasy Calendar)** | Jeremy Valentine (@valentine195) | [github.com/valentine195/obsidian-calendarium](https://github.com/valentine195/obsidian-calendarium) | MIT |
-| **Storyline** | @mgmeyers / Community | [github.com/mgmeyers/obsidian-kanban](https://github.com/mgmeyers/obsidian-kanban) | MIT |
-| **Storyteller Suite** | @javalent | [github.com/javalent/storyteller-suite](https://github.com/javalent/storyteller-suite) | MIT |
-| **Novel Word Count** | @isaackearl | [github.com/isaackearl/novel-word-count-obsidian](https://github.com/isaackearl/novel-word-count-obsidian) | MIT |
+| **Calendarium (Fantasy Calendar)** | Jeremy Valentine (@javalent) | [github.com/javalent/calendarium](https://github.com/javalent/calendarium) | MIT |
+| **Storyline** | @pixerojan | [github.com/pixerojan/obsidian-storyline](https://github.com/pixerojan/obsidian-storyline) | MIT |
+| **Storyteller Suite** | @maws7140 | [github.com/maws7140/obsidian-storyteller-suite](https://github.com/maws7140/obsidian-storyteller-suite) | MIT |
+| **Novel Word Count** | Isaac Lyman (@isaaclyman) | [github.com/isaaclyman/novel-word-count-obsidian](https://github.com/isaaclyman/novel-word-count-obsidian) | MIT |
 | **Obsidian Git** | Denis Olehov (@denolehov) & Vinzent (@Vinzent03) | [github.com/denolehov/obsidian-git](https://github.com/denolehov/obsidian-git) | MIT |
-| **Style Settings** | Stephan Ango (@kepano) | [github.com/kepano/obsidian-style-settings](https://github.com/kepano/obsidian-style-settings) | MIT |
+| **Style Settings** | @mgmeyers | [github.com/mgmeyers/obsidian-style-settings](https://github.com/mgmeyers/obsidian-style-settings) | MIT |
 
 ---
 

@@ -22,11 +22,9 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
-import shutil
 import argparse
 import logging
 from pathlib import Path
@@ -344,7 +342,7 @@ def main():
     build_single_file_codex(categories, world_name=world_path.name, output_path=out_file)
 
     total_articles = sum(len(items) for items in categories.values())
-    print(f"=== Ars Arcanum Static Codex Exporter ===")
+    print("=== Ars Arcanum Static Codex Exporter ===")
     print(f"World:          {world_path.name}")
     print(f"Total Articles: {total_articles} across {len(categories)} categories")
     print(f"Generated:      {out_file} ({out_file.stat().st_size:,} bytes)")

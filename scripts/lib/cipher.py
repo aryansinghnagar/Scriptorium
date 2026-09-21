@@ -20,9 +20,7 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
-import math
 import json
 import html
 import argparse
@@ -202,9 +200,9 @@ def cipher_columnar(text: str, key: str, decode: bool = False) -> str:
         cols = {}
         idx = 0
         for c in col_order:
-            l = col_lengths[c]
-            cols[c] = text[idx:idx + l]
-            idx += l
+            col_len = col_lengths[c]
+            cols[c] = text[idx:idx + col_len]
+            idx += col_len
 
         result = []
         for r in range(num_rows):

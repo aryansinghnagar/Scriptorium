@@ -23,8 +23,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
-import re
 import math
 import json
 import html
@@ -96,7 +94,7 @@ def parse_world_locations(world_dir: Path) -> list[dict]:
     if not files:
         return get_default_locations(world_dir.name)
 
-    for idx, f in enumerate(files, 1):
+    for _idx, f in enumerate(files, 1):
         content = f.read_text(encoding="utf-8", errors="replace")
         lines = content.splitlines()
 
@@ -126,11 +124,15 @@ def parse_world_locations(world_dir: Path) -> list[dict]:
                 elif k in ("faction", "allegiance", "ruler"):
                     faction = v.strip("[]")
                 elif k in ("x", "coord_x", "longitude", "lon"):
-                    try: x = float(v)
-                    except ValueError: pass
+                    try:
+                        x = float(v)
+                    except ValueError:
+                        pass
                 elif k in ("y", "coord_y", "latitude", "lat"):
-                    try: y = float(v)
-                    except ValueError: pass
+                    try:
+                        y = float(v)
+                    except ValueError:
+                        pass
                 elif k in ("biome", "terrain"):
                     biome = v.lower()
 

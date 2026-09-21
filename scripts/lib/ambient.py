@@ -24,12 +24,10 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import math
 import struct
 import wave
 import random
-import json
 import argparse
 import logging
 from pathlib import Path
@@ -330,7 +328,7 @@ def main():
     p_gen.add_argument("--binaural", choices=["alpha", "theta", "beta", "gamma"], default="alpha", help="Binaural frequency wave (default: alpha)")
     p_gen.add_argument("--html", help="Generate standalone interactive HTML5 synthesizer")
 
-    p_list = subparsers.add_parser("list", help="List available atmosphere profiles")
+    subparsers.add_parser("list", help="List available atmosphere profiles")
 
     args = parser.parse_args()
 

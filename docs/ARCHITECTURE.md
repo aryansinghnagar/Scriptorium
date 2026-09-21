@@ -367,13 +367,13 @@ flowchart LR
 ```mermaid
 graph TD
     subgraph Universe Tier
-        U[~/Universes/Cosmere/ - universe.yaml + Git Repo]
+        U[~/Universes/Eldoria-Cosmos/ - universe.yaml + Git Repo]
     end
     subgraph World Lore Tier
-        W[~/Universes/Cosmere/Scadrial/ - Pure Lore Vault + Git Repo]
+        W[~/Universes/Eldoria-Cosmos/Eldoria-World/ - Pure Lore Vault + Git Repo]
     end
     subgraph Manuscript Tier
-        M[~/Manuscripts/Mistborn-Era1/ - manuscript.yaml + Git Repo]
+        M[~/Manuscripts/Chronicles-of-Eldoria/ - manuscript.yaml + Git Repo]
         B1[Book-01/ - Discrete Volume Git Repo]
         B2[Book-02/ - Discrete Volume Git Repo]
     end

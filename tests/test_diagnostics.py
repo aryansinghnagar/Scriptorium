@@ -5,7 +5,6 @@ Unit tests for Ars Arcanum Diagnostics Engine (scripts/lib/diagnostics.py)
 
 import unittest
 from pathlib import Path
-import tempfile
 import sys
 import logging
 

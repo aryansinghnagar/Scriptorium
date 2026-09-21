@@ -98,7 +98,7 @@ Ars Arcanum is built on **Four Unbreakable Invariants**:
 Double-click **"Ars Arcanum Control Center"** on your Desktop (or run `arcanum control-center` in a terminal).
 
 ### Step 2: Create or Explore a Project
-- **Option A (Instant Exploration)**: Click **"✨ Generate Demo Cosmos"** in Tab 1. This creates the *"Cosmere / Scadrial"* and *"Mistborn-Era1"* projects, pre-loaded with characters, bestiaries, magic systems, and sample chapters.
+- **Option A (Instant Exploration)**: Click **"✨ Generate Demo Cosmos"** in Tab 1. This creates the *"Eldoria-Cosmos / Eldoria-World"* and *"Chronicles-of-Eldoria"* projects, pre-loaded with characters, bestiaries, magic systems, and sample chapters.
 - **Option B (Your Own Story)**:
   1. Click **"+ New Universe"** to name your cosmos (e.g. `Solaris-Verse`).
   2. Click **"+ New World"** to create your dedicated lore vault (e.g. `Solaris-Prime`).
@@ -554,12 +554,12 @@ The genealogy engine (`scripts/lib/genealogy.py` / `arcanum genealogy`, `arcanum
 #### Dossier Frontmatter Conventions:
 ```yaml
 ---
-name: Lord Elend Venture
-house: House Venture
-father: Lord Straff Venture
-mother: Lady Clarisse Venture
-born: 1002 FE
-died: 1025 FE
+name: Lord Valen Aethelgard
+house: House Aethelgard
+father: High Lord Justinian Aethelgard
+mother: Lady Eleonora Aethelgard
+born: 1002 4E
+died: 1025 4E
 gender: male
 ---
 ```
@@ -579,13 +579,13 @@ gender: male
 #### Example Usage:
 ```bash
 # Output Mermaid diagram of royal lineage
-arcanum genealogy -w Scadrial -f mermaid
+arcanum genealogy -w Eldoria -f mermaid
 
 # Export interactive HTML dynasty graph
-arcanum genealogy -w Scadrial -f html -o royal_houses.html
+arcanum genealogy -w Eldoria -f html -o royal_houses.html
 
 # Compute inheritance succession order for a throne
-arcanum lineage -w Scadrial --ruler "Lord Straff Venture"
+arcanum lineage -w Eldoria --ruler "High Lord Justinian Aethelgard"
 ```
 
 ---

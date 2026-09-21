@@ -17,8 +17,8 @@ permissions:
 
 jobs:
   verify:
-    name: Lint, Validate & Smoke Test (Ubuntu Latest)
-    runs-on: ubuntu-latest
+    name: Lint, Validate & Smoke Test (Ubuntu 24.04)
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -39,12 +39,8 @@ jobs:
       - name: Set up Typst
         uses: typst-community/setup-typst@f97d94d65e19b033e103c69cb1f27b56dfbb040f # v4.0.1
         with:
-          # DEP-01: exact pin matching dependencies.lock + setup_arcanum.sh
-          # (0.13.0). Bump deliberately after testing
-          # (templates/typst/book_template.typ + preview_sample.typ), never
-          # via 'latest' or floating minor — a silent toolchain bump can break
-          # CI non-deterministically.
-          typst-version: '0.13.0'
+          # DEP-01: exact pin matching dependencies.lock + setup_arcanum.sh (0.14.2).
+          typst-version: '0.14.2'
 
       - name: Print environment and tool versions
         run: |

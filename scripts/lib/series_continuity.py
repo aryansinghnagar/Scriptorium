@@ -19,7 +19,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -127,10 +126,7 @@ def scan_series_continuity(target_dir: Path) -> dict:
     if not book_dirs:
         # Check subdirectories
         sub_books = sorted([d for d in target_dir.rglob("Book-*") if d.is_dir()])
-        if sub_books:
-            book_dirs = sub_books
-        else:
-            book_dirs = [target_dir]
+        book_dirs = sub_books or [target_dir]
 
     volumes = []
     for b in book_dirs:

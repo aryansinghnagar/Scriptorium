@@ -422,16 +422,29 @@ def build_docx_package(output_path: Path, parsed_paragraphs: list, config: dict,
     return False
 
 
+MAX_DOCX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024  # 50 MB safety limit
+MAX_DOCX_FILE_BYTES = 20 * 1024 * 1024  # 20 MB safety limit
+
+
 def convert_docx_to_markdown(docx_path: Path) -> str:
     """Extracts prose from a DOCX file and converts it into clean Markdown."""
     if not docx_path.is_file():
         raise FileNotFoundError(f"DOCX file not found: {docx_path}")
         
+    if docx_path.stat().st_size > MAX_DOCX_FILE_BYTES:
+        raise ValueError(f"DOCX file exceeds maximum allowed size ({MAX_DOCX_FILE_BYTES // (1024*1024)} MB): {docx_path}")
+        
     try:
         with zipfile.ZipFile(docx_path, "r") as zf:
+            total_uncompressed = sum(info.file_size for info in zf.infolist())
+            if total_uncompressed > MAX_DOCX_UNCOMPRESSED_BYTES:
+                raise ValueError(f"DOCX uncompressed payload exceeds safety threshold ({MAX_DOCX_UNCOMPRESSED_BYTES // (1024*1024)} MB)")
             doc_xml_bytes = zf.read("word/document.xml")
             
-        root = ET.fromstring(doc_xml_bytes)
+        if b"<!ENTITY" in doc_xml_bytes or b"<!DOCTYPE" in doc_xml_bytes:
+            raise ValueError("Unsafe XML entity/DOCTYPE declaration detected in DOCX document.xml")
+            
+        root = ET.fromstring(doc_xml_bytes)  # noqa: S314
         ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
         
         md_paragraphs = []
@@ -607,7 +620,7 @@ def load_sync_state(draft_dir: Path) -> dict:
     state_file = draft_dir / ".sync_state.json"
     if state_file.is_file():
         try:
-            with open(state_file, "r", encoding="utf-8") as f:
+            with open(state_file, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
             logger.debug("Failed to read sync state %s: %s", state_file, e)
@@ -789,7 +802,7 @@ def open_in_word_processor(file_path: Path) -> bool:
         
     try:
         if sys.platform.startswith("win"):
-            os.startfile(str(fpath))
+            os.startfile(str(fpath))  # noqa: S606
             return True
         elif sys.platform.startswith("darwin"):
             subprocess.Popen(["open", str(fpath)])
@@ -837,7 +850,7 @@ def main():
     
     if args.subcommand == "build":
         res = build_manuscript_docx(Path(args.manuscript), draft_name=args.draft)
-        print(f"=== Ars Arcanum DOCX Build ===")
+        print("=== Ars Arcanum DOCX Build ===")
         print(f"Manuscript: {res['manuscript']} ({res['draft']})")
         print(f"Chapters Built: {len(res['chapters_built'])}")
         if res['consolidated_built']:
@@ -851,7 +864,7 @@ def main():
         
     elif args.subcommand == "sync":
         res = sync_manuscript_docx(Path(args.manuscript), draft_name=args.draft)
-        print(f"=== Ars Arcanum DOCX Sync ===")
+        print("=== Ars Arcanum DOCX Sync ===")
         print(f"Manuscript: {res['manuscript']} ({res['draft']})")
         print(f"Markdown -> DOCX Updated: {len(res['md_to_docx'])}")
         print(f"DOCX -> Markdown Updated: {len(res['docx_to_md'])}")

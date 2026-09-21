@@ -19,7 +19,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -135,9 +134,8 @@ def scan_portfolio(root_dir: Path | None = None) -> dict:
             else:
                 # Look for subdirectories with manuscript.yaml or Book-*
                 for sub in sorted(c.iterdir()):
-                    if sub.is_dir() and not sub.name.startswith((".", "_")):
-                        if (sub / "manuscript.yaml").is_file() or (sub / "Book-01").is_dir() or any(sub.glob("*.nwx")):
-                            manuscript_dirs.append(sub)
+                    if sub.is_dir() and not sub.name.startswith((".", "_")) and ((sub / "manuscript.yaml").is_file() or (sub / "Book-01").is_dir() or any(sub.glob("*.nwx"))):
+                        manuscript_dirs.append(sub)
 
     projects = [analyze_manuscript_project(d) for d in manuscript_dirs]
     total_words = sum(p["word_count"] for p in projects)
@@ -246,7 +244,7 @@ def main():
         print(json.dumps(report, indent=2))
         return
 
-    print(f"=== Ars Arcanum Author Portfolio Dashboard ===")
+    print("=== Ars Arcanum Author Portfolio Dashboard ===")
     print(f"Projects: {report['total_projects']} | Catalog Words: {report['total_words']:,} | Chapters: {report['total_chapters']}")
     print("-" * 75)
     for p in report["projects"]:

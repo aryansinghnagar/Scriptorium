@@ -9,7 +9,7 @@ discovery, and capability introspection across CLI and GUI surfaces.
 from dataclasses import dataclass, field
 from enum import Enum
 import importlib
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class EngineCategory(str, Enum):
@@ -27,14 +27,14 @@ class EngineSpec:
     description: str
     module_name: str
     cli_command: str
-    aliases: List[str] = field(default_factory=list)
-    studio_tab: Optional[str] = None
+    aliases: list[str] = field(default_factory=list)
+    studio_tab: str | None = None
     default_enabled: bool = True
     enabled: bool = True
 
 
 # Canonical Engine Registry Definitions
-_ENGINES: Dict[str, EngineSpec] = {
+_ENGINES: dict[str, EngineSpec] = {
     # --- Core Authoring, Diagnostics, & Pipeline ---
     "config": EngineSpec(
         name="config",
@@ -421,12 +421,12 @@ _ENGINES: Dict[str, EngineSpec] = {
 }
 
 
-def get_registry() -> Dict[str, EngineSpec]:
+def get_registry() -> dict[str, EngineSpec]:
     """Return the global engine dictionary."""
     return _ENGINES
 
 
-def get_engine(name: str) -> Optional[EngineSpec]:
+def get_engine(name: str) -> EngineSpec | None:
     """Retrieve an engine specification by name or alias."""
     if name in _ENGINES:
         return _ENGINES[name]
@@ -436,7 +436,7 @@ def get_engine(name: str) -> Optional[EngineSpec]:
     return None
 
 
-def list_engines(category: Optional[EngineCategory] = None, enabled_only: bool = True) -> List[EngineSpec]:
+def list_engines(category: EngineCategory | None = None, enabled_only: bool = True) -> list[EngineSpec]:
     """List engine specifications matching optional category and enabled filter."""
     res = []
     for spec in _ENGINES.values():
@@ -448,12 +448,12 @@ def list_engines(category: Optional[EngineCategory] = None, enabled_only: bool =
     return res
 
 
-def get_core_engines(enabled_only: bool = True) -> List[EngineSpec]:
+def get_core_engines(enabled_only: bool = True) -> list[EngineSpec]:
     """Return all core platform engines."""
     return list_engines(category=EngineCategory.CORE, enabled_only=enabled_only)
 
 
-def get_craft_engines(enabled_only: bool = True) -> List[EngineSpec]:
+def get_craft_engines(enabled_only: bool = True) -> list[EngineSpec]:
     """Return all craft & specialized worldbuilding engines."""
     return list_engines(category=EngineCategory.CRAFT, enabled_only=enabled_only)
 

@@ -4,9 +4,6 @@ Ars Arcanum Schema & Project Migration Engine (scripts/lib/migrate.py)
 Upgrades older project vaults, legacy folder layouts, and manifests to schema_version 1.0.
 """
 
-import sys
-import os
-import re
 import json
 import logging
 import argparse
@@ -131,11 +128,10 @@ def migrate_project(target_path: Path) -> dict:
         results["actions"].extend(migrate_universe(tpath))
         # Migrate child worlds
         for child in tpath.iterdir():
-            if child.is_dir() and not child.name.startswith("."):
-                if (child / "Characters").is_dir() or (child / "world.yaml").is_file():
-                    w_actions = migrate_world(child)
-                    if w_actions:
-                        results["actions"].extend([f"[{child.name}] {a}" for a in w_actions])
+            if child.is_dir() and not child.name.startswith(".") and ((child / "Characters").is_dir() or (child / "world.yaml").is_file()):
+                w_actions = migrate_world(child)
+                if w_actions:
+                    results["actions"].extend([f"[{child.name}] {a}" for a in w_actions])
 
     elif (tpath / "Characters").is_dir() or (tpath / "world.yaml").is_file() or (tpath / "scriptorium.yaml").is_file():
         results["type"] = "world"
@@ -170,7 +166,7 @@ def main():
     if args.json:
         print(json.dumps(res, indent=2))
     else:
-        print(f"=== Ars Arcanum Migration Engine ===")
+        print("=== Ars Arcanum Migration Engine ===")
         print(f"Target:  {res['target']}")
         print(f"Type:    {res['type']}")
         if res["actions"]:

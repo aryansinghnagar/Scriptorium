@@ -42,10 +42,7 @@ CONFIG_FILE_NAME = "config.json"
 def get_config_dir() -> Path:
     """Returns the XDG configuration directory for Ars Arcanum."""
     xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
-    if xdg_config_home:
-        base = Path(xdg_config_home)
-    else:
-        base = Path.home() / ".config"
+    base = Path(xdg_config_home) if xdg_config_home else Path.home() / ".config"
     return base / CONFIG_DIR_NAME
 
 
@@ -71,7 +68,7 @@ def load_config() -> dict:
     if not config_path.is_file():
         return {}
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, dict):
                 return data
@@ -272,14 +269,14 @@ def main():
                 print(f"[CONFIG] Secure backup destination set to: {get_backup_dest()}")
                 sys.exit(0)
             else:
-                print(f"[!] Error saving configuration.", file=sys.stderr)
+                print("[!] Error saving configuration.", file=sys.stderr)
                 sys.exit(1)
         elif args.action == "clear":
             if clear_backup_dest():
                 print("[CONFIG] Secure backup destination cleared.")
                 sys.exit(0)
             else:
-                print(f"[!] Error updating configuration.", file=sys.stderr)
+                print("[!] Error updating configuration.", file=sys.stderr)
                 sys.exit(1)
 
     elif args.subcommand == "docx-preset":
@@ -309,10 +306,7 @@ def main():
             val = args.value
             # Type cast numbers
             try:
-                if "." in val:
-                    val = float(val)
-                else:
-                    val = int(val)
+                val = float(val) if "." in val else int(val)
             except ValueError:
                 if val.lower() == "true":
                     val = True
@@ -322,7 +316,7 @@ def main():
                 print(f"[CONFIG] DOCX option '{args.key}' set to: {val}")
                 sys.exit(0)
             else:
-                print(f"[!] Error updating DOCX option.", file=sys.stderr)
+                print("[!] Error updating DOCX option.", file=sys.stderr)
                 sys.exit(1)
         elif args.key:
             cfg = get_docx_config()

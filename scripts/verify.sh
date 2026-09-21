@@ -135,6 +135,10 @@ required_plugins = [
 ]
 for p in required_plugins:
     assert p in plugins, f"Missing required plugin in pre-configured suite: {p}"
+    p_dir = f"templates/world-bible/.obsidian/plugins/{p}"
+    assert os.path.isfile(f"{p_dir}/manifest.json"), f"Missing manifest.json for {p}"
+    assert os.path.isfile(f"{p_dir}/main.js"), f"Missing main.js for {p}"
+    assert os.path.getsize(f"{p_dir}/main.js") > 1000, f"main.js unexpectedly small for {p}"
 
 # Validate fileClasses schemas
 for fc in ("Character", "Location", "Faction", "TimelineEvent", "Creature", "Artifact", "Cosmology", "MagicSystem", "Language", "Economy", "Prophecy"):

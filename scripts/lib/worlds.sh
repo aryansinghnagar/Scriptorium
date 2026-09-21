@@ -100,6 +100,7 @@ universe_label() {
 }
 
 # discover_universes VARNAME
+# shellcheck disable=SC2034
 discover_universes() {
     local -n __u_out="$1"
     local __u
@@ -113,6 +114,7 @@ discover_universes() {
 # discover_worlds VARNAME
 # Populates VARNAME with every World Lore Vault under ~/Universes/<Universe>/<World>,
 # legacy subfolder ~/Universes/<Universe>/Worlds/<World>, and legacy ~/Worlds/<World>
+# shellcheck disable=SC2034
 discover_worlds() {
     local -n __w_out="$1"
     local __w
@@ -160,6 +162,7 @@ discover_worlds() {
 
 # discover_manuscripts VARNAME
 # Populates VARNAME with every Manuscript Project under ~/Manuscripts/<Manuscript>
+# shellcheck disable=SC2034
 discover_manuscripts() {
     local -n __m_out="$1"
     local __m

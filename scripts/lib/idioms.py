@@ -24,7 +24,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -320,7 +319,7 @@ def main():
     if args.json:
         print(json.dumps(audit_data, indent=2))
     else:
-        print(f"\n\033[1;36m=== Ars Arcanum Earth Idiom & Immersion Audit ===\033[0m")
+        print("\n\033[1;36m=== Ars Arcanum Earth Idiom & Immersion Audit ===\033[0m")
         print(f"Manuscript: \033[1m{ms_path.name}\033[0m | Potential Immersion Leaks: \033[1m{len(findings)}\033[0m\n")
 
         if not findings:

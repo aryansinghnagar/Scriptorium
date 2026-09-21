@@ -28,7 +28,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import math
 import json
@@ -36,7 +35,6 @@ import html
 import argparse
 import logging
 from pathlib import Path
-from collections import Counter, defaultdict
 
 try:
     from lib.fs_utils import atomic_write
@@ -332,14 +330,14 @@ def analyze_readability_rhythm(text: str) -> dict:
 
     n_sentences = len(sentence_lengths)
     mean_len = total_words / n_sentences
-    variance = sum((l - mean_len) ** 2 for l in sentence_lengths) / n_sentences
+    variance = sum((slen - mean_len) ** 2 for slen in sentence_lengths) / n_sentences
     std_dev = math.sqrt(variance)
 
     # Detect staccato strings (3+ consecutive sentences under 6 words)
     staccato_clusters = []
     streak = []
-    for idx, l in enumerate(sentence_lengths):
-        if l <= 6:
+    for idx, slen in enumerate(sentence_lengths):
+        if slen <= 6:
             streak.append(idx + 1)
         else:
             if len(streak) >= 3:
@@ -462,12 +460,12 @@ def generate_stylistics_html_report(report: dict, output_path: Path) -> Path:
     if lengths:
         max_h = max(lengths) if max(lengths) > 0 else 1
         w_bar = max(4, int(700 / len(lengths)))
-        for i, l in enumerate(lengths):
-            h_norm = int((l / max_h) * 120)
+        for i, length_val in enumerate(lengths):
+            h_norm = int((length_val / max_h) * 120)
             x = i * (w_bar + 2)
             y = 130 - h_norm
-            color = "#ef4444" if l <= 5 else ("#3b82f6" if l <= 25 else "#f59e0b")
-            svg_bars.append(f'<rect x="{x}" y="{y}" width="{w_bar}" height="{h_norm}" fill="{color}" rx="2"><title>Sentence {i+1}: {l} words</title></rect>')
+            color = "#ef4444" if length_val <= 5 else ("#3b82f6" if length_val <= 25 else "#f59e0b")
+            svg_bars.append(f'<rect x="{x}" y="{y}" width="{w_bar}" height="{h_norm}" fill="{color}" rx="2"><title>Sentence {i+1}: {length_val} words</title></rect>')
 
     svg_content = "\n".join(svg_bars)
 

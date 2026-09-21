@@ -25,7 +25,6 @@ Zero external runtime dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -43,7 +42,7 @@ except ImportError:
             p = Path(path)
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text(data, encoding=encoding)
-from collections import defaultdict, deque
+from collections import defaultdict
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -272,30 +271,27 @@ def validate_genealogy(chars: dict) -> list:
                 p_b_num = p["born_numeric"]
                 p_d_num = p["died_numeric"]
 
-                if p_b_num is not None and b_num is not None:
-                    if b_num <= p_b_num:
-                        findings.append({
-                            "id": "GEN-101",
-                            "severity": "WARNING",
-                            "character": name,
-                            "file": c["file"],
-                            "message": f"Child '{name}' born ({c['born']}) before or same year as parent '{p_name}' ({p['born']})."
-                        })
+                if p_b_num is not None and b_num is not None and b_num <= p_b_num:
+                    findings.append({
+                        "id": "GEN-101",
+                        "severity": "WARNING",
+                        "character": name,
+                        "file": c["file"],
+                        "message": f"Child '{name}' born ({c['born']}) before or same year as parent '{p_name}' ({p['born']})."
+                    })
 
-                if p_d_num is not None and b_num is not None:
-                    # Allow 1-year margin for pregnancy if father, but warn if child born years after parent died
-                    if b_num > (p_d_num + 1.0):
-                        findings.append({
-                            "id": "GEN-101",
-                            "severity": "WARNING",
-                            "character": name,
-                            "file": c["file"],
-                            "message": f"Child '{name}' born ({c['born']}) after parent '{p_name}' deceased ({p['died']})."
-                        })
+                if p_d_num is not None and b_num is not None and b_num > (p_d_num + 1.0):
+                    findings.append({
+                        "id": "GEN-101",
+                        "severity": "WARNING",
+                        "character": name,
+                        "file": c["file"],
+                        "message": f"Child '{name}' born ({c['born']}) after parent '{p_name}' deceased ({p['died']})."
+                    })
 
     # 3. Succession Order gaps / duplicates
     houses = defaultdict(list)
-    for name, c in chars.items():
+    for _name, c in chars.items():
         if c.get("house") and c.get("succession_order") is not None:
             houses[c["house"]].append(c)
 
@@ -340,9 +336,7 @@ def matches_house_or_character(c: dict, query: str) -> bool:
         return True
     if q_raw in house_raw or (q_norm and q_norm in house_raw):
         return True
-    if house_raw in q_raw or (house_norm and house_norm in q_raw) or (house_norm and q_norm and house_norm == q_norm):
-        return True
-    return False
+    return bool(house_raw in q_raw or (house_norm and house_norm in q_raw) or (house_norm and q_norm and house_norm == q_norm))
 
 
 def get_house_lineage(chars: dict, house_name: str) -> list:
@@ -513,7 +507,7 @@ def generate_genealogy_html_report(title: str, mermaid_code: str, lineage: list,
         <td>{html.escape(parents_str)}</td>
       </tr>\n"""
 
-    html_content += f"""    </table>
+    html_content += """    </table>
   </div>
 """
     if findings:

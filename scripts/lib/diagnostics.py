@@ -15,11 +15,10 @@ from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
 import platform
-import re
 import shutil
 import subprocess
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -99,7 +98,7 @@ def redact_sensitive_paths(text: str) -> str:
     return text
 
 
-def get_command_version(cmd: List[str]) -> Optional[str]:
+def get_command_version(cmd: list[str]) -> str | None:
     """Safely query external CLI tool version."""
     try:
         res = subprocess.run(
@@ -116,7 +115,7 @@ def get_command_version(cmd: List[str]) -> Optional[str]:
         return None
 
 
-def get_toolchain_diagnostics() -> Dict[str, Any]:
+def get_toolchain_diagnostics() -> dict[str, Any]:
     """Inspect all system compilers, runtimes, and dependencies."""
     tools = {
         "python": {
@@ -138,6 +137,7 @@ def get_toolchain_diagnostics() -> Dict[str, Any]:
             "version": get_command_version(["typst", "--version"]),
             "executable": shutil.which("typst"),
             "available": shutil.which("typst") is not None,
+            "compile_test": None,
         },
         "ruff": {
             "version": get_command_version(["ruff", "--version"]),
@@ -151,22 +151,41 @@ def get_toolchain_diagnostics() -> Dict[str, Any]:
         },
     }
 
+    if tools["typst"]["available"]:
+        sample_path = Path(__file__).resolve().parent.parent.parent / "templates" / "typst" / "preview_sample.typ"
+        if sample_path.is_file():
+            import tempfile
+            try:
+                with tempfile.TemporaryDirectory() as td:
+                    test_pdf = Path(td) / "test.pdf"
+                    res = subprocess.run(
+                        ["typst", "compile", str(sample_path), str(test_pdf)],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                        cwd=str(sample_path.parent)
+                    )
+                    if res.returncode == 0:
+                        tools["typst"]["compile_test"] = "passed"
+                    else:
+                        tools["typst"]["compile_test"] = f"failed: {res.stderr.strip()}"
+            except Exception as ex:
+                tools["typst"]["compile_test"] = f"error: {ex}"
+
     # GUI typelib check
     gui_status = {"available": False, "toolkit": None, "error": None}
     try:
         import gi
         gi.require_version("Gtk", "4.0")
-        from gi.repository import Gtk, Adw
         gui_status["available"] = True
         gui_status["toolkit"] = "GTK4 / Libadwaita"
     except Exception as e4:
         try:
             import gi
             gi.require_version("Gtk", "3.0")
-            from gi.repository import Gtk
             gui_status["available"] = True
             gui_status["toolkit"] = "GTK3"
-        except Exception as e3:
+        except Exception:
             gui_status["available"] = False
             gui_status["error"] = str(e4)
 
@@ -177,9 +196,9 @@ def get_toolchain_diagnostics() -> Dict[str, Any]:
 
 
 def generate_diagnostic_report(
-    project_path: Optional[str] = None,
+    project_path: str | None = None,
     redact_sensitive: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Compile comprehensive system diagnostic and bug triage report."""
     tc = get_toolchain_diagnostics()
 
@@ -193,7 +212,7 @@ def generate_diagnostic_report(
         except Exception:
             pass
 
-    report: Dict[str, Any] = {
+    report: dict[str, Any] = {
         "version": "1.6.0",
         "system": {
             "os": platform.system(),
@@ -226,7 +245,7 @@ def generate_diagnostic_report(
     return report
 
 
-def format_diagnostic_report_markdown(report: Dict[str, Any]) -> str:
+def format_diagnostic_report_markdown(report: dict[str, Any]) -> str:
     """Format diagnostic bundle as clean GitHub Flavored Markdown."""
     lines = [
         "# Ars Arcanum Diagnostic Triage Report",
@@ -270,7 +289,7 @@ def format_diagnostic_report_markdown(report: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Ars Arcanum Diagnostic & System Health Suite",
         prog="diagnostics",

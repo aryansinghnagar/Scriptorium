@@ -25,7 +25,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -130,7 +129,7 @@ def validate_chapter_formatting(file_path: Path) -> list[dict]:
     lines = content.splitlines()
 
     # 1. Orphan Heading check (Heading as the last non-empty line)
-    non_empty = [l.strip() for l in lines if l.strip()]
+    non_empty = [line_str.strip() for line_str in lines if line_str.strip()]
     if non_empty and non_empty[-1].startswith("#"):
         issues.append({
             "level": "FAIL",

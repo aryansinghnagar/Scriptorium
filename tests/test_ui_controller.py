@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from lib.ui_controller import UIController, ProjectInfo
+from lib.ui_controller import UIController
 
 
 class TestUIController(unittest.TestCase):

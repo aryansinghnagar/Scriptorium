@@ -21,7 +21,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -71,7 +70,6 @@ def parse_yaml_frontmatter(content: str) -> dict:
     data = {}
     lines = fm_match.group(1).splitlines()
     current_key = None
-    in_list = False
     
     for raw_line in lines:
         line = raw_line.strip()
@@ -383,16 +381,15 @@ def scan_scene_magic_constraints(manuscript_dir: Path, magic_systems: dict, char
                                     "line": line_idx,
                                     "message": f"Scene describes resurrection/bringing dead to life, which violates hard limitation in '{s_name}': \"{limit}\"."
                                 })
-                        elif "cannot create matter" in lim_lower:
-                            if "conjured food from nothing" in lower_l or "created water from nothing" in lower_l or "created matter from nothing" in lower_l:
-                                findings.append({
-                                    "id": "MAG-103",
-                                    "severity": "WARNING",
-                                    "system": s_name,
-                                    "file": rel_path,
-                                    "line": line_idx,
-                                    "message": f"Scene describes creating matter from nothing, violating hard limitation in '{s_name}': \"{limit}\"."
-                                })
+                        elif "cannot create matter" in lim_lower and ("conjured food from nothing" in lower_l or "created water from nothing" in lower_l or "created matter from nothing" in lower_l):
+                            findings.append({
+                                "id": "MAG-103",
+                                "severity": "WARNING",
+                                "system": s_name,
+                                "file": rel_path,
+                                "line": line_idx,
+                                "message": f"Scene describes creating matter from nothing, violating hard limitation in '{s_name}': \"{limit}\"."
+                            })
 
         except Exception as e:
             logger.warning("Error scanning scene file %s for magic checks: %s", md_file, e)
@@ -612,7 +609,7 @@ def main():
     if getattr(args, "json", False):
         print(json.dumps(audit, indent=2))
     else:
-        print(f"\n\033[1;35m=== Ars Arcanum Arcane Constraint Matrix ===\033[0m")
+        print("\n\033[1;35m=== Ars Arcanum Arcane Constraint Matrix ===\033[0m")
         print(f"World: \033[1m{audit['world']}\033[0m | Manuscript: \033[1m{audit['manuscript'] or 'N/A'}\033[0m")
         print(f"Systems Registered: \033[32m{audit['systems_registered']}\033[0m | Characters Profiled: \033[32m{audit['characters_profiled']}\033[0m")
         print(f"Total Findings: \033[1m{audit['total_findings']}\033[0m\n")

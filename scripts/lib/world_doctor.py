@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 import re
 import sys
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 try:
     from lib.fs_utils import atomic_write
@@ -92,12 +92,12 @@ def read_capped(path: str, max_bytes: int = MAX_DEFAULT_BYTES) -> str:
     return data.decode("utf-8", "ignore")
 
 
-def parse_frontmatter(text: str) -> Tuple[Dict[str, Any], bool]:
+def parse_frontmatter(text: str) -> tuple[dict[str, Any], bool]:
     """Strict flat-subset YAML parser: key: value / key: [a, b] / lists with '-'."""
     lines = text.splitlines()
     if not lines or lines[0].strip() != FRONTMATTER_DELIM:
         return {}, True
-    fm: Dict[str, Any] = {}
+    fm: dict[str, Any] = {}
     i = 1
     n = len(lines)
     while i < n and lines[i].strip() != FRONTMATTER_DELIM:
@@ -138,7 +138,7 @@ def norm(name: Any) -> str:
     return re.sub(r'[\s_]+', ' ', str(name).strip().lower())
 
 
-def parse_timeline_date(val: Any) -> Optional[Tuple[Optional[str], float, str]]:
+def parse_timeline_date(val: Any) -> tuple[str | None, float, str] | None:
     if val is None:
         return None
     s = str(val).strip().strip('"').strip("'")
@@ -185,7 +185,7 @@ def parse_timeline_date(val: Any) -> Optional[Tuple[Optional[str], float, str]]:
     return None
 
 
-def compare_timeline_dates(d1_val: Any, d2_val: Any) -> Optional[int]:
+def compare_timeline_dates(d1_val: Any, d2_val: Any) -> int | None:
     p1 = parse_timeline_date(d1_val)
     p2 = parse_timeline_date(d2_val)
     if p1 is None or p2 is None:
@@ -224,7 +224,7 @@ def compare_timeline_dates(d1_val: Any, d2_val: Any) -> Optional[int]:
     return None
 
 
-def is_template(rel: str, fm: Dict[str, Any]) -> bool:
+def is_template(rel: str, fm: dict[str, Any]) -> bool:
     fname = os.path.basename(rel)
     if fname == "World-Bible-Index.md":
         return False
@@ -244,29 +244,26 @@ def is_template(rel: str, fm: Dict[str, Any]) -> bool:
 
 def check_world(
     bible_dir: str,
-    manuscript_dir: Optional[str] = None,
+    manuscript_dir: str | None = None,
     use_cache: bool = False,
     max_bytes: int = MAX_DEFAULT_BYTES,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Execute deep consistency audit across the World Bible and optional Manuscript."""
     bible_path = Path(bible_dir).resolve()
     if not bible_path.exists():
         raise FileNotFoundError(f"World directory not found: {bible_dir}")
 
     # Determine real Bible directory
-    if (bible_path / "00-World-Bible").is_dir():
-        actual_bible = bible_path / "00-World-Bible"
-    else:
-        actual_bible = bible_path
+    actual_bible = bible_path / "00-World-Bible" if (bible_path / "00-World-Bible").is_dir() else bible_path
 
-    index: Dict[str, str] = {}
-    aliases: Dict[str, str] = {}
-    notes: List[Tuple[str, Dict[str, Any], str]] = []
-    fm_errors: List[str] = []
-    required_errors: List[Tuple[str, str, str]] = []
-    timeline_errors: List[Tuple[str, str]] = []
+    index: dict[str, str] = {}
+    aliases: dict[str, str] = {}
+    notes: list[tuple[str, dict[str, Any], str]] = []
+    fm_errors: list[str] = []
+    required_errors: list[tuple[str, str, str]] = []
+    timeline_errors: list[tuple[str, str]] = []
 
-    cached_files: Dict[str, Any] = {}
+    cached_files: dict[str, Any] = {}
     cache_used = False
     if use_cache:
         try:
@@ -281,7 +278,7 @@ def check_world(
         except Exception:
             pass
 
-    cached_rels: Set[str] = set()
+    cached_rels: set[str] = set()
     if cache_used:
         for rel, entry in sorted(cached_files.items()):
             if not rel.endswith(".md"):
@@ -364,7 +361,7 @@ def check_world(
 
             notes.append((rel, fm, text))
 
-    def resolve(target: str) -> Optional[str]:
+    def resolve(target: str) -> str | None:
         key = norm(target)
         if key in index:
             return index[key]
@@ -373,11 +370,11 @@ def check_world(
         return None
 
     # Pass 2: Links & Frontmatter Ref Integrity
-    broken_links: List[Tuple[str, str]] = []
-    placeholder_links: List[Tuple[str, str]] = []
-    dangling_refs: List[Tuple[str, str, str]] = []
+    broken_links: list[tuple[str, str]] = []
+    placeholder_links: list[tuple[str, str]] = []
+    dangling_refs: list[tuple[str, str, str]] = []
     inbound = {rel: 0 for rel, _, _ in notes}
-    outbound: Dict[str, Set[str]] = {}
+    outbound: dict[str, set[str]] = {}
 
     for rel, fm, text in notes:
         templated = is_template(rel, fm)
@@ -415,7 +412,7 @@ def check_world(
     orphans = [rel for rel, fm, _ in notes
                if inbound.get(rel, 0) == 0 and not outbound.get(rel) and not is_template(rel, fm)]
 
-    claimed: Dict[str, Set[str]] = {}
+    claimed: dict[str, set[str]] = {}
     for rel, fm, _ in notes:
         if is_template(rel, fm):
             continue
@@ -425,9 +422,9 @@ def check_world(
     duplicates = {n: sorted(rs) for n, rs in claimed.items() if len(rs) > 1}
 
     # Pass 3: Manuscript Entity Cross-Validation
-    manuscript_errors: List[Tuple[str, str, str]] = []
+    manuscript_errors: list[tuple[str, str, str]] = []
     ms_files_scanned = 0
-    ms_index: Set[str] = set()
+    ms_index: set[str] = set()
 
     if manuscript_dir and os.path.isdir(manuscript_dir):
         # Index all manuscript markdown files
@@ -494,7 +491,7 @@ def check_world(
                             if resolve(target) is None and norm(target) not in ms_index:
                                 manuscript_errors.append((rel, "[[link]]", target))
 
-    findings: Dict[str, Any] = {
+    findings: dict[str, Any] = {
         "world": str(actual_bible),
         "notes": len(notes),
         "manuscript_files": ms_files_scanned,
@@ -515,7 +512,7 @@ def check_world(
     return findings
 
 
-def format_report_text(findings: Dict[str, Any]) -> str:
+def format_report_text(findings: dict[str, Any]) -> str:
     lines = [
         f"Ars Arcanum World Doctor — {findings['world']}",
         f"Notes scanned: {findings['notes']}" + (" (fast cache)" if findings.get("fast_cache_used") else ""),
@@ -524,7 +521,7 @@ def format_report_text(findings: Dict[str, Any]) -> str:
         lines.append(f"Manuscript scenes scanned: {findings['manuscript_files']}")
     lines.append("")
 
-    def add_section(title: str, items: List[str]):
+    def add_section(title: str, items: list[str]):
         if not items:
             return
         lines.append(f"{title}: {len(items)}")
@@ -559,7 +556,7 @@ def format_report_text(findings: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Ars Arcanum World Doctor — World Bible Consistency Checker",
         prog="world_doctor",

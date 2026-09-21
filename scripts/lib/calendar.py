@@ -27,7 +27,6 @@ Zero external runtime dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import math

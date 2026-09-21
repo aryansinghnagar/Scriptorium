@@ -26,7 +26,6 @@ Zero external runtime dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import math
@@ -121,7 +120,7 @@ def analyze_chapter_text(text: str) -> dict:
 
     if sent_lengths:
         mean_len = sum(sent_lengths) / len(sent_lengths)
-        variance = sum((l - mean_len) ** 2 for l in sent_lengths) / len(sent_lengths)
+        variance = sum((slen - mean_len) ** 2 for slen in sent_lengths) / len(sent_lengths)
         std_dev = math.sqrt(variance)
     else:
         mean_len = 0.0
@@ -133,10 +132,10 @@ def analyze_chapter_text(text: str) -> dict:
     conflict_density = conflict_word_count / word_count if word_count > 0 else 0.0
 
     # Short sentence factor (sentences < 8 words indicate fast action/tempo)
-    short_sent_ratio = (sum(1 for l in sent_lengths if l <= 8) / sentence_count) if sentence_count > 0 else 0.0
+    short_sent_ratio = (sum(1 for slen in sent_lengths if slen <= 8) / sentence_count) if sentence_count > 0 else 0.0
 
     # Long sentence factor (> 24 words indicates exposition/reflection)
-    long_sent_ratio = (sum(1 for l in sent_lengths if l >= 24) / sentence_count) if sentence_count > 0 else 0.0
+    long_sent_ratio = (sum(1 for slen in sent_lengths if slen >= 24) / sentence_count) if sentence_count > 0 else 0.0
 
     exposition_ratio = max(0.0, min(1.0, (1.0 - dialogue_ratio) * 0.6 + long_sent_ratio * 0.4))
     action_ratio = max(0.0, min(1.0, (1.0 - exposition_ratio - dialogue_ratio) * 0.5 + short_sent_ratio * 0.5))
@@ -205,9 +204,9 @@ def scan_manuscript_pacing(manuscript_dir: Path, target_book: str = None) -> dic
         
         # Determine chapter title
         title = f.stem.replace("_", " ")
-        for l in content.splitlines()[:5]:
-            if l.startswith("# "):
-                title = l[2:].strip()
+        for line_text in content.splitlines()[:5]:
+            if line_text.startswith("# "):
+                title = line_text[2:].strip()
                 break
 
         metrics = analyze_chapter_text(content)
@@ -400,7 +399,7 @@ def generate_pacing_html_report(report: dict, output_file: Path):
         <td>{status}</td>
       </tr>\n"""
 
-    html_content += f"""    </table>
+    html_content += """    </table>
   </div>
 
   <div class="card">
@@ -530,7 +529,7 @@ def main():
     subcmd = args.subcommand or "pace"
 
     if subcmd in ("pace", "tension") and not getattr(args, "pov", False):
-        print(f"\n\033[1;36m=== Ars Arcanum Narrative Pacing & Tension Report ===\033[0m")
+        print("\n\033[1;36m=== Ars Arcanum Narrative Pacing & Tension Report ===\033[0m")
         print(f"Manuscript: \033[1m{report['manuscript']}\033[0m | Total Words: \033[32m{report['total_words']:,}\033[0m | Chapters: \033[33m{report['total_chapters']}\033[0m\n")
 
         # Tension Sparkline
@@ -546,7 +545,7 @@ def main():
         print()
 
     if getattr(args, "pov", False) or subcmd == "pov":
-        print(f"\n\033[1;33m=== POV Character Screen-Time Distribution ===\033[0m\n")
+        print("\n\033[1;33m=== POV Character Screen-Time Distribution ===\033[0m\n")
         print(f"{'POV Character':<20} {'Word Count':<12} {'Share (%)':<10} {'Chapters':<10} {'Status':<16}")
         print("-" * 70)
         for pov, p_data in report["pov_distribution"].items():

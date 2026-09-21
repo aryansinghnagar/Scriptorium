@@ -25,7 +25,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -204,11 +203,11 @@ def audit_ecosystem(species: dict) -> list:
     Audits ecological stability, food web connectivity, and Lindeman's 10% trophic efficiency.
     """
     findings = []
-    norm_map = {normalize_name(k): k for k in species.keys()}
+    norm_map = {normalize_name(k): k for k in species}
 
     # Group by trophic level and habitat
     by_habitat = {}
-    for sname, sinfo in species.items():
+    for _sname, sinfo in species.items():
         hab = normalize_name(sinfo["habitat"])
         if hab not in by_habitat:
             by_habitat[hab] = []
@@ -531,7 +530,7 @@ def main():
     if getattr(args, "json", False):
         print(json.dumps(audit_data, indent=2))
     else:
-        print(f"\n\033[1;32m=== Ars Arcanum Trophic Food Web & Ecology Matrix ===\033[0m")
+        print("\n\033[1;32m=== Ars Arcanum Trophic Food Web & Ecology Matrix ===\033[0m")
         print(f"World: \033[1m{world_path.name}\033[0m | Species Tracked: \033[32m{len(species)}\033[0m")
         print(f"Ecological Issues / Deficits: \033[1m{len(findings)}\033[0m\n")
 

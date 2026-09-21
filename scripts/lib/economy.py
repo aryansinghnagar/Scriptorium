@@ -27,9 +27,7 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
-import math
 import json
 import html
 import argparse
@@ -541,7 +539,7 @@ def generate_economy_html_report(audit_data: dict, output_path: Path):
     """Generates standalone HTML report for Economic audit and Tech Era check."""
     economies = audit_data.get("economies", {})
     findings = audit_data.get("findings", [])
-    ppp_matrix = audit_data.get("ppp_matrix", {})
+    audit_data.get("ppp_matrix", {})
     world_name = audit_data.get("world", "World Bible")
 
     econ_cards = []
@@ -772,7 +770,7 @@ def main():
         if getattr(args, "json", False):
             print(json.dumps(audit_data, indent=2))
         else:
-            print(f"\n\033[1;33m=== Ars Arcanum Economy, Commodity PPP & Tech Matrix ===\033[0m")
+            print("\n\033[1;33m=== Ars Arcanum Economy, Commodity PPP & Tech Matrix ===\033[0m")
             print(f"World: \033[1m{world_path.name}\033[0m | Manuscript: \033[1m{ms_path.name if ms_path else 'N/A'}\033[0m")
             print(f"Economies Registered: \033[32m{len(economies)}\033[0m | Findings: \033[1m{len(all_findings)}\033[0m\n")
 
@@ -824,7 +822,7 @@ def main():
         if args.json:
             print(json.dumps({"manuscript": ms_path.name, "baseline_era": era, "findings": findings}, indent=2))
         else:
-            print(f"\n\033[1;36m=== Technological Era Baseline Audit ===\033[0m")
+            print("\n\033[1;36m=== Technological Era Baseline Audit ===\033[0m")
             print(f"Manuscript: \033[1m{ms_path.name}\033[0m | Baseline Era: \033[1;33m{era}\033[0m")
             print(f"Anachronisms Detected: \033[1m{len(findings)}\033[0m\n")
 
@@ -850,7 +848,7 @@ def main():
         if args.json:
             print(json.dumps(result, indent=2))
         else:
-            print(f"\n\033[1;32m=== Trade Route Profitability Analysis ===\033[0m")
+            print("\n\033[1;32m=== Trade Route Profitability Analysis ===\033[0m")
             print(f"Cargo          : {result['cargo_tons']} tons | Distance: {result['distance']}")
             print(f"Price Spread   : Buy @ {result['buy_price_per_ton']} -> Sell @ {result['sell_price_per_ton']} per ton")
             print(f"Gross Revenue  : {result['gross_revenue']:,.2f}")

@@ -8,7 +8,6 @@ Validates:
 - Directory creation when writing to nested paths.
 """
 
-import os
 import tempfile
 import unittest
 from pathlib import Path

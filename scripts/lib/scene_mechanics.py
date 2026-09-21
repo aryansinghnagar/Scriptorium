@@ -26,14 +26,13 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
 import argparse
 import logging
 from pathlib import Path
-from collections import Counter, defaultdict
+from collections import Counter
 
 try:
     from lib.fs_utils import atomic_write

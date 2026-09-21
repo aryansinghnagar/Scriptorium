@@ -22,7 +22,6 @@ from lib.stylistics import (
     analyze_readability_rhythm,
 )
 from lib.voice import (
-    extract_character_dialogue,
     compute_voice_profile,
     compute_voice_similarity,
 )

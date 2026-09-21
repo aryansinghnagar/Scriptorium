@@ -5,7 +5,7 @@
 
 [![Status: Beta (Experimental)](https://img.shields.io/badge/Status-Beta%20(Experimental)-yellow.svg)](#)
 [![Ars Arcanum CI](https://github.com/aryansinghnagar/Scriptorium/actions/workflows/ci.yml/badge.svg)](https://github.com/aryansinghnagar/Scriptorium/actions/workflows/ci.yml)
-[![Unit Tests: 227 Passing](https://img.shields.io/badge/Unit%20Tests-227%2F227%20Passing-brightgreen.svg)](#)
+[![Unit Tests: 281 Passing](https://img.shields.io/badge/Unit%20Tests-281%2F281%20Passing-brightgreen.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > [!NOTE]
@@ -79,7 +79,7 @@ If you have booted into Linux Mint XFCE or Debian:
    ```
    *This single command tests your OS environment, installs Git, PyGObject, Zenity, LibreOffice, FocusWriter, Calibre, Obsidian, novelWriter, Typst, Pandoc, literary typography fonts, and installs desktop launchers.*
 
-3. **Double-click "Ars Arcanum Control Center" on your Desktop** (or run `arcanum control-center`). On first launch, the welcoming wizard offers a 1-click starter cosmos (*"Cosmere / Scadrial / Mistborn-Era1"*) with pre-configured lore and starter chapters!
+3. **Double-click "Ars Arcanum Control Center" on your Desktop** (or run `arcanum control-center`). On first launch, the welcoming wizard offers a 1-click starter cosmos (*"Eldoria-Cosmos / Eldoria-World / Chronicles-of-Eldoria"*) with pre-configured lore and starter chapters!
 
 ---
 
@@ -115,7 +115,7 @@ Ars Arcanum includes 18 zero-dependency Python standard library engines tailored
 | **9** | **Causal DAGs & Multiverse Timelines** | `arcanum causality [world] [ms]`, `arcanum causality branch [name]` | Event DAG cycle detection, Novikov self-consistency, Grandfather (`CAU-101`) & Bootstrap (`CAU-102`) paradox linters, timeline split-and-merge DAG visualizers. |
 | **10** | **Climate, Biomes & Trophic Webs** | `arcanum calc climate`, `arcanum ecology [world]` | Stellar insolation ($W/m^2$), atmospheric circulation cells (Hadley/Ferrel), orographic rain shadow modeler, Bestiary trophic profiler, Lindeman 10% energy pyramid validator. |
 | **11** | **Earth-Eponyms & Sensory Palette** | `arcanum audit idioms [ms]`, `arcanum audit senses [ms]` | Earth-eponym scanner (*Achilles heel*, *Pandora's box*, *boycott*, *diesel*) with custom whitelist, 6D sensory balance analyzer (Visual, Auditory, Olfactory, Gustatory, Tactile, Kinesthetic) to flag "white room" scenes. |
-| **12** | **Ciphers, Runes & Prophecy Matrix** | `arcanum cipher encode|decode|runes`, `arcanum prophecy [world] [ms]` | Classical ciphers (Caesar, Atbash, Vigenère, Rail Fence), Elder Futhark rune vector SVG renderer, prophecy clause lifecycle tracker (`Cosmology/Prophecies/*.md`) auditing resolution across chapters. |
+| **12** | **Ciphers, Runes & Prophecy Matrix** | `arcanum cipher encode\|decode\|runes`, `arcanum prophecy [world] [ms]` | Classical ciphers (Caesar, Atbash, Vigenère, Rail Fence), Elder Futhark rune vector SVG renderer, prophecy clause lifecycle tracker (`Cosmology/Prophecies/*.md`) auditing resolution across chapters. |
 | **13** | **Prose Stylistics & Dialogue Linter** | `arcanum audit dialogue [ms]`, `arcanum audit echoes [ms]` | Dialogue mechanics linter (`DIA-101` said-bookisms, `DIA-102` floating dialogue, `DIA-103` adverb overload), sliding-window word echo and repetition scanner (`ECH-101`). |
 | **14** | **Character Voice Profiler** | `arcanum audit voice [ms]` | Lexical fingerprint analyzer isolating character dialogue by `@char:` tags: sentence complexity, syllable count, Flesch-Kincaid grade, and voice divergence checks. |
 | **15** | **Story Paradigm & Scene Mechanics** | `arcanum audit structure [ms]`, `arcanum audit scenes [ms]` | Pacing validation against 6 narrative paradigms (Save the Cat, Hero's Journey, 7-Point, Story Circle, Kishōtenketsu, 3-Act 9-Block) and Motivation-Reaction Units (MRU). |

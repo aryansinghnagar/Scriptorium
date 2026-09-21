@@ -20,9 +20,7 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import random
-import copy
 import json
 import argparse
 import logging
@@ -157,7 +155,7 @@ def simulate_single_battle(side1_data: list[dict], side2_data: list[dict], terra
                 log.append(f"  • {attacker.name} attacks {target.name}, but {target.name} dodges the blow.")
 
         # Morale Check at round end if casualties taken
-        for team, side_name in [(team1, "Side 1"), (team2, "Side 2")]:
+        for team, _side_name in [(team1, "Side 1"), (team2, "Side 2")]:
             active_team = [f for f in team if f.is_alive and not f.is_routed]
             dead_team = [f for f in team if not f.is_alive]
             if len(dead_team) >= len(team) * 0.5 and active_team:
@@ -266,10 +264,9 @@ def main():
             print(f"Side 2 Casualties: {battle['team2_casualties']}/{len(side2)}")
             print(f"MVP Combatant: {battle['mvp']['name']} ({battle['mvp']['damage']} dmg, {battle['mvp']['kills']} kills)")
             
-            if args.narrative or True:
-                print("\n=== Blow-by-Blow Narrative Combat Log ===")
-                for line in battle["log"]:
-                    print(line)
+            print("\n=== Blow-by-Blow Narrative Combat Log ===")
+            for line in battle["log"]:
+                print(line)
 
 
 if __name__ == "__main__":

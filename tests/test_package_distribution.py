@@ -18,8 +18,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from package_distribution import (
     package_reader_edition,
     package_submission_bundle,
-    package_arc_bundle,
-    compute_file_sha256
+    package_arc_bundle
 )
 
 

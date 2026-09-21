@@ -21,12 +21,10 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import zipfile
 import hashlib
 import json
-import shutil
 import argparse
 import datetime
 import logging
@@ -216,7 +214,7 @@ def main():
         print(json.dumps(manifest, indent=2))
         return
 
-    print(f"=== Ars Arcanum Release Distribution Packager ===")
+    print("=== Ars Arcanum Release Distribution Packager ===")
     print(f"Target:       {target_path.name}")
     print(f"Output Dir:   {out_dir}")
     print(f"Packages Generated: {len(packages)}")

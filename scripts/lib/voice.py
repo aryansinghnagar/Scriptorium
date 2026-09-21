@@ -26,7 +26,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import math
 import json
@@ -186,7 +185,7 @@ def compute_voice_profile(utterances: list[str], all_characters_corpus: dict[str
 
     u_count = len(utterances)
     mean_len = total_words / u_count if u_count > 0 else 0.0
-    var = sum((l - mean_len) ** 2 for l in utterance_lengths) / u_count if u_count > 0 else 0.0
+    var = sum((ulen - mean_len) ** 2 for ulen in utterance_lengths) / u_count if u_count > 0 else 0.0
     std_dev = math.sqrt(var)
 
     unique_words = len(set(word_tokens))

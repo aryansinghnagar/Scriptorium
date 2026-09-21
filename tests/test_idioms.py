@@ -12,7 +12,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from lib.idioms import (
-    load_idioms_config,
     audit_manuscript_idioms,
     generate_idioms_html_report,
 )

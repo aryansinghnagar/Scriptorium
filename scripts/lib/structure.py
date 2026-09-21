@@ -24,7 +24,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -232,7 +231,6 @@ def scan_manuscript_structure(target_path: Path, paradigm_key: str = "three_act"
 def generate_structure_html_report(report: dict, output_path: Path) -> Path:
     """Generates an offline HTML visual timeline report for story structure."""
     beats = report.get("beats", [])
-    chapters = report.get("chapters", [])
     score = report.get("harmony_score", 0.0)
 
     beat_rows = []

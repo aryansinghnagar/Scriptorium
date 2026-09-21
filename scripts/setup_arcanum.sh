@@ -233,6 +233,7 @@ echo "[4/6] Installing Flatpak applications (Obsidian, novelWriter, Calibre)..."
 # REL-05: track per-application state explicitly. Returns 0 only when the
 # app is present afterwards; callers aggregate failures instead of
 # printing a false [SUCCESS] summary.
+INSTALL_ERRORS=()
 FLATPAK_FAILED=()
 flatpak_install() {
     local app_id="$1"
@@ -245,13 +246,13 @@ flatpak_install() {
         return 0
     fi
     if [ "${USE_SUDO}" -eq 1 ]; then
-        if sudo flatpak install -y --noninteractive --system "flathub" "$app_id" 2>/dev/null; then
+        if sudo flatpak install -y --noninteractive --system "flathub" "$app_id"; then
             echo "  [✓] Installed ${app_id} (system scope)"
             return 0
         fi
     fi
     echo "  [i] Trying --user scope flatpak install for ${app_id}..."
-    if flatpak install -y --noninteractive --user "flathub" "$app_id" 2>/dev/null; then
+    if flatpak install -y --noninteractive --user "flathub" "$app_id"; then
         echo "  [✓] Installed ${app_id} (user scope)"
         return 0
     fi
@@ -266,6 +267,7 @@ flatpak_install() {
 for app in "${FLATPAK_APPS[@]}"; do
     if ! flatpak_install "$app"; then
         FLATPAK_FAILED+=("$app")
+        INSTALL_ERRORS+=("Flatpak app: ${app}")
     fi
 done
 if [ ${#FLATPAK_FAILED[@]} -gt 0 ]; then
@@ -275,9 +277,9 @@ fi
 
 # 5. Typst Installation Phase (with Hardcoded SHA-256 Digest Verification)
 echo "[5/6] Checking Typst installation..."
-TYPST_PINNED_VERSION="0.13.0"
-TYPST_SHA256_X86_64="a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c"
-TYPST_SHA256_AARCH64="5aa8d74a3d906e60ea12a66ac2f37f8eef1b14cbad7182a745e393a10c23dcee"
+TYPST_PINNED_VERSION="0.14.2"
+TYPST_SHA256_X86_64="a6044cbad2a954deb921167e257e120ac0a16b20339ec01121194ff9d394996d"
+TYPST_SHA256_AARCH64="491b101aa40a3a7ea82a3f8a6232cabb4e6a7e233810082e5ac812d43fdcd47a"
 
 ARCH="$(uname -m)"
 EXPECTED_DIGEST=""
@@ -293,6 +295,7 @@ case "${ARCH}" in
     *)
         echo "[!] Unsupported arch '${ARCH}' for precompiled Typst. Install via cargo: cargo install --locked typst-cli"
         TYPST_ARCH=""
+        INSTALL_ERRORS+=("Typst unsupported arch: ${ARCH}")
         ;;
 esac
 
@@ -313,12 +316,14 @@ else
                     TYPST_OK=0
                     echo "  [!] Refusing to install unverified binary: upstream SHA-256 digest unavailable." >&2
                     echo "      Install manually or via cargo: cargo install --locked typst-cli" >&2
+                    INSTALL_ERRORS+=("Typst digest unavailable")
                 elif [ "${EXPECTED_DIGEST}" = "${ACTUAL}" ]; then
                     TYPST_OK=1
                     echo "  [✓] Typst tarball digest verified (sha256 ${ACTUAL:0:16}...)"
                 else
                     TYPST_OK=0
                     echo "  [!] Typst digest mismatch: expected ${EXPECTED_DIGEST}, got ${ACTUAL}. Aborting binary install." >&2
+                    INSTALL_ERRORS+=("Typst digest mismatch")
                 fi
 
                 if [ "${TYPST_OK}" -eq 1 ]; then
@@ -333,10 +338,13 @@ else
                             install -m 755 "${TYPST_BIN}" "${HOME}/.local/bin/typst"
                             echo "  [✓] Typst installed successfully to ${HOME}/.local/bin/typst"
                         fi
+                    else
+                        INSTALL_ERRORS+=("Typst binary extraction failed")
                     fi
                 fi
             else
                 echo "  [!] Warning: Could not download Typst binary. Install manually or via cargo: cargo install --locked typst-cli" >&2
+                INSTALL_ERRORS+=("Typst download failed")
             fi
             rm -rf "${TEMP_DIR}"
             trap - EXIT
@@ -407,11 +415,18 @@ echo ""
 echo "============================================================"
 if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [DRY-RUN COMPLETE] All simulated checks passed without errors."
-elif [ "${#FLATPAK_FAILED[@]}" -gt 0 ]; then
-    echo "  [PARTIAL] Ars Arcanum setup finished WITH WARNINGS — Flatpak failures: ${FLATPAK_FAILED[*]}"
+elif [ "${#INSTALL_ERRORS[@]}" -gt 0 ]; then
+    echo "  [PARTIAL] Ars Arcanum setup finished WITH WARNINGS — Unresolved items:"
+    for err in "${INSTALL_ERRORS[@]}"; do
+        echo "    • ${err}"
+    done
     echo "============================================================"
     echo "Next Steps:"
-    echo "1. Re-run setup when network is available, or: flatpak install flathub ${FLATPAK_FAILED[0]}"
+    if [ "${#FLATPAK_FAILED[@]}" -gt 0 ]; then
+        echo "1. Re-run setup when network is available, or: flatpak install flathub ${FLATPAK_FAILED[0]}"
+    else
+        echo "1. Resolve the warnings above, or re-run: bash scripts/setup_arcanum.sh"
+    fi
     echo "2. Double-click 'New World Vault Creator' (or run ./scripts/init_world.sh) to start a lore vault"
     echo "3. Double-click 'New Manuscript Creator' (or run ./scripts/init_manuscript.sh) to start a novel"
     echo "4. Open Control Center on your desktop (or run ./scripts/arcanum control-center)"

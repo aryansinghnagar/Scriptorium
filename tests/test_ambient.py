@@ -54,7 +54,7 @@ class TestAmbientEngine(unittest.TestCase):
             self.assertEqual(wf.getnframes(), 44100)
 
     def test_atmosphere_profiles_valid(self):
-        for name, p in PROFILES.items():
+        for _name, p in PROFILES.items():
             self.assertIn("noise", p)
             self.assertIn("carrier", p)
             self.assertIn("beat", p)

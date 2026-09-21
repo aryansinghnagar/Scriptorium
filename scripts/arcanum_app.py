@@ -93,9 +93,8 @@ def main():
         sys.exit(0)
 
     # 1. If GTK 4 / Libadwaita forced or default
-    if not args.gtk3:
-        if try_launch_adw(active_tab=args.tab):
-            sys.exit(0)
+    if not args.gtk3 and try_launch_adw(active_tab=args.tab):
+        sys.exit(0)
 
     # 2. GTK 3 Fallback
     if try_launch_gtk3(active_tab=args.tab):

@@ -22,7 +22,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import zlib
@@ -233,9 +232,8 @@ def generate_png_barcode(isbn13: str, scale: int = 3) -> bytes:
             guard = is_guard[mod_idx]
 
             is_black = False
-            if bit == '1':
-                if 10 <= y < (10 + (guard_h if guard else bar_h)):
-                    is_black = True
+            if bit == '1' and 10 <= y < (10 + (guard_h if guard else bar_h)):
+                is_black = True
             
             color = (0, 0, 0) if is_black else (255, 255, 255)
             row_bytes.extend(color)
@@ -311,7 +309,7 @@ def main():
     out_file = Path(args.output or f"isbn_{isbn13}.svg")
     saved_path = export_barcode(isbn13, out_file, scale=args.scale)
 
-    print(f"=== Ars Arcanum ISBN-13 Barcode Generator ===")
+    print("=== Ars Arcanum ISBN-13 Barcode Generator ===")
     print(f"Input:        {args.isbn}")
     print(f"ISBN-13:      {isbn13}")
     print(f"Checksum:     {isbn13[-1]} (Valid Modulo-10)")

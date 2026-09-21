@@ -16,7 +16,6 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from lib.conlang import (
     load_conlang_profile,
     generate_words,
-    compile_sound_rule,
     mutate_text,
 )
 

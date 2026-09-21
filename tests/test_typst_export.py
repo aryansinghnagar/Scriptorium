@@ -7,11 +7,11 @@ Validates:
 - Robust handling of chapter headings, page breaks, and blank verso logic.
 """
 
-import os
 import shutil
 import tempfile
 import unittest
 import subprocess
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -25,6 +25,24 @@ class TestTypstExport(unittest.TestCase):
 
     def tearDown(self):
         self.temp_dir.cleanup()
+
+    def test_typst_lockfile_and_setup_script_hashes_match(self):
+        lock_file = REPO_ROOT / "dependencies.lock"
+        setup_script = REPO_ROOT / "scripts" / "setup_arcanum.sh"
+        self.assertTrue(lock_file.is_file())
+        self.assertTrue(setup_script.is_file())
+
+        lock_text = lock_file.read_text(encoding="utf-8")
+        setup_text = setup_script.read_text(encoding="utf-8")
+
+        lock_x86 = re.search(r"x86_64_sha256\s*=\s*([a-f0-9]{64})", lock_text).group(1)
+        lock_arm = re.search(r"aarch64_sha256\s*=\s*([a-f0-9]{64})", lock_text).group(1)
+
+        setup_x86 = re.search(r'TYPST_SHA256_X86_64="([a-f0-9]{64})"', setup_text).group(1)
+        setup_arm = re.search(r'TYPST_SHA256_AARCH64="([a-f0-9]{64})"', setup_text).group(1)
+
+        self.assertEqual(lock_x86, setup_x86)
+        self.assertEqual(lock_arm, setup_arm)
 
     def test_typst_preview_sample_compilation(self):
         typst_bin = shutil.which("typst")

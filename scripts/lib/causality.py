@@ -26,7 +26,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -156,7 +155,7 @@ def extract_causal_nodes(world_dir: Path = None, manuscript_dir: Path = None) ->
                 branch_from = fm.get("branch_from") or ""
 
                 # Also scan line tags
-                for line_idx, line in enumerate(lines, start=1):
+                for _line_idx, line in enumerate(lines, start=1):
                     tag_m = TAG_REGEX.match(line.strip())
                     if tag_m:
                         tag_k = tag_m.group(1).lower()
@@ -633,13 +632,13 @@ def main():
         if getattr(args, "json", False):
             print(json.dumps(audit_data, indent=2))
         else:
-            print(f"\n\033[1;34m=== Ars Arcanum Causal DAG & Multiverse Engine ===\033[0m")
+            print("\n\033[1;34m=== Ars Arcanum Causal DAG & Multiverse Engine ===\033[0m")
             print(f"Events Tracked: \033[32m{len(events)}\033[0m | Timelines: \033[32m{len(timelines)}\033[0m")
             print(f"Causal Findings / Paradoxes: \033[1m{len(findings)}\033[0m\n")
 
             if events:
                 print("\033[1mCausal Sequence Events:\033[0m")
-                for eid, einfo in events.items():
+                for _eid, einfo in events.items():
                     print(f"  📍 \033[1;36m{einfo['name']}\033[0m (Timeline: {einfo['timeline']}) — Coord: {einfo['time_coord'] or 'N/A'}")
                     if einfo["causal_origins"]:
                         print(f"     Prereq : {', '.join(einfo['causal_origins'])}")
@@ -671,13 +670,13 @@ def main():
 
     elif args.subcommand == "branch":
         branch_id = normalize_id(args.name)
-        print(f"\n\033[1;32m=== Scaffolded Multiverse Branch ===\033[0m")
+        print("\n\033[1;32m=== Scaffolded Multiverse Branch ===\033[0m")
         print(f"Branch ID     : \033[1m{branch_id}\033[0m")
         print(f"Diverges From : {args.from_timeline} @ {args.at_coord}")
         print("\n\033[1mScene Tag Directives to use in new branch scenes:\033[0m")
         print(f"  @timeline: {branch_id}")
         print(f"  @branch-from: {args.from_timeline}@{args.at_coord}")
-        print(f"  @divergence-point: \"Point of divergence\"\n")
+        print("  @divergence-point: \"Point of divergence\"\n")
         sys.exit(0)
 
 

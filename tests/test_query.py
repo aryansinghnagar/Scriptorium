@@ -15,8 +15,6 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from init_query import (
     build_query_letter,
-    build_one_page_synopsis,
-    build_pitch_loglines,
     scaffold_submission_package
 )
 

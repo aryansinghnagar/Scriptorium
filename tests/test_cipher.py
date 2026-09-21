@@ -3,7 +3,6 @@
 Unit tests for Ars Arcanum In-World Cipher & Phonetic Rune Engine (scripts/lib/cipher.py).
 """
 
-import tempfile
 import unittest
 from pathlib import Path
 import sys

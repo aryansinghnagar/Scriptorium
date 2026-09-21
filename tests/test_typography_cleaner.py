@@ -18,8 +18,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from lib.typography_cleaner import (
     normalize_typography_text,
-    clean_file,
-    clean_target
+    clean_file
 )
 
 

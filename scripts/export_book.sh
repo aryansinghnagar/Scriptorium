@@ -474,19 +474,24 @@ EXIT_STATUS=0
 if [ "${BUILD_PDF}" -eq 1 ]; then
     echo "Rendering print PDF with Typst..."
     if command -v typst &> /dev/null; then
-        if (cd "${TEMP_WORK_DIR}" && typst compile "${TYPST_SRC}" "${PDF_OUTPUT}"); then
+        TYPST_LOG="${PUBLISHING_DIR}/typst_compile_err.log"
+        if (cd "${TEMP_WORK_DIR}" && typst compile "${TYPST_SRC}" "${PDF_OUTPUT}" 2>"${TYPST_LOG}"); then
             if [ -s "${PDF_OUTPUT}" ]; then
                 echo "[✓] PDF generated at: ${PDF_OUTPUT}"
+                rm -f "${TYPST_LOG}" 2>/dev/null || true
             else
                 echo "[!] Typst compile finished but PDF artifact is empty (0 bytes)." >&2
                 EXIT_STATUS=1
             fi
         else
-            echo "[!] Typst compile failed. See ${TYPST_SRC} and ${TEMP_WORK_DIR}/book_template.typ for details." >&2
+            echo "[!] PDF compilation failed. (EPUB and DOCX exports will still proceed)." >&2
+            echo "    Detailed compiler output saved to: ${TYPST_LOG}" >&2
+            echo "    Run 'arcanum doctor' to diagnose your template and compiler environment." >&2
             EXIT_STATUS=1
         fi
     else
         echo "[!] Typst not found. Skipping PDF generation." >&2
+        echo "    Install Typst (bash scripts/setup_arcanum.sh) or run 'arcanum doctor'." >&2
         EXIT_STATUS=1
     fi
 fi

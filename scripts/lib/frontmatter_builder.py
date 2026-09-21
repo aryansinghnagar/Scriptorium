@@ -25,8 +25,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
-import re
 import json
 import datetime
 import argparse
@@ -164,7 +162,7 @@ Connect with the author online:
 - *Echoes in Iron*
 """
 
-    discussion_questions = f"""# Discussion Questions for Book Clubs
+    discussion_questions = """# Discussion Questions for Book Clubs
 
 1. How did the opening status quo establish the protagonist's core internal flaw?
 2. What role did the secondary world setting play in shaping the moral choices of the characters?

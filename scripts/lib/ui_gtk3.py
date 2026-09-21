@@ -1132,7 +1132,7 @@ class ArcanumApp(Gtk.Window):
             # Apply world results
             self.discovered_worlds = discovered_worlds
             self.combo_world.remove_all()
-            for wname, wpath, label in discovered_worlds:
+            for _wname, wpath, label in discovered_worlds:
                 self.combo_world.append(wpath, label)
             if discovered_worlds:
                 self.combo_world.set_active(0)
@@ -1143,7 +1143,7 @@ class ArcanumApp(Gtk.Window):
             # Apply manuscript results
             self.discovered_manuscripts = discovered_manuscripts
             self.combo_manuscript.remove_all()
-            for mname, mpath, label in discovered_manuscripts:
+            for _mname, mpath, label in discovered_manuscripts:
                 self.combo_manuscript.append(mpath, label)
             if discovered_manuscripts:
                 self.combo_manuscript.set_active(0)
@@ -1154,6 +1154,7 @@ class ArcanumApp(Gtk.Window):
             self.update_active_world_display()
             self.update_active_manuscript_display()
             self.update_toolchain_badges()
+            self.check_first_run_wizard()
 
         GLib.idle_add(_apply)
 
@@ -1207,7 +1208,7 @@ class ArcanumApp(Gtk.Window):
                 if w.is_dir() and not w.name.startswith("."):
                     self.discovered_worlds.append((w.name, str(w), f"[Legacy] {w.name}"))
 
-        for wname, wpath, label in self.discovered_worlds:
+        for _wname, wpath, label in self.discovered_worlds:
             self.combo_world.append(wpath, label)
 
         if self.discovered_worlds:
@@ -1225,7 +1226,7 @@ class ArcanumApp(Gtk.Window):
                 if m.is_dir() and not m.name.startswith("."):
                     self.discovered_manuscripts.append((m.name, str(m), m.name))
 
-        for mname, mpath, label in self.discovered_manuscripts:
+        for _mname, mpath, label in self.discovered_manuscripts:
             self.combo_manuscript.append(mpath, label)
 
         if self.discovered_manuscripts:
@@ -1447,7 +1448,7 @@ class ArcanumApp(Gtk.Window):
             def _apply():
                 self.manuscript_store.clear()
                 iter_map: dict[str, object] = {}
-                for level, parent_key, key, item, type_, wc, filepath in rows:
+                for _level, parent_key, key, item, type_, wc, filepath in rows:
                     parent_iter = iter_map.get(parent_key) if parent_key else None
                     wc_str = f"{wc:,} words" if wc else ""
                     it = self.manuscript_store.append(parent_iter, [item, type_, wc_str, filepath])
@@ -1711,7 +1712,7 @@ class ArcanumApp(Gtk.Window):
         box.set_border_width(12)
         box.set_spacing(8)
 
-        lbl = Gtk.Label(label="Enter name for new Universe container (e.g., 'Cosmere', 'Solaris-Prime'):")
+        lbl = Gtk.Label(label="Enter name for new Universe container (e.g., 'Eldoria-Cosmos', 'Solaris-Prime'):")
         box.pack_start(lbl, False, False, 0)
 
         entry = Gtk.Entry()
@@ -1760,7 +1761,7 @@ class ArcanumApp(Gtk.Window):
 
                 def on_world_created():
                     self.refresh_all_discovery()
-                    for name, path, label in self.discovered_worlds:
+                    for name, path, _label in self.discovered_worlds:
                         if name == wname:
                             self.combo_world.set_active_id(path)
                             break
@@ -1798,7 +1799,7 @@ class ArcanumApp(Gtk.Window):
 
                 def on_ms_created():
                     self.refresh_all_discovery()
-                    for name, path, label in self.discovered_manuscripts:
+                    for name, path, _label in self.discovered_manuscripts:
                         if name == mname:
                             self.combo_manuscript.set_active_id(path)
                             break
@@ -2041,12 +2042,48 @@ class ArcanumApp(Gtk.Window):
         return scrolled, view.get_buffer()
 
     def _open_html_in_browser(self, filepath: str):
-        # OPT-05: webbrowser is imported at module level
         path_obj = Path(filepath).resolve()
         try:
             webbrowser.open(path_obj.as_uri())
         except Exception:
             self._launch_detached(["xdg-open", str(path_obj)])
+
+    def check_first_run_wizard(self):
+        if getattr(self, "_first_run_wizard_shown", False):
+            return
+        self._first_run_wizard_shown = True
+        has_projects = bool(self.discovered_worlds or self.discovered_manuscripts)
+        if not has_projects:
+            dialog = Gtk.Dialog(title="Welcome to Ars Arcanum", parent=self, flags=0)
+            dialog.set_default_size(520, 320)
+            box = dialog.get_content_area()
+            box.set_border_width(16)
+            box.set_spacing(12)
+
+            lbl_title = Gtk.Label()
+            lbl_title.set_markup("<span size='large' weight='bold'>Welcome to Ars Arcanum Studio!</span>")
+            lbl_title.set_xalign(0)
+            box.pack_start(lbl_title, False, False, 0)
+
+            lbl_desc = Gtk.Label(label="Ars Arcanum is your sovereign writing, worldbuilding, and publishing platform.\nHow would you like to begin?")
+            lbl_desc.set_xalign(0)
+            lbl_desc.set_line_wrap(True)
+            box.pack_start(lbl_desc, False, False, 0)
+
+            btn_demo = Gtk.Button(label="✨  Generate Sample Cosmos (Recommended)\nExplore a pre-configured fantasy cosmos with lore, characters & starter chapters")
+            btn_demo.get_style_context().add_class("suggested-action")
+            btn_demo.connect("clicked", lambda b: (dialog.response(Gtk.ResponseType.YES), dialog.destroy(), self.on_generate_demo_clicked(None)))
+            box.pack_start(btn_demo, False, False, 4)
+
+            btn_new = Gtk.Button(label="➕  Create Fresh Project\nStart a new blank Universe, World Lore Vault, or Manuscript")
+            btn_new.connect("clicked", lambda b: (dialog.response(Gtk.ResponseType.OK), dialog.destroy(), self.on_new_universe_clicked(None)))
+            box.pack_start(btn_new, False, False, 4)
+
+            btn_skip = Gtk.Button(label="Skip / Explore Interface")
+            btn_skip.connect("clicked", lambda b: (dialog.response(Gtk.ResponseType.CANCEL), dialog.destroy()))
+            box.pack_start(btn_skip, False, False, 4)
+
+            dialog.show_all()
 
 
     def _run_dialog_cmd(self, cmd, buffer_obj, status_msg="Running model..."):
@@ -2372,23 +2409,23 @@ class ArcanumApp(Gtk.Window):
         box.pack_start(scrolled, True, True, 0)
 
         def _do_gen():
-            l = entry_lang.get_text().strip() or "Solar Tongue"
-            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "generate", l, "-w", target_world, "-n", str(int(spin_n.get_value()))]
-            self._run_dialog_cmd(cmd, out_buf, f"Generating conlang words for '{l}'...")
+            lang_val = entry_lang.get_text().strip() or "Solar Tongue"
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "generate", lang_val, "-w", target_world, "-n", str(int(spin_n.get_value()))]
+            self._run_dialog_cmd(cmd, out_buf, f"Generating conlang words for '{lang_val}'...")
 
         def _do_mut():
-            l = entry_lang.get_text().strip() or "Solar Tongue"
+            lang_val = entry_lang.get_text().strip() or "Solar Tongue"
             r = entry_rule.get_text().strip() or "p>f"
             rules = [s.strip() for s in r.split(",") if s.strip()]
-            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "mutate", l, "Aethelgard", "-w", target_world]
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "mutate", lang_val, "Aethelgard", "-w", target_world]
             for rule in rules:
                 cmd.extend(["-r", rule])
-            self._run_dialog_cmd(cmd, out_buf, f"Mutating words for '{l}'...")
+            self._run_dialog_cmd(cmd, out_buf, f"Mutating words for '{lang_val}'...")
 
         def _do_lex():
-            l = entry_lang.get_text().strip() or "Solar Tongue"
-            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "lexicon", l, "-w", target_world]
-            self._run_dialog_cmd(cmd, out_buf, f"Fetching lexicon for '{l}'...")
+            lang_val = entry_lang.get_text().strip() or "Solar Tongue"
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "conlang.py"), "lexicon", lang_val, "-w", target_world]
+            self._run_dialog_cmd(cmd, out_buf, f"Fetching lexicon for '{lang_val}'...")
 
         btn_gen.connect("clicked", lambda b: _do_gen())
         btn_mut.connect("clicked", lambda b: _do_mut())
@@ -2826,9 +2863,9 @@ class ArcanumApp(Gtk.Window):
         def _do_calc():
             page_idx = notebook.get_current_page()
             if page_idx == 0:
-                l = str(spin_lum.get_value())
-                r = str(spin_orb.get_value())
-                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "climate.py"), "--star-lum", l, "--distance-au", r]
+                lum_val = str(spin_lum.get_value())
+                orb_val = str(spin_orb.get_value())
+                cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "climate.py"), "--star-lum", lum_val, "--distance-au", orb_val]
                 self._run_dialog_cmd(cmd, out_buf, "Calculating planetary climate...")
             else:
                 cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "ecology.py"), "check", target_world]
@@ -2837,9 +2874,9 @@ class ArcanumApp(Gtk.Window):
         def _do_html():
             page_idx = notebook.get_current_page()
             if page_idx == 0:
-                l = str(spin_lum.get_value())
-                r = str(spin_orb.get_value())
-                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "climate.py"), "--star-lum", l, "--distance-au", r]
+                lum_val = str(spin_lum.get_value())
+                orb_val = str(spin_orb.get_value())
+                base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "climate.py"), "--star-lum", lum_val, "--distance-au", orb_val]
                 self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Climate report...")
             else:
                 base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "ecology.py"), "check", target_world]
@@ -3112,7 +3149,7 @@ class ArcanumApp(Gtk.Window):
 
 
     def on_generate_demo_clicked(self, btn):
-        demo_uni = "Cosmere-Prime"
+        demo_uni = "Eldoria-Cosmos"
         demo_world = "Chronicles-of-Eldoria"
         demo_ms = "The-Sovereign-Scroll"
         self.set_status("Scaffolding demo cosmos and manuscript...")

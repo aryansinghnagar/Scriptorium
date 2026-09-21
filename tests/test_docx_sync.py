@@ -8,7 +8,6 @@ import sys
 import tempfile
 import unittest
 import zipfile
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 # Add scripts directory to path
@@ -17,7 +16,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "scripts" / "lib"))
 
 from lib.config import (
-    DOCX_PRESETS, get_docx_config, set_docx_preset, set_docx_option,
+    get_docx_config, set_docx_preset, set_docx_option,
     get_active_docx_preset_name, list_docx_presets
 )
 from lib.docx_sync import (

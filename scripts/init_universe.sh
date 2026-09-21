@@ -77,7 +77,7 @@ if [ -z "${UNIVERSE_NAME}" ]; then
     if has_gui; then
         UNIVERSE_NAME=$(zenity --entry \
             --title="Ars Arcanum — New Universe Creator" \
-            --text="Enter the name for your narrative Universe:\n(e.g., 'Cosmere', 'Solaris-Prime', 'High-Fantasy-Multiverse')" \
+            --text="Enter the name for your narrative Universe:\n(e.g., 'Eldoria-Cosmos', 'Solaris-Prime', 'High-Fantasy-Multiverse')" \
             --entry-text="Default-Universe" || true)
     fi
 fi

@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 import re
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 try:
     from lib.fs_utils import atomic_write
@@ -40,7 +40,7 @@ def clean_wikilinks(text: Any) -> str:
     return text.strip()
 
 
-def parse_frontmatter_and_body(file_path: Path) -> Tuple[Dict[str, Any], str]:
+def parse_frontmatter_and_body(file_path: Path) -> tuple[dict[str, Any], str]:
     try:
         content = file_path.read_text(encoding="utf-8", errors="ignore")
     except Exception:
@@ -48,7 +48,7 @@ def parse_frontmatter_and_body(file_path: Path) -> Tuple[Dict[str, Any], str]:
     lines = content.splitlines()
     if not lines or lines[0].strip() != FRONTMATTER_DELIM:
         return {}, content
-    fm: Dict[str, Any] = {}
+    fm: dict[str, Any] = {}
     i = 1
     n = len(lines)
     while i < n and lines[i].strip() != FRONTMATTER_DELIM:
@@ -90,9 +90,8 @@ def extract_summary_or_quote(body: str) -> str:
     quote = ""
     for line in lines:
         s = line.strip()
-        if s.startswith(">"):
-            if not quote:
-                quote = clean_wikilinks(s.lstrip(">").strip().strip('*').strip('"'))
+        if s.startswith(">") and not quote:
+            quote = clean_wikilinks(s.lstrip(">").strip().strip('*').strip('"'))
         if re.match(r"^##\s+.*(Summary|Overview|Description)", s, re.IGNORECASE):
             in_summary = True
             continue
@@ -110,32 +109,30 @@ def extract_summary_or_quote(body: str) -> str:
     return quote
 
 
-def is_template(path: Path, fm: Dict[str, Any]) -> bool:
+def is_template(path: Path, fm: dict[str, Any]) -> bool:
     if "Template" in path.name or "template" in path.name or "Templates" in path.parts:
         return True
     name = str(fm.get("name", ""))
-    if "<%" in name:
-        return True
-    return False
+    return "<%" in name
 
 
-def build_dramatis_personae_markdown(characters: List[Dict[str, Any]]) -> str:
+def build_dramatis_personae_markdown(characters: list[dict[str, Any]]) -> str:
     dp_md = [
         "# Dramatis Personae\n",
         "A comprehensive register of key individuals, allies, rivals, and figures encountered throughout the narrative.\n"
     ]
 
-    def is_antagonist(c: Dict[str, Any]) -> bool:
+    def is_antagonist(c: dict[str, Any]) -> bool:
         return bool(re.search(r'antagonist|villain|rival|nemesis', c.get('role', ''), re.IGNORECASE))
 
-    def is_protagonist(c: Dict[str, Any]) -> bool:
+    def is_protagonist(c: dict[str, Any]) -> bool:
         return bool(re.search(r'protagonist|major|lead', c.get('role', ''), re.IGNORECASE))
 
     antagonists = [c for c in characters if is_antagonist(c)]
     protagonists = [c for c in characters if is_protagonist(c) and not is_antagonist(c)]
     supporting = [c for c in characters if not is_protagonist(c) and not is_antagonist(c)]
 
-    def format_character_block(c: Dict[str, Any]) -> str:
+    def format_character_block(c: dict[str, Any]) -> str:
         lines = []
         alias_str = f" (*{', '.join(c['aliases'])}*)" if c.get('aliases') else ""
         meta_parts = []
@@ -185,11 +182,11 @@ def build_dramatis_personae_markdown(characters: List[Dict[str, Any]]) -> str:
 
 
 def build_glossary_markdown(
-    factions: List[Dict[str, Any]],
-    artifacts: List[Dict[str, Any]],
-    magic_systems: List[Dict[str, Any]],
-    creatures: List[Dict[str, Any]],
-    languages: List[Dict[str, Any]],
+    factions: list[dict[str, Any]],
+    artifacts: list[dict[str, Any]],
+    magic_systems: list[dict[str, Any]],
+    creatures: list[dict[str, Any]],
+    languages: list[dict[str, Any]],
 ) -> str:
     gc_md = [
         "# Glossary & Concordance\n",
@@ -200,9 +197,12 @@ def build_glossary_markdown(
         gc_md.append("## Factions & Sovereign Powers\n")
         for f in sorted(factions, key=lambda x: str(x['name'])):
             details = []
-            if f.get('type'): details.append(f['type'])
-            if f.get('leader'): details.append(f"Led by {f['leader']}")
-            if f.get('headquarters'): details.append(f"Seat: {f['headquarters']}")
+            if f.get('type'):
+                details.append(f['type'])
+            if f.get('leader'):
+                details.append(f"Led by {f['leader']}")
+            if f.get('headquarters'):
+                details.append(f"Seat: {f['headquarters']}")
             d_str = f" (*{', '.join(details)}*)" if details else ""
             m_str = f" Motto: *\"{f['motto']}\"*." if f.get('motto') else ""
             gc_md.append(f"- **{f['name']}**{d_str}:{m_str}")
@@ -215,10 +215,14 @@ def build_glossary_markdown(
         gc_md.append("## Legendary Artifacts & Relics\n")
         for a in sorted(artifacts, key=lambda x: str(x['name'])):
             details = []
-            if a.get('type'): details.append(a['type'])
-            if a.get('rarity'): details.append(a['rarity'])
-            if a.get('bearer'): details.append(f"Bearer: {a['bearer']}")
-            if a.get('creator'): details.append(f"Forged by {a['creator']}")
+            if a.get('type'):
+                details.append(a['type'])
+            if a.get('rarity'):
+                details.append(a['rarity'])
+            if a.get('bearer'):
+                details.append(f"Bearer: {a['bearer']}")
+            if a.get('creator'):
+                details.append(f"Forged by {a['creator']}")
             d_str = f" (*{', '.join(details)}*)" if details else ""
             gc_md.append(f"- **{a['name']}**{d_str}:")
             if a.get('summary'):
@@ -230,9 +234,12 @@ def build_glossary_markdown(
         gc_md.append("## Magic & Arcane Disciplines\n")
         for m in sorted(magic_systems, key=lambda x: str(x['name'])):
             details = []
-            if m.get('classification'): details.append(m['classification'])
-            if m.get('source'): details.append(f"Source: {m['source']}")
-            if m.get('danger'): details.append(f"Cost: {m['danger']}")
+            if m.get('classification'):
+                details.append(m['classification'])
+            if m.get('source'):
+                details.append(f"Source: {m['source']}")
+            if m.get('danger'):
+                details.append(f"Cost: {m['danger']}")
             d_str = f" (*{', '.join(details)}*)" if details else ""
             gc_md.append(f"- **{m['name']}**{d_str}:")
             if m.get('summary'):
@@ -244,9 +251,12 @@ def build_glossary_markdown(
         gc_md.append("## Bestiary & Ecological Hazards\n")
         for cr in sorted(creatures, key=lambda x: str(x['name'])):
             details = []
-            if cr.get('classification'): details.append(cr['classification'])
-            if cr.get('threat'): details.append(f"Threat: {cr['threat']}")
-            if cr.get('habitat'): details.append(f"Habitat: {cr['habitat']}")
+            if cr.get('classification'):
+                details.append(cr['classification'])
+            if cr.get('threat'):
+                details.append(f"Threat: {cr['threat']}")
+            if cr.get('habitat'):
+                details.append(f"Habitat: {cr['habitat']}")
             d_str = f" (*{', '.join(details)}*)" if details else ""
             gc_md.append(f"- **{cr['name']}**{d_str}:")
             if cr.get('summary'):
@@ -258,10 +268,14 @@ def build_glossary_markdown(
         gc_md.append("## Linguistics & Conlang Lexicon\n")
         for lang in sorted(languages, key=lambda x: str(x['name'])):
             meta = []
-            if lang.get('family'): meta.append(f"Family: {lang['family']}")
-            if lang.get('spoken_by'): meta.append(f"Spoken by: {lang['spoken_by']}")
-            if lang.get('status'): meta.append(f"Status: {lang['status']}")
-            if lang.get('writing'): meta.append(f"Script: {lang['writing']}")
+            if lang.get('family'):
+                meta.append(f"Family: {lang['family']}")
+            if lang.get('spoken_by'):
+                meta.append(f"Spoken by: {lang['spoken_by']}")
+            if lang.get('status'):
+                meta.append(f"Status: {lang['status']}")
+            if lang.get('writing'):
+                meta.append(f"Script: {lang['writing']}")
             gc_md.append(f"### {lang['name']}\n")
             if meta:
                 gc_md.append(f"*{' | '.join(meta)}*\n")
@@ -284,7 +298,7 @@ def generate_concordance(
     bible_dir: Path,
     ms_dir: Path,
     target_book: str = "all",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Parse World Bible lore and compile back-matter files for target manuscript volume(s)."""
     bible_path = Path(bible_dir).resolve()
     ms_path = Path(ms_dir).resolve()
@@ -293,7 +307,7 @@ def generate_concordance(
         raise FileNotFoundError(f"World Bible directory not found: {bible_dir}")
 
     # 1. Characters
-    characters: List[Dict[str, Any]] = []
+    characters: list[dict[str, Any]] = []
     char_dir = bible_path / "Characters"
     if char_dir.is_dir():
         for f in sorted(char_dir.rglob("*.md")):
@@ -318,7 +332,7 @@ def generate_concordance(
                 })
 
     # 2. Factions
-    factions: List[Dict[str, Any]] = []
+    factions: list[dict[str, Any]] = []
     fac_dir = bible_path / "Factions"
     if fac_dir.is_dir():
         for f in sorted(fac_dir.rglob("*.md")):
@@ -336,7 +350,7 @@ def generate_concordance(
                 })
 
     # 3. Artifacts
-    artifacts: List[Dict[str, Any]] = []
+    artifacts: list[dict[str, Any]] = []
     art_dir = bible_path / "Artifacts"
     if art_dir.is_dir():
         for f in sorted(art_dir.rglob("*.md")):
@@ -354,7 +368,7 @@ def generate_concordance(
                 })
 
     # 4. Bestiary
-    creatures: List[Dict[str, Any]] = []
+    creatures: list[dict[str, Any]] = []
     best_dir = bible_path / "Bestiary"
     if best_dir.is_dir():
         for f in sorted(best_dir.rglob("*.md")):
@@ -371,7 +385,7 @@ def generate_concordance(
                 })
 
     # 5. Magic Systems
-    magic_systems: List[Dict[str, Any]] = []
+    magic_systems: list[dict[str, Any]] = []
     magic_dir = bible_path / "Magic-Technology"
     if magic_dir.is_dir():
         for f in sorted(magic_dir.rglob("*.md")):
@@ -388,7 +402,7 @@ def generate_concordance(
                 })
 
     # 6. Languages
-    languages: List[Dict[str, Any]] = []
+    languages: list[dict[str, Any]] = []
     lang_dir = bible_path / "Languages"
     if lang_dir.is_dir():
         for f in sorted(lang_dir.rglob("*.md")):
@@ -433,7 +447,7 @@ def generate_concordance(
             bdir.mkdir(parents=True, exist_ok=True)
             books_to_target.append(bdir)
 
-    generated_files: List[Path] = []
+    generated_files: list[Path] = []
     for bdir in books_to_target:
         bm_dir = bdir / "04_Back_Matter"
         bm_dir.mkdir(parents=True, exist_ok=True)
@@ -457,7 +471,7 @@ def generate_concordance(
     }
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Ars Arcanum Concordance Generator — Dramatis Personae and Glossary Back-Matter",
         prog="concordance",
@@ -485,10 +499,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if not ms_dir:
         w_path = Path(world_dir)
-        if (w_path / "01-Manuscript").is_dir():
-            ms_dir = str(w_path / "01-Manuscript")
-        else:
-            ms_dir = str(w_path)
+        ms_dir = str(w_path / "01-Manuscript") if (w_path / "01-Manuscript").is_dir() else str(w_path)
 
     try:
         res = generate_concordance(

@@ -25,8 +25,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
-import math
 import json
 import html
 import argparse
@@ -368,7 +366,7 @@ def main():
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print(f"\n\033[1;36m=== Ars Arcanum Planetary Climate & Biome Model ===\033[0m")
+        print("\n\033[1;36m=== Ars Arcanum Planetary Climate & Biome Model ===\033[0m")
         print(f"Stellar Insolation : \033[1m{ins['stellar_flux_w_m2']} W/m²\033[0m ({args.star_lum} L_sun @ {args.distance_au} AU)")
         print(f"Mean Surface Temp  : \033[1;32m{ins['surface_temp_c']} °C\033[0m ({ins['surface_temp_f']} °F) — Habitable: {ins['liquid_water_habitable']}")
         print(f"Atmosphere         : {circ['circulation_cells_per_hemisphere']} circulation cells per hemisphere ({circ['coriolis_effect']} Coriolis)")

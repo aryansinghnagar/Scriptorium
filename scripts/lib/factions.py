@@ -29,7 +29,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import math
 import json
@@ -208,7 +207,7 @@ def extract_faction_profiles(world_dir: Path) -> dict:
 def audit_faction_diplomacy(factions: dict) -> list:
     """Detects diplomatic paradoxes and asymmetric alliances across factions."""
     findings = []
-    norm_map = {normalize_name(k): k for k in factions.keys()}
+    norm_map = {normalize_name(k): k for k in factions}
 
     for fname, f_info in factions.items():
         fn_norm = normalize_name(fname)
@@ -778,7 +777,7 @@ def main():
         if getattr(args, "json", False):
             print(json.dumps(audit_data, indent=2))
         else:
-            print(f"\n\033[1;36m=== Ars Arcanum Geopolitical Faction Matrix ===\033[0m")
+            print("\n\033[1;36m=== Ars Arcanum Geopolitical Faction Matrix ===\033[0m")
             print(f"World: \033[1m{world_path.name}\033[0m | Total Factions: \033[32m{len(factions)}\033[0m")
             print(f"Diplomatic Paradoxes / Issues: \033[1m{len(findings)}\033[0m\n")
 
@@ -851,7 +850,7 @@ def main():
             req = result["logistics_requirements"]
             param = result["campaign_parameters"]
 
-            print(f"\n\033[1;36m=== Military Campaign Logistics & Supply Calculator ===\033[0m")
+            print("\n\033[1;36m=== Military Campaign Logistics & Supply Calculator ===\033[0m")
             print(f"Personnel      : {comp['total_personnel']:,} ({comp['infantry']:,} inf, {comp['cavalry']:,} cav, {comp['support']:,} support)")
             print(f"Campaign March : {param['distance_km']} km @ {param['march_speed_km_day']} km/day ({param['duration_days_one_way']} days one-way)")
             print(f"Daily Demand   : {cons['food_kg']:,} kg food, {cons['water_liters']:,} L water, {cons['cavalry_fodder_kg']:,} kg fodder ({cons['total_daily_supply_tons']} metric tons/day)")

@@ -27,8 +27,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
-import re
 import json
 import math
 import html
@@ -323,7 +321,7 @@ def main():
         if args.json:
             print(json.dumps(journey, indent=2))
         else:
-            print(f"\n\033[1;33m=== Ars Arcanum Overland & Expedition Route Plan ===\033[0m")
+            print("\n\033[1;33m=== Ars Arcanum Overland & Expedition Route Plan ===\033[0m")
             print(f"Total Distance: \033[1;36m{journey['distance_km']} km\033[0m | Terrain: \033[32m{journey['terrain']}\033[0m (Speed Factor: {journey['terrain_modifier']}x)")
             print(f"Travel Mode: \033[1m{journey['travel_mode']}\033[0m (Effective Pace: \033[32m{journey['effective_speed_km_day']} km/day\033[0m)")
             print(f"Estimated Duration: \033[1;35m{journey['total_days_formatted']}\033[0m\n")

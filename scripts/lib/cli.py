@@ -5,12 +5,9 @@ Ars Arcanum Unified Python CLI Dispatcher (scripts/lib/cli.py)
 Provides modular command parsing and delegation to core and craft engines.
 """
 
-import argparse
 import importlib
-import os
 from pathlib import Path
 import sys
-from typing import List, Optional
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -79,7 +76,7 @@ Usage:
     print(banner)
 
 
-def dispatch_subcommand(module_name: str, argv: List[str]) -> int:
+def dispatch_subcommand(module_name: str, argv: list[str]) -> int:
     """Dynamically load module and run its main() function."""
     try:
         mod = importlib.import_module(module_name)
@@ -93,8 +90,8 @@ def dispatch_subcommand(module_name: str, argv: List[str]) -> int:
         return 1
 
 
-def handle_engines_command(argv: List[str]) -> int:
-    from lib.registry import get_core_engines, get_craft_engines, list_engines, EngineCategory
+def handle_engines_command(argv: list[str]) -> int:
+    from lib.registry import list_engines, EngineCategory
     category = None
     if "--core" in argv:
         category = EngineCategory.CORE
@@ -111,7 +108,7 @@ def handle_engines_command(argv: List[str]) -> int:
     return 0
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 

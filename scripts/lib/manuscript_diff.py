@@ -13,7 +13,6 @@ Generates:
 100% offline, privacy-respecting, zero-telemetry, and accessible.
 """
 
-import os
 import sys
 import re
 import json
@@ -22,7 +21,7 @@ import difflib
 import argparse
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Tuple, Any, Optional
+from typing import Any
 
 try:
     from lib.fs_utils import atomic_write
@@ -70,12 +69,12 @@ def strip_nw_metadata(text: str) -> str:
     return "\n".join(filtered)
 
 
-def tokenize_words(text: str) -> List[str]:
+def tokenize_words(text: str) -> list[str]:
     """Splits text into words, whitespace, and punctuation tokens preserving full structure."""
     return TOKEN_REGEX.findall(text)
 
 
-def compute_word_diff(tokens_a: List[str], tokens_b: List[str]) -> Tuple[List[Dict[str, Any]], int, int]:
+def compute_word_diff(tokens_a: list[str], tokens_b: list[str]) -> tuple[list[dict[str, Any]], int, int]:
     """
     Computes word-level diff using difflib.SequenceMatcher.
     Returns:
@@ -112,7 +111,7 @@ def compute_word_diff(tokens_a: List[str], tokens_b: List[str]) -> Tuple[List[Di
     return chunks, added_words, deleted_words
 
 
-def discover_draft_files(draft_dir: Path) -> List[Path]:
+def discover_draft_files(draft_dir: Path) -> list[Path]:
     """Finds and sorts all markdown files in a draft directory."""
     if not draft_dir.is_dir():
         return []
@@ -149,10 +148,10 @@ class ManuscriptComparator:
         self.path_b = path_b
         self.label_a = label_a
         self.label_b = label_b
-        self.chapters: List[Dict[str, Any]] = []
-        self.summary: Dict[str, Any] = {}
+        self.chapters: list[dict[str, Any]] = []
+        self.summary: dict[str, Any] = {}
 
-    def compare(self) -> Dict[str, Any]:
+    def compare(self) -> dict[str, Any]:
         """Performs full comparison across all chapters/files."""
         if self.path_a.is_file() and self.path_b.is_file():
             self._compare_single_files(self.path_a, self.path_b)
@@ -214,7 +213,7 @@ class ManuscriptComparator:
             chap_data = self._diff_prose(content_a, content_b, title, str(rel_path))
             self.chapters.append(chap_data)
 
-    def _diff_prose(self, raw_a: str, raw_b: str, title: str, rel_path: str) -> Dict[str, Any]:
+    def _diff_prose(self, raw_a: str, raw_b: str, title: str, rel_path: str) -> dict[str, Any]:
         clean_a = strip_nw_metadata(raw_a)
         clean_b = strip_nw_metadata(raw_b)
 

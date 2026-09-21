@@ -6,7 +6,6 @@ Unit and integration tests for Ars Arcanum Threat Model & Security Posture (test
 import unittest
 from pathlib import Path
 import re
-import sys
 
 REPO_ROOT = Path(__file__).parent.parent
 LIB_DIR = REPO_ROOT / "scripts" / "lib"

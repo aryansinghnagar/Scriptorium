@@ -16,7 +16,6 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from lib.magic_system import (
     extract_magic_profiles,
     extract_character_magic_profiles,
-    scan_scene_magic_constraints,
     run_magic_audit,
     generate_magic_html_report,
 )

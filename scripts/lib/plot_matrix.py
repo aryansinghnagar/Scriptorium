@@ -23,7 +23,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -348,7 +347,6 @@ def main():
     print(f"Total Chapters: {report['total_chapters']} | Narrative Tracks: {report['total_tracks']}")
     print("-" * 65)
     for t, meta in sorted(report["tracks"].items()):
-        ch_str = ", ".join(f"Ch{c}" for c in meta["chapters"])
         print(f"📌 {t:<22} | {meta['occurrences']:>2} scenes | Range: Ch {meta['first_chapter']}..{meta['last_chapter']} | Status: {meta['status']}")
 
     if report["abandoned_tracks"]:

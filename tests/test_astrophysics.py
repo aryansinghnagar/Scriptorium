@@ -5,7 +5,6 @@ Covers Brachistochrone trajectories, Lorentz factors, time dilation, Hohmann tra
 and planetary habitability / surface gravity calculations.
 """
 
-import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from lib.astrophysics import (
-    C, G0, AU, LIGHT_YEAR, SOLAR_MASS, EARTH_MASS, EARTH_RADIUS,
+    G0, AU, LIGHT_YEAR, EARTH_MASS, EARTH_RADIUS,
     parse_distance, parse_acceleration, format_duration, format_distance,
     calc_brachistochrone, calc_time_dilation, calc_orbital_transfer,
     calc_comms_delay, calc_habitability_gravity, generate_astrophysics_html_report

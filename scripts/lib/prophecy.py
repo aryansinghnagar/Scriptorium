@@ -24,7 +24,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -224,7 +223,6 @@ def audit_prophecy_resolution(prophecies: dict, manuscript_dir: Path = None, wor
     for pname, pinfo in prophecies.items():
         pname_norm = normalize_name(pname)
         status = pinfo["status"]
-        clauses = pinfo["clauses"]
         target = pinfo.get("target_entity", "")
         target_norm = normalize_name(target)
 
@@ -273,7 +271,6 @@ def generate_prophecy_mermaid(prophecies: dict) -> str:
     lines.append("    %% Prophecy Lifecycle State Matrix")
     for pname, pinfo in sorted(prophecies.items()):
         safe_name = pname.replace('"', "'").replace(" ", "_")
-        status = pinfo["status"].upper()
         lines.append(f"    [*] --> {safe_name}_Uttered : Uttered by {pinfo['oracle']}")
         if "fulfilled" in pinfo["status"]:
             lines.append(f"    {safe_name}_Uttered --> {safe_name}_Fulfilled : Criteria Met")
@@ -500,7 +497,7 @@ def main():
     if getattr(args, "json", False):
         print(json.dumps(audit_data, indent=2))
     else:
-        print(f"\n\033[1;35m=== Ars Arcanum Prophecy Resolution Matrix ===\033[0m")
+        print("\n\033[1;35m=== Ars Arcanum Prophecy Resolution Matrix ===\033[0m")
         print(f"World: \033[1m{world_path.name}\033[0m | Manuscript: \033[1m{ms_path.name if ms_path else 'N/A'}\033[0m")
         print(f"Prophecies Tracked: \033[32m{len(prophecies)}\033[0m | Findings: \033[1m{len(findings)}\033[0m\n")
 

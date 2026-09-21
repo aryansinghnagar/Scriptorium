@@ -11,10 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from lib.registry import (
     EngineCategory,
-    EngineSpec,
     get_registry,
     get_engine,
-    list_engines,
     get_core_engines,
     get_craft_engines,
     is_engine_enabled,

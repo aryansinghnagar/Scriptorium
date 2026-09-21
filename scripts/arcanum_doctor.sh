@@ -89,6 +89,7 @@ findings = {
     "toolchain": {},
     "workspace": {},
     "worlds": [],
+    "manuscripts": [],
     "backups": [],
     "summary": {"errors": 0, "warnings": 0, "status": "healthy"}
 }
@@ -164,6 +165,28 @@ def check_tool(bin_name, version_cmd=None, required=True):
 findings["toolchain"]["git"] = check_tool("git", ["git", "--version"], required=True)
 findings["toolchain"]["pandoc"] = check_tool("pandoc", ["pandoc", "--version"], required=True)
 findings["toolchain"]["typst"] = check_tool("typst", ["typst", "--version"], required=False)
+if findings["toolchain"]["typst"]["installed"]:
+    sample_path = os.path.join(PROJECT_ROOT, "templates", "typst", "preview_sample.typ")
+    if os.path.isfile(sample_path):
+        import tempfile
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                out_pdf = os.path.join(td, "test.pdf")
+                res = subprocess.run(
+                    ["typst", "compile", sample_path, out_pdf],
+                    capture_output=True,
+                    timeout=10,
+                    cwd=os.path.dirname(sample_path)
+                )
+                if res.returncode == 0:
+                    findings["toolchain"]["typst"]["compile_check"] = "passed"
+                else:
+                    findings["toolchain"]["typst"]["compile_check"] = "failed"
+                    err_msg = res.stderr.decode("utf-8", "ignore").strip()
+                    findings["toolchain"]["typst"]["version"] += f" (COMPILE FAILED: {err_msg})"
+                    findings["summary"]["errors"] += 1
+        except Exception as e:
+            findings["toolchain"]["typst"]["compile_check"] = "error"
 findings["toolchain"]["python3"] = check_tool("python3", ["python3", "--version"], required=True)
 findings["toolchain"]["zenity"] = check_tool("zenity", ["zenity", "--version"], required=False)
 findings["toolchain"]["focuswriter"] = check_tool("focuswriter", ["focuswriter", "--version"], required=False)
@@ -227,7 +250,7 @@ findings["workspace"] = {
 
 # 4. WORLDS & MANUSCRIPTS & BACKUPS DIAGNOSTICS
 discovered_worlds = []
-universes_base = os.path.expanduser("~/Universes")
+universes_base = os.path.expanduser(UNIVERSES_BASE)
 if os.path.isdir(universes_base):
     for u in sorted(os.listdir(universes_base)):
         u_dir = os.path.join(universes_base, u)
@@ -245,18 +268,19 @@ if os.path.isdir(universes_base):
                     if os.path.isdir(full) and not w.startswith(".") and full not in discovered_worlds:
                         discovered_worlds.append(full)
 
-manuscripts_base = os.path.expanduser("~/Manuscripts")
-if os.path.isdir(manuscripts_base):
-    for m in sorted(os.listdir(manuscripts_base)):
-        full = os.path.join(manuscripts_base, m)
-        if os.path.isdir(full) and not m.startswith(".") and full not in discovered_worlds:
-            discovered_worlds.append(full)
-
 if os.path.isdir(WORLDS_BASE):
     for d in sorted(os.listdir(WORLDS_BASE)):
         full = os.path.join(WORLDS_BASE, d)
         if os.path.isdir(full) and not d.startswith(".") and full not in discovered_worlds:
             discovered_worlds.append(full)
+
+discovered_manuscripts = []
+manuscripts_base = os.path.expanduser(MANUSCRIPTS_BASE)
+if os.path.isdir(manuscripts_base):
+    for m in sorted(os.listdir(manuscripts_base)):
+        full = os.path.join(manuscripts_base, m)
+        if os.path.isdir(full) and not m.startswith("."):
+            discovered_manuscripts.append(full)
 
 target_worlds = []
 if WORLD_FILTER:
@@ -343,6 +367,44 @@ for wdir in target_worlds:
     }
     findings["worlds"].append(world_info)
 
+# Process manuscripts
+target_manuscripts = []
+if MANUSCRIPT_FILTER:
+    if os.path.isdir(MANUSCRIPT_FILTER):
+        target_manuscripts = [MANUSCRIPT_FILTER]
+    else:
+        matched = [m for m in discovered_manuscripts if os.path.basename(m) == MANUSCRIPT_FILTER]
+        target_manuscripts = matched if matched else [os.path.join(MANUSCRIPTS_BASE, MANUSCRIPT_FILTER)]
+elif discovered_manuscripts:
+    target_manuscripts = discovered_manuscripts
+
+for mdir in target_manuscripts:
+    mname = os.path.basename(mdir)
+    if not os.path.isdir(mdir):
+        findings["manuscripts"].append({"manuscript": mname, "status": "not_found", "path": mdir})
+        continue
+
+    git_commits = 0
+    git_clean = True
+    if os.path.isdir(os.path.join(mdir, ".git")):
+        try:
+            git_commits = int(subprocess.check_output(["git", "-C", mdir, "rev-list", "--count", "HEAD"], stderr=subprocess.DEVNULL).decode().strip())
+            status_out = subprocess.check_output(["git", "-C", mdir, "status", "--porcelain"], stderr=subprocess.DEVNULL).decode().strip()
+            git_clean = (len(status_out) == 0)
+        except Exception:
+            pass
+
+    volumes = [v for v in sorted(os.listdir(mdir)) if (v.startswith("Book-") or v.startswith("Volume-")) and os.path.isdir(os.path.join(mdir, v))]
+
+    findings["manuscripts"].append({
+        "manuscript": mname,
+        "path": mdir,
+        "volumes": volumes,
+        "git_initialized": os.path.isdir(os.path.join(mdir, ".git")),
+        "git_snapshots_count": git_commits,
+        "git_clean": git_clean,
+    })
+
 # Status summary
 if findings["summary"]["errors"] > 0:
     findings["summary"]["status"] = "issues_detected"
@@ -375,7 +437,8 @@ else:
         print("\nWorld Status:")
         for w in findings["worlds"]:
             print(f"  • World: {w['world']}")
-            print(f"    - Git Snapshots: {w['git_snapshots_count']} (Working tree clean: {w['git_clean']})")
+            unsaved = "None" if w.get("git_clean", True) else "Detected"
+            print(f"    - Snapshots: {w['git_snapshots_count']} (Unsaved changes: {unsaved})")
             print(f"    - Standalone Backups: {w['backup_count']}")
             if w.get("doctor") and "notes" in w["doctor"]:
                 print(f"    - Lore Notes Scanned: {w['doctor']['notes']}")
@@ -383,7 +446,16 @@ else:
                 dangling = len(w["doctor"].get("dangling_frontmatter_refs", []))
                 orphans = len(w["doctor"].get("orphans", []))
                 ms_drift = len(w["doctor"].get("manuscript_name_drift", []))
-                print(f"    - Lore & Manuscript Consistency: {broken} broken links, {dangling} dangling refs, {orphans} orphans, {ms_drift} manuscript drift")
+                print(f"    - Lore Consistency: {broken} broken links, {dangling} dangling refs, {orphans} orphans, {ms_drift} manuscript drift")
+
+    if findings["manuscripts"]:
+        print("\nManuscript Status:")
+        for m in findings["manuscripts"]:
+            print(f"  • Manuscript: {m['manuscript']}")
+            unsaved = "None" if m.get("git_clean", True) else "Detected"
+            vols_str = ", ".join(m["volumes"]) if m["volumes"] else "None"
+            print(f"    - Volumes: {vols_str}")
+            print(f"    - Snapshots: {m['git_snapshots_count']} (Unsaved changes: {unsaved})")
 
     print("\n============================================================")
     print(f"Diagnostic Result: {findings['summary']['status'].upper()} ({findings['summary']['errors']} errors, {findings['summary']['warnings']} warnings)")

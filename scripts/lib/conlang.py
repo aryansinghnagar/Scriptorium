@@ -22,7 +22,6 @@ Zero external runtime dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import csv
 import json
@@ -290,10 +289,7 @@ def compile_sound_rule(rule_str: str, vowels: list, consonants: list):
         if not e_str:
             return ""
         s = e_str
-        if is_left:
-            s = s.replace("#", "^")
-        else:
-            s = s.replace("#", "$")
+        s = s.replace("#", "^") if is_left else s.replace("#", "$")
         s = re.sub(r"(?<!\\)V", f"(?:{v_set})", s)
         s = re.sub(r"(?<!\\)C", f"(?:{c_set})", s)
         def _repl_b(m):
@@ -491,8 +487,8 @@ def main():
             elif args.json:
                 print(json.dumps({"language": profile["name"], "count": len(lex), "lexicon": lex}, indent=2))
             elif args.markdown:
-                print(f"\n| Foreign Word | Part of Speech | Pronunciation | English Translation | Cultural Connotation |")
-                print(f"| :--- | :--- | :--- | :--- | :--- |")
+                print("\n| Foreign Word | Part of Speech | Pronunciation | English Translation | Cultural Connotation |")
+                print("| :--- | :--- | :--- | :--- | :--- |")
                 for e in lex:
                     print(f"| *{e['word']}* | {e['pos']} | {e['ipa']} | {e['translation']} | {e['connotation']} |")
             else:

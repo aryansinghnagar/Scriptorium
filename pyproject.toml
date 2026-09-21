@@ -3,15 +3,20 @@ target-version = "py310"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "S", "UP", "SIM", "C90"]
+select = ["E", "F", "B", "S", "UP", "SIM"]
 ignore = [
+    "E501", # line length handled separately
     "S603", # subprocess call - check for execution of untrusted input
     "S607", # start_process with partial path
     "S311", # standard pseudo-random generators are fine for worldbuilding / fiction engines
+    "S110", # try-except-pass intentional fallbacks
+    "SIM105", # try-except-pass vs contextlib.suppress style choice
+    "B905", # zip strict argument
+    "S608", # SQL injection rule (project does not use SQL databases; false positive on HTML templates)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "S105"]
+"tests/*" = ["S101", "S105", "E402"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25

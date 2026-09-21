@@ -15,33 +15,33 @@ TEST_DIR="$(mktemp -d)"
 trap 'rm -rf "${TEST_DIR}"' EXIT
 
 export HOME="${TEST_DIR}/home"
-WORLD_DIR="${HOME}/Universes/Cosmere/Roshar"
-MS_DIR="${HOME}/Manuscripts/Stormlight"
+WORLD_DIR="${HOME}/Universes/Eldoria-Cosmos/Aetheria"
+MS_DIR="${HOME}/Manuscripts/Chronicles-of-Eldoria"
 
 mkdir -p "${WORLD_DIR}/Characters"
 mkdir -p "${MS_DIR}/Book-01/01_Act_I"
 mkdir -p "${MS_DIR}/Book-02/01_Act_I"
 
 # Baseline World Bible Lore Note
-cat << 'EOF' > "${WORLD_DIR}/Characters/Kaladin.md"
+cat << 'EOF' > "${WORLD_DIR}/Characters/Vaelor.md"
 ---
-name: Kaladin
+name: Vaelor
 type: character
 eyes: brown
 hair: black
 status: alive
 ---
-# Kaladin Stormblessed
+# Knight Commander Vaelor
 A warrior with dark brown eyes and wavy black hair.
 EOF
 
 # Consistent Manuscript Scene
 cat << 'EOF' > "${MS_DIR}/Book-01/01_Act_I/01_Scene.md"
 # Scene 1
-@pov: Kaladin
+@pov: Vaelor
 @status: draft
 
-Kaladin looked across the Shattered Plains. His dark brown eyes narrowed in the storm.
+Vaelor looked across the high mountain pass. His dark brown eyes narrowed in the storm.
 EOF
 
 echo "=== Test 1: Clean Continuity Audit ==="
@@ -52,10 +52,10 @@ echo "=== Test 2: Lore Trait Contradiction (CNT-101) ==="
 # Introduce contradictory eye color in scene
 cat << 'EOF' > "${MS_DIR}/Book-01/01_Act_I/02_Scene.md"
 # Scene 2
-@pov: Kaladin
+@pov: Vaelor
 @status: draft
 
-Kaladin smiled, his bright blue eyes reflecting the moonlight.
+Vaelor smiled, his bright blue eyes reflecting the moonlight.
 EOF
 
 set +e
@@ -79,10 +79,10 @@ echo "=== Test 3: Inter-scene Trait Drift (CNT-102) ==="
 # Scene in Book 2 describes different hair
 cat << 'EOF' > "${MS_DIR}/Book-02/01_Act_I/01_Scene.md"
 # Book 2 Scene 1
-@pov: Kaladin
+@pov: Vaelor
 @status: draft
 
-Kaladin brushed his golden blonde hair out of his face.
+Vaelor brushed his golden blonde hair out of his face.
 EOF
 
 set +e

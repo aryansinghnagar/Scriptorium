@@ -12,10 +12,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from lib.concordance import (
     clean_wikilinks,
-    parse_frontmatter_and_body,
-    extract_summary_or_quote,
-    build_dramatis_personae_markdown,
-    build_glossary_markdown,
     generate_concordance,
 )
 

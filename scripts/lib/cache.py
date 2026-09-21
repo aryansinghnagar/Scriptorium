@@ -76,7 +76,7 @@ def load_cache(project_dir: str) -> dict:
         else:
             return {"version": CACHE_VERSION, "files": {}}
     try:
-        with open(cache_path, "r", encoding="utf-8") as f:
+        with open(cache_path, encoding="utf-8") as f:
             data = json.load(f)
             if data.get("version") == CACHE_VERSION and isinstance(data.get("files"), dict):
                 return data

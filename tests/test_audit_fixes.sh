@@ -182,11 +182,11 @@ echo "  OK Test 14 passed: Typst installer fails closed on missing upstream dige
 
 echo "[Test 15] Depth-3 Universe/World Discovery & Labeling (LIB-01)..."
 DISC_TMP=$(mktemp -d)
-mkdir -p "$DISC_TMP/Universes/Cosmere/Scadrial/World-Bible"
-mkdir -p "$DISC_TMP/Universes/Arda/Worlds/Valinor/World-Bible"
+mkdir -p "$DISC_TMP/Universes/Eldoria-Cosmos/Eldoria-World/World-Bible"
+mkdir -p "$DISC_TMP/Universes/Solaris-Verse/Worlds/Aetheria/World-Bible"
 mkdir -p "$DISC_TMP/Worlds/SoloWorld/World-Bible"
-touch "$DISC_TMP/Universes/Cosmere/Scadrial/World-Bible/World-Bible-Index.md"
-touch "$DISC_TMP/Universes/Arda/Worlds/Valinor/World-Bible/World-Bible-Index.md"
+touch "$DISC_TMP/Universes/Eldoria-Cosmos/Eldoria-World/World-Bible/World-Bible-Index.md"
+touch "$DISC_TMP/Universes/Solaris-Verse/Worlds/Aetheria/World-Bible/World-Bible-Index.md"
 touch "$DISC_TMP/Worlds/SoloWorld/World-Bible/World-Bible-Index.md"
 
 (
@@ -197,21 +197,21 @@ touch "$DISC_TMP/Worlds/SoloWorld/World-Bible/World-Bible-Index.md"
 
     discover_worlds FOUND_WORLDS
     JOINED_WORLDS=$(printf '%s\n' "${FOUND_WORLDS[@]}")
-    echo "$JOINED_WORLDS" | grep -q "Scadrial" || { echo "  FAIL: Scadrial not discovered"; exit 1; }
-    echo "$JOINED_WORLDS" | grep -q "Valinor" || { echo "  FAIL: Depth-3 Valinor not discovered"; exit 1; }
+    echo "$JOINED_WORLDS" | grep -q "Eldoria-World" || { echo "  FAIL: Eldoria-World not discovered"; exit 1; }
+    echo "$JOINED_WORLDS" | grep -q "Aetheria" || { echo "  FAIL: Depth-3 Aetheria not discovered"; exit 1; }
     echo "$JOINED_WORLDS" | grep -q "SoloWorld" || { echo "  FAIL: SoloWorld not discovered"; exit 1; }
     ! echo "$JOINED_WORLDS" | grep -E -q '/Universes/[^/]+/Worlds$' || { echo "  FAIL: Literal 'Worlds' container folder discovered as world"; exit 1; }
 
     # Test universe_label extraction
-    LBL_VALINOR=$(universe_label "$DISC_TMP/Universes/Arda/Worlds/Valinor")
-    [ "$LBL_VALINOR" = "Arda" ] || { echo "  FAIL: Valinor universe label was '$LBL_VALINOR' (expected 'Arda')"; exit 1; }
+    LBL_AETHERIA=$(universe_label "$DISC_TMP/Universes/Solaris-Verse/Worlds/Aetheria")
+    [ "$LBL_AETHERIA" = "Solaris-Verse" ] || { echo "  FAIL: Aetheria universe label was '$LBL_AETHERIA' (expected 'Solaris-Verse')"; exit 1; }
 
-    LBL_SCADRIAL=$(universe_label "$DISC_TMP/Universes/Cosmere/Scadrial")
-    [ "$LBL_SCADRIAL" = "Cosmere" ] || { echo "  FAIL: Scadrial universe label was '$LBL_SCADRIAL' (expected 'Cosmere')"; exit 1; }
+    LBL_ELDORIA=$(universe_label "$DISC_TMP/Universes/Eldoria-Cosmos/Eldoria-World")
+    [ "$LBL_ELDORIA" = "Eldoria-Cosmos" ] || { echo "  FAIL: Eldoria universe label was '$LBL_ELDORIA' (expected 'Eldoria-Cosmos')"; exit 1; }
 
     # Test resolve_world_dir
-    RESOLVED_VALINOR=$(resolve_world_dir "Valinor")
-    [ "$RESOLVED_VALINOR" = "$DISC_TMP/Universes/Arda/Worlds/Valinor" ] || { echo "  FAIL: resolve_world_dir Valinor failed: $RESOLVED_VALINOR"; exit 1; }
+    RESOLVED_AETHERIA=$(resolve_world_dir "Aetheria")
+    [ "$RESOLVED_AETHERIA" = "$DISC_TMP/Universes/Solaris-Verse/Worlds/Aetheria" ] || { echo "  FAIL: resolve_world_dir Aetheria failed: $RESOLVED_AETHERIA"; exit 1; }
 )
 rm -rf "$DISC_TMP"
 echo "  OK Test 15 passed: Depth-3 universe/world discovery and universe label verified"

@@ -17,7 +17,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from lib.series_continuity import (
-    extract_book_entities,
     scan_series_continuity,
     generate_series_html_report
 )

@@ -20,7 +20,6 @@ Zero external dependencies; 100% offline privacy.
 """
 
 import sys
-import os
 import re
 import json
 import html
@@ -127,7 +126,8 @@ def speak_text(text: str, speed: float = 1.0, voice: str | None = None) -> bool:
         elif engine in ("espeak-ng", "espeak"):
             speed_wpm = int(175 * speed)
             cmd = [engine, "-s", str(speed_wpm), text]
-            if voice: cmd.extend(["-v", voice])
+            if voice:
+                cmd.extend(["-v", voice])
             res = subprocess.run(cmd)
             return res.returncode == 0
         elif engine == "spd-say":
@@ -138,7 +138,8 @@ def speak_text(text: str, speed: float = 1.0, voice: str | None = None) -> bool:
         elif engine == "say":
             # macOS
             cmd = ["say", "-r", str(int(180 * speed)), text]
-            if voice: cmd.extend(["-v", voice])
+            if voice:
+                cmd.extend(["-v", voice])
             res = subprocess.run(cmd)
             return res.returncode == 0
         elif engine == "powershell_sapi":
@@ -400,7 +401,7 @@ def main():
         # Default: generate HTML player or print speech stats
         out_default = Path(f"{target_path.stem}_audio_proofreader.html")
         generate_tts_html_player(paragraphs, title=target_path.stem.replace("_", " "), output_path=out_default)
-        print(f"=== Ars Arcanum Audio Proofreader ===")
+        print("=== Ars Arcanum Audio Proofreader ===")
         print(f"Target:        {target_path.name}")
         print(f"Paragraphs:    {len(paragraphs)}")
         print(f"Generated:     {out_default} (Open in any browser for neural voice audio proofreading)")

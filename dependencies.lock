@@ -6,13 +6,13 @@
 
 [metadata]
 schema_version = 1.0
-updated = 2026-09-17
+updated = 2026-09-21
 
 [typst]
-version = 0.13.0
-x86_64_sha256 = a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c
-aarch64_sha256 = 5aa8d74a3d906e60ea12a66ac2f37f8eef1b14cbad7182a745e393a10c23dcee
-download_url = https://github.com/typst/typst/releases/download/v0.13.0/typst-{arch}.tar.xz
+version = 0.14.2
+x86_64_sha256 = a6044cbad2a954deb921167e257e120ac0a16b20339ec01121194ff9d394996d
+aarch64_sha256 = 491b101aa40a3a7ea82a3f8a6232cabb4e6a7e233810082e5ac812d43fdcd47a
+download_url = https://github.com/typst/typst/releases/download/v0.14.2/typst-{arch}.tar.xz
 
 [flatpak]
 remote = flathub
@@ -52,3 +52,25 @@ fonts-sil-charis = >=5.000
 fonts-sil-gentiumplus = >=5.000
 fonts-bitter = >=1.000
 fonts-cmu = >=0.7.0
+
+[obsidian.plugins]
+dataview = 0.5.70
+dataview.main_js_sha256 = 6bb1cf7010afad830e73575fca0e2bfbd3279c562e3d9d24f2d2f45161eb7d00
+templater-obsidian = 2.25.1
+templater-obsidian.main_js_sha256 = eb86d9282694ce1f099154c320286fdd89473e60dc2441ee310f3ac331333e94
+longform = 2.1.0
+longform.main_js_sha256 = d937568a0a522778b1c2968d47288ef5fb18f7c28d02bdccb31415e304daaf3b
+metadata-menu = 0.8.12
+metadata-menu.main_js_sha256 = a4c37d9f3931a72a8115c34ca226121f8d6f3d1c1d1feaef1179f05113cf3c6d
+calendarium = 2.1.0
+calendarium.main_js_sha256 = bb91db87f0725631b5276393af58e3796caeeb0ef5a6c702bec4c3890bb20f7d
+storyline = 1.10.72
+storyline.main_js_sha256 = d504b4894b888096b19f1ebe574abae3006239ca6ef63eb112987fa5d3b67bfa
+storyteller-suite = 1.8.19
+storyteller-suite.main_js_sha256 = 8aa32041f8cc519f3027b9ebdffd4372dfb625ae5c6d839c7a25c950841f1265
+novel-word-count = 5.0.0
+novel-word-count.main_js_sha256 = 65d5f85af85d0232ba0dd4050f495749e09d8767da609f8943ca5e27ac3a7461
+obsidian-git = 2.40.0
+obsidian-git.main_js_sha256 = 6f198f140be39254c410c21998c1bd86f9a077ad415604356382e5dc5836e1a1
+obsidian-style-settings = 1.0.9
+obsidian-style-settings.main_js_sha256 = 1828abaacdab4c5578b705a625c585b30512f8efad4c7cfc5a18e70cc3557468
