@@ -37,7 +37,7 @@ jobs:
           sudo apt-get install -y shellcheck desktop-file-utils pandoc libxml2-utils xvfb gir1.2-gtk-3.0 gir1.2-adw-1 python3-gi
 
       - name: Set up Typst
-        uses: typst-community/setup-typst@f97d94d65e19b033e103c69cb1f27b56dfbb040f # v4.0.1
+        uses: typst-community/setup-typst@40d32bb6ccb235bd7f5164cb47cfd40a5ea3a314 # v5.2.0
         with:
           # DEP-01: exact pin matching dependencies.lock + setup_arcanum.sh (0.14.2).
           typst-version: '0.14.2'
