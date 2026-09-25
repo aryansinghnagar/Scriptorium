@@ -114,9 +114,9 @@ class TestUiTabMapping(unittest.TestCase):
     """Tests for studio tab index mappings and method definitions."""
 
     def test_gtk3_app_tab_dispatch_methods(self):
-        # Read ui_gtk3.py and verify all 12 speculative dialog methods exist
-        ui_gtk3_path = SCRIPTS_DIR / "lib" / "ui_gtk3.py"
-        content = ui_gtk3_path.read_text(encoding="utf-8")
+        # Verify all speculative and craft dialog methods exist on ArcanumApp
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from lib.ui_gtk3 import ArcanumApp
 
         expected_dialog_methods = [
             "open_astrophysics_dialog",
@@ -151,11 +151,11 @@ class TestUiTabMapping(unittest.TestCase):
             "open_tts_dialog",
         ]
         for method in expected_dialog_methods:
-            self.assertIn(f"def {method}(", content, f"Missing dialog method {method} in ui_gtk3.py")
+            self.assertTrue(hasattr(ArcanumApp, method), f"Missing dialog method {method} on ArcanumApp")
 
     def test_gtk3_all_6_studios_created(self):
-        ui_gtk3_path = SCRIPTS_DIR / "lib" / "ui_gtk3.py"
-        content = ui_gtk3_path.read_text(encoding="utf-8")
+        sys.path.insert(0, str(SCRIPTS_DIR))
+        from lib.ui_gtk3 import ArcanumApp
 
         studio_creators = [
             "create_cosmos_tab",
@@ -166,7 +166,7 @@ class TestUiTabMapping(unittest.TestCase):
             "create_doctor_tab",
         ]
         for creator in studio_creators:
-            self.assertIn(f"def {creator}(", content, f"Missing tab creator {creator} in ui_gtk3.py")
+            self.assertTrue(hasattr(ArcanumApp, creator), f"Missing tab creator {creator} on ArcanumApp")
 
     def test_adw_all_6_studios_defined(self):
         ui_adw_path = SCRIPTS_DIR / "lib" / "ui_adw.py"
@@ -270,7 +270,7 @@ class TestArcanumCliFacade(unittest.TestCase):
             ["prophecy", "check", "--help"],
         ]
         for sub in subcmds:
-            cmd = [BASH_EXE, str(SCRIPTS_DIR / "arcanum")] + sub
+            cmd = [BASH_EXE, str(SCRIPTS_DIR / "arcanum"), *sub]
             res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
             self.assertEqual(res.returncode, 0, f"Failed routing arcanum {' '.join(sub)}: {res.stderr}")
 
@@ -279,14 +279,16 @@ class TestSpeculativeDialogArgumentIntegrity(unittest.TestCase):
     """Verifies that all 12 speculative dialog command constructions match target CLI parsers."""
 
     def test_dialog_commands_contain_no_invalid_flags(self):
-        ui_gtk3_path = SCRIPTS_DIR / "lib" / "ui_gtk3.py"
-        content = ui_gtk3_path.read_text(encoding="utf-8")
+        ui_gtk3_dir = SCRIPTS_DIR / "lib" / "ui_gtk3"
+        contents = [p.read_text(encoding="utf-8") for p in ui_gtk3_dir.glob("**/*.py")]
+        contents.append((SCRIPTS_DIR / "lib" / "ui_gtk3.py").read_text(encoding="utf-8"))
+        combined = "\n".join(contents)
 
-        # Verify no invalid options in ui_gtk3.py dialogs
-        self.assertNotIn("--window", content, "ui_gtk3.py should not pass unsupported --window to pacing.py")
-        self.assertNotIn("--depth", content, "ui_gtk3.py should not pass unsupported --depth to genealogy.py")
-        self.assertNotIn('"factions.py"), "audit"', content, "factions.py should use 'check' or 'matrix', not 'audit'")
-        self.assertNotIn('--orbit', content, "climate.py should use --distance-au, not --orbit")
+        # Verify no invalid options in ui_gtk3 package dialogs
+        self.assertNotIn("--window", combined, "ui_gtk3 should not pass unsupported --window to pacing.py")
+        self.assertNotIn("--depth", combined, "ui_gtk3 should not pass unsupported --depth to genealogy.py")
+        self.assertNotIn('"factions.py"), "audit"', combined, "factions.py should use 'check' or 'matrix', not 'audit'")
+        self.assertNotIn('--orbit', combined, "climate.py should use --distance-au, not --orbit")
 
 
 if __name__ == "__main__":

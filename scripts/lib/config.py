@@ -11,26 +11,17 @@ Provides programmatic API and CLI commands for managing:
 - Active author profiles
 """
 
+import argparse
+import json
+import logging
 import os
 import sys
-import json
-import argparse
-import logging
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    import lib._bootstrap  # noqa: F401
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    import _bootstrap  # noqa: F401
 
 logger = logging.getLogger("arcanum.config")
 

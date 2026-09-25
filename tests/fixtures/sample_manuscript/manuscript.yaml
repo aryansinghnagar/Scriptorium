@@ -1,6 +1,7 @@
-manuscript:
-  title: "The Glass Horizon"
-  author: "Renée d'Anjou"
-  universe: "SampleUniverse"
-  world: "sample_world"
-  created: "2026-09-17"
+# Ars Arcanum Manuscript Project Manifest
+schema_version: "1.0"
+title: "The Glass Horizon"
+author: "Renée d'Anjou"
+universe: "SampleUniverse"
+world: "sample_world"
+created_at: "2026-09-17"

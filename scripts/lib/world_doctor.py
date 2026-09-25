@@ -17,24 +17,15 @@ Verifies:
 import argparse
 import json
 import os
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 from typing import Any
 
 try:
-    from lib.fs_utils import atomic_write
+    import lib._bootstrap  # noqa: F401
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    import _bootstrap  # noqa: F401
 
 
 WIKI_LINK = re.compile(r"\[\[([^\]\|#]+)(?:\|[^\]\]]*)?\]\]")
@@ -242,32 +233,36 @@ def is_template(rel: str, fm: dict[str, Any]) -> bool:
     )
 
 
-def check_world(
-    bible_dir: str,
-    manuscript_dir: str | None = None,
-    use_cache: bool = False,
-    max_bytes: int = MAX_DEFAULT_BYTES,
-) -> dict[str, Any]:
-    """Execute deep consistency audit across the World Bible and optional Manuscript."""
-    bible_path = Path(bible_dir).resolve()
-    if not bible_path.exists():
-        raise FileNotFoundError(f"World directory not found: {bible_dir}")
-
-    # Determine real Bible directory
-    actual_bible = bible_path / "00-World-Bible" if (bible_path / "00-World-Bible").is_dir() else bible_path
-
+def _index_world_vault(
+    actual_bible: Path,
+    manuscript_dir: str | None,
+    use_cache: bool,
+    max_bytes: int,
+) -> tuple[
+    list[tuple[str, dict[str, Any], str]],
+    dict[str, str],
+    dict[str, str],
+    list[str],
+    list[tuple[str, str, str]],
+    list[tuple[str, str]],
+    bool,
+]:
+    """Scans and indexes the World Bible vault, integrating fast cache when available."""
     index: dict[str, str] = {}
     aliases: dict[str, str] = {}
     notes: list[tuple[str, dict[str, Any], str]] = []
     fm_errors: list[str] = []
     required_errors: list[tuple[str, str, str]] = []
     timeline_errors: list[tuple[str, str]] = []
-
     cached_files: dict[str, Any] = {}
     cache_used = False
+
     if use_cache:
         try:
-            from lib import cache as cache_engine
+            try:
+                from lib import cache as cache_engine
+            except ImportError:
+                import cache as cache_engine  # type: ignore[no-redef]
             b_cache = cache_engine.scan_project(str(actual_bible))
             if manuscript_dir:
                 cache_engine.scan_project(str(manuscript_dir))
@@ -280,9 +275,10 @@ def check_world(
 
     cached_rels: set[str] = set()
     if cache_used:
-        for rel, entry in sorted(cached_files.items()):
-            if not rel.endswith(".md"):
+        for rel_raw, entry in sorted(cached_files.items()):
+            if not rel_raw.endswith(".md"):
                 continue
+            rel = rel_raw.replace("\\", "/")
             base = os.path.basename(rel)
             if base.startswith("."):
                 continue
@@ -293,7 +289,6 @@ def check_world(
             rel_no_ext = os.path.splitext(rel)[0]
             index.setdefault(norm(stem), rel)
             index.setdefault(norm(rel_no_ext), rel)
-            index.setdefault(norm(rel_no_ext.replace('\\', '/')), rel)
             if fm.get("name") and isinstance(fm["name"], str) and fm["name"].strip():
                 index.setdefault(norm(fm["name"]), rel)
             for alias in (fm.get("aliases") or []):
@@ -303,10 +298,12 @@ def check_world(
             for req in REQUIRED_BY_TYPE.get(etype, ()):
                 if not fm.get(req):
                     required_errors.append((rel, etype, req))
-            for (b_key, d_key, label) in [("birth_year", "death_year", "Death year ({d}) precedes birth year ({b})"),
-                                          ("birth_date", "death_date", "Death date ({d}) precedes birth date ({b})"),
-                                          ("start_year", "end_year", "End year ({e}) precedes start year ({s})"),
-                                          ("start_date", "end_date", "End date ({e}) precedes start date ({s})")]:
+            for (b_key, d_key, label) in [
+                ("birth_year", "death_year", "Death year ({d}) precedes birth year ({b})"),
+                ("birth_date", "death_date", "Death date ({d}) precedes birth date ({b})"),
+                ("start_year", "end_year", "End year ({e}) precedes start year ({s})"),
+                ("start_date", "end_date", "End date ({e}) precedes start date ({s})"),
+            ]:
                 if b_key in fm and d_key in fm:
                     cmp = compare_timeline_dates(fm[b_key], fm[d_key])
                     if cmp is not None and cmp > 0:
@@ -322,7 +319,7 @@ def check_world(
             if not fname.endswith(".md") or fname.startswith("."):
                 continue
             path = os.path.join(root, fname)
-            rel = os.path.relpath(path, str(actual_bible))
+            rel = os.path.relpath(path, str(actual_bible)).replace("\\", "/")
             if rel in cached_rels:
                 continue
             stem = os.path.splitext(fname)[0]
@@ -347,10 +344,12 @@ def check_world(
                 if not fm.get(req):
                     required_errors.append((rel, etype, req))
 
-            for (b_key, d_key, label) in [("birth_year", "death_year", "Death year ({d}) precedes birth year ({b})"),
-                                          ("birth_date", "death_date", "Death date ({d}) precedes birth date ({b})"),
-                                          ("start_year", "end_year", "End year ({e}) precedes start year ({s})"),
-                                          ("start_date", "end_date", "End date ({e}) precedes start date ({s})")]:
+            for (b_key, d_key, label) in [
+                ("birth_year", "death_year", "Death year ({d}) precedes birth year ({b})"),
+                ("birth_date", "death_date", "Death date ({d}) precedes birth date ({b})"),
+                ("start_year", "end_year", "End year ({e}) precedes start year ({s})"),
+                ("start_date", "end_date", "End date ({e}) precedes start date ({s})"),
+            ]:
                 if b_key in fm and d_key in fm:
                     b_val = fm[b_key]
                     d_val = fm[d_key]
@@ -361,6 +360,20 @@ def check_world(
 
             notes.append((rel, fm, text))
 
+    return notes, index, aliases, fm_errors, required_errors, timeline_errors, cache_used
+
+
+def _validate_link_graph(
+    notes: list[tuple[str, dict[str, Any], str]],
+    index: dict[str, str],
+    aliases: dict[str, str],
+) -> tuple[
+    list[tuple[str, str]],
+    list[tuple[str, str]],
+    list[tuple[str, str, str]],
+    list[str],
+]:
+    """Validates wikilinks, typed frontmatter references, and identifies orphaned notes."""
     def resolve(target: str) -> str | None:
         key = norm(target)
         if key in index:
@@ -369,7 +382,6 @@ def check_world(
             return aliases[key]
         return None
 
-    # Pass 2: Links & Frontmatter Ref Integrity
     broken_links: list[tuple[str, str]] = []
     placeholder_links: list[tuple[str, str]] = []
     dangling_refs: list[tuple[str, str, str]] = []
@@ -409,9 +421,18 @@ def check_world(
                             else:
                                 dangling_refs.append((rel, field, t))
 
-    orphans = [rel for rel, fm, _ in notes
-               if inbound.get(rel, 0) == 0 and not outbound.get(rel) and not is_template(rel, fm)]
+    orphans = [
+        rel for rel, fm, _ in notes
+        if inbound.get(rel, 0) == 0 and not outbound.get(rel) and not is_template(rel, fm)
+    ]
 
+    return broken_links, placeholder_links, dangling_refs, orphans
+
+
+def _validate_duplicate_names(
+    notes: list[tuple[str, dict[str, Any], str]],
+) -> dict[str, list[str]]:
+    """Detects conflicting entity names and alias collisions across the vault."""
     claimed: dict[str, set[str]] = {}
     for rel, fm, _ in notes:
         if is_template(rel, fm):
@@ -419,79 +440,129 @@ def check_world(
         names = [n for n in [fm.get("name")] + (fm.get("aliases") or []) if isinstance(n, str) and n.strip()]
         for n in names:
             claimed.setdefault(norm(n), set()).add(rel)
-    duplicates = {n: sorted(rs) for n, rs in claimed.items() if len(rs) > 1}
+    return {n: sorted(rs) for n, rs in claimed.items() if len(rs) > 1}
 
-    # Pass 3: Manuscript Entity Cross-Validation
+
+def _validate_manuscript_crossrefs(
+    manuscript_dir: str | None,
+    index: dict[str, str],
+    aliases: dict[str, str],
+    max_bytes: int,
+) -> tuple[list[tuple[str, str, str]], int]:
+    """Scans manuscript chapters to identify dangling @tags or broken lore links."""
+    def resolve(target: str) -> str | None:
+        key = norm(target)
+        if key in index:
+            return index[key]
+        if key in aliases:
+            return aliases[key]
+        return None
+
     manuscript_errors: list[tuple[str, str, str]] = []
     ms_files_scanned = 0
     ms_index: set[str] = set()
 
-    if manuscript_dir and os.path.isdir(manuscript_dir):
-        # Index all manuscript markdown files
-        for root, dirs, files in os.walk(manuscript_dir):
-            dirs[:] = [d for d in dirs if d not in (".git", ".obsidian")]
-            for fname in sorted(files):
-                if not fname.endswith(".md") or fname.startswith("."):
-                    continue
-                path = os.path.join(root, fname)
-                rel = os.path.relpath(path, manuscript_dir)
-                stem = os.path.splitext(fname)[0]
-                rel_no_ext = os.path.splitext(rel)[0]
-                ms_index.add(norm(stem))
-                ms_index.add(norm(rel_no_ext))
-                ms_index.add(norm(rel_no_ext.replace('\\', '/')))
-                try:
-                    txt = read_capped(path, max_bytes=max_bytes)
-                    fm, _ = parse_frontmatter(txt)
-                    if fm.get("name") and isinstance(fm["name"], str):
-                        ms_index.add(norm(fm["name"]))
-                    for al in (fm.get("aliases") or []):
-                        if isinstance(al, str):
-                            ms_index.add(norm(al))
-                except Exception:
-                    pass
+    if not manuscript_dir or not os.path.isdir(manuscript_dir):
+        return manuscript_errors, ms_files_scanned
 
-        # Scan manuscript scenes for entity tags and prose lore links
-        for root, dirs, files in os.walk(manuscript_dir):
-            dirs[:] = [d for d in dirs if d not in (".git", "Outlines", ".obsidian")]
-            for fname in sorted(files):
-                if not fname.endswith(".md") or fname.startswith("."):
-                    continue
-                path = os.path.join(root, fname)
-                rel = os.path.relpath(path, manuscript_dir)
-                try:
-                    text = read_capped(path, max_bytes=max_bytes)
-                except OSError:
-                    continue
-                ms_files_scanned += 1
+    # Index all manuscript markdown files
+    for root, dirs, files in os.walk(manuscript_dir):
+        dirs[:] = [d for d in dirs if d not in (".git", ".obsidian")]
+        for fname in sorted(files):
+            if not fname.endswith(".md") or fname.startswith("."):
+                continue
+            path = os.path.join(root, fname)
+            rel = os.path.relpath(path, manuscript_dir)
+            stem = os.path.splitext(fname)[0]
+            rel_no_ext = os.path.splitext(rel)[0]
+            ms_index.add(norm(stem))
+            ms_index.add(norm(rel_no_ext))
+            ms_index.add(norm(rel_no_ext.replace('\\', '/')))
+            try:
+                txt = read_capped(path, max_bytes=max_bytes)
+                fm, _ = parse_frontmatter(txt)
+                if fm.get("name") and isinstance(fm["name"], str):
+                    ms_index.add(norm(fm["name"]))
+                for al in (fm.get("aliases") or []):
+                    if isinstance(al, str):
+                        ms_index.add(norm(al))
+            except Exception:
+                pass
 
-                for line in text.splitlines():
-                    stripped = line.strip()
-                    m_tag = re.match(r"^@(pov|char|character|location|focus|faction|item|artifact|prophecy):\s*(.+)$", stripped, re.IGNORECASE)
-                    if m_tag:
-                        tag_type = m_tag.group(1).lower()
-                        raw_val = m_tag.group(2).strip()
-                        items = [v.strip().strip('"').strip("'") for v in raw_val.split(",") if v.strip()]
-                        for item in items:
-                            if not item or norm(item) in PLACEHOLDER_NAMES:
-                                continue
-                            wl_m = WIKI_LINK.match(item)
-                            target = wl_m.group(1).split("#")[0].strip() if wl_m else item
-                            if not target or norm(target) in PLACEHOLDER_NAMES:
-                                continue
-                            if resolve(target) is None and norm(target) not in ms_index:
-                                manuscript_errors.append((rel, f"@{tag_type}", target))
-                    elif stripped.startswith("@"):
-                        continue
-                    else:
-                        for m_wl in WIKI_LINK.finditer(stripped):
-                            target = m_wl.group(1).split("#")[0].strip()
-                            if not target or norm(target) in PLACEHOLDER_NAMES:
-                                continue
-                            if resolve(target) is None and norm(target) not in ms_index:
-                                manuscript_errors.append((rel, "[[link]]", target))
+    # Scan manuscript scenes for entity tags and prose lore links
+    for root, dirs, files in os.walk(manuscript_dir):
+        dirs[:] = [d for d in dirs if d not in (".git", "Outlines", ".obsidian")]
+        for fname in sorted(files):
+            if not fname.endswith(".md") or fname.startswith("."):
+                continue
+            path = os.path.join(root, fname)
+            rel = os.path.relpath(path, manuscript_dir)
+            try:
+                text = read_capped(path, max_bytes=max_bytes)
+            except OSError:
+                continue
+            ms_files_scanned += 1
 
-    findings: dict[str, Any] = {
+            for line in text.splitlines():
+                stripped = line.strip()
+                m_tag = re.match(r"^@(pov|char|character|location|focus|faction|item|artifact|prophecy):\s*(.+)$", stripped, re.IGNORECASE)
+                if m_tag:
+                    tag_type = m_tag.group(1).lower()
+                    raw_val = m_tag.group(2).strip()
+                    items = [v.strip().strip('"').strip("'") for v in raw_val.split(",") if v.strip()]
+                    for item in items:
+                        if not item or norm(item) in PLACEHOLDER_NAMES:
+                            continue
+                        wl_m = WIKI_LINK.match(item)
+                        target = wl_m.group(1).split("#")[0].strip() if wl_m else item
+                        if not target or norm(target) in PLACEHOLDER_NAMES:
+                            continue
+                        if resolve(target) is None and norm(target) not in ms_index:
+                            manuscript_errors.append((rel, f"@{tag_type}", target))
+                elif stripped.startswith("@"):
+                    continue
+                else:
+                    for m_wl in WIKI_LINK.finditer(stripped):
+                        target = m_wl.group(1).split("#")[0].strip()
+                        if not target or norm(target) in PLACEHOLDER_NAMES:
+                            continue
+                        if resolve(target) is None and norm(target) not in ms_index:
+                            manuscript_errors.append((rel, "[[link]]", target))
+
+    return manuscript_errors, ms_files_scanned
+
+
+def check_world(
+    bible_dir: str,
+    manuscript_dir: str | None = None,
+    use_cache: bool = False,
+    max_bytes: int = MAX_DEFAULT_BYTES,
+) -> dict[str, Any]:
+    """Execute deep consistency audit across the World Bible and optional Manuscript."""
+    bible_path = Path(bible_dir).resolve()
+    if not bible_path.exists():
+        raise FileNotFoundError(f"World directory not found: {bible_dir}")
+
+    # Determine real Bible directory
+    actual_bible = bible_path / "00-World-Bible" if (bible_path / "00-World-Bible").is_dir() else bible_path
+
+    # Pass 1: Indexing & Note Scanning
+    notes, index, aliases, fm_errors, required_errors, timeline_errors, cache_used = _index_world_vault(
+        actual_bible, manuscript_dir, use_cache, max_bytes
+    )
+
+    # Pass 2: Links & Frontmatter Ref Integrity
+    broken_links, placeholder_links, dangling_refs, orphans = _validate_link_graph(notes, index, aliases)
+
+    # Pass 3: Duplicate Name & Identity Claim Validation
+    duplicates = _validate_duplicate_names(notes)
+
+    # Pass 4: Manuscript Entity Cross-Validation
+    manuscript_errors, ms_files_scanned = _validate_manuscript_crossrefs(
+        manuscript_dir, index, aliases, max_bytes
+    )
+
+    return {
         "world": str(actual_bible),
         "notes": len(notes),
         "manuscript_files": ms_files_scanned,
@@ -508,8 +579,6 @@ def check_world(
         "timeline_errors": [{"code": "WLD-104", "file": s, "issue": iss} for s, iss in timeline_errors],
         "manuscript_name_drift": [{"code": "WLD-108", "file": s, "ref_type": r, "missing": t} for s, r, t in manuscript_errors],
     }
-
-    return findings
 
 
 def format_report_text(findings: dict[str, Any]) -> str:

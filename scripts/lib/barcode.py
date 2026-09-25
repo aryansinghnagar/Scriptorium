@@ -21,35 +21,19 @@ Capabilities (PUB-102):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import zlib
-import struct
 import argparse
+import json
 import logging
+import re
+import struct
+import sys
+import zlib
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.barcode")
 
@@ -172,7 +156,7 @@ def encode_ean13_modules(isbn13: str) -> tuple[str, list[bool]]:
     return "".join(bit_sequence), is_guard
 
 
-def generate_svg_barcode(isbn13: str, scale: float = 1.0, formatted_text: str | None = None) -> str:
+def generate_svg_barcode(isbn13: str, scale: float = 1.0, formatted_text: str | None = None, include_text: bool = True) -> str:
     """Generates crisp publication-grade vector SVG barcode string."""
     bit_str, is_guard = encode_ean13_modules(isbn13)
     
@@ -182,7 +166,7 @@ def generate_svg_barcode(isbn13: str, scale: float = 1.0, formatted_text: str | 
     total_modules = len(bit_str)
     
     svg_width = total_modules * module_width
-    svg_height = (guard_height + 30.0 * scale)
+    svg_height = (guard_height + 30.0 * scale) if include_text else (guard_height + 15.0 * scale)
 
     rects = []
     for idx, (bit, guard) in enumerate(zip(bit_str, is_guard)):
@@ -192,10 +176,14 @@ def generate_svg_barcode(isbn13: str, scale: float = 1.0, formatted_text: str | 
             rects.append(f'<rect x="{x:.2f}" y="10" width="{module_width:.2f}" height="{h:.2f}" fill="#000000" />')
 
     display_text = formatted_text or f"ISBN {isbn13[:3]}-{isbn13[3]}-{isbn13[4:8]}-{isbn13[8:12]}-{isbn13[12]}"
-    
-    # Left 1st digit label
     d0 = isbn13[0]
-    
+
+    text_tags = ""
+    if include_text:
+        text_tags = f"""  <!-- Human Readable Labels -->
+  <text x="{4 * module_width}" y="{guard_height + 2}" class="isbn-text">{d0}</text>
+  <text x="{svg_width / 2:.1f}" y="{svg_height - 6 * scale:.1f}" text-anchor="middle" class="isbn-text">{display_text}</text>"""
+
     svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{svg_width:.1f}" height="{svg_height:.1f}" viewBox="0 0 {svg_width:.1f} {svg_height:.1f}">
   <style>
     .isbn-text {{ font-family: "Courier New", Courier, monospace; font-size: {13.0 * scale:.1f}px; font-weight: 700; fill: #000000; }}
@@ -203,9 +191,7 @@ def generate_svg_barcode(isbn13: str, scale: float = 1.0, formatted_text: str | 
   <rect width="100%" height="100%" fill="#ffffff" />
   <!-- Barcode Modules -->
   {''.join(rects)}
-  <!-- Human Readable Labels -->
-  <text x="{4 * module_width}" y="{guard_height + 2}" class="isbn-text">{d0}</text>
-  <text x="{svg_width / 2:.1f}" y="{svg_height - 6 * scale:.1f}" text-anchor="middle" class="isbn-text">{display_text}</text>
+{text_tags}
 </svg>"""
     return svg_content
 

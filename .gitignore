@@ -86,9 +86,11 @@ env/
 /tmp/
 scratch/
 
-# Ars Arcanum Cache
+# Ars Arcanum Cache and Sync State
 .arcanum_cache.json
 *.arcanum_cache.json
+.sync_state.json
+*.sync_state.json
 .scriptorium_cache.json
 *.scriptorium_cache.json
 
@@ -100,4 +102,13 @@ debian/scriptorium/
 debian/scriptorium.substvars
 debian/files
 debian/debhelper-build-stamp
+
+# Build, distribution, and packaging outputs
+/dist/
+/build/
+*.egg-info/
+.coverage
+coverage.xml
+htmlcov/
+
 

@@ -21,18 +21,20 @@ Options:
   --dry-run          Simulate and log all planned system and user mutations
                      without making changes or invoking sudo
   --no-sudo          Run in user-space only mode without requiring root/sudo privileges
+  --enable-timer     Install and enable daily background backup timer (systemd user service)
   -f, --force        Bypass OS distribution / version support gating
   -h, --help         Show this help and exit
 
-Supported Operating Systems (Tier 1):
-  - Linux Mint 21.x / 22.x (XFCE Edition)
-  - Debian 12 / 13 (XFCE)
+Supported Operating Systems:
+  - Tier 1 (Verified): Linux Mint 21.x / 22.x, Debian 12 / 13, Ubuntu 22.04 / 24.04 (APT)
+  - Tier 2 (Supported): Fedora, RHEL (DNF), Arch Linux, Manjaro (Pacman), openSUSE (Zypper)
 USAGE
 }
 
 DRY_RUN=0
 FORCE_OS=0
 USE_SUDO=1
+ENABLE_TIMER=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -40,6 +42,8 @@ while [ $# -gt 0 ]; do
             DRY_RUN=1; shift ;;
         --no-sudo)
             USE_SUDO=0; shift ;;
+        --enable-timer)
+            ENABLE_TIMER=1; shift ;;
         -f|--force)
             FORCE_OS=1; shift ;;
         -h|--help)
@@ -68,7 +72,7 @@ if [ "${DRY_RUN}" -eq 1 ]; then
     echo "  [MODE: DRY-RUN SIMULATION — No system changes will be made]"
 fi
 if [ "${USE_SUDO}" -eq 0 ]; then
-    echo "  [MODE: USER-SPACE ONLY (--no-sudo) — APT & system packages bypassed]"
+    echo "  [MODE: USER-SPACE ONLY (--no-sudo) — System packages bypassed]"
 fi
 if [ -f "${LOG_FILE:-}" ]; then
     echo "  [AUDIT LOG: ${LOG_FILE}]"
@@ -85,6 +89,7 @@ fi
 OS_ID="unknown"
 OS_VER="unknown"
 OS_PRETTY="Unknown Linux"
+PKG_MGR="apt"
 
 if [ -f /etc/os-release ]; then
     # shellcheck disable=SC1091
@@ -98,30 +103,57 @@ echo "[i] Detected System: ${OS_PRETTY} (ID: ${OS_ID}, Version: ${OS_VER})"
 
 IS_SUPPORTED=0
 case "${OS_ID}" in
-    linuxmint)
-        if [[ "${OS_VER}" =~ ^(21|22) ]]; then
-            IS_SUPPORTED=1
-        fi
+    linuxmint|ubuntu|pop|elementary)
+        PKG_MGR="apt"
+        IS_SUPPORTED=1
         ;;
     debian)
+        PKG_MGR="apt"
         if [[ "${OS_VER}" =~ ^(12|13) ]] || [ "${OS_VER}" = "unknown" ]; then
             IS_SUPPORTED=1
+        else
+            IS_SUPPORTED=2  # Tier 2
+        fi
+        ;;
+    fedora|rhel|almalinux|rocky)
+        PKG_MGR="dnf"
+        IS_SUPPORTED=2
+        ;;
+    arch|manjaro|endeavouros)
+        PKG_MGR="pacman"
+        IS_SUPPORTED=2
+        ;;
+    opensuse*|sles)
+        PKG_MGR="zypper"
+        IS_SUPPORTED=2
+        ;;
+    *)
+        if command -v apt-get &>/dev/null; then
+            PKG_MGR="apt"
+        elif command -v dnf &>/dev/null; then
+            PKG_MGR="dnf"
+        elif command -v pacman &>/dev/null; then
+            PKG_MGR="pacman"
+        elif command -v zypper &>/dev/null; then
+            PKG_MGR="zypper"
         fi
         ;;
 esac
 
 if [ "${IS_SUPPORTED}" -eq 0 ]; then
     if [ "${FORCE_OS}" -eq 1 ]; then
-        echo "[!] WARNING: ${OS_PRETTY} is not a verified Tier 1 target, but --force was passed. Proceeding..."
+        echo "[!] WARNING: ${OS_PRETTY} is not a verified Tier 1/2 target, but --force was passed. Proceeding with ${PKG_MGR}..."
     else
         echo "[!] ERROR: Unsupported distribution '${OS_PRETTY}'." >&2
-        echo "    Ars Arcanum is optimized and verified for Linux Mint 21/22 and Debian 12/13." >&2
+        echo "    Ars Arcanum supports Debian, Ubuntu, Mint, Fedora, Arch Linux, and openSUSE." >&2
         echo "    To proceed anyway on this platform, run with --force:" >&2
         echo "      bash scripts/setup_arcanum.sh --force" >&2
         exit 2
     fi
+elif [ "${IS_SUPPORTED}" -eq 1 ]; then
+    echo "[✓] Verified Tier 1 platform compatibility: ${OS_PRETTY} (${PKG_MGR})"
 else
-    echo "[✓] Verified platform compatibility: ${OS_PRETTY}"
+    echo "[✓] Verified Tier 2 platform compatibility: ${OS_PRETTY} (${PKG_MGR})"
 fi
 
 # 2. Check sudo availability and authorization early (unless dry-run or --no-sudo)
@@ -136,41 +168,18 @@ if [ "${DRY_RUN}" -eq 0 ] && [ "${USE_SUDO}" -eq 1 ]; then
     fi
 fi
 
-# Define Package Sets
-REQUIRED_APT_PACKAGES=(
-    git
-    zenity
-    libnotify-bin
-    curl
-    wget
-    tar
-    xz-utils
-    jq
-    pandoc
-    xdg-user-dirs
-    python3-gi
-    python3-gi-cairo
-    gir1.2-gtk-3.0
-)
+# Define Package Sets per Package Manager
+APT_PACKAGES=(git zenity libnotify-bin curl tar xz-utils jq pandoc xdg-user-dirs python3-gi python3-gi-cairo gir1.2-gtk-3.0 focuswriter libreoffice-writer libreoffice-gtk3 flatpak)
+APT_FONTS=(fonts-linuxlibertine fonts-ebgaramond fonts-alegreya fonts-sil-charis fonts-sil-gentiumplus fonts-bitter fonts-cmu)
 
-RECOMMENDED_APT_PACKAGES=(
-    focuswriter
-    deja-dup
-    duplicity
-    libreoffice-writer
-    libreoffice-gtk3
-    flatpak
-)
+DNF_PACKAGES=(git zenity libnotify curl tar xz jq pandoc xdg-user-dirs python3-gobject cairo-gobject gtk3 focuswriter libreoffice-writer flatpak)
+DNF_FONTS=(linux-libertine-fonts google-eb-garamond-fonts sil-gentium-plus-fonts)
 
-TYPOGRAPHY_FONTS=(
-    fonts-linuxlibertine
-    fonts-ebgaramond
-    fonts-alegreya
-    fonts-sil-charis
-    fonts-sil-gentiumplus
-    fonts-bitter
-    fonts-cmu
-)
+PACMAN_PACKAGES=(git zenity libnotify curl tar xz jq pandoc-cli xdg-user-dirs python-gobject gtk3 focuswriter libreoffice-fresh flatpak)
+PACMAN_FONTS=(ttf-linux-libertine ttf-gentium-plus)
+
+ZYPPER_PACKAGES=(git zenity libnotify-tools curl tar xz jq pandoc xdg-user-dirs python3-gobject typelib-1_0-Gtk-3_0 focuswriter libreoffice-writer flatpak)
+ZYPPER_FONTS=(linux-libertine-fonts sil-gentium-fonts)
 
 FLATPAK_APPS=(
     "md.obsidian.Obsidian"
@@ -178,38 +187,66 @@ FLATPAK_APPS=(
     "com.calibre_ebook.calibre"
 )
 
-# 3. APT Package Installation Phase
+# 3. System Package Installation Phase
 if [ "${USE_SUDO}" -eq 0 ]; then
-    echo "[1/6] Skipping APT system package updates (--no-sudo mode)..."
+    echo "[1/6] Skipping system package updates (--no-sudo mode)..."
     echo "  [i] Ensure core utilities (git, pandoc, flatpak, python3-gi, fonts) are present."
-    echo "[2/6] Skipping APT package installation (--no-sudo mode)..."
-    echo "[2b/6] Skipping APT font package installation (--no-sudo mode)..."
+    echo "[2/6] Skipping system package installation (--no-sudo mode)..."
+    echo "[2b/6] Skipping font package installation (--no-sudo mode)..."
 else
-    echo "[1/6] Updating package repositories..."
+    echo "[1/6] Updating package repositories (${PKG_MGR})..."
     if [ "${DRY_RUN}" -eq 1 ]; then
-        echo "  [DRY-RUN] Would run: sudo apt-get update -y"
+        echo "  [DRY-RUN] Would update ${PKG_MGR} repositories"
     else
-        sudo apt-get update -y
+        case "${PKG_MGR}" in
+            apt) sudo apt-get update -y ;;
+            dnf) sudo dnf check-update -y || true ;;
+            pacman) sudo pacman -Sy --noconfirm ;;
+            zypper) sudo zypper --non-interactive refresh ;;
+        esac
     fi
 
-    echo "[2/6] Installing required & recommended APT packages..."
-    ALL_APT_CORE=("${REQUIRED_APT_PACKAGES[@]}" "${RECOMMENDED_APT_PACKAGES[@]}")
+    echo "[2/6] Installing required & recommended system packages..."
     if [ "${DRY_RUN}" -eq 1 ]; then
-        echo "  [DRY-RUN] Would install core packages: ${ALL_APT_CORE[*]}"
+        echo "  [DRY-RUN] Would install packages via ${PKG_MGR}"
     else
-        sudo apt-get install -y "${ALL_APT_CORE[@]}"
+        case "${PKG_MGR}" in
+            apt)
+                sudo apt-get install -y "${APT_PACKAGES[@]}"
+                ;;
+            dnf)
+                sudo dnf install -y "${DNF_PACKAGES[@]}" || true
+                ;;
+            pacman)
+                sudo pacman -S --noconfirm --needed "${PACMAN_PACKAGES[@]}" || true
+                ;;
+            zypper)
+                sudo zypper --non-interactive install "${ZYPPER_PACKAGES[@]}" || true
+                ;;
+        esac
     fi
 
     echo "[2b/6] Installing book typography fonts..."
     if [ "${DRY_RUN}" -eq 1 ]; then
-        echo "  [DRY-RUN] Would install fonts: ${TYPOGRAPHY_FONTS[*]}"
+        echo "  [DRY-RUN] Would install typography fonts via ${PKG_MGR}"
     else
-        if ! sudo apt-get install -y "${TYPOGRAPHY_FONTS[@]}"; then
-            echo "[!] Warning: Some primary font packages unavailable. Attempting Libertinus fallback..." >&2
-            if ! sudo apt-get install -y fonts-libertinus; then
-                echo "[!] Notice: Libertinus fallback unavailable via APT. System will use DejaVu Serif fallback." >&2
-            fi
-        fi
+        case "${PKG_MGR}" in
+            apt)
+                if ! sudo apt-get install -y "${APT_FONTS[@]}"; then
+                    echo "[!] Warning: Some primary font packages unavailable. Attempting Libertinus fallback..." >&2
+                    sudo apt-get install -y fonts-libertinus 2>/dev/null || true
+                fi
+                ;;
+            dnf)
+                sudo dnf install -y "${DNF_FONTS[@]}" 2>/dev/null || true
+                ;;
+            pacman)
+                sudo pacman -S --noconfirm --needed "${PACMAN_FONTS[@]}" 2>/dev/null || true
+                ;;
+            zypper)
+                sudo zypper --non-interactive install "${ZYPPER_FONTS[@]}" 2>/dev/null || true
+                ;;
+        esac
     fi
 fi
 
@@ -408,6 +445,24 @@ else
         for df in "${DESKTOP_DIR}/"*.desktop; do
             [ -f "$df" ] && gio set "$df" metadata::trusted true 2>/dev/null || true
         done
+    fi
+    echo "  [✓] Installed desktop launchers to ~/.local/share/applications/ and Desktop"
+
+    # Optional Systemd User Backup Timer Installation
+    if [ "${ENABLE_TIMER:-0}" -eq 1 ]; then
+        echo "[6b/6] Installing automated systemd user backup timer..."
+        mkdir -p "${HOME}/.config/systemd/user"
+        if [ -f "${PROJECT_ROOT}/configs/systemd/arcanum-backup.service" ]; then
+            cp "${PROJECT_ROOT}/configs/systemd/arcanum-backup.service" "${HOME}/.config/systemd/user/"
+        fi
+        if [ -f "${PROJECT_ROOT}/configs/systemd/arcanum-backup.timer" ]; then
+            cp "${PROJECT_ROOT}/configs/systemd/arcanum-backup.timer" "${HOME}/.config/systemd/user/"
+        fi
+        if command -v systemctl &>/dev/null; then
+            systemctl --user daemon-reload 2>/dev/null || true
+            systemctl --user enable --now arcanum-backup.timer 2>/dev/null || true
+            echo "  [✓] Scheduled daily background backup timer (systemd user unit)"
+        fi
     fi
 fi
 

@@ -380,7 +380,7 @@ echo "  OK Test 20 passed: duplicate world names require --universe"
 
 echo "[Test 21] Manuscript XML escapes special characters (DAT-02)..."
 bash scripts/arcanum manuscript "XMLTest" --universe TestUni --world TestWorld --author 'A & B <Draft> "Quoted"' >/dev/null
-python3 -c "import xml.etree.ElementTree as ET; ET.parse('${HOME}/Manuscripts/XMLTest/nwProject.nwx'); print('  OK Test 21 passed: nwProject.nwx parses with special chars')"
+python3 -c 'import sys, xml.etree.ElementTree as ET; ET.parse(sys.argv[1]); print("  OK Test 21 passed: nwProject.nwx parses with special chars")' "${HOME}/Manuscripts/XMLTest/nwProject.nwx"
 grep -q '&amp;' "${HOME}/Manuscripts/XMLTest/nwProject.nwx" || { echo "  FAIL: expected XML entity escaping"; exit 1; }
 
 echo "[Test 22] Packaged CLI dispatches via symlink (PKG-01)..."
@@ -427,9 +427,9 @@ PYEOF
 
 echo "[Test 26] Relativistic Astrophysics & Brachistochrone CLI..."
 bash scripts/arcanum calc transit "alpha-centauri" --json > "${TMP_DIR}/astro.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/astro.json')); assert d['peak_velocity_c_fraction'] > 0.9; assert d['proper_time_sec'] > 0"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["peak_velocity_c_fraction"] > 0.9; assert d["proper_time_sec"] > 0' "${TMP_DIR}/astro.json"
 bash scripts/arcanum calc comms "5.2 AU" --json > "${TMP_DIR}/comms.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/comms.json')); assert d['one_way_seconds'] > 2000"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["one_way_seconds"] > 2000' "${TMP_DIR}/comms.json"
 echo "  OK Test 26 passed: Relativistic Brachistochrone and comms latency verified"
 
 echo "[Test 27] Hard Magic System constraints & tier violation detection..."
@@ -463,7 +463,7 @@ bash scripts/arcanum magic-check "${WORLD_PATH}" -m "${MS_PATH}" --json > "${TMP
 MAGIC_RC=$?
 set -e
 [ "${MAGIC_RC}" -eq 1 ] || { echo "  FAIL: expected magic tier violation exit code 1"; exit 1; }
-python3 -c "import json; d = json.load(open('${TMP_DIR}/magic_res.json')); assert any(f['id'] == 'MAG-101' for f in d['findings'])"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert any(f["id"] == "MAG-101" for f in d["findings"])' "${TMP_DIR}/magic_res.json"
 echo "  OK Test 27 passed: Arcane Constraint Matrix detected MAG-101 tier violation"
 rm -f "${MS_PATH}/Book-01/01_Act_I/03_MagicScene.md"
 
@@ -495,7 +495,7 @@ bash scripts/arcanum genealogy "House Solar" -w "${WORLD_PATH}" --mermaid > "${T
 grep -q "King Aethel" "${TMP_DIR}/tree.mmd"
 grep -q "Prince Kael" "${TMP_DIR}/tree.mmd"
 bash scripts/arcanum lineage "House Solar" -w "${WORLD_PATH}" --json > "${TMP_DIR}/lineage.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/lineage.json')); assert len(d['members']) >= 2; assert d['members'][0]['name'] == 'King Aethel'"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert len(d["members"]) >= 2; assert d["members"][0]["name"] == "King Aethel"' "${TMP_DIR}/lineage.json"
 echo "  OK Test 28 passed: Dynastic Genealogies & Succession order compiled"
 
 echo "[Test 29] Conlang Phonotactics & Historical Sound Shifts..."
@@ -512,23 +512,23 @@ sound_changes:
 ---
 EOF
 bash scripts/arcanum conlang generate "Archaic Valen" -w "${WORLD_PATH}" -n 5 --json > "${TMP_DIR}/conlang_gen.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/conlang_gen.json')); assert len(d['words']) == 5"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert len(d["words"]) == 5' "${TMP_DIR}/conlang_gen.json"
 bash scripts/arcanum conlang mutate "Archaic Valen" "apata keli" -w "${WORLD_PATH}" --json > "${TMP_DIR}/conlang_mut.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/conlang_mut.json')); assert d['mutated'] == 'afata cheli'"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["mutated"] == "afata cheli"' "${TMP_DIR}/conlang_mut.json"
 echo "  OK Test 29 passed: Conlang generation and sound-law mutations verified"
 
 echo "[Test 30] Narrative Pacing, POV Balance & Tension Arc Analytics..."
 bash scripts/arcanum pace "${MS_PATH}" --json > "${TMP_DIR}/pacing.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/pacing.json')); assert d['total_chapters'] >= 1; assert 'pov_distribution' in d"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["total_chapters"] >= 1; assert "pov_distribution" in d' "${TMP_DIR}/pacing.json"
 bash scripts/arcanum words "${MS_PATH}" --pov --json > "${TMP_DIR}/pov_report.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/pov_report.json')); assert 'pov_distribution' in d"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert "pov_distribution" in d' "${TMP_DIR}/pov_report.json"
 echo "  OK Test 30 passed: Pacing & POV screen-time analytics verified"
 
 echo "[Test 31] Overland Journey Modeler & Custom Planetary Calendar..."
 bash scripts/arcanum calc journey 150km -t mountain-pass -p foot-normal --json > "${TMP_DIR}/journey.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/journey.json')); assert d['total_days'] > 0; assert d['supplies_required']['rations_food_kg'] > 0"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["total_days"] > 0; assert d["supplies_required"]["rations_food_kg"] > 0' "${TMP_DIR}/journey.json"
 bash scripts/arcanum calendar "${WORLD_PATH}" --phases --json > "${TMP_DIR}/calendar.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/calendar.json')); assert len(d['moons']) >= 1; assert 'day' in d"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert len(d["moons"]) >= 1; assert "day" in d' "${TMP_DIR}/calendar.json"
 echo "  OK Test 31 passed: Journey route calculation and Planetary calendar verified"
 
 echo "[Test 32] Geopolitical Faction Matrix & Campaign Logistics..."
@@ -549,11 +549,11 @@ allies: ["[[Solar Empire]]"]
 ---
 EOF
 bash scripts/arcanum faction "${WORLD_PATH}" --json > "${TMP_DIR}/factions.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/factions.json')); assert d['factions_count'] >= 2; assert d['findings_count'] == 0"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["factions_count"] >= 2; assert d["findings_count"] == 0' "${TMP_DIR}/factions.json"
 bash scripts/arcanum calc battle -a 10000 -d 5000 --json > "${TMP_DIR}/battle.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/battle.json')); assert d['victor'] == 'Attacker'"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["victor"] == "Attacker"' "${TMP_DIR}/battle.json"
 bash scripts/arcanum calc logistics --infantry 5000 --json > "${TMP_DIR}/logistics.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/logistics.json')); assert d['logistics_requirements']['wagons_required'] > 0"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["logistics_requirements"]["wagons_required"] > 0' "${TMP_DIR}/logistics.json"
 echo "  OK Test 32 passed: Geopolitical Faction Matrix & Lanchester / Logistics engines verified"
 
 echo "[Test 33] In-World Economy, Commodity PPP & Tech Era Anachronisms..."
@@ -567,9 +567,9 @@ commodity_basket:
 ---
 EOF
 bash scripts/arcanum economy "${WORLD_PATH}" --json > "${TMP_DIR}/economy.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/economy.json')); assert d['economies_count'] >= 1"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["economies_count"] >= 1' "${TMP_DIR}/economy.json"
 bash scripts/arcanum audit tech "${MS_PATH}" --era medieval --json > "${TMP_DIR}/tech_audit.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/tech_audit.json')); assert 'findings' in d"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert "findings" in d' "${TMP_DIR}/tech_audit.json"
 echo "  OK Test 33 passed: In-World Economy & Tech Era Anachronism audit verified"
 
 echo "[Test 34] Causal DAGs, Time Travel Loops & Multiverse Branching..."
@@ -588,13 +588,13 @@ cat > "${MS_PATH}/Book-01/01_Act_I/04_ConvergenceScene.md" << 'EOF'
 @causal-origin: convergence
 EOF
 bash scripts/arcanum causality "${WORLD_PATH}" "${MS_PATH}" --json > "${TMP_DIR}/causality.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/causality.json')); assert d['events_count'] >= 2; assert d['findings_count'] == 0"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["events_count"] >= 2; assert d["findings_count"] == 0' "${TMP_DIR}/causality.json"
 rm -f "${MS_PATH}/Book-01/01_Act_I/04_ConvergenceScene.md"
 echo "  OK Test 34 passed: Causal DAG and timeline extraction verified"
 
 echo "[Test 35] Planetary Climate & Trophic Food-Web Simulator..."
 bash scripts/arcanum calc climate --star-lum 1.0 --distance-au 1.0 --json > "${TMP_DIR}/climate.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/climate.json')); assert d['insolation']['liquid_water_habitable'] is True"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["insolation"]["liquid_water_habitable"] is True' "${TMP_DIR}/climate.json"
 cat > "${WORLD_PATH}/Bestiary/Ancient_Fern.md" << 'EOF'
 ---
 name: "Ancient Fern"
@@ -614,7 +614,7 @@ dietary_prey: ["[[Ancient Fern]]"]
 ---
 EOF
 bash scripts/arcanum ecology "${WORLD_PATH}" --json > "${TMP_DIR}/ecology.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/ecology.json')); assert d['species_count'] >= 2; assert d['findings_count'] == 0"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["species_count"] >= 2; assert d["findings_count"] == 0' "${TMP_DIR}/ecology.json"
 echo "  OK Test 35 passed: Climate simulator and Trophic Food-Web verified"
 
 echo "[Test 36] Earth-Eponym Scanner & 6D Sensory Palette..."
@@ -622,15 +622,15 @@ set +e
 bash scripts/arcanum audit idioms "${MS_PATH}" --json > "${TMP_DIR}/idioms.json"
 bash scripts/arcanum audit senses "${MS_PATH}" --json > "${TMP_DIR}/senses.json"
 set -e
-python3 -c "import json; d = json.load(open('${TMP_DIR}/idioms.json')); assert 'findings' in d"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/senses.json')); assert 'overall_percentages' in d"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert "findings" in d' "${TMP_DIR}/idioms.json"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert "overall_percentages" in d' "${TMP_DIR}/senses.json"
 echo "  OK Test 36 passed: Idiom immersion audit and 6D Sensory Palette verified"
 
 echo "[Test 37] Inscriptions, In-World Ciphers & Prophecy Matrix..."
 bash scripts/arcanum cipher encode "SECRET VAULT" --type vigenere --key "LORE" --json > "${TMP_DIR}/cipher.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/cipher.json')); assert d['ciphertext'] != 'SECRET VAULT'"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["ciphertext"] != "SECRET VAULT"' "${TMP_DIR}/cipher.json"
 bash scripts/arcanum cipher runes "Thor" --json > "${TMP_DIR}/runes.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/runes.json')); assert len(d['runes']) > 0"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert len(d["runes"]) > 0' "${TMP_DIR}/runes.json"
 cat > "${WORLD_PATH}/Cosmology/Prophecies/Sun_Prophecy.md" << 'EOF'
 ---
 name: "Sun Prophecy"
@@ -641,7 +641,7 @@ clauses:
 ---
 EOF
 bash scripts/arcanum prophecy "${WORLD_PATH}" --json > "${TMP_DIR}/prophecy.json"
-python3 -c "import json; d = json.load(open('${TMP_DIR}/prophecy.json')); assert d['prophecies_count'] >= 1"
+python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["prophecies_count"] >= 1' "${TMP_DIR}/prophecy.json"
 echo "  OK Test 37 passed: Ciphers, Runes & Prophecy Matrix verified"
 
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

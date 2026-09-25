@@ -55,6 +55,11 @@ class TestDiagnostics(unittest.TestCase):
         self.assertIn("Ars Arcanum Diagnostic Triage Report", md)
         self.assertIn("Toolchain & Dependencies", md)
 
+    def test_run_doctor_report(self):
+        from lib.diagnostics import run_doctor_report
+        rc = run_doctor_report(as_json=True)
+        self.assertIn(rc, (0, 1))
+
 
 if __name__ == "__main__":
     unittest.main()

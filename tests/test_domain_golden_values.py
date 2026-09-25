@@ -173,7 +173,7 @@ class TestDomainGoldenValues(unittest.TestCase):
         # Year 3, Month 5, Day 12
         abs_day = date_to_absolute_day(year=3, month_idx=4, day=12, cal_spec=cal_spec)
         # Convert back
-        yr, m_idx, dy, dow = absolute_day_to_date(abs_day, cal_spec)
+        yr, m_idx, dy, _dow = absolute_day_to_date(abs_day, cal_spec)
         self.assertEqual(yr, 3)
         self.assertEqual(m_idx, 4)
         self.assertEqual(dy, 12)

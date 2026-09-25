@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-09-21T00:00:00Z",
+  "catalog_name": "Ars Arcanum Sovereign Speculative Plugin Marketplace",
+  "plugins": [
+    {
+      "id": "mythic_pantheon",
+      "name": "Mythic Pantheon & Divine Domain Validator",
+      "version": "1.0.0",
+      "author": "Ars Arcanum Craft Council",
+      "category": "lore",
+      "description": "Audits deity lineages, conflicting divine domains (e.g. un-syncretized solar deities), and divine intervention paradoxes.",
+      "min_arcanum_version": "1.6.0",
+      "hooks": ["validate_entity", "custom_metric"],
+      "tags": ["mythology", "deities", "pantheon", "worldbuilding"],
+      "files": {
+        "plugin.json": "{\n  \"id\": \"mythic_pantheon\",\n  \"name\": \"Mythic Pantheon & Divine Domain Validator\",\n  \"version\": \"1.0.0\",\n  \"author\": \"Ars Arcanum Craft Council\",\n  \"description\": \"Audits deity lineages, conflicting divine domains, and divine intervention paradoxes.\",\n  \"category\": \"lore\",\n  \"entry_point\": \"plugin.py\",\n  \"hooks\": [\n    \"validate_entity\",\n    \"custom_metric\"\n  ],\n  \"min_arcanum_version\": \"1.6.0\"\n}",
+        "plugin.py": "import re\nfrom typing import Any\n\nCONFLICTING_DOMAINS = {\n    \"sun\": [\"solar\", \"day\", \"light\", \"dawn\"],\n    \"death\": [\"underworld\", \"mortality\", \"necromancy\", \"afterlife\"],\n    \"war\": [\"battle\", \"strife\", \"conquest\", \"wrath\"],\n    \"ocean\": [\"sea\", \"tides\", \"depths\", \"storms\"]\n}\n\ndef hook_validate_entity(entity_data: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:\n    diagnostics = []\n    etype = str(entity_data.get(\"type\", \"\")).lower()\n    name = entity_data.get(\"name\", \"Unnamed Entity\")\n    \n    if etype in (\"deity\", \"god\", \"goddess\", \"demigod\", \"pantheon\"):\n        domains = entity_data.get(\"domains\", [])\n        if isinstance(domains, str):\n            domains = [d.strip() for d in domains.split(\",\")]\n        \n        if not domains:\n            diagnostics.append({\n                \"severity\": \"warning\",\n                \"message\": f\"Deity '{name}' has no defined divine domains or portfolio.\",\n                \"target\": name,\n                \"details\": {\"recommendation\": \"Specify domains such as 'Sun, Justice, Metallurgy' in frontmatter.\"}\n            })\n            \n        alignment = entity_data.get(\"alignment\", None)\n        worship_tier = entity_data.get(\"worship_tier\", None)\n        if worship_tier and str(worship_tier).lower() not in (\"local\", \"national\", \"continental\", \"cosmic\", \"primordial\"):\n            diagnostics.append({\n                \"severity\": \"info\",\n                \"message\": f\"Deity '{name}' uses non-standard worship tier '{worship_tier}'.\",\n                \"target\": name\n            })\n            \n    return diagnostics\n\ndef hook_custom_metric(text: str, context: dict[str, Any]) -> dict[str, Any]:\n    prayers = len(re.findall(r\"\\b(pray|prayed|prayer|supplication|altar|sacrifice|deity|gods|goddess)\\b\", text, re.I))\n    return {\"mythic_pantheon_piety_references\": prayers}\n"
+      }
+    },
+    {
+      "id": "linguistic_drift",
+      "name": "Linguistic Drift & Historical Phonetics",
+      "version": "1.0.0",
+      "author": "Ars Arcanum Craft Council",
+      "category": "speculative",
+      "description": "Validates historical phoneme shifts across dialects, archaic word roots, and conlang naming consistency.",
+      "min_arcanum_version": "1.6.0",
+      "hooks": ["validate_entity", "custom_metric"],
+      "tags": ["conlang", "linguistics", "phonology", "dialects"],
+      "files": {
+        "plugin.json": "{\n  \"id\": \"linguistic_drift\",\n  \"name\": \"Linguistic Drift & Historical Phonetics\",\n  \"version\": \"1.0.0\",\n  \"author\": \"Ars Arcanum Craft Council\",\n  \"description\": \"Validates historical phoneme shifts across dialects, archaic word roots, and conlang naming consistency.\",\n  \"category\": \"speculative\",\n  \"entry_point\": \"plugin.py\",\n  \"hooks\": [\n    \"validate_entity\",\n    \"custom_metric\"\n  ],\n  \"min_arcanum_version\": \"1.6.0\"\n}",
+        "plugin.py": "import re\nfrom typing import Any\n\ndef hook_validate_entity(entity_data: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:\n    diagnostics = []\n    name = entity_data.get(\"name\", \"\")\n    language = entity_data.get(\"language_family\", \"\")\n    \n    # Check for forbidden double plosives or illegal cluster patterns\n    if re.search(r\"(pb|td|kg|bp|dt|gk)\", name, re.IGNORECASE):\n        diagnostics.append({\n            \"severity\": \"info\",\n            \"message\": f\"Name '{name}' contains abutting voiced/voiceless plosive clusters which may violate phonetic harmony.\",\n            \"target\": name\n        })\n    return diagnostics\n\ndef hook_custom_metric(text: str, context: dict[str, Any]) -> dict[str, Any]:\n    apostrophes = len(re.findall(r\"[a-zA-Z]'[a-zA-Z]\", text))\n    foreign_italics = len(re.findall(r\"\\*[a-zA-Z]+\\*|_([a-zA-Z]+)_\", text))\n    return {\n        \"linguistic_apostrophe_glottal_stops\": apostrophes,\n        \"linguistic_italicized_terms\": foreign_italics\n    }\n"
+      }
+    },
+    {
+      "id": "trope_inversion",
+      "name": "Trope Inversion & Cliché Fatigue Diagnostic",
+      "version": "1.0.0",
+      "author": "Ars Arcanum Craft Council",
+      "category": "craft",
+      "description": "Scans manuscript prose for overused speculative tropes and highlights opportunities for subversive inversion.",
+      "min_arcanum_version": "1.6.0",
+      "hooks": ["validate_manuscript", "custom_metric"],
+      "tags": ["tropes", "craft", "subversion", "editorial"],
+      "files": {
+        "plugin.json": "{\n  \"id\": \"trope_inversion\",\n  \"name\": \"Trope Inversion & Cliché Fatigue Diagnostic\",\n  \"version\": \"1.0.0\",\n  \"author\": \"Ars Arcanum Craft Council\",\n  \"description\": \"Scans manuscript prose for overused speculative tropes and highlights opportunities for subversive inversion.\",\n  \"category\": \"craft\",\n  \"entry_point\": \"plugin.py\",\n  \"hooks\": [\n    \"validate_manuscript\",\n    \"custom_metric\"\n  ],\n  \"min_arcanum_version\": \"1.6.0\"\n}",
+        "plugin.py": "import re\nfrom typing import Any\n\nCLICHE_PATTERNS = [\n    (r\"chosen one\", \"Prophecy fatigue: consider inverting who the prophecy refers to or making it a fabricated political tool.\"),\n    (r\"ancient evil awakens\", \"Awakened evil trope: consider making the 'evil' an ancient misunderstood technological defense system.\"),\n    (r\"dark lord\", \"Monolithic villainy: give the antagonist clear economic, theological, or philosophical justifications.\"),\n    (r\"orphan boy with a mysterious birthmark\", \"Hero origin cliché: anchor the protagonist's drive in communal responsibility rather than bloodline entitlement.\")\n]\n\ndef hook_validate_manuscript(manuscript_data: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:\n    diagnostics = []\n    chapters = manuscript_data.get(\"chapters\", [])\n    for ch in chapters:\n        title = ch.get(\"title\", \"Chapter\")\n        text = ch.get(\"content\", \"\")\n        for pat, advice in CLICHE_PATTERNS:\n            if re.search(r\"\\b\" + pat + r\"\\b\", text, re.IGNORECASE):\n                diagnostics.append({\n                    \"severity\": \"info\",\n                    \"message\": f\"Detected classic trope pattern '{pat}' in {title}. Subversion prompt: {advice}\",\n                    \"target\": title\n                })\n    return diagnostics\n\ndef hook_custom_metric(text: str, context: dict[str, Any]) -> dict[str, Any]:\n    hits = 0\n    for pat, _ in CLICHE_PATTERNS:\n        hits += len(re.findall(r\"\\b\" + pat + r\"\\b\", text, re.I))\n    return {\"trope_inversion_opportunity_count\": hits}\n"
+      }
+    },
+    {
+      "id": "hard_sf_chronometry",
+      "name": "Hard SF Chronometry & Relativistic Dilation",
+      "version": "1.0.0",
+      "author": "Ars Arcanum Craft Council",
+      "category": "continuity",
+      "description": "Calculates relativistic lore consistency, time dilation curves, and light-cone communication latency.",
+      "min_arcanum_version": "1.6.0",
+      "hooks": ["validate_entity", "custom_metric"],
+      "tags": ["hard-sf", "physics", "relativity", "time-dilation"],
+      "files": {
+        "plugin.json": "{\n  \"id\": \"hard_sf_chronometry\",\n  \"name\": \"Hard SF Chronometry & Relativistic Dilation\",\n  \"version\": \"1.0.0\",\n  \"author\": \"Ars Arcanum Craft Council\",\n  \"description\": \"Calculates relativistic lore consistency, time dilation curves, and light-cone communication latency.\",\n  \"category\": \"continuity\",\n  \"entry_point\": \"plugin.py\",\n  \"hooks\": [\n    \"validate_entity\",\n    \"custom_metric\"\n  ],\n  \"min_arcanum_version\": \"1.6.0\"\n}",
+        "plugin.py": "import math\nimport re\nfrom typing import Any\n\ndef hook_validate_entity(entity_data: dict[str, Any], context: dict[str, Any]) -> list[dict[str, Any]]:\n    diagnostics = []\n    v_c = entity_data.get(\"velocity_fraction_c\", None)\n    name = entity_data.get(\"name\", \"Vessel\")\n    if v_c is not None:\n        try:\n            v = float(v_c)\n            if v >= 1.0:\n                diagnostics.append({\n                    \"severity\": \"error\",\n                    \"message\": f\"Vessel '{name}' has sub-light velocity >= 1.0c ({v}c). Relativistic singularity violation.\",\n                    \"target\": name\n                })\n            elif v > 0.999:\n                diagnostics.append({\n                    \"severity\": \"warning\",\n                    \"message\": f\"Vessel '{name}' travels at extreme relativistic speed ({v}c). Lorentz factor gamma > 22.3.\",\n                    \"target\": name\n                })\n        except ValueError:\n            pass\n    return diagnostics\n\ndef hook_custom_metric(text: str, context: dict[str, Any]) -> dict[str, Any]:\n    matches = len(re.findall(r\"\\b(light-year|lightyear|parsec|dilation|lorentz|gamma factor|sub-light)\\b\", text, re.I))\n    return {\"hard_sf_chronometry_terms\": matches}\n"
+      }
+    },
+    {
+      "id": "grimdark_entropy",
+      "name": "Grimdark Entropy & Tone Auditor",
+      "version": "1.0.0",
+      "author": "Ars Arcanum Craft Council",
+      "category": "audit",
+      "description": "Measures hope-to-despair ratio, mortality cadence, and grimdark tonal consistency across chapters.",
+      "min_arcanum_version": "1.6.0",
+      "hooks": ["custom_metric"],
+      "tags": ["grimdark", "tone", "entropy", "editorial"],
+      "files": {
+        "plugin.json": "{\n  \"id\": \"grimdark_entropy\",\n  \"name\": \"Grimdark Entropy & Tone Auditor\",\n  \"version\": \"1.0.0\",\n  \"author\": \"Ars Arcanum Craft Council\",\n  \"description\": \"Measures hope-to-despair ratio, mortality cadence, and grimdark tonal consistency across chapters.\",\n  \"category\": \"audit\",\n  \"entry_point\": \"plugin.py\",\n  \"hooks\": [\n    \"custom_metric\"\n  ],\n  \"min_arcanum_version\": \"1.6.0\"\n}",
+        "plugin.py": "import re\nfrom typing import Any\n\nHOPE_WORDS = re.compile(r\"\\b(hope|dawn|healing|mercy|triumph|joy|promise|sunlight|redemption)\\b\", re.I)\nDREAD_WORDS = re.compile(r\"\\b(ash|decay|blood|corpse|slaughter|despair|ruin|rot|futile|betrayal|gloom)\\b\", re.I)\n\ndef hook_custom_metric(text: str, context: dict[str, Any]) -> dict[str, Any]:\n    hope_count = len(HOPE_WORDS.findall(text))\n    dread_count = len(DREAD_WORDS.findall(text))\n    total = hope_count + dread_count\n    ratio = (dread_count / total) if total > 0 else 0.5\n    return {\n        \"grimdark_dread_word_count\": dread_count,\n        \"grimdark_hope_word_count\": hope_count,\n        \"grimdark_entropy_ratio\": round(ratio, 3)\n    }\n"
+      }
+    }
+  ]
+}

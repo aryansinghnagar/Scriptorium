@@ -18,10 +18,10 @@ Capabilities (PUB-106):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import json
 import argparse
+import json
 import logging
+import sys
 from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):

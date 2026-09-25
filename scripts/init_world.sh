@@ -258,6 +258,9 @@ cat << 'EOF' > "${STAGING_DIR}/.gitignore"
 # Ars Arcanum World Git Ignore
 .obsidian/workspace.json
 .obsidian/cache
+.arcanum_cache.json
+.sync_state.json
+*.lock
 *.bak
 *.tmp
 *.log
@@ -311,11 +314,13 @@ mkdir -p "${WORLDS_BASE}"
 mv "${STAGING_DIR}" "${TARGET_DIR}"
 SUCCESS=1
 
-# 6. Track new world in Universe Git repo if applicable
+# 6. Track new world in Universe Git repo if applicable (ADR-043)
 if [ "${USE_LEGACY_DIR}" -eq 0 ] && [ -d "${UNIVERSE_DIR}/.git" ] && command -v git &> /dev/null; then
     if ! (
         cd "${UNIVERSE_DIR}"
-        git add "${WORLD_NAME}" 2>/dev/null
+        git config -f .gitmodules "submodule.${WORLD_NAME}.path" "${WORLD_NAME}" 2>/dev/null || true
+        git config -f .gitmodules "submodule.${WORLD_NAME}.url" "./${WORLD_NAME}" 2>/dev/null || true
+        git add .gitmodules "${WORLD_NAME}" 2>/dev/null
         git_commit_safe "Add world '${WORLD_NAME}' to universe '${UNIVERSE_NAME}'"
     ); then
         echo "[!] Warning: universe tracking commit failed for '${WORLD_NAME}'. World itself is intact." >&2

@@ -179,28 +179,32 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 ### M28: Sovereign Privacy-First Audio Proofreader (Intelligence)
 - [x] Offline neural audio proofreading player (`scripts/lib/tts_reader.py`, `arcanum read`): Local auditory proofreading engine with Piper TTS / espeak-ng subprocess bridge, paragraph tracking, speed modulation (`0.75x` to `2.0x`), and WAV compilation.
 
-### M29: Production Hardening, Audit Remediation & Release Gate (Phases 0–7)
-- [x] **CI & Supply Chain Hardening**: Fixed pinned action SHAs (`setup-typst` v4.0.1, `gitleaks-action` v2.3.8), weekly Dependabot, multi-distro container CI matrix (`ubuntu:22.04`, `ubuntu:24.04`, `debian:12`, `debian:13`, ARM64), and automated Xvfb headless GUI startup verification (`G_DEBUG=fatal-criticals`).
-- [x] **Data Safety Architecture**: Implemented `atomic_write()` across all 40+ engines, 3-way DOCX hash synchronization with `.conflict.md` branching, safe tar extraction (`filter="data"`), and schema evolution (`scripts/lib/migrate.py`).
-- [x] **Modular Architecture**: Decoupled Core vs Craft engines (`scripts/lib/registry.py`), pure Python World Doctor and Concordance engines, unified Python CLI (`scripts/lib/cli.py`), structured logging (`scripts/lib/diagnostics.py`), and UI Controller (`scripts/lib/ui_controller.py`).
-- [x] **Security & Privacy**: Formal STRIDE-lite threat model (`docs/THREAT_MODEL.md`), strict offline Content Security Policy meta tags across all 27 HTML generators, and dynamic Git author identity extraction.
-- [x] **Scientific & Linter Benchmarks**: Domain golden values test suite (`tests/test_domain_golden_values.py`), sample size guardrails in stylistics/voice, labelled prose linter corpus (`tests/test_prose_linter_corpus.py`), and complete governance templates (`SUPPORT.md`, `DEPRECATION.md`, `.github/ISSUE_TEMPLATE/`).
+### M30: Sovereign Intelligence, Extensibility & Long-Term Sustainability (Phases 8–19)
+- [x] **Universal Corpus & Local Semantic RAG**: Universal structured RAG exporter (`scripts/lib/corpus_export.py`), hybrid TF-IDF + FTS5 vector lore query engine (`scripts/lib/local_rag.py`), and local AI fine-tuning dataset synthesizer (`scripts/lib/fine_tuning.py`).
+- [x] **Autonomous Editorial Intelligence & Zen Studio**: 4-persona autonomous editorial council (`scripts/lib/editorial_council.py`), standalone distraction-free Zen drafting studio (`scripts/lib/zen_studio.py`), and visual story canvas (`scripts/lib/story_canvas.py`).
+- [x] **Branching Fiction & Audio Overlays**: Interactive branching narrative graph compiler (`scripts/lib/branching_graph.py`), EPUB 3 SMIL media overlays (`scripts/lib/media_overlay.py`), and multi-volume series omnibus compiler (`scripts/lib/omnibus.py`).
+- [x] **Craft Deepening & System Hardening**: Writing sprint analytics (`scripts/lib/writing_sprint.py`), revision churn density heatmap (`scripts/lib/revision_heatmap.py`), causal DAG paradox validator (`scripts/lib/causality.py`), prophecy resolution matrix (`scripts/lib/prophecy.py`), 6D sensory immersion palette (`scripts/lib/senses.py`), and cryptographic archive freeze sealer (`scripts/lib/archive_freeze.py`).
+- [x] **Desktop Hub & Grand Tour**: Studio Desktop Hub (`scripts/lib/studio_hub.py`), 21-stage Grand Tour E2E integration lifecycle harness (`tests/test_grand_tour_e2e.py`), and offline self-contained Flatpak runtime bundle builder.
 
 ---
 
 ## 5. Real-Time Operational Status & Momentum Queues
 
 ### Operational State
-- **Active Status**: Production-Hardened Release Gate (v1.6.1).
-- **Verification**: 100% Pass Rate across **281 Python unit tests** and the canonical 7-stage verification harness (`scripts/verify.sh`).
-- **Code Quality**: Zero ShellCheck warnings, zero Python syntax errors, 100% pure Python standard library core engines, zero external pip dependencies.
+- **Active Status**: The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Milestone (**v3.7.0**).
+- **Verification**: **100% Pass Rate across 797 Python tests** (795 passed, 0 failures, 2 skipped) and the canonical 7-stage verification harness (`scripts/verify.sh`).
+- **Code Quality**: Zero Ruff linter violations across expanded rule sets, strict static typing via `mypy`, 100% pure Python standard library core craft engines, zero external pip dependencies.
 
 ---
 
 ## 6. Definition of Done
 
-- `bash scripts/verify.sh` passes across all 7 verification stages.
-- `python -m unittest discover -s tests -p "test_*.py"` passes 281/281 tests with 0 failures and 0 errors.
-- `python3 -m py_compile scripts/arcanum_app.py scripts/lib/*.py` compiles without syntax errors.
-- All craft, speculative, publishing, and diagnostic tools execute cleanly via `arcanum <subcommand>`.
+- `bash scripts/verify.sh` passes across all 7 canonical verification stages.
+- `python -m unittest discover tests` passes 797 tests with 0 failures and 0 errors.
+- `ruff check .` passes with 0 violations.
+- `mypy --explicit-package-bases scripts/lib/*.py tests/*.py` passes with clean static typing.
+- `python -m unittest tests/test_version_consistency.py` verifies version parity across all surfaces.
+- `python -m unittest tests/test_grand_tour_e2e.py` passes all 21 end-to-end integration stages.
+- All craft, intelligence, publishing, and diagnostic engines execute cleanly via `arcanum <subcommand>`.
 - Test universes, pure world lore vaults, and standalone manuscripts scaffold, export (PDF, EPUB, DOCX), snapshot, and restore cleanly without data loss.
+

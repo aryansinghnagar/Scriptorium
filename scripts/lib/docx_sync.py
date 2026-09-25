@@ -9,40 +9,34 @@ Google Docs, and LibreOffice Writer while preserving Markdown integrity.
 Zero external dependencies; operates 100% offline.
 """
 
-import sys
+import argparse
+import hashlib
+import json
+import logging
 import os
 import re
-import json
-import hashlib
-import zipfile
 import shutil
 import subprocess
-import logging
-import argparse
+import sys
 import xml.etree.ElementTree as ET
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("arcanum.docx_sync")
 
 try:
-    from lib.config import get_docx_config, get_active_docx_preset_name
+    from lib.config import get_active_docx_preset_name, get_docx_config
 except Exception:
     try:
-        from config import get_docx_config, get_active_docx_preset_name
+        from config import get_active_docx_preset_name, get_docx_config
     except Exception:
         def get_docx_config():
             return {
@@ -81,12 +75,12 @@ def escape_xml(text: str) -> str:
 
 def inches_to_dxa(inches: float) -> int:
     """Converts inches to twentieths of a point (dxa). 1 in = 1440 dxa."""
-    return int(round(inches * 1440))
+    return round(inches * 1440)
 
 
 def pt_to_half_pt(pt: float) -> int:
     """Converts points to half-points. 12 pt = 24."""
-    return int(round(pt * 2))
+    return round(pt * 2)
 
 
 def line_spacing_to_val(line_spacing: float) -> tuple:
@@ -96,7 +90,7 @@ def line_spacing_to_val(line_spacing: float) -> tuple:
     elif line_spacing >= 1.5:
         return (360, "auto")
     elif line_spacing >= 1.3:
-        return (int(round(240 * line_spacing)), "auto")
+        return (round(240 * line_spacing), "auto")
     else:
         return (240, "auto")
 
@@ -497,7 +491,7 @@ def convert_docx_to_markdown(docx_path: Path) -> str:
         raise
 
 
-def resolve_active_draft_dir(manuscript_dir: Path, requested_draft: str = None) -> Path:
+def resolve_active_draft_dir(manuscript_dir: Path, requested_draft: str | None = None) -> Path:
     """Finds the active or requested draft directory in a manuscript project."""
     ms_dir = manuscript_dir / "01-Manuscript" if (manuscript_dir / "01-Manuscript").is_dir() else manuscript_dir
     
@@ -531,7 +525,7 @@ def resolve_active_draft_dir(manuscript_dir: Path, requested_draft: str = None) 
     return draft_dirs[-1]
 
 
-def build_manuscript_docx(manuscript_dir: Path, draft_name: str = None, preset_name: str = None) -> dict:
+def build_manuscript_docx(manuscript_dir: Path, draft_name: str | None = None, preset_name: str | None = None) -> dict:
     """Builds both per-chapter .docx files and consolidated draft .docx files for a manuscript."""
     mpath = Path(manuscript_dir).resolve()
     draft_dir = resolve_active_draft_dir(mpath, draft_name)
@@ -632,7 +626,7 @@ def save_sync_state(draft_dir: Path, state: dict) -> None:
     atomic_write(state_file, json.dumps(state, indent=2))
 
 
-def sync_manuscript_docx(manuscript_dir: Path, draft_name: str = None) -> dict:
+def sync_manuscript_docx(manuscript_dir: Path, draft_name: str | None = None) -> dict:
     """Performs 3-way hash-verified bidirectional synchronization between .md and .docx files."""
     mpath = Path(manuscript_dir).resolve()
     draft_dir = resolve_active_draft_dir(mpath, draft_name)

@@ -1,0 +1,15 @@
+[Unit]
+Description=Ars Arcanum Automated World & Manuscript Backup Service
+Documentation=https://github.com/aryansinghnagar/Scriptorium
+After=default.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/arcanum backup --all
+StandardOutput=journal
+StandardError=journal
+Nice=19
+IOSchedulingClass=idle
+
+[Install]
+WantedBy=default.target

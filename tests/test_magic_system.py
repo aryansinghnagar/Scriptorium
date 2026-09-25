@@ -5,25 +5,27 @@ Covers magic profile extraction, character tier limits, catalyst validation, fat
 hard limitation enforcement, and HTML report generation.
 """
 
+import sys
 import tempfile
 import unittest
 from pathlib import Path
-import sys
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from lib.magic_system import (
-    extract_magic_profiles,
     extract_character_magic_profiles,
-    run_magic_audit,
+    extract_magic_profiles,
     generate_magic_html_report,
+    resolve_manuscript_dir,
+    resolve_world_dir,
+    run_magic_audit,
 )
 
 
 class TestMagicSystemEngine(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.world_dir = Path(self.temp_dir.name) / "World"
         self.ms_dir = Path(self.temp_dir.name) / "Manuscript"
@@ -34,10 +36,11 @@ class TestMagicSystemEngine(unittest.TestCase):
         (self.world_dir / "Characters").mkdir(parents=True)
         (self.ms_dir / "Book-01" / "01_Act_I").mkdir(parents=True)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         self.temp_dir.cleanup()
 
-    def test_extract_magic_profiles(self):
+    def test_extract_magic_profiles(self) -> None:
+        """Parses magic system frontmatter and markdown sections for rules and limits."""
         magic_file = self.world_dir / "Magic-Technology" / "Aether_Weaving.md"
         magic_file.write_text("""---
 name: "Aether Weaving"
@@ -70,7 +73,8 @@ Energy must be conserved.
         self.assertIn("ruby focus", data["catalysts"])
         self.assertTrue(any("resurrect" in lim for lim in data["hard_limitations"]))
 
-    def test_extract_character_magic_profiles(self):
+    def test_extract_character_magic_profiles(self) -> None:
+        """Parses character affinity, registered tier, and catalyst attunement."""
         char_file = self.world_dir / "Characters" / "Valen.md"
         char_file.write_text("""---
 name: "Valen Vance"
@@ -90,9 +94,10 @@ A promising initiate.
         self.assertEqual(chars["Valen Vance"]["magic_tier"], 2)
         self.assertIn("pyromancy", chars["Valen Vance"]["affinity"])
         self.assertIn("ruby focus", chars["Valen Vance"]["catalysts"])
+        self.assertEqual(chars["Valen Vance"]["max_fatigue"], 80)
 
-    def test_detect_tier_violation_mag101(self):
-        # Valen is Tier 2, scene has @cast: Valen Vance, Hellfire, tier=4
+    def test_detect_tier_violation_mag101(self) -> None:
+        """MAG-101 is triggered when a character casts above their registered tier."""
         (self.world_dir / "Magic-Technology" / "Aether.md").write_text("""---
 name: "Aether"
 type: magic_tech_system
@@ -120,8 +125,8 @@ Valen reached deep into the aether.
         self.assertEqual(finding["character"], "Valen Vance")
         self.assertIn("Tier 2", finding["message"])
 
-    def test_detect_missing_catalyst_mag102(self):
-        # Spell requires catalyst Diamond, but character and scene lack it
+    def test_detect_missing_catalyst_mag102(self) -> None:
+        """MAG-102 is raised when required spell catalyst is absent from scene and inventory."""
         (self.world_dir / "Characters" / "Valen.md").write_text("""---
 name: "Valen Vance"
 magic_tier: 3
@@ -140,7 +145,8 @@ The light shone through the prism.
         audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
         self.assertTrue(any(f["id"] == "MAG-102" for f in audit["findings"]))
 
-    def test_detect_hard_limitation_breach_mag103(self):
+    def test_detect_hard_limitation_breach_resurrection_mag103(self) -> None:
+        """MAG-103 detects resurrection descriptions violating explicit system bounds."""
         (self.world_dir / "Magic-Technology" / "Necromancy.md").write_text("""---
 name: "Necromancy"
 type: magic_tech_system
@@ -159,7 +165,98 @@ With a gasp, the fallen king was resurrected before their eyes.
         audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
         self.assertTrue(any(f["id"] == "MAG-103" for f in audit["findings"]))
 
-    def test_html_report_generation(self):
+    def test_detect_hard_limitation_breach_matter_creation_mag103(self) -> None:
+        """MAG-103 detects matter creation violating physical conservation bounds."""
+        (self.world_dir / "Magic-Technology" / "Elementalism.md").write_text("""---
+name: "Elementalism"
+type: magic_tech_system
+hard_limitations:
+  - "Cannot create matter from nothing"
+---
+""", encoding="utf-8")
+
+        scene = self.ms_dir / "Book-01" / "01_Act_I" / "04_Scene.md"
+        scene.write_text("""# Scene 4
+@pov: Valen
+
+With a wave of his hand, he created water from nothing to quench their thirst.
+""", encoding="utf-8")
+
+        audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
+        self.assertTrue(any(f["id"] == "MAG-103" for f in audit["findings"]))
+
+    def test_detect_fatigue_overdraw_mag104(self) -> None:
+        """MAG-104 flags accumulated fatigue exceeding character capacity in a scene."""
+        (self.world_dir / "Characters" / "Kaelen.md").write_text("""---
+name: "Kaelen"
+magic_tier: 3
+max_fatigue: 50
+---
+""", encoding="utf-8")
+
+        scene = self.ms_dir / "Book-01" / "01_Act_I" / "05_Scene.md"
+        scene.write_text("""# Scene 5
+@pov: Kaelen
+@cast: Kaelen, Flame Strike, tier=2, cost=30
+@cast: Kaelen, Fire Storm, tier=2, cost=30
+
+Kaelen collapsed from total exhaustion.
+""", encoding="utf-8")
+
+        audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
+        self.assertTrue(any(f["id"] == "MAG-104" for f in audit["findings"]))
+
+    def test_clean_scene_compliant_cast_no_findings(self) -> None:
+        """Compliant casting within tier, with catalyst, under fatigue limit gives 0 findings."""
+        (self.world_dir / "Magic-Technology" / "Aether.md").write_text("""---
+name: "Aether"
+type: magic_tech_system
+---
+""", encoding="utf-8")
+
+        (self.world_dir / "Characters" / "Valen.md").write_text("""---
+name: "Valen"
+magic_tier: 3
+catalyst: "Opal Focus"
+max_fatigue: 100
+---
+""", encoding="utf-8")
+
+        scene = self.ms_dir / "Book-01" / "01_Act_I" / "06_Scene.md"
+        scene.write_text("""# Scene 6
+@pov: Valen
+@reagent: Opal Focus
+@cast: Valen, Spark, tier=1, catalyst=Opal Focus, cost=10
+
+A single bright spark flickered to life.
+""", encoding="utf-8")
+
+        audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
+        self.assertEqual(audit["total_findings"], 0)
+
+    def test_character_inventory_catalyst_satisfies_requirement(self) -> None:
+        """Catalyst registered in character profile frontmatter satisfies catalyst check."""
+        (self.world_dir / "Characters" / "Elena.md").write_text("""---
+name: "Elena"
+magic_tier: 3
+attuned_catalysts:
+  - "Star Shard"
+---
+""", encoding="utf-8")
+
+        scene = self.ms_dir / "Book-01" / "01_Act_I" / "07_Scene.md"
+        scene.write_text("""# Scene 7
+@pov: Elena
+@cast: Elena, Radiant Ward, tier=2, catalyst=Star Shard
+
+The protective barrier hummed with power.
+""", encoding="utf-8")
+
+        audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
+        self.assertEqual(audit["total_findings"], 0)
+
+    def test_html_report_generation_and_csp(self) -> None:
+        """HTML report generates with strict offline Content-Security-Policy."""
         (self.world_dir / "Magic-Technology" / "Alchemy.md").write_text("""---
 name: "Alchemy"
 type: magic_tech_system
@@ -170,12 +267,25 @@ classification: "Potioncraft"
         out_html = self.ms_dir / "magic_report.html"
         generate_magic_html_report(audit, out_html)
         self.assertTrue(out_html.is_file())
-        self.assertIn("Arcane Constraint Matrix", out_html.read_text(encoding="utf-8"))
+        content = out_html.read_text(encoding="utf-8")
+        self.assertIn("Arcane Constraint Matrix", content)
+        self.assertIn("Content-Security-Policy", content)
+        self.assertIn("default-src 'none'", content)
 
-    def test_resolve_world_dir(self):
-        from lib.magic_system import resolve_world_dir
-        resolved = resolve_world_dir(str(self.world_dir))
-        self.assertEqual(resolved, str(self.world_dir.resolve()))
+    def test_html_report_clean_world_pass(self) -> None:
+        """HTML report displays green success badge when zero findings are detected."""
+        audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
+        out_html = self.ms_dir / "clean_report.html"
+        generate_magic_html_report(audit, out_html)
+        content = out_html.read_text(encoding="utf-8")
+        self.assertIn("100% consistent", content)
+
+    def test_resolve_world_and_manuscript_dir(self) -> None:
+        """Directory path resolution helpers resolve absolute and relative paths."""
+        resolved_w = resolve_world_dir(str(self.world_dir))
+        self.assertEqual(resolved_w, str(self.world_dir.resolve()))
+        resolved_m = resolve_manuscript_dir(str(self.ms_dir))
+        self.assertEqual(resolved_m, str(self.ms_dir.resolve()))
 
 
 if __name__ == "__main__":

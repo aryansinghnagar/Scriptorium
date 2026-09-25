@@ -1,0 +1,12 @@
+[Unit]
+Description=Ars Arcanum Scheduled Backup Timer
+Documentation=https://github.com/aryansinghnagar/Scriptorium
+
+[Timer]
+# Run daily at 02:00, or 15 minutes after boot if missed
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

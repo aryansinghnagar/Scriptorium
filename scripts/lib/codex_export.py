@@ -21,34 +21,18 @@ Capabilities (WOR-102):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import html
 import argparse
+import html
+import json
 import logging
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.codex_export")
 
@@ -187,7 +171,7 @@ def build_single_file_codex(categories: dict[str, list[dict]], world_name: str, 
             """
             entries_html.append(entry)
 
-    search_json = json.dumps(search_index)
+    search_json = json.dumps(search_index).replace("<", "\\u003c").replace(">", "\\u003e")
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -319,24 +303,24 @@ window.addEventListener('hashchange', handleHash);
     return output_path
 
 
-def main():
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Ars Arcanum Static World Wiki Codex Exporter (WOR-102)")
     parser.add_argument("world", help="World Lore Vault directory path")
     parser.add_argument("-o", "--output", help="Output file path (default: <world_name>_codex.html)")
     parser.add_argument("--html", help="Generate HTML codex export at path")
     parser.add_argument("--json", action="store_true", help="Output JSON vault taxonomy index")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     world_path = Path(args.world)
     if not world_path.is_dir():
         print(f"Error: World directory not found: {world_path}", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
     categories = scan_world_vault(world_path)
 
     if args.json:
         print(json.dumps({tax: len(items) for tax, items in categories.items()}, indent=2))
-        return
+        return 0
 
     out_file = Path(args.html or args.output or f"{world_path.name}_codex.html")
     build_single_file_codex(categories, world_name=world_path.name, output_path=out_file)
@@ -346,7 +330,8 @@ def main():
     print(f"World:          {world_path.name}")
     print(f"Total Articles: {total_articles} across {len(categories)} categories")
     print(f"Generated:      {out_file} ({out_file.stat().st_size:,} bytes)")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

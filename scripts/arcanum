@@ -24,7 +24,7 @@ if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ] && [ -f "${SCRIPT_DIR}/verify.sh
     fi
 fi
 
-VERSION="1.6.0"
+VERSION="3.7.0"
 
 usage() {
     cat << USAGE
@@ -36,6 +36,7 @@ Usage:
   ars-arcanum <command> [arguments...]
 
 ✍️  Core Authoring & Editorial Craft:
+  hub [TARGET] [--port PORT]   Launch Sovereign Studio Desktop Hub & Telemetry Dashboard
   write [TARGET]               Open writing workspace in novelWriter or Obsidian (alias: open)
   word [MS]                    Open manuscript in Microsoft Word / LibreOffice (alias: writer)
   docx <build|sync|import|open> Manage Word .docx manuscript synchronization
@@ -55,6 +56,7 @@ Usage:
   tension [MS] [--html]        Model chapter tension curve & narrative arcs
   plot [MS] [--html|--matrix]  Multi-track plot grid & subplot pacing matrix (PLT-101)
   structure [MS] [-p PARADIGM] Story paradigm enforcer: 3-Act, Save the Cat, Hero's Journey (PLT-102)
+  freeze [TARGET] [options]    Cosmos archive freeze & cryptographic provenance seal
   ambient [PROFILE]            Focus noise & binaural beat synthesizer (PLT-106)
   portfolio [DIR] [--html]     Multi-manuscript catalog dashboard & drafting velocity (OPS-103)
   package [MS] [-t TARGET]     Multi-platform release packager: Reader, Submission, ARC (OPS-101)
@@ -62,6 +64,7 @@ Usage:
 🪐 Universe, World Lore & Series Continuity:
   universe [NAME] [--list]     Create or list narrative universes in ~/Universes/
   world <NAME> [-u UNIVERSE]   Scaffold an Obsidian World Lore Vault
+  cast [UNIVERSE] [--html|--md] Multi-volume Dramatis Personae & Universe Cast Matrix (alias: dramatis-personae)
   map <WORLD> [--html|--svg]   Interactive offline vector cartography & map viewer (WOR-101)
   codex <WORLD> [--html]       Compile static offline World Wiki encyclopedia (WOR-102)
   series [TARGET] [--html]     Multi-book series continuity & character trait ledger (WOR-103)
@@ -390,7 +393,10 @@ case "${COMMAND}" in
     series|series-continuity)
         exec python3 "${PROJECT_ROOT}/scripts/lib/series_continuity.py" "$@"
         ;;
-    concordance|glossary|dramatis-personae)
+    cast|dramatis-personae|dramatis|characters-cast)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/dramatis_personae.py" "$@"
+        ;;
+    concordance|glossary)
         exec bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$@"
         ;;
     continuity|check-continuity)
@@ -560,6 +566,39 @@ case "${COMMAND}" in
     portfolio|catalog)
         exec python3 "${PROJECT_ROOT}/scripts/lib/portfolio.py" "$@"
         ;;
+    rag|query-lore|semantic-search|lore-query)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/local_rag.py" "$@"
+        ;;
+    market|plugin-market|marketplace)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/plugin_market.py" "$@"
+        ;;
+    train-data|lora-dataset|dataset-synth|fine-tune)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/fine_tuning.py" "$@"
+        ;;
+    branch|branching|gamebook|interactive-fiction|branch-graph)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/branching_graph.py" "$@"
+        ;;
+    hub|dashboard|gui-web|studio-hub)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/studio_hub.py" "$@"
+        ;;
+    causality|causal|time-travel|ctc|multiverse)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/causality.py" "$@"
+        ;;
+    prophecy|oracle|arcane-inscription|prophecy-matrix)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/prophecy.py" "$@"
+        ;;
+    senses|sensory|immersion|white-room)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/senses.py" "$@"
+        ;;
+    sprint|writing-sprint|pomodoro|session)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/writing_sprint.py" "$@"
+        ;;
+    revision-heatmap|churn|revision-density|draft-churn)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/revision_heatmap.py" "$@"
+        ;;
+    freeze|archive-freeze|seal-archive|verify-archive)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/archive_freeze.py" "$@"
+        ;;
     package|dist|bundle)
         exec python3 "${PROJECT_ROOT}/scripts/package_distribution.py" "$@"
         ;;
@@ -709,7 +748,8 @@ known_commands = [
     "calc", "magic-check", "magic-report", "genealogy", "lineage", "conlang",
     "faction", "economy", "causality", "ecology", "climate", "idioms", "senses",
     "cipher", "prophecy", "audit", "pace", "tension", "voice", "calendar", "journey",
-    "gui", "control-center", "menu", "interactive", "verify", "setup", "uninstall", "version", "help"
+    "gui", "control-center", "menu", "interactive", "verify", "setup", "uninstall", "version", "help",
+    "freeze", "archive-freeze", "seal-archive", "verify-archive", "cast", "dramatis-personae", "dramatis", "characters-cast"
 ]
 
 matches = difflib.get_close_matches(cmd, known_commands, n=1, cutoff=0.55)

@@ -144,6 +144,10 @@ fi
 WORLD_NAME=$(basename "${SELECTED_WORLD}")
 cd "${SELECTED_WORLD}"
 
+# Acquire advisory world lock (F-28)
+arcanum_lock_dir "${SELECTED_WORLD}" 10 "snapshot" || exit 1
+trap 'arcanum_unlock_dir "${SELECTED_WORLD}"' EXIT INT TERM
+
 # Helper to handle transient index lock contention (e.g. background Obsidian Git commits)
 wait_for_git_lock() {
     local repo_dir="${1:-.}"

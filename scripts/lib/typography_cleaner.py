@@ -25,35 +25,19 @@ Capabilities (PRO-104):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import difflib
 import argparse
+import difflib
+import json
 import logging
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write
 
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
 
 logger = logging.getLogger("arcanum.typography")
 
@@ -76,9 +60,10 @@ def normalize_typography_text(text: str) -> tuple[str, dict]:
     for line in lines:
 
         # 1. Trailing whitespace
-        clean_end = line.rstrip("\r\n \t")
-        newline_char = line[len(clean_end):]
-        if line != clean_end + newline_char:
+        newline_char = "\r\n" if line.endswith("\r\n") else "\n" if line.endswith("\n") else ""
+        raw_without_nl = line[:-len(newline_char)] if newline_char else line
+        clean_end = raw_without_nl.rstrip(" \t")
+        if len(clean_end) < len(raw_without_nl):
             stats["trailing_spaces_removed"] += 1
         line = clean_end
 
@@ -216,8 +201,13 @@ def clean_target(target_path: Path, in_place: bool = False, make_backup: bool = 
         "target": str(target_path),
         "in_place": in_place,
         "summary": total_stats,
-        "files": file_results
+        "files": file_results,
     }
+
+
+def clean_directory(dir_path: Path, in_place: bool = False, make_backup: bool = True) -> dict:
+    """Batch cleans all markdown files in a directory."""
+    return clean_target(dir_path, in_place=in_place, make_backup=make_backup)
 
 
 def main():

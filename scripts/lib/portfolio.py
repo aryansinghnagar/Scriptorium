@@ -18,35 +18,18 @@ Capabilities (OPS-103):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import html
-import datetime
 import argparse
+import datetime
+import html
+import json
 import logging
+import re
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.portfolio")
 
@@ -141,11 +124,15 @@ def scan_portfolio(root_dir: Path | None = None) -> dict:
     total_words = sum(p["word_count"] for p in projects)
     total_chapters = sum(p["chapter_count"] for p in projects)
     total_volumes = sum(p["volume_count"] for p in projects)
+    total_target_words = sum(p.get("target_words", 0) for p in projects)
+    overall_progress_pct = round((total_words / total_target_words * 100), 1) if total_target_words > 0 else 0.0
 
     return {
         "scan_time": datetime.datetime.now().isoformat(),
         "total_projects": len(projects),
         "total_words": total_words,
+        "total_target_words": total_target_words,
+        "overall_progress_pct": min(100.0, overall_progress_pct),
         "total_chapters": total_chapters,
         "total_volumes": total_volumes,
         "projects": projects

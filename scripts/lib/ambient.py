@@ -23,35 +23,18 @@ Capabilities (PLT-106):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import math
-import struct
-import wave
-import random
 import argparse
 import logging
+import math
+import random
+import struct
+import wave
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.ambient")
 
@@ -322,7 +305,7 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Command mode")
 
     p_gen = subparsers.add_parser("generate", help="Synthesize WAV focus audio file or HTML player")
-    p_gen.add_argument("profile", nargs="?", default="rainy_library", choices=list(PROFILES.keys()) + ["white", "pink", "brown"], help="Atmosphere profile or noise color")
+    p_gen.add_argument("profile", nargs="?", default="rainy_library", choices=[*list(PROFILES.keys()), "white", "pink", "brown"], help="Atmosphere profile or noise color")
     p_gen.add_argument("-d", "--duration", type=int, default=10, help="Duration in seconds (default: 10s)")
     p_gen.add_argument("-o", "--output", help="Output .wav path")
     p_gen.add_argument("--binaural", choices=["alpha", "theta", "beta", "gamma"], default="alpha", help="Binaural frequency wave (default: alpha)")

@@ -7,13 +7,13 @@ finish-args:
   - --share=ipc
   - --socket=fallback-x11
   - --socket=wayland
-  - --socket=x11
   # PKG-03: `~/...` tilde forms are deprecated; Ars Arcanum manages whole
   # author trees (~/Universes, ~/Manuscripts, ~/Worlds legacy) plus Git
   # metadata, so a scoped `home` grant replaces the two tilde grants.
   - --filesystem=home
   - --filesystem=xdg-desktop:ro
   - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.freedesktop.Flatpak
 
 modules:
   - name: ars-arcanum
@@ -23,6 +23,7 @@ modules:
       - mkdir -p /app/share/ars-arcanum/templates
       - mkdir -p /app/share/ars-arcanum/configs
       - mkdir -p /app/share/applications
+      - mkdir -p /app/share/metainfo
       - mkdir -p /app/bin
       - cp -r scripts/* /app/share/ars-arcanum/scripts/
       # PKG-03: strip bytecode for reproducible packages.
@@ -33,6 +34,7 @@ modules:
       - chmod +x /app/share/ars-arcanum/scripts/arcanum_app.py
       - cp -r templates/* /app/share/ars-arcanum/templates/
       - cp -r configs/* /app/share/ars-arcanum/configs/
+      - cp flatpak/org.arsarcanum.ArsArcanum.metainfo.xml /app/share/metainfo/
       # PKG-02: generate Flatpak-native launchers calling /app/bin/arcanum
       # so the installed .desktop files never contain __PROJECT_ROOT__.
       - |

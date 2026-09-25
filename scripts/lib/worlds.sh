@@ -56,6 +56,24 @@ sanitize_name() {
     printf '%s' "${safe}"
 }
 
+# arcanum_validate_volume_name VOL -> validates volume identifier against path traversal and special characters
+arcanum_validate_volume_name() {
+    local vol="${1:-}"
+    if [ -z "${vol}" ]; then
+        echo "Error: Volume name cannot be empty." >&2
+        return 2
+    fi
+    if [ "${vol}" = "all" ]; then
+        return 0
+    fi
+    # Must be alphanumeric, hyphen, or underscore and contain no path separators or ..
+    if [[ ! "${vol}" =~ ^[A-Za-z0-9_-]+$ ]] || [[ "${vol}" == *"."* ]] || [[ "${vol}" == *"/"* ]] || [[ "${vol}" == *"\\"* ]]; then
+        echo "Error: Invalid volume name '${vol}'. Volume names must contain only alphanumeric characters, hyphens, or underscores, and cannot contain path separators or '..'." >&2
+        return 2
+    fi
+    return 0
+}
+
 # git_commit_safe MSG -> commits using author's configured Git identity or clean local tool fallback
 git_commit_safe() {
     local msg="$1"
@@ -358,4 +376,54 @@ resolve_target_dir() {
 
     printf '%s' "${resolved}"
 }
+
+# ==============================================================================
+# Fail-Safe Concurrency & Subprocess Timeout Management
+# ==============================================================================
+
+# run_with_timeout SECONDS COMMAND [ARGS...]
+# Runs a command with a fail-safe timeout guard (defaulting to 120s if not specified)
+run_with_timeout() {
+    local timeout_sec="${1:-120}"
+    shift
+    if command -v timeout &> /dev/null; then
+        timeout "${timeout_sec}" "$@"
+    elif command -v gtimeout &> /dev/null; then
+        gtimeout "${timeout_sec}" "$@"
+    else
+        "$@"
+    fi
+}
+
+# arcanum_lock_dir DIR [TIMEOUT_SECS] [OPERATION_NAME]
+# Acquires an advisory flock on DIR/.arcanum.lock
+arcanum_lock_dir() {
+    local dir="${1:-.}"
+    local timeout_sec="${2:-10}"
+    local op_name="${3:-operation}"
+    local lock_file="${dir}/.arcanum.lock"
+
+    if command -v flock &> /dev/null; then
+        exec 9>"${lock_file}"
+        if ! flock -x -w "${timeout_sec}" 9; then
+            echo "[!] Error: Timed out waiting for lock on '${dir}' (operation: ${op_name})" >&2
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# arcanum_unlock_dir DIR
+# Releases the advisory flock on DIR/.arcanum.lock
+arcanum_unlock_dir() {
+    local dir="${1:-.}"
+    local lock_file="${dir}/.arcanum.lock"
+
+    if command -v flock &> /dev/null; then
+        flock -u 9 2>/dev/null || true
+        exec 9>&- 2>/dev/null || true
+    fi
+    return 0
+}
+
 

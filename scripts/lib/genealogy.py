@@ -24,24 +24,19 @@ Capabilities:
 Zero external runtime dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import html
 import argparse
+import html
+import json
 import logging
+import re
+import sys
 from pathlib import Path
+from typing import Any
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write
 from collections import defaultdict
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -66,7 +61,7 @@ def clean_wikilink(val: str) -> str:
     return s
 
 
-def parse_year(val) -> float:
+def parse_year(val: Any) -> float | None:
     """Parses year strings like '450 BCE', '-450 IE', '1240 AC', '500' to a numeric value for chronological checks."""
     if val is None:
         return None
@@ -87,42 +82,24 @@ def parse_year(val) -> float:
     return None
 
 
-def parse_yaml_frontmatter(content: str) -> dict:
-    """Extracts frontmatter dictionary from markdown note."""
-    fm_match = FRONTMATTER_REGEX.match(content)
-    if not fm_match:
-        return {}
-    
-    data = {}
-    lines = fm_match.group(1).splitlines()
-    current_key = None
-    
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        
-        if raw_line.startswith("  - ") or raw_line.startswith("    - ") or (raw_line.startswith("- ") and current_key):
-            item_val = clean_wikilink(line.lstrip("- ").strip())
-            if current_key:
-                if not isinstance(data.get(current_key), list):
-                    data[current_key] = []
-                data[current_key].append(item_val)
-            continue
+try:
+    from lib.frontmatter import parse_yaml_frontmatter as _base_parse_fm
+except ImportError:
+    from frontmatter import parse_yaml_frontmatter as _base_parse_fm
 
-        if ":" in line:
-            key, val = line.split(":", 1)
-            key = key.strip().lower()
-            val = val.strip()
-            current_key = key
-            
-            if not val:
-                data[key] = []
-            elif val.startswith("[") and val.endswith("]"):
-                items = [clean_wikilink(v) for v in val[1:-1].split(",") if v.strip()]
-                data[key] = items
-            else:
-                data[key] = clean_wikilink(val)
+
+def parse_yaml_frontmatter(content: str) -> dict:
+    """Extracts frontmatter dictionary from markdown note with cleaned wikilinks."""
+    raw = _base_parse_fm(content)
+    data = {}
+    for k, v in raw.items():
+        key = k.lower()
+        if isinstance(v, list):
+            data[key] = [clean_wikilink(item) if isinstance(item, str) else item for item in v]
+        elif isinstance(v, str):
+            data[key] = clean_wikilink(v)
+        else:
+            data[key] = v
     return data
 
 
@@ -232,10 +209,10 @@ def validate_genealogy(chars: dict) -> list:
                 continue
             for parent in chars[curr]["parents"]:
                 if parent == start_char:
-                    return path + [parent]
+                    return [*path, parent]
                 if parent not in visited:
                     visited.add(parent)
-                    stack.append((parent, path + [parent]))
+                    stack.append((parent, [*path, parent]))
         return None
 
     for name in chars:
@@ -350,7 +327,7 @@ def get_house_lineage(chars: dict, house_name: str) -> list:
     return sorted(members, key=sort_key)
 
 
-def generate_mermaid_flowchart(chars: dict, target_query: str = None) -> str:
+def generate_mermaid_flowchart(chars: dict, target_query: str | None = None) -> str:
     """Generates Mermaid.js flowchart code for the target house or character family tree."""
     # Filter nodes if query given
     nodes_to_include = set()
@@ -531,7 +508,7 @@ def generate_genealogy_html_report(title: str, mermaid_code: str, lineage: list,
     atomic_write(output_file, html_content)
 
 
-def print_terminal_tree(chars: dict, root_name: str, prefix: str = "", visited: set = None):
+def print_terminal_tree(chars: dict, root_name: str, prefix: str = "", visited: set | None = None):
     """Recursively prints an ASCII/Unicode hierarchy tree."""
     if visited is None:
         visited = set()
@@ -559,7 +536,7 @@ def print_terminal_tree(chars: dict, root_name: str, prefix: str = "", visited: 
         print_terminal_tree(chars, child_name, next_prefix, visited)
 
 
-def resolve_world_dir(target_str: str = None) -> str:
+def resolve_world_dir(target_str: str | None = None) -> str:
     """Resolves world input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()

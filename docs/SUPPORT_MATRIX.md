@@ -13,6 +13,9 @@ This document defines the formal compatibility, architecture tiers, and display 
 | **Ubuntu Desktop** | 24.04 LTS (Noble) | XFCE / GNOME | x86_64 | **Tier 1** | CI Reference & Fully Supported |
 | **Debian** | 13 (Trixie) | XFCE | x86_64 | **Tier 1** | Fully Supported |
 | **Debian** | 12 (Bookworm) | XFCE | x86_64 | **Tier 1** | Fully Supported |
+| **Fedora / RHEL** | 39 / 40 / 41 | GNOME / XFCE | x86_64 | **Tier 2** | Supported via DNF & RPM spec (`pkg/rpm/`) |
+| **Arch Linux / Manjaro** | Rolling | Any | x86_64 | **Tier 2** | Supported via Pacman & AUR PKGBUILD (`pkg/arch/`) |
+| **openSUSE** | Tumbleweed / Leap | Any | x86_64 | **Tier 2** | Supported via Zypper |
 | **Ubuntu Desktop** | 22.04 LTS | XFCE / GNOME | x86_64 | **Tier 2** | Compatible (requires `--force`) |
 | **Debian Derivatives** | Rolling / Sid | Any | x86_64 | **Tier 2** | Community Tested (`--force`) |
 | **Linux (ARM)** | Mint / Debian / Ubuntu | XFCE | aarch64 (ARM64) | **Tier 2** | Precompiled Typst musl supported |

@@ -206,11 +206,8 @@ if [ -n "${BOOK_VOLUME_CLI}" ]; then
     if [ "${BOOK_VOLUME_CLI}" = "all" ] || [ "${BOOK_VOLUME_CLI}" = "ALL" ] || [ "${BOOK_VOLUME_CLI}" = "omnibus" ]; then
         SELECTED_VOLUME="all"
     else
-        # Reject path traversal components (Issue 5)
-        if [[ "${BOOK_VOLUME_CLI}" == *".."* ]] || [[ "${BOOK_VOLUME_CLI}" == *"/"* ]] || [[ "${BOOK_VOLUME_CLI}" == *"\\"* ]]; then
-            echo "Error: Invalid volume name '${BOOK_VOLUME_CLI}'. Volume name cannot contain path traversal components ('..') or slashes." >&2
-            exit 2
-        fi
+        # Reject path traversal and invalid characters (Issue 5 / P3-M5)
+        arcanum_validate_volume_name "${BOOK_VOLUME_CLI}" || exit $?
         if [ -d "${MANUSCRIPT_DIR}/${BOOK_VOLUME_CLI}" ]; then
             SELECTED_VOLUME="${BOOK_VOLUME_CLI}"
         else

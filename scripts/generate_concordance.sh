@@ -69,6 +69,7 @@ while [ $# -gt 0 ]; do
 done
 
 TARGET_BOOK="${BOOK_CLI:-${POSITIONAL[1]:-all}}"
+arcanum_validate_volume_name "${TARGET_BOOK}" || exit $?
 
 RESOLVED_MS=""
 RESOLVED_WORLD=""

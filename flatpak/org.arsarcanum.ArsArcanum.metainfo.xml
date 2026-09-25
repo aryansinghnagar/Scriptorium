@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.arsarcanum.ArsArcanum</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Ars Arcanum</name>
+  <summary>Sovereign speculative fiction writing and worldbuilding operating system</summary>
+  
+  <description>
+    <p>
+      Ars Arcanum (Scriptorium) is a 100% offline, privacy-first writing environment and worldbuilding studio tailored for novelists, screenwriters, and speculative fiction creators.
+    </p>
+    <p>Key Capabilities:</p>
+    <ul>
+      <li>Multi-Tier Cosmos &amp; World Bibles: Characters, Factions, Magic Systems, Calendars, Dynastic Lineages, and Conlangs.</li>
+      <li>Universal Story Paradigms: 3-Act Structure, 8-Sequence Method, Save the Cat, Hero's Journey, Kishōtenketsu, Fichtean Curve, and Freytag's Pyramid.</li>
+      <li>Interactive Visual Story Canvas: Drag-and-drop scene corkboard with live pacing harmony score recalculation.</li>
+      <li>Dual-Track Timeline Synchronizer: Aligns narrative reading order with in-world chronological epochs and detects temporal paradoxes.</li>
+      <li>Multi-Volume Series Omnibus Compiler: Compiles multi-book series into unified omnibus editions with merged Dramatis Personae.</li>
+      <li>Speculative Fiction Plugin Architecture: Extensible zero-dependency craft and world lore linters.</li>
+      <li>Publication Toolchain: Compiles to Print PDF (Typst), EPUB3 (with SMIL Media Overlays), and Word DOCX.</li>
+      <li>Fail-Safe Data Protection: Atomic writes, multi-tier Git version milestones, and optional GPG AES-256 encrypted backups.</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">arcanum-control-center.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Ars Arcanum Desktop Control Center and Studio Suite</caption>
+      <image>https://raw.githubusercontent.com/aryansinghnagar/Scriptorium/main/docs/assets/screenshot-main.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Interactive Visual Story Canvas and Corkboard</caption>
+      <image>https://raw.githubusercontent.com/aryansinghnagar/Scriptorium/main/docs/assets/screenshot-canvas.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Dual-Track Timeline Synchronizer and Paradox Inspector</caption>
+      <image>https://raw.githubusercontent.com/aryansinghnagar/Scriptorium/main/docs/assets/screenshot-timeline.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/aryansinghnagar/Scriptorium</url>
+  <url type="bugtracker">https://github.com/aryansinghnagar/Scriptorium/issues</url>
+  <url type="vcs-browser">https://github.com/aryansinghnagar/Scriptorium</url>
+  <url type="donation">https://github.com/sponsors/aryansinghnagar</url>
+
+  <developer_name>Ars Arcanum Sovereign Authorship Collective</developer_name>
+
+  <provides>
+    <binary>arcanum</binary>
+    <binary>ars-arcanum</binary>
+  </provides>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="3.7.0" date="2026-09-25">
+      <description>
+        <p>Phase 19 Release — The Sovereign Local Intelligence, Editorial Intelligence &amp; Narrative Distribution Architecture: Interactive Branching Narrative Graph &amp; Choice Engine (arcanum branch), Local Semantic Retrieval RAG &amp; Context Synthesis Engine (arcanum rag), Multi-Perspective Autonomous Editorial Council Engine (arcanum council), Local AI Fine-Tuning &amp; Dataset Synthesizer (arcanum train-data), Universal Structured Corpus &amp; RAG Dataset Exporter (arcanum corpus), Offline Neural TTS &amp; Audio Proofreader (arcanum tts), Multi-Platform Distribution &amp; Packaging Engine (arcanum package), World Doctor &amp; Cosmos Integrity Diagnostics (arcanum doctor), and 21-Stage Grand Tour Master Integration Lifecycle Harness.</p>
+      </description>
+    </release>
+    <release version="3.6.0" date="2026-09-24">
+      <description>
+        <p>Phase 18 Release — The Authoring Studios, Publishing Toolchains &amp; Creative Scaffolding Expansion: Back-Matter Concordance &amp; Dramatis Personae Indexer (arcanum concordance), Sovereign Zen Drafting Studio &amp; In-Situ Lore Drawer (arcanum studio), Visual Story Canvas &amp; Multi-Paradigm Corkboard (arcanum canvas), Multi-Volume Series Omnibus Compiler (arcanum omnibus), Author Portfolio &amp; Catalog Analytics Dashboard (arcanum portfolio), EPUB 3 SMIL Media Overlays &amp; Synchronized Narration Player (arcanum overlay), Smart Typography Normalizer &amp; Punctuation Engine (arcanum typography), ISBN-13 Vector SVG/PNG Barcode Engine (arcanum barcode), and 20-Stage Grand Tour Master Integration Lifecycle Harness.</p>
+      </description>
+    </release>
+    <release version="3.5.0" date="2026-09-24">
+      <description>
+        <p>Phase 17 Release — The Worldbuilding Sciences &amp; Narrative Mechanics Expansion: Focus Ambient &amp; Binaural Soundscape Generator (arcanum ambient), Dynamic Tactical Combat &amp; Monte Carlo Skirmish Simulator (arcanum tactical), Motivation-Reaction Unit (MRU) Scene Mechanics Analyzer (arcanum scene), Multi-Track Narrative Plot Grid &amp; Subplot Matrix Engine (arcanum plot-matrix), Dual-Track Chronological vs Narrative Timeline Synchronizer (arcanum timeline), Planetary Climate, Orographic Rain Shadows &amp; Köppen Biomes (arcanum climate), Trophic Food Web Ecology &amp; Biomass Efficiency Simulator (arcanum ecology), Earth Idiom &amp; Immersion-Breaking Eponym Linter (arcanum idioms), and 19-Stage Grand Tour Master Integration Lifecycle Harness.</p>
+      </description>
+    </release>
+    <release version="3.4.0" date="2026-09-22">
+      <description>
+        <p>Phase 16 Release — The Sovereign Story Craft &amp; Editorial Mastery: In-World Macroeconomics &amp; Anachronism Matrix (arcanum economy), Overland, Naval &amp; Aerial Journey Expedition Modeler (arcanum journey), Offline Vector Cartography &amp; Interactive Map Viewer (arcanum map), Narrative Pacing, POV Balance &amp; Tension Arc Analytics (arcanum pacing), Multi-Paradigm Story Structure &amp; Beat Sheet Enforcer (arcanum structure), Character Voice Profiler &amp; Dialogue Fingerprint Engine (arcanum voice), Stylistics, Dialogue Mechanics &amp; Readability Rhythm Engine (arcanum stylistics), and 18-Stage Grand Tour Master Integration Lifecycle Harness.</p>
+      </description>
+    </release>
+    <release version="3.3.0" date="2026-09-22">
+      <description>
+        <p>Phase 15 Release — The Sovereign Worldbuilding Codex &amp; Arcane Mastery: Standalone single-file World Wiki Codex Exporter (arcanum codex), Hard Magic Systems &amp; Arcane Constraint Matrix (arcanum magic-check, arcanum magic-report), In-World Cryptographic Ciphers &amp; Phonetic Rune SVG generator (arcanum cipher), Dynastic Genealogies &amp; Succession Lineages (arcanum genealogy), Conlang Phonotactics &amp; Historical Sound Shifts (arcanum conlang), Geopolitical Faction Matrix &amp; Campaign Logistics (arcanum faction), Custom Planetary Calendars &amp; Multi-Moon Phase Engine (arcanum calendar), and 17-Stage Grand Tour Master Integration Lifecycle Harness.</p>
+      </description>
+    </release>
+    <release version="3.2.0" date="2026-09-22">
+      <description>
+        <p>Phase 14 Release — The Sovereign Crown &amp; Flathub Upstream Hardening: Flathub Upstream Packaging Validator, Cosmos Archive Freeze &amp; Cryptographic Provenance Sealer (arcanum freeze), Multi-Volume Dramatis Personae &amp; Universe Cast Matrix (arcanum cast), and 16-Stage Grand Tour Master Integration Lifecycle Harness.</p>
+      </description>
+    </release>
+    <release version="3.1.0" date="2026-09-22">
+      <description>
+        <p>Phase 13 Release — The Sovereign Craft Deepening: Sovereign Writing Sprint &amp; Session Analytics (arcanum sprint), Manuscript Revision Density &amp; Churn Heatmap (arcanum revision-heatmap), Causal DAG and Novikov self-consistency validation (arcanum causality), Prophecy Resolution Matrix (arcanum prophecy), and 6D Sensory Palette analyzer (arcanum senses).</p>
+      </description>
+    </release>
+    <release version="3.0.0" date="2026-09-21">
+      <description>
+        <p>Phase 12 Release — The Sovereign Zenith: Sovereign Studio Desktop Hub, 13-Stage Grand Tour Lifecycle Verification, and Offline Flatpak Runtime Bundle. Aggregates telemetry from all 40+ craft engines into a unified offline HTML cockpit accessible via arcanum hub.</p>
+      </description>
+    </release>
+    <release version="2.2.0" date="2026-09-21">
+      <description>
+        <p>Phase 11 Release: Sovereign Local AI Fine-Tuning Dataset Synthesizer (arcanum train-data) and Interactive Branching Narrative Graph &amp; Choice Engine (arcanum branch) with multi-format interactive fiction compilation.</p>
+      </description>
+    </release>
+    <release version="2.1.0" date="2026-09-21">
+      <description>
+        <p>Phase 10 Release: Sovereign Local Semantic Retrieval Engine (arcanum rag), Speculative Fiction Plugin Marketplace (arcanum market), and automated LLM prompt context synthesis.</p>
+      </description>
+    </release>
+    <release version="2.0.0" date="2026-09-21">
+      <description>
+        <p>Phase 9 Release: Multi-Perspective Autonomous Editorial Council (arcanum council), Standalone Offline Zen Drafting Studio (arcanum studio), and Sovereign Agentic OS Manifesto (AGENTS.md).</p>
+      </description>
+    </release>
+    <release version="1.9.0" date="2026-09-21">
+      <description>
+        <p>Phase 8 Release: Flathub Upstream Metainfo, EPUB 3 Media Overlays, and Universal Structured Corpus Exporter.</p>
+      </description>
+    </release>
+    <release version="1.8.0" date="2026-09-21">
+      <description>
+        <p>Phase 7 Release: Interactive Visual Story Canvas &amp; Corkboard, Dual-Track Timeline Synchronizer, and Series Omnibus Compiler.</p>
+      </description>
+    </release>
+    <release version="1.7.0" date="2026-09-21">
+      <description>
+        <p>Phase 6 Release: Speculative Fiction Plugin Architecture and Universal 9-Model Story Paradigm Engine.</p>
+      </description>
+    </release>
+    <release version="1.6.1" date="2026-09-21">
+      <description>
+        <p>Phase 0-5 Modernization: Multi-platform packaging, GPG backup encryption, path traversal defense, and open-source governance.</p>
+      </description>
+    </release>
+  </releases>
+
+  <categories>
+    <category>Office</category>
+    <category>WordProcessor</category>
+    <category>Publishing</category>
+    <category>Development</category>
+  </categories>
+</component>

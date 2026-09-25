@@ -19,33 +19,17 @@ Capabilities (WOR-104):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import random
-import json
 import argparse
+import json
 import logging
+import random
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    import lib._bootstrap  # noqa: F401
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    import _bootstrap  # noqa: F401
 
 logger = logging.getLogger("arcanum.tactical_sim")
 

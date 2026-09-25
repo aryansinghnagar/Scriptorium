@@ -5,19 +5,20 @@ Ars Arcanum System Diagnostics & Bug Triage Engine (scripts/lib/diagnostics.py)
 Provides:
 1. Structured rotating file logging to $XDG_STATE_HOME/ars-arcanum/arcanum.log.
 2. Toolchain and runtime environment inspection (Python, Git, Pandoc, Typst, GUI).
-3. Redacted diagnostic bug-report bundle generation (arcanum doctor --report).
+3. Comprehensive Unified Doctor diagnostic reports for workspace, worlds, and manuscripts.
+4. Redacted diagnostic bug-report bundle generation (arcanum doctor --report).
 """
 
 import argparse
 import json
 import logging
-from logging.handlers import RotatingFileHandler
 import os
-from pathlib import Path
 import platform
 import shutil
 import subprocess
 import sys
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Any
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -28,18 +29,11 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 try:
-    from lib.fs_utils import atomic_write
+    import lib._bootstrap  # noqa: F401
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    import _bootstrap  # noqa: F401
+
+VERSION = "1.6.1"
 
 
 def get_state_dir() -> Path:
@@ -81,7 +75,6 @@ def setup_logging(
         handler.setFormatter(formatter)
         logger.addHandler(handler)
     except Exception as e:
-        # Fallback to null handler if state dir cannot be written
         logger.addHandler(logging.NullHandler())
         sys.stderr.write(f"Warning: Failed to initialize file logger ({e})\n")
 
@@ -92,7 +85,6 @@ def redact_sensitive_paths(text: str) -> str:
     """Sanitize home directory paths and author usernames for public issue reports."""
     home = str(Path.home())
     text = text.replace(home, "~")
-    # Also replace backslash Windows home path
     home_win = home.replace("/", "\\")
     text = text.replace(home_win, "~")
     return text
@@ -163,7 +155,7 @@ def get_toolchain_diagnostics() -> dict[str, Any]:
                         capture_output=True,
                         text=True,
                         timeout=10,
-                        cwd=str(sample_path.parent)
+                        cwd=str(sample_path.parent),
                     )
                     if res.returncode == 0:
                         tools["typst"]["compile_test"] = "passed"
@@ -202,18 +194,17 @@ def generate_diagnostic_report(
     """Compile comprehensive system diagnostic and bug triage report."""
     tc = get_toolchain_diagnostics()
 
-    # Read recent logs
     recent_logs = []
     log_file = get_state_dir() / "arcanum.log"
     if log_file.exists():
         try:
             lines = log_file.read_text(encoding="utf-8", errors="ignore").splitlines()
-            recent_logs = lines[-50:]  # last 50 lines
+            recent_logs = lines[-50:]
         except Exception:
             pass
 
     report: dict[str, Any] = {
-        "version": "1.6.0",
+        "version": VERSION,
         "system": {
             "os": platform.system(),
             "os_release": platform.release(),
@@ -249,7 +240,7 @@ def format_diagnostic_report_markdown(report: dict[str, Any]) -> str:
     """Format diagnostic bundle as clean GitHub Flavored Markdown."""
     lines = [
         "# Ars Arcanum Diagnostic Triage Report",
-        f"- **Version**: v{report.get('version', '1.6.0')}",
+        f"- **Version**: v{report.get('version', VERSION)}",
         f"- **Platform**: {report['system']['os']} {report['system']['os_release']} ({report['system']['architecture']})",
         f"- **Python**: {report['system']['python_version']}",
         "",
@@ -289,6 +280,104 @@ def format_diagnostic_report_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def run_doctor_report(
+    world_filter: str | None = None,
+    manuscript_filter: str | None = None,
+    all_worlds: bool = False,
+    as_json: bool = False,
+) -> int:
+    """Execute unified system, workspace, and world diagnostics."""
+    report = generate_diagnostic_report(redact_sensitive=False)
+    findings: dict[str, Any] = {
+        "version": VERSION,
+        "system": report["system"],
+        "toolchain": report["toolchain"]["tools"],
+        "gui": report["toolchain"]["gui"],
+        "worlds": [],
+        "errors": 0,
+        "warnings": 0,
+    }
+
+    # Toolchain errors
+    for t_name, t_data in findings["toolchain"].items():
+        if not t_data.get("available") and t_name in ("python", "git", "pandoc"):
+            findings["errors"] += 1
+        elif not t_data.get("available"):
+            findings["warnings"] += 1
+
+    # World checks if requested
+    if world_filter or all_worlds:
+        try:
+            from lib.world_doctor import check_world
+        except ImportError:
+            from world_doctor import check_world
+
+        universes_base = Path(os.environ.get("UNIVERSES_BASE", Path.home() / "Universes"))
+        worlds_to_check = []
+
+        if world_filter:
+            # Look up specific world
+            w_path = Path(world_filter)
+            if not w_path.is_dir() and universes_base.is_dir():
+                for u in universes_base.iterdir():
+                    if u.is_dir() and (u / world_filter).is_dir():
+                        w_path = u / world_filter
+                        break
+            if w_path.is_dir():
+                worlds_to_check.append(w_path)
+        elif all_worlds and universes_base.is_dir():
+            for u in universes_base.iterdir():
+                if u.is_dir():
+                    for w in u.iterdir():
+                        if w.is_dir() and ((w / "world.yaml").is_file() or (w / "00-World-Bible").is_dir()):
+                            worlds_to_check.append(w)
+
+        for w_dir in worlds_to_check:
+            try:
+                w_res = check_world(str(w_dir))
+                findings["worlds"].append(w_res)
+                findings["errors"] += len(w_res.get("broken_links", []))
+                findings["errors"] += len(w_res.get("missing_required_fields", []))
+                findings["warnings"] += len(w_res.get("orphans", []))
+            except Exception as e:
+                findings["errors"] += 1
+                findings["worlds"].append({"world": str(w_dir), "error": str(e)})
+
+    if as_json:
+        print(json.dumps(findings, indent=2))
+        return 0 if findings["errors"] == 0 else 1
+
+    print(f"Ars Arcanum Unified Doctor — v{VERSION}")
+    print("========================================")
+    print(f"OS: {findings['system']['os']} {findings['system']['os_release']} ({findings['system']['architecture']})")
+    print(f"Python: {findings['system']['python_version']}")
+    print("\n[Toolchain Status]")
+    for name, data in findings["toolchain"].items():
+        status = "✓ Ready" if data["available"] else "✗ Missing"
+        ver = f"({data['version']})" if data.get("version") else ""
+        print(f"  • {name:<12} [{status}] {ver}")
+
+    if findings["gui"]["available"]:
+        print(f"  • GUI:         [✓ Ready] ({findings['gui']['toolkit']})")
+    else:
+        print("  • GUI:         [✗ Disabled] (Headless / Missing PyGObject)")
+
+    if findings["worlds"]:
+        print("\n[World Lore Vault Audits]")
+        for w in findings["worlds"]:
+            if "error" in w:
+                print(f"  • {w['world']}: Error ({w['error']})")
+            else:
+                bl = len(w.get("broken_links", []))
+                mf = len(w.get("missing_required_fields", []))
+                print(f"  • {w['world']}: {w.get('notes', 0)} notes (Broken Links: {bl}, Missing Fields: {mf})")
+
+    print("\n========================================")
+    status_str = "HEALTHY" if findings["errors"] == 0 else "ISSUES DETECTED"
+    print(f"Status: {status_str} ({findings['errors']} errors, {findings['warnings']} warnings)")
+    return 0 if findings["errors"] == 0 else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Ars Arcanum Diagnostic & System Health Suite",
@@ -296,29 +385,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--report", action="store_true", help="Generate complete redacted bug report bundle")
     parser.add_argument("--json", action="store_true", help="Emit report in JSON format")
+    parser.add_argument("-w", "--world", help="Run diagnostics on a specific world lore vault")
+    parser.add_argument("-m", "--manuscript", help="Optional manuscript project to cross-validate")
+    parser.add_argument("--all-worlds", action="store_true", help="Run diagnostics on all discovered worlds")
     parser.add_argument("project", nargs="?", help="Optional project directory to inspect")
 
     args = parser.parse_args(argv)
 
-    report = generate_diagnostic_report(project_path=args.project, redact_sensitive=True)
-
-    if args.json:
-        print(json.dumps(report, indent=2))
-    elif args.report:
+    if args.report:
+        report = generate_diagnostic_report(project_path=args.project or args.world, redact_sensitive=True)
         print(format_diagnostic_report_markdown(report))
-    else:
-        # Simple health check overview
-        tc = report["toolchain"]["tools"]
-        print("Ars Arcanum System Toolchain Health:")
-        for name, data in tc.items():
-            status = "OK" if data["available"] else "MISSING"
-            ver = f"({data['version']})" if data["version"] else ""
-            print(f"  [{status:7}] {name:12} {ver}")
-        gui = report["toolchain"]["gui"]
-        gui_status = "OK" if gui["available"] else "DISABLED"
-        print(f"  [{gui_status:7}] GUI Toolkit   ({gui.get('toolkit') or 'None'})")
+        return 0
 
-    return 0
+    return run_doctor_report(
+        world_filter=args.world or args.project,
+        manuscript_filter=args.manuscript,
+        all_worlds=args.all_worlds,
+        as_json=args.json,
+    )
 
 
 if __name__ == "__main__":

@@ -6,9 +6,9 @@ Modern dynamic presentation launcher with adaptive Libadwaita / GTK 4 support
 and seamless GTK 3 & Zenity desktop fallbacks for Linux Mint, Debian & Wayland/X11.
 """
 
-import sys
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 logger = logging.getLogger("arcanum_app")
@@ -73,7 +73,7 @@ def main():
         ],
         help="Open specific studio workflow tab on launch"
     )
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_args()
 
     if args.check_ui:
         has_adw = False

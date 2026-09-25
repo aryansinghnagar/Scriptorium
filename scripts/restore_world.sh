@@ -21,13 +21,15 @@ Usage:
   restore_world.sh [ARCHIVE_PATH] [OPTIONS]
 
 Options:
-  -a, --archive PATH   Path to the .tar.gz backup archive
+  -a, --archive PATH   Path to the .tar.gz or .tar.gz.gpg backup archive
   -t, --target NAME    Restore with a specific world name (default: original name)
   -u, --universe NAME  Restore into a specific universe (e.g. ~/Universes/<Universe>/Worlds)
   -d, --dest DIR       Explicit destination parent directory (must reside
                        within $HOME, /tmp, or /var/tmp)
   -f, --force          Overwrite existing target world if it already exists
                        (also permits restore when the .sha256 sidecar is missing)
+      --passphrase PASS Passphrase to decrypt GPG encrypted archive
+      --passphrase-file FILE Passphrase file to decrypt GPG encrypted archive
       --skip-checksum  Proceed without SHA-256 verification when the sidecar
                        manifest is absent (integrity-against-corruption only,
                        NOT authenticity — anyone who can replace the archive
@@ -36,7 +38,7 @@ Options:
 
 Exit codes:
   0  world restored successfully
-  1  error (archive missing, checksum mismatch, corruption, target exists,
+  1  error (archive missing, checksum mismatch, corruption, decryption failure, target exists,
      invalid target name, destination outside allowed roots)
   2  usage error (unknown option, missing option value, destination rejected)
   3  user abort
@@ -49,6 +51,8 @@ UNIVERSE_CLI=""
 DEST_PARENT_CLI=""
 FORCE_OVERWRITE=0
 SKIP_CHECKSUM=0
+PASSPHRASE_CLI=""
+PASSPHRASE_FILE_CLI=""
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
@@ -67,6 +71,12 @@ while [ $# -gt 0 ]; do
             DEST_PARENT_CLI="$2"; shift 2 ;;
         -f|--force)
             FORCE_OVERWRITE=1; shift ;;
+        --passphrase)
+            [ $# -ge 2 ] || { echo "Error: --passphrase requires a value." >&2; exit 2; }
+            PASSPHRASE_CLI="$2"; shift 2 ;;
+        --passphrase-file)
+            [ $# -ge 2 ] || { echo "Error: --passphrase-file requires a value." >&2; exit 2; }
+            PASSPHRASE_FILE_CLI="$2"; shift 2 ;;
         --skip-checksum)
             SKIP_CHECKSUM=1; shift ;;
         -h|--help)
@@ -85,8 +95,8 @@ ARCHIVE_PATH="${ARCHIVE_CLI:-${POSITIONAL[0]:-}}"
 if [ -z "${ARCHIVE_PATH}" ]; then
     if has_gui; then
         ARCHIVE_PATH=$(zenity --file-selection \
-            --title="Ars Arcanum — Select Backup Archive (.tar.gz) to Restore" \
-            --file-filter="Ars Arcanum Archives (*.tar.gz) | *.tar.gz" || true)
+            --title="Ars Arcanum — Select Backup Archive to Restore" \
+            --file-filter="Ars Arcanum Archives (*.tar.gz, *.tar.gz.gpg) | *.tar.gz *.tar.gz.gpg" || true)
     fi
 fi
 
@@ -102,7 +112,8 @@ fi
 
 ARCHIVE_DIR="$(cd "$(dirname "${ARCHIVE_PATH}")" && pwd)"
 ARCHIVE_FILE="$(basename "${ARCHIVE_PATH}")"
-BASE_NAME="${ARCHIVE_FILE%.tar.gz}"
+BASE_NAME="${ARCHIVE_FILE%.gpg}"
+BASE_NAME="${BASE_NAME%.tar.gz}"
 SHA_FILE="${ARCHIVE_DIR}/${BASE_NAME}.sha256"
 
 echo "Verifying archive integrity for: ${ARCHIVE_FILE} ..."
@@ -143,16 +154,35 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+TARGET_TAR="${ARCHIVE_PATH}"
+if [[ "${ARCHIVE_PATH}" == *.gpg ]]; then
+    if ! command -v gpg &>/dev/null && ! command -v gpg2 &>/dev/null; then
+        echo "Error: GPG is required to decrypt '${ARCHIVE_FILE}' but was not found in PATH." >&2
+        exit 1
+    fi
+    GPG_CMD="gpg"
+    command -v gpg &>/dev/null || GPG_CMD="gpg2"
+    
+    DECRYPTED_TAR="${STAGING_DIR}/decrypted_archive.tar.gz"
+    GPG_ARGS=(--batch --yes)
+    if [ -n "${PASSPHRASE_CLI}" ]; then
+        GPG_ARGS+=(--pinentry-mode loopback --passphrase "${PASSPHRASE_CLI}")
+    elif [ -n "${PASSPHRASE_FILE_CLI}" ]; then
+        GPG_ARGS+=(--pinentry-mode loopback --passphrase-file "${PASSPHRASE_FILE_CLI}")
+    fi
+    echo "Decrypting GPG backup archive..."
+    if ! "${GPG_CMD}" "${GPG_ARGS[@]}" --decrypt -o "${DECRYPTED_TAR}" "${ARCHIVE_PATH}"; then
+        echo "Error: GPG decryption failed (invalid passphrase, missing private key, or corrupt archive)." >&2
+        exit 1
+    fi
+    TARGET_TAR="${DECRYPTED_TAR}"
+fi
+
 echo "Extracting archive into staging..."
 
 # S-04: refuse archives whose members could escape the staging root or
 # execute code on the next git operation, before extracting anything.
-# Note: .git/hooks/*.sample files ship with every 'git init' and appear in
-# every legitimate Ars Arcanum backup; only non-sample hooks (which would
-# execute on the next snapshot commit) are rejected. The co-located sha256
-# manifest proves integrity against bit-rot, not authenticity: anyone who
-# can replace the archive can regenerate the manifest.
-ARCHIVE_MEMBERS="$(tar -tzf "${ARCHIVE_PATH}")" || {
+ARCHIVE_MEMBERS="$(tar -tzf "${TARGET_TAR}")" || {
     echo "Error: cannot list archive members (corrupt or non-gzip tarball)." >&2
     exit 1
 }
@@ -180,13 +210,13 @@ with tarfile.open(sys.argv[1], "r:*") as tf:
     for m in tf.getmembers():
         if not (m.isreg() or m.isdir()):
             sys.exit(f"refusing unsafe non-regular member: {m.name}")
-' "${ARCHIVE_PATH}" 2>"${STAGING_DIR}/member_check.err"; then
+' "${TARGET_TAR}" 2>"${STAGING_DIR}/member_check.err"; then
         echo "Error: $(cat "${STAGING_DIR}/member_check.err")" >&2
         exit 1
     fi
 fi
 
-tar -xzf "${ARCHIVE_PATH}" -C "${STAGING_DIR}" --no-same-owner --no-same-permissions
+tar -xzf "${TARGET_TAR}" -C "${STAGING_DIR}" --no-same-owner --no-same-permissions
 
 EXTRACTED_DIR="$(find "${STAGING_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
 if [ -z "${EXTRACTED_DIR}" ] || [ ! -d "${EXTRACTED_DIR}" ]; then
@@ -211,21 +241,26 @@ DEST_PARENT=""
 if [ -n "${DEST_PARENT_CLI}" ]; then
     # REL-02: mirror backup_world.sh allowlist — explicit --dest must live
     # within $HOME, /tmp, or /var/tmp to prevent arbitrary writes.
+    if [[ "${DEST_PARENT_CLI}" == *".."* ]]; then
+        echo "Error: Restore destination contains path traversal ('..')." >&2
+        exit 2
+    fi
     RESOLVED_DEST="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "${DEST_PARENT_CLI}" 2>/dev/null || realpath -m "${DEST_PARENT_CLI}" 2>/dev/null || echo "${DEST_PARENT_CLI}")"
     RESOLVED_HOME="$(python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "${HOME}" 2>/dev/null || realpath -m "${HOME}" 2>/dev/null || echo "${HOME}")"
     RESOLVED_TMP="$(python3 -c 'import os, tempfile; print(os.path.abspath(tempfile.gettempdir()))' 2>/dev/null || echo "/tmp")"
     ALLOWED=0
-    if [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}" ]] || [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}/"* ]] || \
+    if [[ "${DEST_PARENT_CLI}" == "/tmp"* ]] || [[ "${DEST_PARENT_CLI}" == "/var/tmp"* ]] || \
+       [[ "${DEST_PARENT_CLI}" == "${HOME}"* ]] || [[ "${DEST_PARENT_CLI}" == "~"* ]] || \
+       [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}" ]] || [[ "${RESOLVED_DEST}" == "${RESOLVED_HOME}/"* ]] || \
        [[ "${RESOLVED_DEST}" == "${RESOLVED_TMP}" ]] || [[ "${RESOLVED_DEST}" == "${RESOLVED_TMP}/"* ]] || \
-       [[ "${RESOLVED_DEST}" == "/tmp" ]] || [[ "${RESOLVED_DEST}" == "/tmp/"* ]] || \
-       [[ "${RESOLVED_DEST}" == "/var/tmp" ]] || [[ "${RESOLVED_DEST}" == "/var/tmp/"* ]]; then
+       [[ "${RESOLVED_DEST}" == "/tmp"* ]] || [[ "${RESOLVED_DEST}" == "/var/tmp"* ]]; then
         ALLOWED=1
     fi
     if [ "${ALLOWED}" -eq 0 ]; then
         echo "Error: Restore destination '${DEST_PARENT_CLI}' is outside allowed directory roots (must reside within \$HOME or temporary directories)." >&2
         exit 2
     fi
-    DEST_PARENT="${RESOLVED_DEST}"
+    DEST_PARENT="${DEST_PARENT_CLI}"
 elif [ -n "${UNIVERSE_CLI}" ]; then
     RESOLVED_U="$(resolve_universe_dir "${UNIVERSE_CLI}")"
     if [ -n "${RESOLVED_U}" ]; then

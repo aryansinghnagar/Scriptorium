@@ -68,11 +68,11 @@ if [ $RC -ne 1 ]; then
     exit 1
 fi
 
-python3 -c "import sys, json
+python3 -c 'import sys, json
 d = json.loads(sys.argv[1])
-assert d['total_findings'] >= 1, 'Expected findings'
-assert any(f['id'] == 'CNT-101' for f in d['findings']), 'Expected CNT-101 finding'
-" "${ERR_OUT}"
+assert d["total_findings"] >= 1, "Expected findings"
+assert any(f["id"] == "CNT-101" for f in d["findings"]), "Expected CNT-101 finding"
+' "${ERR_OUT}"
 echo "PASS: Test 2 passed"
 
 echo "=== Test 3: Inter-scene Trait Drift (CNT-102) ==="
@@ -95,10 +95,10 @@ if [ $RC2 -ne 1 ]; then
     exit 1
 fi
 
-python3 -c "import sys, json
+python3 -c 'import sys, json
 d = json.loads(sys.argv[1])
-assert any(f['id'] == 'CNT-102' or f['id'] == 'CNT-101' for f in d['findings']), 'Expected drift finding'
-" "${ERR_OUT2}"
+assert any(f["id"] == "CNT-102" or f["id"] == "CNT-101" for f in d["findings"]), "Expected drift finding"
+' "${ERR_OUT2}"
 echo "PASS: Test 3 passed"
 
 echo "=== Test 4: CLI Facade Dispatch ==="

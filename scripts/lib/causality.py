@@ -25,34 +25,18 @@ Capabilities:
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import html
 import argparse
+import html
+import json
 import logging
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.causality")
 
@@ -60,53 +44,10 @@ FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DO
 TAG_REGEX = re.compile(r"^@([a-zA-Z0-9_-]+):\s*(.*)$")
 
 
-def parse_yaml_frontmatter(content: str) -> dict:
-    """Safe frontmatter parser."""
-    fm_match = FRONTMATTER_REGEX.match(content)
-    if not fm_match:
-        return {}
-    
-    data = {}
-    lines = fm_match.group(1).splitlines()
-    current_key = None
-    
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        
-        if raw_line.startswith("  - ") or raw_line.startswith("    - ") or (raw_line.startswith("- ") and current_key):
-            item_val = line.lstrip("- ").strip().strip("\"'")
-            if current_key:
-                if not isinstance(data.get(current_key), list):
-                    data[current_key] = []
-                data[current_key].append(item_val)
-            continue
-
-        if ":" in line:
-            key, val = line.split(":", 1)
-            key = key.strip()
-            val = val.strip()
-            current_key = key
-            
-            if not val:
-                data[key] = []
-            elif val.startswith("[") and val.endswith("]"):
-                items = [v.strip().strip("\"'") for v in val[1:-1].split(",") if v.strip()]
-                data[key] = items
-            elif val.lower() in ("true", "yes"):
-                data[key] = True
-            elif val.lower() in ("false", "no"):
-                data[key] = False
-            else:
-                try:
-                    if "." in val:
-                        data[key] = float(val)
-                    else:
-                        data[key] = int(val)
-                except ValueError:
-                    data[key] = val.strip("\"'")
-    return data
+try:
+    from lib.frontmatter import parse_yaml_frontmatter
+except ImportError:
+    from frontmatter import parse_yaml_frontmatter
 
 
 def normalize_id(text: str) -> str:
@@ -114,7 +55,7 @@ def normalize_id(text: str) -> str:
     return re.sub(r"[\s_#-]+", "-", str(text).strip().lower())
 
 
-def extract_causal_nodes(world_dir: Path = None, manuscript_dir: Path = None) -> tuple:
+def extract_causal_nodes(world_dir: Path | None = None, manuscript_dir: Path | None = None) -> tuple:
     """
     Extracts events, temporal metadata, timeline branches, and causal edges from world and manuscript.
     Returns: (events_dict, timelines_dict)
@@ -251,7 +192,7 @@ def audit_causality(events: dict, timelines: dict) -> list:
             if visited.get(neighbor, 0) == 1:
                 # Cycle found!
                 cycle_start = path.index(neighbor)
-                cycles.append(path[cycle_start:] + [neighbor])
+                cycles.append([*path[cycle_start:], neighbor])
             elif visited.get(neighbor, 0) == 0:
                 dfs(neighbor, path)
         path.pop()
@@ -511,7 +452,7 @@ def generate_causality_html_report(audit_data: dict, output_path: Path):
     atomic_write(output_path, html_content)
 
 
-def resolve_world_dir(target_str: str = None) -> str:
+def resolve_world_dir(target_str: str | None = None) -> str:
     """Resolves world input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()
@@ -547,7 +488,7 @@ def resolve_world_dir(target_str: str = None) -> str:
     return ""
 
 
-def resolve_manuscript_dir(target_str: str = None) -> str:
+def resolve_manuscript_dir(target_str: str | None = None) -> str:
     """Resolves manuscript input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()

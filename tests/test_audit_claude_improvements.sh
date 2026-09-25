@@ -69,12 +69,12 @@ The [[Iron Citadel]] stood firm.
 EOF4
 
 DOC_CLEAN="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --manuscript "${MS_PATH}" --json || true)"
-printf '%s' "${DOC_CLEAN}" | python3 -c "
+printf '%s' "${DOC_CLEAN}" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-drifts = d.get('manuscript_name_drift', [])
-assert len(drifts) == 0, f'Expected 0 drift, got {drifts}'
-"
+drifts = d.get("manuscript_name_drift", [])
+assert len(drifts) == 0, f"Expected 0 drift, got {drifts}"
+'
 echo "  OK Clean manuscript produces 0 WLD-108 findings"
 
 # Case B: Drifting manuscript referencing deleted/renamed character
@@ -88,17 +88,17 @@ They walked toward [[DanglingSanctuary]].
 EOF5
 
 DOC_DRIFT="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --manuscript "${MS_PATH}" --json || true)"
-printf '%s' "${DOC_DRIFT}" | python3 -c "
+printf '%s' "${DOC_DRIFT}" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)
-drifts = d.get('manuscript_name_drift', [])
-missing_names = {e['missing'] for e in drifts}
-assert 'OldNameVance' in missing_names, f'OldNameVance not caught in {missing_names}'
-assert 'MissingGeneral' in missing_names, f'MissingGeneral not caught in {missing_names}'
-assert 'LostRuinsOfValdor' in missing_names, f'LostRuinsOfValdor not caught in {missing_names}'
-assert 'DanglingSanctuary' in missing_names, f'DanglingSanctuary wikilink not caught in {missing_names}'
-assert 'Kaelen' not in missing_names, 'Valid character wrongly flagged'
-"
+drifts = d.get("manuscript_name_drift", [])
+missing_names = {e["missing"] for e in drifts}
+assert "OldNameVance" in missing_names, f"OldNameVance not caught in {missing_names}"
+assert "MissingGeneral" in missing_names, f"MissingGeneral not caught in {missing_names}"
+assert "LostRuinsOfValdor" in missing_names, f"LostRuinsOfValdor not caught in {missing_names}"
+assert "DanglingSanctuary" in missing_names, f"DanglingSanctuary wikilink not caught in {missing_names}"
+assert "Kaelen" not in missing_names, "Valid character wrongly flagged"
+'
 echo "  OK Manuscript name drift correctly caught across tags and wikilinks"
 rm -f "${MS_PATH}/Book-01/01_Act_I/02_Drift.md"
 

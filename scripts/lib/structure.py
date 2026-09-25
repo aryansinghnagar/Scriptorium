@@ -23,34 +23,18 @@ Capabilities (PLT-102):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import html
 import argparse
+import html
+import json
 import logging
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.structure")
 
@@ -129,6 +113,52 @@ PARADIGMS = {
             {"name": "5. Pinch Point 2", "target_pct": 0.65, "window": (0.58, 0.72), "desc": "Disaster strikes; plan fails"},
             {"name": "6. Plot Turn 2", "target_pct": 0.80, "window": (0.74, 0.86), "desc": "Final piece of puzzle acquired"},
             {"name": "7. Resolution", "target_pct": 0.95, "window": (0.88, 1.00), "desc": "Climactic resolution and transformed status quo"},
+        ]
+    },
+    "eight_sequence": {
+        "name": "8-Sequence Method (Gulino/Daniel)",
+        "beats": [
+            {"name": "Sequence A: Status Quo & Inciting Incident", "target_pct": 0.06, "window": (0.0, 0.12), "desc": "Ordinary world, introduction, and the hook/inciting event"},
+            {"name": "Sequence B: Predicament & Lock-In", "target_pct": 0.18, "window": (0.12, 0.25), "desc": "Main tension formulated; protagonist committed to the journey"},
+            {"name": "Sequence C: First Obstacle & Rising Action", "target_pct": 0.31, "window": (0.24, 0.38), "desc": "First major barrier encountered and navigated"},
+            {"name": "Sequence D: Midpoint Crisis & Shift of Intent", "target_pct": 0.44, "window": (0.37, 0.52), "desc": "Crucial revelation; point of no return; stakes double"},
+            {"name": "Sequence E: Rising Complications & Subplot Climax", "target_pct": 0.56, "window": (0.50, 0.63), "desc": "Complications multiply; subplots reach major inflection"},
+            {"name": "Sequence F: Climax of Act II & Main Culmination", "target_pct": 0.69, "window": (0.62, 0.76), "desc": "Highest tension of Act II; all hope seems lost"},
+            {"name": "Sequence G: New Tension & Final Twist", "target_pct": 0.81, "window": (0.75, 0.88), "desc": "Re-evaluation; discovery of unexpected path forward"},
+            {"name": "Sequence H: Climax of Act III & Resolution", "target_pct": 0.94, "window": (0.87, 1.00), "desc": "Ultimate resolution of the core tension and new equilibrium"},
+        ]
+    },
+    "fichtean_curve": {
+        "name": "The Fichtean Curve",
+        "beats": [
+            {"name": "1. Exposition & Initial Action", "target_pct": 0.08, "window": (0.0, 0.15), "desc": "Characters and immediate conflict introduced directly"},
+            {"name": "2. Crisis 1 (First Complication)", "target_pct": 0.22, "window": (0.15, 0.30), "desc": "First major obstacle and escalating tension"},
+            {"name": "3. Rising Action & Escalation", "target_pct": 0.38, "window": (0.30, 0.46), "desc": "Consequences compound; stakes deepen"},
+            {"name": "4. Crisis 2 (Major Reversal)", "target_pct": 0.52, "window": (0.45, 0.60), "desc": "Significant reversal testing character resolve"},
+            {"name": "5. Crisis 3 (Point of No Return)", "target_pct": 0.70, "window": (0.62, 0.78), "desc": "Severe crisis immediately preceding the climax"},
+            {"name": "6. Climax (Supreme Confrontation)", "target_pct": 0.88, "window": (0.80, 0.94), "desc": "Peak of dramatic narrative tension"},
+            {"name": "7. Falling Action & Denouement", "target_pct": 0.96, "window": (0.92, 1.00), "desc": "Unraveling of tension and final new state"},
+        ]
+    },
+    "kishotenketsu": {
+        "name": "Kishōtenketsu (起承転結)",
+        "beats": [
+            {"name": "1. 起 Ki (Introduction)", "target_pct": 0.15, "window": (0.0, 0.25), "desc": "Introduces characters, setting, world environment and tone"},
+            {"name": "2. 承 Shō (Development)", "target_pct": 0.40, "window": (0.25, 0.55), "desc": "Expands upon introduction without introducing major conflict"},
+            {"name": "3. 転 Ten (The Twist / Turn)", "target_pct": 0.75, "window": (0.60, 0.85), "desc": "Introduction of an unexpected element, subversion, or perspective shift"},
+            {"name": "4. 結 Ketsu (Reconciliation)", "target_pct": 0.95, "window": (0.85, 1.00), "desc": "Harmonizes twist with the initial premise; brings synthesis"},
+        ]
+    },
+    "freytags_pyramid": {
+        "name": "Freytag's Dramatic Pyramid",
+        "beats": [
+            {"name": "1. Exposition", "target_pct": 0.07, "window": (0.0, 0.14), "desc": "Background information, setting, character establish"},
+            {"name": "2. Inciting Force", "target_pct": 0.18, "window": (0.12, 0.24), "desc": "Event triggering the central action"},
+            {"name": "3. Rising Action", "target_pct": 0.35, "window": (0.25, 0.45), "desc": "Series of events building suspense and complication"},
+            {"name": "4. Climax / Turning Point", "target_pct": 0.52, "window": (0.46, 0.58), "desc": "Central turning point and maximum intensity"},
+            {"name": "5. Falling Action", "target_pct": 0.70, "window": (0.60, 0.78), "desc": "Aftermath of the turning point; tightening threads"},
+            {"name": "6. Moment of Final Suspense", "target_pct": 0.84, "window": (0.78, 0.90), "desc": "Brief delay or doubt before final outcome"},
+            {"name": "7. Catastrophe / Denouement", "target_pct": 0.96, "window": (0.90, 1.00), "desc": "Final unknotting, tragedy or resolution"},
         ]
     }
 }
@@ -318,9 +348,9 @@ def main():
     parser.add_argument("target", help="Manuscript directory or file")
     parser.add_argument(
         "--paradigm", "-p",
-        choices=["three_act", "save_the_cat", "heros_journey", "story_circle", "seven_point"],
+        choices=list(PARADIGMS.keys()),
         default="three_act",
-        help="Story structure paradigm model (default: three_act)"
+        help=f"Story structure paradigm model: {', '.join(PARADIGMS.keys())} (default: three_act)"
     )
     parser.add_argument("--html", help="Generate HTML report to output path")
     parser.add_argument("--json", action="store_true", help="Output JSON results")

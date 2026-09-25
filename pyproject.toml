@@ -3,7 +3,7 @@ target-version = "py310"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "S", "UP", "SIM"]
+select = ["E", "F", "B", "S", "UP", "SIM", "I", "RUF", "C901"]
 ignore = [
     "E501", # line length handled separately
     "S603", # subprocess call - check for execution of untrusted input
@@ -13,10 +13,35 @@ ignore = [
     "SIM105", # try-except-pass vs contextlib.suppress style choice
     "B905", # zip strict argument
     "S608", # SQL injection rule (project does not use SQL databases; false positive on HTML templates)
+    "RUF001", # ambiguous unicode characters (literals in conlangs / unicode typography)
+    "RUF002", # ambiguous docstring unicode
+    "RUF003", # ambiguous comment unicode
+    "RUF012", # mutable class attributes
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "S105", "E402"]
+"tests/*" = ["S101", "S105", "E402", "I001"]
+"scripts/lib/cli.py" = ["C901"]
 
 [tool.ruff.lint.mccabe]
-max-complexity = 25
+max-complexity = 40
+
+[tool.coverage.run]
+source = ["scripts/lib"]
+branch = true
+omit = [
+    "scripts/lib/ui_gtk3/*",
+    "tests/*",
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+

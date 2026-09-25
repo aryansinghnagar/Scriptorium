@@ -1,0 +1,14 @@
+{
+  "id": "pacing_heat_map",
+  "name": "Scene Pacing & Sensory Heat Map Analyzer",
+  "version": "1.0.0",
+  "author": "Ars Arcanum Editorial Lab",
+  "description": "Calculates dialogue-to-exposition density, talking-heads detection, and sensory distribution per chapter.",
+  "category": "craft",
+  "entry_point": "plugin.py",
+  "hooks": [
+    "validate_manuscript",
+    "custom_metric"
+  ],
+  "min_arcanum_version": "1.6.0"
+}

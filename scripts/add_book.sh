@@ -147,6 +147,9 @@ if [ -z "${VOLUME_NAME}" ]; then
     exit 3
 fi
 
+# Reject path traversal and validate volume name format (P3-M5)
+arcanum_validate_volume_name "${VOLUME_NAME}" || exit $?
+
 # Sanitize volume name
 VOLUME_NAME="$(printf '%s' "${VOLUME_NAME}" | sed 's/^[ \t]*//;s/[ \t]*$//' | tr ' ' '-' | tr -cd 'A-Za-z0-9_-' | cut -c1-64)"
 
@@ -211,12 +214,15 @@ if command -v git &> /dev/null; then
         GIT_HISTORY="failed"
     fi
 
-    # Track in Manuscript Git repo if present
+    # Track in Manuscript Git repo if present (ADR-043)
     if [ -d "${MANUSCRIPT_DIR}/.git" ]; then
         if ! (
             cd "${MANUSCRIPT_DIR}"
+            VOL_REL="${TARGET_VOL_DIR#"${MANUSCRIPT_DIR}/"}"
+            git config -f .gitmodules "submodule.${VOL_REL}.path" "${VOL_REL}" 2>/dev/null || true
+            git config -f .gitmodules "submodule.${VOL_REL}.url" "./${VOL_REL}" 2>/dev/null || true
             git config advice.addEmbeddedRepo false
-            git -c advice.addEmbeddedRepo=false add "${TARGET_VOL_DIR#"${MANUSCRIPT_DIR}/"}" 2>/dev/null
+            git -c advice.addEmbeddedRepo=false add .gitmodules "${VOL_REL}" 2>/dev/null
             git_commit_safe "Scaffold manuscript volume ${VOLUME_NAME} in ${MANUSCRIPT_NAME}"
         ); then
             echo "[!] Warning: manuscript tracking commit failed for '${VOLUME_NAME}'. Volume itself is intact." >&2

@@ -13,29 +13,20 @@ Generates:
 100% offline, privacy-respecting, zero-telemetry, and accessible.
 """
 
-import sys
-import re
-import json
-import html
-import difflib
 import argparse
+import difflib
+import html
+import json
+import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write
 
 NW_TAG_REGEX = re.compile(r"^@[A-Za-z0-9_-]+:")
 TOKEN_REGEX = re.compile(r"\S+|\s+")
@@ -209,9 +200,10 @@ class ManuscriptComparator:
             content_b = file_b.read_text(encoding="utf-8", errors="replace") if file_b else ""
 
             target_file = file_b or file_a
-            title = extract_chapter_title(target_file, content_b or content_a)
-            chap_data = self._diff_prose(content_a, content_b, title, str(rel_path))
-            self.chapters.append(chap_data)
+            if target_file is not None:
+                title = extract_chapter_title(target_file, content_b or content_a)
+                chap_data = self._diff_prose(content_a, content_b, title, str(rel_path))
+                self.chapters.append(chap_data)
 
     def _diff_prose(self, raw_a: str, raw_b: str, title: str, rel_path: str) -> dict[str, Any]:
         clean_a = strip_nw_metadata(raw_a)

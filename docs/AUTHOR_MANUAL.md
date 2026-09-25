@@ -113,63 +113,89 @@ Double-click **"Ars Arcanum Control Center"** on your Desktop (or run `arcanum c
 
 ## 3. The Desktop Control Center Tour
 
-The Ars Arcanum desktop application is organized into **5 intuitive tabs** with global project selectors across the top:
+The Ars Arcanum desktop application is organized into **6 dedicated workflow studios** with global project selectors, instant snapshot controls, and accessibility toggles:
 
-### Top Selector Bar
+### Header Bar & Global Project Selectors
 - **Universe Selector**: Switch between different narrative universes.
-- **World Lore Vault Selector**: Choose which direct lore bible is active for lore exploration.
-- **Manuscript Project Selector**: Choose which novel/book project is active for drafting, metrics, and exports.
-- **Quick Snapshot**: 1-click Git checkpoint across your entire active universe, world, and manuscript.
+- **World Lore Vault Selector**: Choose which direct lore bible is active for lore exploration and simulation engines.
+- **Manuscript Project Selector**: Choose which novel/book project is active for drafting, scene inspection, and publishing.
+- **Quick Snapshot (`Ctrl+S`)**: 1-click Git checkpoint across your active project with custom progress annotations.
+- **High Contrast Mode (`Ctrl+H`)**: Instant accessibility toggle for WCAG AAA high-contrast styling and large typography.
+- **Field Manual (`F1`)**: Instant offline access to this comprehensive authoring guide.
 
-### Tab 1: 🪐 Universes & Worlds
+### Studio 1: 🪐 Cosmos & Worlds
 - **Direct Lore Vault Management**: Open your World Lore Vault directly in Obsidian with all pre-configured plugins enabled.
 - **Cosmos Index Hub**: Open `Universe-Index.md` to manage overarching continuity across multiple planets/realms.
-- **Creative Tool Launchers**: 1-click buttons to launch Obsidian, novelWriter, FocusWriter, LibreOffice, Calibre, or your file manager.
+- **Creative Tool Launchers**: 1-click buttons to launch Obsidian, novelWriter, FocusWriter, LibreOffice, Calibre, or your system file manager.
+- **Lore Taxonomy Register**: Live background entity counter across Characters, Locations, Factions, Magic Systems, Bestiary, Artifacts, Cosmology, History, and Languages.
 
-### Tab 2: ✍️ Manuscripts & Drafting
-- **Live Word Count Dashboard**: Displays total manuscript word counts, scene counts, and volume progress.
-- **Manuscript Tree Explorer**: Interactive tree view listing Volumes (`Book-01`, `Book-02`), Acts, Chapters, and Scenes.
-- **Word Processing & DOCX Synchronization Toolbar**:
-  - **Open in Word Processor**: 1-click button to launch your preferred word processor (Microsoft Word, Google Docs via browser, or LibreOffice Writer) directly with the active consolidated draft (`Draft-01_Manuscript.docx`) or selected chapter.
-  - **Sync DOCX ↔ Markdown**: 1-click bidirectional synchronization engine. Reconciles prose changes between `.docx` files and Markdown scenes while preserving all narrative metadata tags (`@pov:`, `@location:`, etc.).
-  - **DOCX Formatting Settings**: Modal dialog to configure global Word styling presets (`Standard Submission / Shunn`, `Modern Manuscript`, `Classic Trade`, or `Custom` font, line spacing, margins, and paragraph indents).
-- **Manuscript Draft Revisions & Redline Comparator**:
-  - Fork new draft versions (`+ Fork New Draft`) to maintain independent revisions (`Draft-01`, `Draft-02`).
-  - View visual redline changelogs in your browser or LibreOffice Writer to see added/deleted prose between drafts.
-- **Visual Scene Metadata Inspector**: A non-technical visual control panel for inspecting and modifying scene headers:
+### Studio 2: ✍️ Manuscripts & Drafting
+- **Live Word Count Dashboard**: Displays total manuscript word counts, scene counts, and daily pacing progress.
+- **Manuscript Tree Explorer**: Interactive hierarchy tree listing Volumes (`Book-01`, `Book-02`), Acts, Chapters, and Scenes.
+- **Visual Scene Metadata Inspector**: Non-technical visual control panel for inspecting and modifying scene headers:
   - **POV Character**: Set `@pov: CharacterName`
-  - **Characters Present**: Set `@char: CharA, CharB`
-  - **Location**: Set `@location: LocationName` (standardized; replaces deprecated `@focus:`)
-  - **Narrative Thread**: Set `@thread: Main-Plot` or `@thread: Subplot-Heist`
-  - **Story Time**: Set `@time: 1899-03-14`
-  - **Scene Status**: Dropdown selector (`Draft`, `Revision`, `Finished`)
-  - **Safe Header Updater**: Click **"💾 Update Scene Tags"** to rewrite the metadata header safely in place while preserving the scene prose!
-- **Add New Volume**: 1-Click button (`📚 Add Volume`) to scaffold subsequent manuscript books with 3-act structures and isolated Git repositories.
+  - **Cast Present**: Set `@char: CharacterA, CharacterB`
+  - **Location**: Set `@location: LocationName`
+  - **Narrative Subplot**: Set `@thread: Arcane-Heist`
+  - **Chronology Marker**: Set `@time: 1422 3E, Night`
+  - **Scene Status**: Dropdown selector (`Draft`, `Revision`, `First Polish`, `Final`)
+  - **Atomic Safe Header Updater**: Click **"💾 Update Scene Header"** to rewrite metadata safely in-place with pre-save backup snapshots.
+- **Draft Revisions & Redline Comparator**:
+  - Fork new draft versions (`+ Fork New Draft`) to maintain isolated revisions (`Draft-01`, `Draft-02`).
+  - View visual redline changelogs in browser or LibreOffice Writer to compare added/deleted prose between any two draft iterations.
+- **Word Processing & DOCX Synchronization**:
+  - **Open in Word Processor**: Launch Microsoft Word, Google Docs, or LibreOffice Writer with consolidated `.docx` drafts.
+  - **Sync DOCX ↔ Markdown**: Bidirectional synchronization reconciling Word edits back into sovereign Markdown scenes.
+  - **DOCX Formatting Presets**: Configure typography presets (`Standard Submission / Shunn`, `Modern Manuscript`, `Classic Trade`, `Custom`).
 
-### Tab 3: 📚 Publishing & Exports
-- **1-Click Typesetting & Export**: Turn your Markdown manuscript into a print-ready vector PDF, an EPUB ebook, or a standard industry submission document (`.docx`) in seconds.
-- **Export Format Options**:
-  - `Print Book (PDF + EPUB)`: Typesets ready-to-print paperback PDFs (via Typst) and distributor-ready ebooks (via Pandoc).
-  - `Submission Manuscript (.docx)`: Formats standard manuscript format (12pt, double-spaced, clean chapter breaks) for literary agents, editors, and anthologies.
-  - `Complete Package (PDF + EPUB + DOCX)`: Builds all publication and submission formats simultaneously.
-- **Generate Concordance**: 1-Click button (`📖 Generate Concordance`) to automatically extract characters, factions, relics, bestiary creatures, and linguistics from your World Bible into publication-grade `01_Dramatis_Personae.md` and `02_Glossary_and_Concordance.md` back-matter.
-- **Volume Selector**: Choose to compile an individual volume (`Book-01`, `Book-02`) or the entire series omnibus.
-- **Trim Size Presets**:
-  - `US Trade (6 × 9 in)`: Standard commercial fiction and fantasy trade paperback.
-  - `Trade (5.5 × 8.5 in)`: Compact novel trim size.
-  - `Pocket (5 × 8 in)`: Mass-market paperback size.
-- **Instant Preview**: Click **"📄 Open PDF"**, **"📱 Open EPUB"**, or **"📝 Open DOCX"** immediately upon compilation.
+### Studio 3: 🔮 Speculative Fiction & Worldbuilding Studio Hub
+- 12 integrated in-world modeling engines with parameter dialogs, constraint solvers, and standalone 1-click HTML/SVG reports:
+  1. **Astrophysics & Flight**: Relativistic 1g Brachistochrone trajectories, Lorentz time dilation, Hohmann orbits, light-lag comms.
+  2. **Hard Magic Constraints**: Tier checks, reagent consumption, arcane fatigue curves, and comprehensive constraint ledgers.
+  3. **Dynastic Genealogies**: Vector family lineage trees, succession rank rosters, and Mermaid flowcharts.
+  4. **Conlang Studio**: Syllable generator, historical sound-law shift mutations, and lexicon search.
+  5. **Pacing & Tension Arcs**: Prose rhythm density, POV starvation auditor, and chapter tension curves.
+  6. **Journeys & Calendars**: Overland expedition route modeler and multi-moon planetary calendar arithmetic.
+  7. **Factions & Logistics**: Geopolitical relationship matrices, Lanchester combat modeler, and supply wagon radii.
+  8. **Economy & Tech Eras**: Purchasing power parity (PPP) currency baskets, price outlier scanners, and tech era linter.
+  9. **Causal DAGs & Multiverse**: Timeline branch visualizer, Novikov self-consistency paradox auditor, and DAG graphs.
+  10. **Climate & Trophic Webs**: Planetary stellar flux insolation, orographic rain shadows, and Lindeman 10% trophic food webs.
+  11. **Idioms & Sensory Palettes**: Earth-eponym scanner, colloquialism detector, and 6D sensory palette coverage.
+  12. **Ciphers & Prophecies**: In-world cryptographic encoders (Vigenère, Atbash, Runes) and prophecy lifecycle clause checkers.
 
-### Tab 4: 🔒 Snapshots & Backups
-- **Version Milestone Snapshot (Git)**: Type a short progress note (e.g. `Finished Chapter 4 battle`) and click **"📷 Save Snapshot"**.
-- **Milestone History**: View recent Git commits across your world and manuscript repositories.
-- **Standalone Archive Backup**: Click **"📦 Create Standalone Backup Archive"** to generate a compressed `.tar.gz` bundle with an immutable SHA-256 verification manifest in `Backups/` or onto an external USB drive.
-- **Disaster Recovery Restore**: Click **"♻️ Restore World from Archive"** to safely unpack and verify any past backup archive.
+### Studio 4: 📚 Publishing & Exports
+- **1-Click Typesetting & Export**: Turn your Markdown manuscript into a print-ready vector PDF (Typst), distributor EPUB (Pandoc), or submission DOCX.
+- **Modular Front & Back Matter Builder**: Scaffold standard Title, Copyright, Dedication, Epigraph, and CTA matter.
+- **Pre-Flight Linter**: Automated verification of orphan headings, missing scenes, broken cross-references, and typographic errors.
+- **Vector Barcode Generator**: Standalone ISBN-13 vector SVG barcode generator with checksum validation.
+- **Query Letter & Submission Package**: Scaffold agent query letters, 1-page synopses, and submission trackers.
+- **Smart Typography Normalizer**: 1-click normalization of curly quotes (“ ” ‘ ’), em-dashes (—), en-dashes (–), and ellipses (…).
 
-### Tab 5: 🩺 Diagnostics & Doctor
-- **System Toolchain Badges**: Live indicators confirming that Git, Pandoc, Typst, and Python 3 are installed and functional.
-- **World & Manuscript Doctor**: Audits your Obsidian vault for broken wikilinks, dangling character/faction references, chronological timeline anomalies, and manuscript-to-lore name drift (`WLD-108`).
-- **Verification Harness**: Run the automated 7-stage test suite to verify project integrity.
+### Studio 5: 🔒 Snapshots & Backups
+- **Version Milestone Snapshot (Git)**: Annotate progress milestones and commit immutable history across all nested project tiers.
+- **Git Milestone History**: View the 15 most recent commits with hashes, timestamps, and commit messages.
+- **Standalone Archive Backup (3-2-1 Rule)**: Generate `.tar.gz` archive packages with SHA-256 cryptographic verification digests.
+- **Dual-Target External Destination**: Configure secondary USB drives or NAS shares for automatic redundant off-site backups.
+- **Disaster Recovery Restore**: Safely restore and verify any past backup archive into a working project.
+
+### Studio 6: 🩺 Diagnostics & Doctor
+- **Toolchain Status Badges**: Live indicators confirming Git, Pandoc, Typst, and Python 3 availability.
+- **Unified Doctor Suite**: Automated audits for broken lore links, character name drift, timeline anomalies, and schema validation.
+- **Verification Test Harness**: Launch the canonical 7-stage verification suite directly from the desktop UI.
+
+---
+
+### ⌨️ Desktop Keyboard Accelerators & Shortcuts
+
+| Shortcut | Action | Scope / Studio |
+| :--- | :--- | :--- |
+| `Ctrl + N` | **+ New Manuscript Project** | Global Scaffolding |
+| `Ctrl + S` | **Quick Version Snapshot** | Global Git Versioning |
+| `Ctrl + E` | **Compile & Export Book** | Studio 4: Publishing |
+| `Ctrl + B` | **Create Standalone Backup Archive** | Studio 5: Safety |
+| `Ctrl + H` | **Toggle High-Contrast Mode** | Accessibility |
+| `Ctrl + R` | **Refresh Project Discovery** | Top Selector Bar |
+| `F1` | **Open Author's Field Manual** | Help & Reference |
 
 ---
 
@@ -406,11 +432,47 @@ Whenever you reach a milestone (e.g. finishing a chapter or rewriting an act), c
     - Or via CLI: `arcanum backup-dest set /media/usb/backups`
   - When you click **"📦 Create Standalone Backup Archive"** (or run `arcanum backup <project>`), Ars Arcanum creates the verified archive locally in `05-Backups/` and automatically replicates it to your configured secure destination, verifying the SHA-256 checksum in both locations!
 
-### 4. Verified Disaster Recovery
+### 4. GPG Military-Grade Backup Encryption (Zero-Trust Security)
+For authors working on confidential manuscripts, NDA projects, or storing backups on untrusted external cloud/USB media, Ars Arcanum provides native GPG encryption:
+- **Symmetric Passphrase Encryption (`.tar.gz.gpg`)**:
+  ```bash
+  # Encrypt backup archive with symmetric AES-256 passphrase
+  arcanum backup My-World --symmetric
+  
+  # Or provide passphrase directly/via file for headless automation:
+  arcanum backup My-World --symmetric --passphrase "MySecretVaultKey"
+  arcanum backup My-World --symmetric --passphrase-file /path/to/key.txt
+  ```
+- **Asymmetric Public Key Encryption**:
+  ```bash
+  # Encrypt using recipient GPG public key ID
+  arcanum backup My-World --encrypt "author@example.com"
+  ```
+- **Encrypted Restoration**:
+  ```bash
+  # Restores and decrypts .tar.gz.gpg archive with automated integrity checks
+  arcanum restore /path/to/My-World_2026-09-21.tar.gz.gpg
+  ```
+
+### 5. Multi-Platform Release Packaging (`arcanum package`)
+When preparing for commercial release or agent submission, bundle your assets into verified release archives with cryptographic manifests:
+```bash
+# Generate all distribution bundles (Reader, Submission, ARC, Codex)
+arcanum package My-Manuscript
+
+# Target a specific release bundle
+arcanum package My-Manuscript -t reader       # EPUB + PDF + HTML reader + Cover art
+arcanum package My-Manuscript -t submission   # DOCX + Query letter + Synopsis
+arcanum package My-Manuscript -t arc --reviewer "Early Reviewer"  # Watermarked ARC bundle
+arcanum package My-World -t codex             # Offline static lore wiki + interactive SVG maps
+```
+All packages calculate SHA-256 checksums and emit a standard `RELEASE_MANIFEST.json` in `Dist/`.
+
+### 6. Verified Disaster Recovery
 If you ever switch computers or want to rollback a project:
 1. Open **Tab 4: Vault Safety**.
 2. Click **"♻️ Restore World from Archive"**.
-3. Select your `.tar.gz` archive file from your local disk or external USB drive.
+3. Select your `.tar.gz` or `.tar.gz.gpg` archive file from your local disk or external USB drive.
 4. Ars Arcanum verifies the SHA-256 hash to ensure zero file corruption, stages the restoration safely, and registers your world.
 
 ---

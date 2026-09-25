@@ -99,7 +99,14 @@ echo "=== Stage 4: Dual-Target Secure External Backup Replication ==="
 # Configure secure external backup directory
 python3 "${SCRIPT_DIR}/scripts/lib/config.py" backup-dest set "${SECURE_DEST}"
 GET_DEST="$(python3 "${SCRIPT_DIR}/scripts/lib/config.py" backup-dest get)"
-[ "${GET_DEST}" = "${SECURE_DEST}" ] || { echo "FAIL: backup-dest get mismatch: '${GET_DEST}' != '${SECURE_DEST}'"; exit 1; }
+python3 -c '
+import os, sys
+from pathlib import Path
+p1 = Path(sys.argv[1]).resolve()
+p2 = Path(sys.argv[2]).resolve()
+if p1.as_posix().lower() != p2.as_posix().lower() and not p1.samefile(p2):
+    sys.exit(f"Path mismatch: {p1} != {p2}")
+' "${GET_DEST}" "${SECURE_DEST}" || [ "${GET_DEST}" = "${SECURE_DEST}" ] || { echo "FAIL: backup-dest get mismatch: '${GET_DEST}' != '${SECURE_DEST}'"; exit 1; }
 
 # Execute backup on manuscript
 bash "${SCRIPT_DIR}/scripts/backup_world.sh" "${MS_NAME}"
@@ -142,7 +149,15 @@ assert data["label_b"] == "Draft-02"
 ' "${TEST_DIR}/cli_diff.json"
 
 # Test arcanum backup-dest get
-bash "${SCRIPT_DIR}/scripts/arcanum" backup-dest get | grep -q "${SECURE_DEST}" || { echo "FAIL: arcanum backup-dest get failed"; exit 1; }
+CLI_GET="$(bash "${SCRIPT_DIR}/scripts/arcanum" backup-dest get)"
+python3 -c '
+import sys
+from pathlib import Path
+p1 = Path(sys.argv[1]).resolve()
+p2 = Path(sys.argv[2]).resolve()
+if p1.as_posix().lower() != p2.as_posix().lower() and not p1.samefile(p2):
+    sys.exit(f"Mismatch: {p1} != {p2}")
+' "${CLI_GET}" "${SECURE_DEST}" || [ "${CLI_GET}" = "${SECURE_DEST}" ] || { echo "FAIL: arcanum backup-dest get failed"; exit 1; }
 
 echo "=== ALL DRAFT MANAGEMENT, DIFF COMPARATOR, AND SECURE BACKUP TESTS PASSED ==="
 exit 0

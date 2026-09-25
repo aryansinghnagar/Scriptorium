@@ -61,14 +61,26 @@ jobs:
           pip install "ruff==0.16.8"
           ruff check .
 
+      - name: Static type safety check (mypy)
+        run: |
+          pip install "mypy==1.15.0"
+          mypy --config-file mypy.ini scripts/lib/
+
+      - name: Python AST Security Scan (bandit SAST)
+        run: |
+          pip install "bandit==1.8.3"
+          bandit -r scripts/lib -ll -ii
+
       - name: Privacy & offline audit (no remote CDN URLs in engines)
         run: |
           ! grep -rnE "https?://(cdn|unpkg|cdnjs|ajax)" scripts/lib/ || (echo "ERROR: remote CDN URL found in offline engine" >&2; exit 1)
           echo "  OK 100% offline asset verification passed"
 
-      - name: Run Python unit tests
+      - name: Run Python unit tests with coverage
         run: |
-          python3 -m unittest discover -s tests -p "test_*.py" -v
+          pip install "coverage==7.6.12"
+          coverage run -m unittest discover -s tests -p "test_*.py" -v
+          coverage report
 
       - name: Bash syntax validation (bash -n)
         run: |

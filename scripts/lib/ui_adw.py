@@ -5,25 +5,16 @@ Implements adaptive modern desktop views, system dark-mode synchronization,
 and responsive controls for GNOME / modern Linux desktops.
 """
 
-import sys
-import subprocess
-import threading
 import logging
+import subprocess
+import sys
+import threading
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    import lib._bootstrap  # noqa: F401
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    import _bootstrap  # noqa: F401
 
 logger = logging.getLogger("arcanum.ui_adw")
 
@@ -32,7 +23,7 @@ try:
     import gi
     gi.require_version('Gtk', '4.0')
     gi.require_version('Adw', '1')
-    from gi.repository import Gtk, Adw, GLib
+    from gi.repository import Adw, GLib, Gtk
     HAS_ADW = True
 except (ImportError, ValueError):
     HAS_ADW = False
@@ -247,7 +238,7 @@ class ArcanumAppAdw:
             row = make_action_row(title, desc)
             btn = Gtk.Button(label="Launch")
             btn.set_valign(Gtk.Align.CENTER)
-            cmd = [sys.executable, str(SCRIPT_DIR / "lib" / script)] + args
+            cmd = [sys.executable, str(SCRIPT_DIR / "lib" / script), *args]
             btn.connect("clicked", lambda x, c=cmd, t=title: self._run_bg(c, f"{t} executed"))
             row.add_suffix(btn)
             group.add(row)
@@ -417,7 +408,7 @@ class ArcanumAppAdw:
                     GLib.idle_add(self._show_toast, f"Notice: {err}")
             except Exception as e:
                 logger.error("Error executing command %s: %s", cmd, e)
-                GLib.idle_add(self._show_toast, f"Error: {str(e)}")
+                GLib.idle_add(self._show_toast, f"Error: {e!s}")
 
         threading.Thread(target=worker, daemon=True).start()
 

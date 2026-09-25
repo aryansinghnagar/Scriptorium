@@ -1,0 +1,11 @@
+# Ars Arcanum Manuscript Project Manifest
+schema_version: "1.0"
+title: "The Silver Chronicles"
+author: "Aryan Singh Nagar"
+universe: "Eldoria-Cosmos"
+world: "Eldoria-Prime"
+status: "in-progress"
+description: "The epic saga of Aeloria Vael and the defense of the floating spires."
+isbn: "978-0-306-40615-7"
+language: "en-US"
+genre: "Epic Fantasy"

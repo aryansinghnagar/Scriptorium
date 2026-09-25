@@ -220,6 +220,9 @@ fi
 # Create .gitignore and manuscript manifests
 cat << 'EOF' > "${STAGING_DIR}/.gitignore"
 # Ars Arcanum Manuscript Git Ignore
+.arcanum_cache.json
+.sync_state.json
+*.lock
 *.bak
 *.tmp
 *.log
@@ -272,10 +275,12 @@ if command -v git &> /dev/null; then
         GIT_HISTORY="failed"
     fi
 
-    # 3b. Initialize Manuscript Root Git repository
+    # 3b. Initialize Manuscript Root Git repository with submodule tracking (ADR-043)
     if ! (
         cd "${STAGING_DIR}"
         git init -q
+        git config -f .gitmodules "submodule.Book-01.path" "Book-01" 2>/dev/null || true
+        git config -f .gitmodules "submodule.Book-01.url" "./Book-01" 2>/dev/null || true
         git config advice.addEmbeddedRepo false
         git -c advice.addEmbeddedRepo=false add . 2>/dev/null
         git_commit_safe "Initial Ars Arcanum manuscript repository: ${MANUSCRIPT_NAME}"

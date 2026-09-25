@@ -117,6 +117,7 @@ else
 fi
 
 MS_NAME="$(basename "${MANUSCRIPT_DIR}")"
+arcanum_validate_volume_name "${BOOK_VOLUME_CLI}" || exit $?
 BOOK_DIR="${MANUSCRIPT_DIR}/${BOOK_VOLUME_CLI}"
 
 if [ ! -d "${BOOK_DIR}" ]; then

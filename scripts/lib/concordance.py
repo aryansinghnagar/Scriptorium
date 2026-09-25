@@ -10,24 +10,15 @@ from the World Bible (00-World-Bible/) and generates publication-ready back-matt
 
 import argparse
 import os
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 from typing import Any
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write, validate_volume_name
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write, validate_volume_name
 
 
 FRONTMATTER_DELIM = "---"
@@ -434,8 +425,9 @@ def generate_concordance(
 
     # Determine target books
     books_to_target = []
-    if target_book and target_book != "all":
-        bdir = ms_path / target_book
+    if target_book and target_book.lower() not in ("all", "all-books"):
+        valid_book = validate_volume_name(target_book)
+        bdir = ms_path / valid_book
         bdir.mkdir(parents=True, exist_ok=True)
         books_to_target.append(bdir)
     else:

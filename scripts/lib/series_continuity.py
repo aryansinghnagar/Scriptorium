@@ -18,57 +18,82 @@ Capabilities (WOR-103):
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import html
 import argparse
+import html
+import json
 import logging
-from pathlib import Path
+import re
+import sys
 from collections import defaultdict
+from pathlib import Path
+from typing import Any
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.series_continuity")
 
+PRONOUN_EXCLUSIONS = {
+    "He", "She", "They", "It", "The", "When", "Then", "After", "Before", "While",
+    "Suddenly", "Finally", "Soon", "Now", "There", "Here", "Some", "Many", "All",
+    "Each", "Every", "One", "Two", "Three", "Who", "What", "Where", "Why", "How",
+    "And", "But", "Or", "If", "So", "As", "With", "At", "By", "In", "On", "From",
+    "Into", "Upon", "His", "Her", "Their", "Its", "My", "Your", "Our", "This", "That"
+}
+
 # Physical trait extraction patterns
-EYE_COLOR_PATTERN = re.compile(r'\b([A-Z][a-zA-Z]{1,20})\b[^\.\n]{0,50}\b(?:had|with|of)\s+([a-z]+)\s+eyes\b', re.IGNORECASE)
-HAIR_COLOR_PATTERN = re.compile(r'\b([A-Z][a-zA-Z]{1,20})\b[^\.\n]{0,50}\b(?:had|with|of)\s+([a-z]+)\s+hair\b', re.IGNORECASE)
+EYE_COLOR_PATTERN = re.compile(r'\b([A-Z][a-zA-Z]{1,20})\b[^\.\n]{0,80}\b(?:had|with|of|,|and)\s+([a-z]+)\s+eyes\b', re.IGNORECASE)
+HAIR_COLOR_PATTERN = re.compile(r'\b([A-Z][a-zA-Z]{1,20})\b[^\.\n]{0,80}\b(?:had|with|of|,|and)\s+([a-z]+)\s+hair\b', re.IGNORECASE)
 DEATH_PATTERNS = [
-    re.compile(r'\b([A-Z][a-zA-Z]{1,20})\b\s+(?:died|was slain|perished|succumbed|fell in battle|was executed|breathed their last)\b', re.IGNORECASE),
-    re.compile(r'\bthe death of\s+([A-Z][a-zA-Z]{1,20})\b', re.IGNORECASE)
+    re.compile(
+        r'\b([A-Z][a-zA-Z]{1,20})\b\s+(?:died|was slain|perished|succumbed|fell in battle|was executed|'
+        r'breathed their last|was killed|was murdered|met their end|passed away|drew their last breath|'
+        r'lost their life|was assassinated|was struck down|lay lifeless|was butchered|succumbed to wounds|'
+        r'succumbed to poison|fell to the ground lifeless|was mortally wounded)\b',
+        re.IGNORECASE
+    ),
+    re.compile(r'\bthe (?:death|murder|killing|execution|assassination|slaying|corpse|body|funeral|burial) of\s+([A-Z][a-zA-Z]{1,20})\b', re.IGNORECASE),
+    re.compile(r'\b([A-Z][a-zA-Z]{1,20})\'s\s+(?:death|execution|murder|slaying|funeral|burial|sacrifice|lifeless body)\b', re.IGNORECASE),
 ]
 
 
 def extract_book_entities(book_dir: Path) -> dict:
     """Extracts characters, physical traits, and deaths mentioned within a book volume."""
     text_content = ""
+    deaths = set()
+
     for md_file in sorted(book_dir.rglob("*.md")):
         if not md_file.name.startswith((".", "_")) and "04_Back_Matter" not in md_file.parts:
-            text_content += f"\n\n# {md_file.name}\n" + md_file.read_text(encoding="utf-8", errors="replace")
+            file_text = md_file.read_text(encoding="utf-8", errors="replace")
+            text_content += f"\n\n# {md_file.name}\n" + file_text
+
+            # Check for canonical mortality frontmatter in character files or notes
+            if file_text.startswith("---"):
+                try:
+                    from lib.frontmatter import parse_yaml_frontmatter
+                except ImportError:
+                    try:
+                        from frontmatter import parse_yaml_frontmatter
+                    except ImportError:
+                        parse_yaml_frontmatter = lambda c: {}  # noqa: E731
+                fm = parse_yaml_frontmatter(file_text)
+                c_name = fm.get("name") or md_file.stem.replace("_", " ").replace("-", " ")
+                if isinstance(c_name, str) and c_name.strip():
+                    norm_c = c_name.strip().title()
+                    is_dead = bool(
+                        fm.get("death_date")
+                        or fm.get("death_year")
+                        or fm.get("death_volume")
+                        or fm.get("is_deceased") is True
+                        or str(fm.get("status", "")).lower() in ("deceased", "dead")
+                    )
+                    if norm_c not in PRONOUN_EXCLUSIONS and is_dead:
+                        deaths.add(norm_c)
 
     # Characters mentioned
-    character_traits = defaultdict(lambda: {"eyes": set(), "hair": set(), "mentions": 0})
-    deaths = set()
+    character_traits: dict[str, dict[str, Any]] = defaultdict(lambda: {"eyes": set(), "hair": set(), "mentions": 0})
 
     for line in text_content.splitlines():
         # Eye colors
@@ -89,21 +114,23 @@ def extract_book_entities(book_dir: Path) -> dict:
         for p in DEATH_PATTERNS:
             for dm in p.finditer(line):
                 char = dm.group(1).title()
-                if char not in ("He", "She", "They", "It", "The"):
+                if char not in PRONOUN_EXCLUSIONS:
                     deaths.add(char)
 
     # Extract characters from traits, dialogue attribution, action tags, and @pov
     characters = set(character_traits.keys())
     for line in text_content.splitlines():
         s_line = line.strip()
-        pov_m = re.match(r'^@pov:\s*([A-Za-z0-9_\-\'\s]+)', s_line, re.IGNORECASE)
-        if pov_m:
-            name = pov_m.group(1).strip().title()
-            if name:
-                characters.add(name)
+        char_tag_m = re.match(r'^@(pov|char|character):\s*(.+)$', s_line, re.IGNORECASE)
+        if char_tag_m:
+            raw_names = char_tag_m.group(2).strip()
+            for r_name in raw_names.split(","):
+                c_clean = r_name.strip().strip('"\'').title()
+                if c_clean and c_clean not in PRONOUN_EXCLUSIONS:
+                    characters.add(c_clean)
         for m in re.finditer(r'\b([A-Z][a-z]{2,15})\s+(?:said|asked|shouted|whispered|cried|replied|thought|stepped|drew|smiled|nodded|commanded|looked|turned|stood|fought|advanced)\b', line):
             c_name = m.group(1).title()
-            if c_name not in ("He", "She", "They", "It", "There", "When", "Then", "After", "Before", "While", "Suddenly", "Finally", "Soon", "Now"):
+            if c_name not in PRONOUN_EXCLUSIONS:
                 characters.add(c_name)
 
     # Word count
@@ -114,7 +141,13 @@ def extract_book_entities(book_dir: Path) -> dict:
         "path": str(book_dir),
         "word_count": words,
         "characters": sorted(list(characters)),
-        "traits": {k: {"eyes": list(v["eyes"]), "hair": list(v["hair"])} for k, v in character_traits.items()},
+        "traits": {
+            k: {
+                "eyes": sorted(list(v["eyes"])) if isinstance(v.get("eyes"), (set, list)) else [],
+                "hair": sorted(list(v["hair"])) if isinstance(v.get("hair"), (set, list)) else [],
+            }
+            for k, v in character_traits.items()
+        },
         "deaths": list(deaths)
     }
 

@@ -74,13 +74,13 @@ echo "PASS: Test 2 passed"
 echo "=== Test 3: Cache invalidation on file edit ==="
 # Initial scan
 python3 "${SCRIPT_DIR}/scripts/lib/cache.py" scan "${MS_DIR}"
-INITIAL_WC="$(python3 -c "import json; d=json.load(open('${MS_DIR}/.arcanum_cache.json')); print(d['files']['Book-01/01_Act_I/01_Chapter.md']['word_count'])")"
+INITIAL_WC="$(python3 -c 'import sys, json; d=json.load(open(sys.argv[1])); print(d["files"]["Book-01/01_Act_I/01_Chapter.md"]["word_count"])' "${MS_DIR}/.arcanum_cache.json")"
 
 # Append text
 echo "Extra words appended to scene file." >> "${MS_DIR}/Book-01/01_Act_I/01_Chapter.md"
 # Rescan
 python3 "${SCRIPT_DIR}/scripts/lib/cache.py" scan "${MS_DIR}"
-UPDATED_WC="$(python3 -c "import json; d=json.load(open('${MS_DIR}/.arcanum_cache.json')); print(d['files']['Book-01/01_Act_I/01_Chapter.md']['word_count'])")"
+UPDATED_WC="$(python3 -c 'import sys, json; d=json.load(open(sys.argv[1])); print(d["files"]["Book-01/01_Act_I/01_Chapter.md"]["word_count"])' "${MS_DIR}/.arcanum_cache.json")"
 
 if [ "${UPDATED_WC}" -le "${INITIAL_WC}" ]; then
     echo "FAIL: Cache did not detect updated word count (${UPDATED_WC} <= ${INITIAL_WC})" >&2

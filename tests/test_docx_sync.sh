@@ -63,10 +63,10 @@ echo "PASS: Test 4 passed (Bidirectional sync executed successfully)"
 
 echo "=== Test 5: CLI docx import from standalone file ==="
 EXT_DOCX="${TEST_DIR}/External_Chapter.docx"
-cat << PYEOF > "${TEST_DIR}/make_sample.py"
+cat << 'PYEOF' > "${TEST_DIR}/make_sample.py"
 import sys
 from pathlib import Path
-sys.path.insert(0, '${SCRIPT_DIR}/scripts/lib')
+sys.path.insert(0, str(Path("scripts/lib").resolve()))
 from docx_sync import parse_markdown_to_paragraphs, build_docx_package, get_docx_config
 
 md = "# External Chapter\n\nWritten completely in Microsoft Word."

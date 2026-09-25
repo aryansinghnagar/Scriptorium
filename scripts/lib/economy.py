@@ -26,35 +26,19 @@ Capabilities:
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import html
 import argparse
+import html
+import json
 import logging
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write
 
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
 
 logger = logging.getLogger("arcanum.economy")
 
@@ -166,59 +150,10 @@ TECH_ERA_DICTIONARY = {
 }
 
 
-def parse_yaml_frontmatter(content: str) -> dict:
-    """Safe YAML frontmatter parser for economy configurations."""
-    fm_match = FRONTMATTER_REGEX.match(content)
-    if not fm_match:
-        return {}
-    
-    data = {}
-    lines = fm_match.group(1).splitlines()
-    current_key = None
-    
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        
-        if raw_line.startswith("  - ") or raw_line.startswith("    - ") or (raw_line.startswith("- ") and current_key):
-            item_val = line.lstrip("- ").strip().strip("\"'")
-            if current_key:
-                if not isinstance(data.get(current_key), list):
-                    data[current_key] = []
-                data[current_key].append(item_val)
-            continue
-
-        if ":" in line:
-            key, val = line.split(":", 1)
-            key = key.strip()
-            val = val.strip()
-            current_key = key
-            
-            if not val:
-                data[key] = {}
-            elif val.startswith("[") and val.endswith("]"):
-                items = [v.strip().strip("\"'") for v in val[1:-1].split(",") if v.strip()]
-                data[key] = items
-            elif val.startswith("{") and val.endswith("}"):
-                # Basic inline dict
-                try:
-                    data[key] = json.loads(val.replace("'", '"'))
-                except Exception:
-                    data[key] = val
-            elif val.lower() in ("true", "yes"):
-                data[key] = True
-            elif val.lower() in ("false", "no"):
-                data[key] = False
-            else:
-                try:
-                    if "." in val:
-                        data[key] = float(val)
-                    else:
-                        data[key] = int(val)
-                except ValueError:
-                    data[key] = val.strip("\"'")
-    return data
+try:
+    from lib.frontmatter import parse_yaml_frontmatter
+except ImportError:
+    from frontmatter import parse_yaml_frontmatter
 
 
 def normalize_name(name: str) -> str:
@@ -444,7 +379,7 @@ def audit_manuscript_prices(manuscript_dir: Path, economies: dict) -> list:
 def audit_technological_anachronisms(
     manuscript_dir: Path,
     baseline_era: str = "medieval",
-    custom_whitelist: list = None
+    custom_whitelist: list | None = None
 ) -> list:
     """
     Scans manuscript prose to detect out-of-era technological and material anachronisms.
@@ -634,7 +569,7 @@ def generate_economy_html_report(audit_data: dict, output_path: Path):
     atomic_write(output_path, html_content)
 
 
-def resolve_world_dir(target_str: str = None) -> str:
+def resolve_world_dir(target_str: str | None = None) -> str:
     """Resolves world input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()
@@ -670,7 +605,7 @@ def resolve_world_dir(target_str: str = None) -> str:
     return ""
 
 
-def resolve_manuscript_dir(target_str: str = None) -> str:
+def resolve_manuscript_dir(target_str: str | None = None) -> str:
     """Resolves manuscript input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()
@@ -752,7 +687,7 @@ def main():
         # Also run tech check if manuscript provided
         primary_era = "medieval"
         if economies:
-            primary_era = list(economies.values())[0].get("tech_era", "medieval")
+            primary_era = next(iter(economies.values())).get("tech_era", "medieval")
         tech_findings = audit_technological_anachronisms(ms_path, primary_era) if ms_path else []
 
         all_findings = price_findings + tech_findings
@@ -815,7 +750,7 @@ def main():
             if w_dir:
                 econs = extract_economy_profiles(Path(w_dir))
                 if econs:
-                    era = list(econs.values())[0].get("tech_era", era)
+                    era = next(iter(econs.values())).get("tech_era", era)
 
         findings = audit_technological_anachronisms(ms_path, baseline_era=era)
 

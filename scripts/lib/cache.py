@@ -5,24 +5,18 @@ High-performance mtime-keyed in-memory & on-disk cache layer for World Bibles an
 Ensures sub-millisecond treeview rendering and accelerated diagnostic passes.
 """
 
-import os
-import sys
-import json
-import re
 import argparse
+import json
 import logging
+import os
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.cache")
 

@@ -1,4 +1,148 @@
-ars-arcanum (1.6.0-1) unstable; urgency=medium
+ars-arcanum (3.7.0-1) unstable; urgency=medium
+
+  * The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Architecture — Phase 19.
+  * Solidified and expanded 8 core intelligence, distribution, and diagnostic engines with 12+ tests and docs:
+    - Interactive Branching Narrative Graph & Choice Engine (arcanum branch).
+    - Local Semantic Retrieval RAG & Context Synthesis Engine (arcanum rag).
+    - Multi-Perspective Autonomous Editorial Council Engine (arcanum council).
+    - Local AI Fine-Tuning & Dataset Synthesizer (arcanum train-data).
+    - Universal Structured Corpus & RAG Dataset Exporter (arcanum corpus).
+    - Offline Neural TTS & Audio Proofreader (arcanum tts).
+    - Multi-Platform Distribution & Packaging Engine (arcanum package).
+    - World Doctor & Cosmos Integrity Diagnostics (arcanum doctor).
+  * Extended Master Grand Tour lifecycle integration harness to 21 stages.
+  * Reached 797 passing unit tests across repository with 0 failures.
+  * Recorded ADR-103 through ADR-110 in decisions.md.
+  * Synchronized version parity to v3.7.0 across all surfaces.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Fri, 25 Sep 2026 19:50:00 +0530
+
+ars-arcanum (3.6.0-1) unstable; urgency=medium
+
+  * The Authoring Studios, Publishing Toolchains & Creative Scaffolding Expansion — Phase 18.
+  * Solidified and expanded 8 core authoring, studio, and publishing engines with 12+ tests and docs:
+    - Back-Matter Concordance & Dramatis Personae Indexer (arcanum concordance).
+    - Sovereign Zen Drafting Studio & In-Situ Lore Drawer (arcanum studio).
+    - Visual Story Canvas & Multi-Paradigm Corkboard (arcanum canvas).
+    - Multi-Volume Series Omnibus Compiler (arcanum omnibus).
+    - Author Portfolio & Catalog Analytics Dashboard (arcanum portfolio).
+    - EPUB 3 SMIL Media Overlays & Synchronized Narration Player (arcanum overlay).
+    - Smart Typography Normalizer & Punctuation Engine (arcanum typography).
+    - ISBN-13 Vector SVG/PNG Barcode Engine (arcanum barcode).
+  * Extended Master Grand Tour lifecycle integration harness to 20 stages.
+  * Reached 750 passing unit tests across repository with 0 failures.
+  * Recorded ADR-095 through ADR-102 in decisions.md.
+  * Synchronized version parity to v3.6.0 across all surfaces.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Thu, 24 Sep 2026 16:30:00 +0530
+
+ars-arcanum (3.5.0-1) unstable; urgency=medium
+
+  * The Worldbuilding Sciences & Narrative Mechanics Release — Phase 17.
+  * Solidified and expanded 8 core worldbuilding, science, and mechanics engines with 12+ tests and docs:
+    - Focus Ambient & Binaural Soundscape Generator (arcanum ambient).
+    - Dynamic Tactical Combat & Monte Carlo Skirmish Simulator (arcanum tactical).
+    - Motivation-Reaction Unit (MRU) Scene Mechanics Analyzer (arcanum scene).
+    - Multi-Track Narrative Plot Grid & Subplot Matrix Engine (arcanum plot-matrix).
+    - Dual-Track Chronological vs Narrative Timeline Synchronizer (arcanum timeline).
+    - Planetary Climate, Orographic Rain Shadows & Köppen Biomes (arcanum climate).
+    - Trophic Food Web Ecology & Biomass Efficiency Simulator (arcanum ecology).
+    - Earth Idiom & Immersion-Breaking Eponym Linter (arcanum idioms).
+  * Extended Master Grand Tour lifecycle integration harness to 19 stages.
+  * Recorded ADR-087 through ADR-094 in decisions.md.
+  * Synchronized version parity to v3.5.0 across all surfaces.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Thu, 24 Sep 2026 16:00:00 +0530
+
+ars-arcanum (3.4.0-1) unstable; urgency=medium
+
+  * The Sovereign Story Craft & Editorial Mastery Release — Phase 16.
+  * Solidified and expanded 7 core narrative, prose, and craft engines with 12+ tests and docs:
+    - In-World Macroeconomics & Anachronism Matrix (arcanum economy).
+    - Overland, Naval & Aerial Journey Expedition Modeler (arcanum journey).
+    - Offline Vector Cartography & Interactive Map Viewer (arcanum map).
+    - Narrative Pacing, POV Balance & Tension Arc Analytics (arcanum pacing).
+    - Multi-Paradigm Story Structure & Beat Sheet Enforcer (arcanum structure).
+    - Character Voice Profiler & Dialogue Fingerprint Engine (arcanum voice).
+    - Stylistics, Dialogue Mechanics & Readability Rhythm Engine (arcanum stylistics).
+  * Extended Master Grand Tour lifecycle integration harness to 18 stages.
+  * Recorded ADR-080 through ADR-086 in decisions.md.
+  * Synchronized version parity to v3.4.0 across all surfaces.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Tue, 22 Sep 2026 17:30:00 +0530
+
+ars-arcanum (3.3.0-1) unstable; urgency=medium
+
+  * The Sovereign Worldbuilding Codex & Arcane Mastery Release — Phase 15.
+  * Solidified and expanded 7 core worldbuilding and craft engines with 12+ tests and docs:
+    - Static World Wiki & Offline Codex Exporter (arcanum codex).
+    - Hard Magic Systems & Arcane Constraint Matrix (arcanum magic-check, arcanum magic-report).
+    - In-World Ciphers, Runes & SVG Inscription Generator (arcanum cipher).
+    - Dynastic Genealogies & Succession Lineage Engine (arcanum genealogy, arcanum lineage).
+    - Conlang Phonotactics & Historical Sound-Change Engine (arcanum conlang).
+    - Geopolitical Faction Matrix & Campaign Logistics Architecture (arcanum faction).
+    - Custom Planetary Calendars & Multi-Moon Phase Synchronizer (arcanum calendar).
+  * Extended Master Grand Tour lifecycle integration harness to 17 stages.
+  * Synchronized version parity to v3.3.0 across all 5 surfaces.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Tue, 22 Sep 2026 16:30:00 +0530
+
+ars-arcanum (3.2.0-1) unstable; urgency=medium
+
+  * The Sovereign Crown & Flathub Upstream Hardening Release — Phase 14.
+  * Added Flathub Upstream Packaging Validation Suite (flatpak/flathub_submission_validate.py).
+  * Added Cosmos Archive Freeze & Cryptographic Provenance Sealer (arcanum freeze, arcanum verify-archive).
+  * Added Multi-Volume Dramatis Personae & Universe Cast Matrix (arcanum cast, arcanum dramatis-personae).
+  * Expanded Grand Tour master end-to-end integration lifecycle test suite to 16 stages.
+  * Synchronized all CLI dispatchers, Studio Hub telemetry, and version parity across 5 surfaces.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Tue, 22 Sep 2026 15:30:00 +0530
+
+ars-arcanum (3.1.0-1) unstable; urgency=medium
+
+  * The Sovereign Craft Deepening Release — Phase 13.
+  * Added Sovereign Writing Sprint & Session Analytics engine (arcanum sprint).
+  * Added Manuscript Revision Density & Churn Heatmap engine (arcanum revision-heatmap).
+  * Full testing & documentation for Causal DAG & Time-Travel Consistency Validator (arcanum causality).
+  * Full testing & documentation for Prophecy Resolution Matrix & Arcane Inscription Tracker (arcanum prophecy).
+  * Full testing & documentation for 6D Sensory Palette & White Room Syndrome Linter (arcanum senses).
+  * Expanded test coverage for climate, ecology, and idiom craft suites.
+  * Full regression test suite elevated to 500+ tests, 100% clean Ruff, strict mypy across all modules.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Tue, 22 Sep 2026 12:30:00 +0530
+
+ars-arcanum (3.0.0-1) unstable; urgency=medium
+
+  * The Sovereign Zenith Release — Phase 12: Sovereign Studio Desktop Hub & Grand Tour Lifecycle Verification.
+  * Added Sovereign Studio Desktop Hub engine (arcanum hub) with unified telemetry cockpit, REST API, and static HTML export.
+  * Implemented 13-Stage Grand Tour end-to-end lifecycle verification suite covering all 40+ craft engines.
+  * Added offline Flatpak bundle builder with dry-run and verbose flags (flatpak/build_offline_bundle.sh).
+  * Bumped version to v3.0.0 across CLI, Bash wrapper, Debian, AppStream metainfo, and CHANGELOG.
+  * Full test suite elevated to 439+ tests (437 passed, 2 skipped, 0 failures), 100% Ruff clean, strict mypy.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Sun, 21 Sep 2026 21:00:00 +0530
+
+ars-arcanum (2.2.0-1) unstable; urgency=medium
+
+  * Sovereign Synthesis & Interactive Branching Fiction Release.
+  * Added zero-dependency Local AI Fine-Tuning Dataset Synthesizer (arcanum train-data).
+  * Implemented Interactive Branching Narrative Graph & Choice Engine (arcanum branch).
+  * Added multi-format interactive fiction compilation (Playable HTML5, Ink .ink, Twine .twee, Mermaid).
+  * Added topological DAG reachability, dead-end, and state requirement validation.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Sun, 21 Sep 2026 20:00:00 +0530
+
+ars-arcanum (2.1.0-1) unstable; urgency=medium
+
+  * Sovereign Intelligence & Local Semantic Retrieval Release.
+  * Added zero-dependency, offline TF-IDF and SQLite FTS5 hybrid Lore Retrieval Engine (arcanum rag).
+  * Introduced curated Speculative Fiction Plugin Marketplace and integrity verifier (arcanum market).
+  * Added automated LLM prompt context synthesis with canonical provenance attribution.
+  * Synchronized full documentation, CLI aliases, and regression test suites.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Sun, 21 Sep 2026 18:00:00 +0530
+
+ars-arcanum (2.0.0-1) unstable; urgency=medium
 
   * Production readiness and modular architecture release.
   * Packaged unified Python CLI dispatcher and plugin registry.
@@ -6,4 +150,4 @@ ars-arcanum (1.6.0-1) unstable; urgency=medium
   * Hardened World Bible doctor, concordance back-matter engine, and diagnostics.
   * Included FreeDesktop launcher specifications and headless GUI support.
 
- -- Aryan Singh Nagar <https://github.com/aryansinghnagar/Scriptorium>  Sun, 21 Sep 2026 12:00:00 +0530
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Sun, 21 Sep 2026 12:00:00 +0530

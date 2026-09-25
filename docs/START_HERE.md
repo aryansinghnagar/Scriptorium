@@ -50,15 +50,22 @@ Access 18 offline modeling and consistency engines:
 - **EPUB & Ebook**: Compiles validated EPUB with cover art detection.
 - **Submission Manuscript**: Produces industry-standard Shunn/Modern format `.docx` for literary agents and editors.
 - **Automatic Concordance**: Generates *Dramatis Personae* and *Glossary* back-matter automatically.
+- **Release Packaging**: 1-click generation of Reader, Submission, ARC, and Lore Codex ZIP bundles with SHA-256 manifests (`arcanum package`).
 
 ### Studio 5: 🔒 Snapshots & Safe Backups
-- **📷 Quick Snapshot**: Record a 1-click version milestone in local Git.
-- **Offline Verified Archive**: Create a standalone `.tar.gz` archive with SHA-256 integrity verification.
+- **📷 Quick Snapshot**: Record a 1-click version milestone in local Git (`Ctrl+S`).
+- **Offline Verified Archive**: Create a standalone `.tar.gz` archive with SHA-256 integrity verification (`Ctrl+B`).
+- **GPG Military-Grade Encryption**: Protect confidential manuscripts with AES-256 passphrase or recipient public-key encryption (`--symmetric`, `--encrypt`).
 - **External Drive Replication**: Configure an external USB drive or secondary hard drive in Settings for automated 3-2-1 backup protection.
 
 ### Studio 6: 🩺 System Health & Doctor
 - Run comprehensive diagnostics on system compilers, Flatpak apps, world lore vaults, and backup destinations.
 - Plain-language alerts guide you if any tool needs configuration.
+
+---
+
+## ⚡ Quick Reference
+For a single-page printable reference of all keyboard shortcuts, scene metadata tags, and CLI flags, see **[`docs/CHEATSHEET.md`](CHEATSHEET.md)**.
 
 ---
 

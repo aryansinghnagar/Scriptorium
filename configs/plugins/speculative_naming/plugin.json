@@ -1,0 +1,14 @@
+{
+  "id": "speculative_naming",
+  "name": "Speculative Naming & Phoneme Collision Auditor",
+  "version": "1.0.0",
+  "author": "Ars Arcanum Craft Guild",
+  "description": "Analyzes entity names for phoneme collisions, dangerous Levenshtein similarities, and reader-confusion clusters.",
+  "category": "speculative",
+  "entry_point": "plugin.py",
+  "hooks": [
+    "validate_entity",
+    "custom_metric"
+  ],
+  "min_arcanum_version": "1.6.0"
+}

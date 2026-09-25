@@ -26,15 +26,21 @@ Options:
   -m, --manuscript NAME  Manuscript name or path
   -p, --project NAME     Project name or path
   -u, --universe NAME    Universe name (optional)
+  -a, --all              Back up all discovered worlds and manuscripts
   -d, --dest DIR         Primary destination directory for archive
   -s, --secure-dest DIR  Explicit secure external/USB backup destination
   -n, --note NOTE        Optional backup note/label
+  -e, --encrypt [KEY_ID] Encrypt backup with GPG (asymmetric if KEY_ID given, else symmetric)
+  --symmetric            Encrypt backup using GPG symmetric cipher (AES-256)
+  --gpg-key KEY_ID       Recipient GPG key ID for asymmetric encryption
+  --passphrase PASS      Passphrase for symmetric encryption (non-interactive)
+  --passphrase-file FILE Passphrase file for symmetric encryption
   --no-local             Write only to secure external destination (skip local Backups/)
   -h, --help             Show this help and exit
 
 Exit codes:
   0  backup created and checksum verified
-  1  error (target not found, compression failure, checksum failure)
+  1  error (target not found, compression failure, checksum failure, encryption error)
   2  usage error or destination path disallowed
   3  user abort (no target selected)
 USAGE
@@ -48,6 +54,11 @@ DEST_CLI=""
 SECURE_DEST_CLI=""
 NOTE_CLI=""
 NO_LOCAL=0
+ENCRYPTED_BACKUP=0
+ENCRYPTION_TYPE="none"
+GPG_KEY=""
+PASSPHRASE_CLI=""
+PASSPHRASE_FILE_CLI=""
 POSITIONAL=()
 
 while [ $# -gt 0 ]; do
@@ -73,6 +84,28 @@ while [ $# -gt 0 ]; do
         -n|--note)
             [ $# -ge 2 ] || { echo "Error: --note requires a value." >&2; exit 2; }
             NOTE_CLI="$2"; shift 2 ;;
+        -e|--encrypt)
+            ENCRYPTED_BACKUP=1
+            if [ $# -ge 2 ] && [[ "$2" != -* ]]; then
+                GPG_KEY="$2"; shift 2
+            else
+                shift
+            fi ;;
+        --symmetric)
+            ENCRYPTED_BACKUP=1
+            ENCRYPTION_TYPE="symmetric"; shift ;;
+        --gpg-key)
+            [ $# -ge 2 ] || { echo "Error: --gpg-key requires a value." >&2; exit 2; }
+            ENCRYPTED_BACKUP=1
+            GPG_KEY="$2"; shift 2 ;;
+        --passphrase)
+            [ $# -ge 2 ] || { echo "Error: --passphrase requires a value." >&2; exit 2; }
+            PASSPHRASE_CLI="$2"; shift 2 ;;
+        --passphrase-file)
+            [ $# -ge 2 ] || { echo "Error: --passphrase-file requires a value." >&2; exit 2; }
+            PASSPHRASE_FILE_CLI="$2"; shift 2 ;;
+        --all)
+            BACKUP_ALL=1; shift ;;
         --no-local)
             NO_LOCAL=1; shift ;;
         -h|--help)
@@ -87,6 +120,28 @@ while [ $# -gt 0 ]; do
 done
 
 TARGET_INPUT="${MANUSCRIPT_CLI:-${WORLD_CLI:-${PROJECT_CLI:-${POSITIONAL[0]:-}}}}"
+
+# Handle bulk --all mode
+if [ "${BACKUP_ALL:-0}" -eq 1 ] || [ "${TARGET_INPUT}" = "--all" ] || [ "${TARGET_INPUT}" = "all" ]; then
+    discover_worlds ALL_WORLDS
+    discover_manuscripts ALL_MS
+    echo "=== Ars Arcanum Bulk Backup Engine ==="
+    TOTAL_PROCS=0
+    for w in "${ALL_WORLDS[@]}"; do
+        [ -d "$w" ] || continue
+        echo "Backing up World: $(basename "$w") ..."
+        bash "${SCRIPT_DIR}/backup_world.sh" -w "$w" ${DEST_CLI:+-d "$DEST_CLI"} ${SECURE_DEST_CLI:+-s "$SECURE_DEST_CLI"} || true
+        TOTAL_PROCS=$((TOTAL_PROCS + 1))
+    done
+    for m in "${ALL_MS[@]}"; do
+        [ -d "$m" ] || continue
+        echo "Backing up Manuscript: $(basename "$m") ..."
+        bash "${SCRIPT_DIR}/backup_world.sh" -m "$m" ${DEST_CLI:+-d "$DEST_CLI"} ${SECURE_DEST_CLI:+-s "$SECURE_DEST_CLI"} || true
+        TOTAL_PROCS=$((TOTAL_PROCS + 1))
+    done
+    echo "[✓] Bulk backup completed for ${TOTAL_PROCS} project(s)."
+    exit 0
+fi
 
 if [ -z "${TARGET_INPUT}" ]; then
     if has_gui; then
@@ -196,15 +251,56 @@ if [ ! -s "${ARCHIVE_TAR}" ]; then
     exit 1
 fi
 
-ACTUAL_SHA="$(sha256sum "${ARCHIVE_TAR}" | cut -d' ' -f1)"
-echo "${ACTUAL_SHA}  ${ARCHIVE_BASE}.tar.gz" > "${CHECKSUM_FILE}"
+# Pre-verification: Ensure tar archive integrity is valid before calculating SHA-256
+if ! tar -tzf "${ARCHIVE_TAR}" >/dev/null 2>&1; then
+    echo "Error: Backup archive is corrupted or unreadable: ${ARCHIVE_TAR}" >&2
+    rm -f "${ARCHIVE_TAR}"
+    exit 1
+fi
+
+FINAL_ARCHIVE="${ARCHIVE_TAR}"
+FINAL_ARCHIVE_NAME="${ARCHIVE_BASE}.tar.gz"
+
+if [ "${ENCRYPTED_BACKUP}" -eq 1 ]; then
+    if ! command -v gpg &>/dev/null && ! command -v gpg2 &>/dev/null; then
+        echo "Error: GPG is required for encrypted backups but was not found in PATH." >&2
+        rm -f "${ARCHIVE_TAR}"
+        exit 1
+    fi
+    GPG_CMD="gpg"
+    command -v gpg &>/dev/null || GPG_CMD="gpg2"
+    
+    ARCHIVE_GPG="${PRIMARY_BACKUP_DIR}/${ARCHIVE_BASE}.tar.gz.gpg"
+    GPG_ARGS=(--batch --yes)
+    
+    if [ -n "${PASSPHRASE_CLI}" ]; then
+        GPG_ARGS+=(--pinentry-mode loopback --passphrase "${PASSPHRASE_CLI}")
+    elif [ -n "${PASSPHRASE_FILE_CLI}" ]; then
+        GPG_ARGS+=(--pinentry-mode loopback --passphrase-file "${PASSPHRASE_FILE_CLI}")
+    fi
+    
+    if [ -n "${GPG_KEY}" ]; then
+        ENCRYPTION_TYPE="asymmetric"
+        "${GPG_CMD}" "${GPG_ARGS[@]}" --encrypt --recipient "${GPG_KEY}" -o "${ARCHIVE_GPG}" "${ARCHIVE_TAR}"
+    else
+        ENCRYPTION_TYPE="symmetric"
+        "${GPG_CMD}" "${GPG_ARGS[@]}" --symmetric --cipher-algo AES256 -o "${ARCHIVE_GPG}" "${ARCHIVE_TAR}"
+    fi
+    
+    rm -f "${ARCHIVE_TAR}"
+    FINAL_ARCHIVE="${ARCHIVE_GPG}"
+    FINAL_ARCHIVE_NAME="${ARCHIVE_BASE}.tar.gz.gpg"
+fi
+
+ACTUAL_SHA="$(sha256sum "${FINAL_ARCHIVE}" | cut -d' ' -f1)"
+echo "${ACTUAL_SHA}  ${FINAL_ARCHIVE_NAME}" > "${CHECKSUM_FILE}"
 
 GIT_COMMIT="none"
 if [ -d "${WORLD_DIR}/.git" ] && command -v git &>/dev/null; then
     GIT_COMMIT="$(git -C "${WORLD_DIR}" rev-parse HEAD 2>/dev/null || echo "none")"
 fi
 
-ARCHIVE_BYTES="$(wc -c < "${ARCHIVE_TAR}" | tr -d ' ')"
+ARCHIVE_BYTES="$(wc -c < "${FINAL_ARCHIVE}" | tr -d ' ')"
 
 python3 -c '
 import json, sys
@@ -216,11 +312,14 @@ meta = {
     "size_bytes": int(sys.argv[5]),
     "git_commit": sys.argv[6],
     "note": sys.argv[7],
+    "encrypted": sys.argv[8] == "1",
+    "encryption_type": sys.argv[9],
+    "gpg_recipient": sys.argv[10],
 }
-with open(sys.argv[8], "w", encoding="utf-8") as f:
+with open(sys.argv[11], "w", encoding="utf-8") as f:
     json.dump(meta, f, indent=2)
     f.write("\n")
-' "${WORLD_NAME}" "${TIMESTAMP}" "${ARCHIVE_BASE}.tar.gz" "${ACTUAL_SHA}" "${ARCHIVE_BYTES}" "${GIT_COMMIT}" "${NOTE_CLI:-auto-backup}" "${META_FILE}"
+' "${WORLD_NAME}" "${TIMESTAMP}" "${FINAL_ARCHIVE_NAME}" "${ACTUAL_SHA}" "${ARCHIVE_BYTES}" "${GIT_COMMIT}" "${NOTE_CLI:-auto-backup}" "${ENCRYPTED_BACKUP}" "${ENCRYPTION_TYPE}" "${GPG_KEY:-none}" "${META_FILE}"
 
 (
     cd "${PRIMARY_BACKUP_DIR}"
@@ -228,7 +327,7 @@ with open(sys.argv[8], "w", encoding="utf-8") as f:
 )
 
 echo "[✓] Primary backup archive created and verified:"
-echo "    Archive:  ${ARCHIVE_TAR}"
+echo "    Archive:  ${FINAL_ARCHIVE}"
 echo "    SHA-256:  ${ACTUAL_SHA}"
 echo "    Metadata: ${META_FILE}"
 
@@ -237,23 +336,23 @@ SECURE_SYNCED=0
 if [ -n "${SECURE_BACKUP_DIR}" ] && [ "${SECURE_BACKUP_DIR}" != "${PRIMARY_BACKUP_DIR}" ]; then
     echo "Replicating backup to secure external destination: ${SECURE_BACKUP_DIR} ..."
     if mkdir -p "${SECURE_BACKUP_DIR}" 2>/dev/null; then
-        cp "${ARCHIVE_TAR}" "${SECURE_BACKUP_DIR}/"
+        cp "${FINAL_ARCHIVE}" "${SECURE_BACKUP_DIR}/"
         cp "${CHECKSUM_FILE}" "${SECURE_BACKUP_DIR}/"
         cp "${META_FILE}" "${SECURE_BACKUP_DIR}/"
         (
             cd "${SECURE_BACKUP_DIR}"
             sha256sum -c "${ARCHIVE_BASE}.sha256" >/dev/null
         )
-        echo "[✓] Secure external backup verified at: ${SECURE_BACKUP_DIR}/${ARCHIVE_BASE}.tar.gz"
+        echo "[✓] Secure external backup verified at: ${SECURE_BACKUP_DIR}/${FINAL_ARCHIVE_NAME}"
         SECURE_SYNCED=1
     else
         echo "[!] Warning: Could not write to secure external destination '${SECURE_BACKUP_DIR}' (device unmounted or permission denied)." >&2
     fi
 fi
 
-MSG="Backup created successfully for '${WORLD_NAME}'!\n\nLocal Archive: ${ARCHIVE_TAR}\nSHA256: ${ACTUAL_SHA:0:16}...\nSize: $(( ARCHIVE_BYTES / 1024 )) KB"
+MSG="Backup created successfully for '${WORLD_NAME}'!\n\nLocal Archive: ${FINAL_ARCHIVE}\nSHA256: ${ACTUAL_SHA:0:16}...\nSize: $(( ARCHIVE_BYTES / 1024 )) KB"
 if [ "${SECURE_SYNCED}" -eq 1 ]; then
-    MSG="${MSG}\n\n[✓] Secure External Backup Synced:\n${SECURE_BACKUP_DIR}/${ARCHIVE_BASE}.tar.gz"
+    MSG="${MSG}\n\n[✓] Secure External Backup Synced:\n${SECURE_BACKUP_DIR}/${FINAL_ARCHIVE_NAME}"
 fi
 
 if has_gui; then

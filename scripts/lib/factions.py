@@ -28,35 +28,19 @@ Capabilities:
 Zero external dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import math
-import json
-import html
 import argparse
+import html
+import json
 import logging
+import math
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 logger = logging.getLogger("arcanum.factions")
 
@@ -64,54 +48,10 @@ FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DO
 WIKILINK_REGEX = re.compile(r"\[\[([^\]\|#]+)(?:\|[^\]\]]*)?\]\]")
 
 
-def parse_yaml_frontmatter(content: str) -> dict:
-    """Lightweight, safe YAML frontmatter parser supporting key-value, lists, and inline arrays."""
-    fm_match = FRONTMATTER_REGEX.match(content)
-    if not fm_match:
-        return {}
-    
-    data = {}
-    lines = fm_match.group(1).splitlines()
-    current_key = None
-    
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        
-        # Check list item under current key
-        if raw_line.startswith("  - ") or raw_line.startswith("    - ") or (raw_line.startswith("- ") and current_key):
-            item_val = line.lstrip("- ").strip().strip("\"'")
-            if current_key:
-                if not isinstance(data.get(current_key), list):
-                    data[current_key] = []
-                data[current_key].append(item_val)
-            continue
-
-        if ":" in line:
-            key, val = line.split(":", 1)
-            key = key.strip()
-            val = val.strip()
-            current_key = key
-            
-            if not val:
-                data[key] = []
-            elif val.startswith("[") and val.endswith("]"):
-                items = [v.strip().strip("\"'") for v in val[1:-1].split(",") if v.strip()]
-                data[key] = items
-            elif val.lower() in ("true", "yes"):
-                data[key] = True
-            elif val.lower() in ("false", "no"):
-                data[key] = False
-            else:
-                try:
-                    if "." in val:
-                        data[key] = float(val)
-                    else:
-                        data[key] = int(val)
-                except ValueError:
-                    data[key] = val.strip("\"'")
-    return data
+try:
+    from lib.frontmatter import parse_yaml_frontmatter
+except ImportError:
+    from frontmatter import parse_yaml_frontmatter
 
 
 def clean_link_name(raw: str) -> str:
@@ -668,7 +608,7 @@ def generate_faction_html_report(audit_data: dict, output_path: Path):
     atomic_write(output_path, html_content)
 
 
-def resolve_world_dir(target_str: str = None) -> str:
+def resolve_world_dir(target_str: str | None = None) -> str:
     """Resolves world input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()

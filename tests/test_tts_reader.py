@@ -4,21 +4,21 @@ Unit tests for Ars Arcanum Offline Neural TTS & Audio Proofreader
 (scripts/lib/tts_reader.py)
 """
 
+import json
+import sys
+import tempfile
 import unittest
 from pathlib import Path
-import tempfile
-import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from lib.tts_reader import (
     clean_prose_for_speech,
     find_system_tts_engine,
-    speak_text,
     generate_tts_html_player,
-    main
+    main as tts_main,
+    speak_text,
 )
 
 
@@ -131,7 +131,7 @@ He whispered to [[Kaelen]]: "Wait here."
         result = speak_text("Hello world", speed=1.2, voice="en-us")
         self.assertTrue(result)
         mock_run.assert_called_once()
-        args, kwargs = mock_run.call_args
+        args, _kwargs = mock_run.call_args
         cmd = args[0]
         self.assertEqual(cmd[0], "espeak")
         self.assertIn("-s", cmd)
@@ -143,13 +143,55 @@ He whispered to [[Kaelen]]: "Wait here."
         doc.write_text("# Chapter\n\nFirst paragraph here.\n\nSecond paragraph here.", encoding="utf-8")
 
         with patch("sys.argv", ["tts_reader.py", str(doc), "--json"]), patch("builtins.print") as mock_print:
-            main()
+            tts_main()
             mock_print.assert_called()
             printed_str = mock_print.call_args[0][0]
             data = json.loads(printed_str)
             self.assertEqual(len(data["paragraphs"]), 3)
             self.assertEqual(data["paragraphs"][0], "Chapter")
             self.assertEqual(data["paragraphs"][1], "First paragraph here.")
+
+    def test_clean_prose_empty_and_whitespace(self):
+        """Verifies empty strings and whitespace-only documents produce empty list."""
+        self.assertEqual(clean_prose_for_speech(""), [])
+        self.assertEqual(clean_prose_for_speech("   \n\n   \t  "), [])
+        self.assertEqual(clean_prose_for_speech("---\ntitle: Only Frontmatter\n---\n"), [])
+
+    def test_clean_prose_multiple_paragraphs_spacing(self):
+        """Verifies distinct paragraphs are parsed with proper boundaries."""
+        text = "First paragraph here.\n\nSecond paragraph with multiple sentences. Another sentence.\n\nThird paragraph."
+        paragraphs = clean_prose_for_speech(text)
+        self.assertEqual(len(paragraphs), 3)
+        self.assertEqual(paragraphs[0], "First paragraph here.")
+        self.assertEqual(paragraphs[2], "Third paragraph.")
+
+    def test_generate_tts_html_player_csp_meta(self):
+        """Verifies CSP meta tag and offline compliance in audio player HTML."""
+        out_file = self.test_dir / "player_csp.html"
+        generate_tts_html_player(["Paragraph 1", "Paragraph 2"], title="Proofreader", output_path=out_file)
+        self.assertTrue(out_file.exists())
+        content = out_file.read_text(encoding="utf-8")
+        self.assertIn("Content-Security-Policy", content)
+        self.assertIn("default-src 'none'", content)
+
+    @patch("lib.tts_reader.find_system_tts_engine")
+    def test_speak_text_no_engine_returns_false(self, mock_find):
+        """Verifies speak_text returns False when no system TTS engine is available."""
+        mock_find.return_value = None
+        res = speak_text("Test voice output")
+        self.assertFalse(res)
+
+    def test_cli_execution_with_html_export(self):
+        """Verifies CLI execution with --html output file creation."""
+        doc = self.test_dir / "story.md"
+        doc.write_text("# Chapter One\n\nThe hero embarked on the journey.", encoding="utf-8")
+        out_html = self.test_dir / "story_audio.html"
+
+        with patch("sys.argv", ["tts_reader.py", str(doc), "--html", str(out_html)]):
+            tts_main()
+            self.assertTrue(out_html.exists())
+            content = out_html.read_text(encoding="utf-8")
+            self.assertIn("The hero embarked on the journey.", content)
 
 
 if __name__ == "__main__":

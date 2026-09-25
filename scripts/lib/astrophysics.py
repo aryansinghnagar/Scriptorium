@@ -33,34 +33,18 @@ Outputs:
 - Standalone interactive HTML report (--html <file>)
 """
 
-import sys
-import re
-import math
-import json
 import argparse
 import html
+import json
+import math
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write
 
 # --- Physical & Astronomical Constants (SI Units) ---
 C = 299792458.0                          # Speed of light in vacuum (m/s)
@@ -206,7 +190,7 @@ def format_distance(meters: float) -> str:
 # Core Calculation Engines
 # ==============================================================================
 
-def calc_brachistochrone(distance_m: float, acc_mps2: float = G0, exhaust_vel_mps: float = None) -> dict:
+def calc_brachistochrone(distance_m: float, acc_mps2: float = G0, exhaust_vel_mps: float | None = None) -> dict:
     """
     Calculates exact relativistic 1-turnover (accelerate to midpoint, decelerate to stop)
     continuous-thrust Brachistochrone spaceflight trajectory.
@@ -278,8 +262,8 @@ def calc_brachistochrone(distance_m: float, acc_mps2: float = G0, exhaust_vel_mp
     }
 
 
-def calc_time_dilation(v_mps: float = None, beta: float = None, gamma: float = None,
-                       grav_mass_kg: float = None, grav_radius_m: float = None) -> dict:
+def calc_time_dilation(v_mps: float | None = None, beta: float | None = None, gamma: float | None = None,
+                       grav_mass_kg: float | None = None, grav_radius_m: float | None = None) -> dict:
     """Calculates special and general relativistic time dilation."""
     res = {}
     if beta is not None:
@@ -327,9 +311,13 @@ def calc_time_dilation(v_mps: float = None, beta: float = None, gamma: float = N
     return res
 
 
-def calc_orbital_transfer(primary_body: str = "sun", r1_m: float = None, r2_m: float = None,
-                          primary_mass_kg: float = None) -> dict:
+def calc_orbital_transfer(primary_body: str = "sun", r1_m: float | None = None, r2_m: float | None = None,
+                          primary_mass_kg: float | None = None) -> dict:
     """Calculates Keplerian Hohmann orbital transfer delta-v and durations."""
+    if r1_m is None:
+        r1_m = AU
+    if r2_m is None:
+        r2_m = 1.524 * AU
     m_primary = primary_mass_kg
     body_name = primary_body.capitalize()
     if primary_body.lower() in BODY_PRESETS:

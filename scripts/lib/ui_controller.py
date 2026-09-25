@@ -6,18 +6,18 @@ Decouples application state management, project discovery, studio engine routing
 and background command execution from the GTK presentation layer.
 """
 
+import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-import subprocess
 from typing import Any
 
 try:
-    from lib.registry import list_engines
     from lib.diagnostics import get_toolchain_diagnostics
+    from lib.registry import list_engines
 except ImportError:
     try:
-        from registry import list_engines
         from diagnostics import get_toolchain_diagnostics
+        from registry import list_engines
     except ImportError:
         pass
 

@@ -1,0 +1,14 @@
+{
+  "id": "magic_system_audit",
+  "name": "Hard Magic System & Arcane Consistency Auditor",
+  "version": "1.0.0",
+  "author": "Brandonian Arcane Society",
+  "description": "Enforces Sandersonian hard magic principles, cost-limitation balance, and conservation invariants across magic lore.",
+  "category": "speculative",
+  "entry_point": "plugin.py",
+  "hooks": [
+    "validate_entity",
+    "validate_manuscript"
+  ],
+  "min_arcanum_version": "1.6.0"
+}

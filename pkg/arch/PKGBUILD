@@ -1,0 +1,78 @@
+# Maintainer: Aryan Singh Nagar <aryan@example.com>
+# Contributor: Ars Arcanum Contributors
+
+pkgname=ars-arcanum
+pkgver=1.6.1
+pkgrel=1
+pkgdesc="Sovereign 100% offline writing and speculative worldbuilding studio for fiction authors"
+arch=('any')
+url="https://github.com/aryansinghnagar/Scriptorium"
+license=('MIT')
+depends=(
+    'bash>=4.3'
+    'python>=3.10'
+    'python-gobject'
+    'gtk3'
+    'git>=2.34'
+    'pandoc-cli'
+    'jq'
+    'zenity'
+    'curl'
+    'tar'
+    'xz'
+    'xdg-user-dirs'
+    'libnotify'
+)
+optdepends=(
+    'typst>=0.11: Publication-grade sub-second PDF compilation'
+    'focuswriter: Distraction-free sprint canvas'
+    'libreoffice-fresh: Word processor synchronization'
+    'flatpak: Obsidian and novelWriter launcher integration'
+    'wl-clipboard: Wayland clipboard support'
+    'xclip: X11 clipboard support'
+)
+provides=('arcanum' 'ars-arcanum')
+conflicts=('ars-arcanum-git')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+    cd "$srcdir" || cd "$pkgdir"
+
+    # Install application files to /usr/share/ars-arcanum
+    install -dm755 "$pkgdir/usr/share/ars-arcanum"
+    cp -r scripts templates configs "$pkgdir/usr/share/ars-arcanum/"
+
+    # Clean compiled python caches
+    find "$pkgdir/usr/share/ars-arcanum" -type d -name '__pycache__' -prune -exec rm -rf {} +
+    find "$pkgdir/usr/share/ars-arcanum" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
+
+    # Ensure executable permissions on scripts
+    chmod +x "$pkgdir/usr/share/ars-arcanum/scripts/"*.sh
+    chmod +x "$pkgdir/usr/share/ars-arcanum/scripts/arcanum"
+    chmod +x "$pkgdir/usr/share/ars-arcanum/scripts/ars-arcanum"
+
+    # Install CLI symlinks in /usr/bin
+    install -dm755 "$pkgdir/usr/bin"
+    ln -sf /usr/share/ars-arcanum/scripts/arcanum "$pkgdir/usr/bin/arcanum"
+    ln -sf /usr/share/ars-arcanum/scripts/ars-arcanum "$pkgdir/usr/bin/ars-arcanum"
+
+    # Install Desktop launchers
+    install -dm755 "$pkgdir/usr/share/applications"
+    for launcher in launchers/*.desktop; do
+        if [ -f "$launcher" ]; then
+            filename=$(basename "$launcher")
+            sed "s|bash __PROJECT_ROOT__/scripts/arcanum|/usr/bin/arcanum|g; s|bash __PROJECT_ROOT__/scripts/|/usr/share/ars-arcanum/scripts/|g; s|__PROJECT_ROOT__|/usr/share/ars-arcanum|g" \
+                "$launcher" > "$pkgdir/usr/share/applications/$filename"
+        fi
+    done
+
+    # Install systemd user service and timer
+    install -dm755 "$pkgdir/usr/lib/systemd/user"
+    install -m644 configs/systemd/arcanum-backup.service "$pkgdir/usr/lib/systemd/user/"
+    install -m644 configs/systemd/arcanum-backup.timer "$pkgdir/usr/lib/systemd/user/"
+
+    # Install License
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

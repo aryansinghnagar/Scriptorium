@@ -21,35 +21,19 @@ Capabilities:
 Zero external runtime dependencies; 100% offline privacy.
 """
 
-import sys
-import re
+import argparse
 import csv
 import json
-import random
-import argparse
 import logging
+import random
+import re
+import sys
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    import lib._bootstrap  # noqa: F401
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    import _bootstrap  # noqa: F401
 
 logger = logging.getLogger("arcanum.conlang")
 
@@ -60,43 +44,10 @@ DEFAULT_VOWELS = ["a", "e", "i", "o", "u"]
 DEFAULT_SYLLABLES = ["CV", "CVC", "V", "VC"]
 
 
-def parse_yaml_frontmatter(content: str) -> dict:
-    """Extracts frontmatter dictionary from markdown note."""
-    fm_match = FRONTMATTER_REGEX.match(content)
-    if not fm_match:
-        return {}
-    
-    data = {}
-    lines = fm_match.group(1).splitlines()
-    current_key = None
-    
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        
-        if raw_line.startswith("  - ") or raw_line.startswith("    - ") or (raw_line.startswith("- ") and current_key):
-            item_val = line.lstrip("- ").strip().strip("\"'")
-            if current_key:
-                if not isinstance(data.get(current_key), list):
-                    data[current_key] = []
-                data[current_key].append(item_val)
-            continue
-
-        if ":" in line:
-            key, val = line.split(":", 1)
-            key = key.strip().lower()
-            val = val.strip()
-            current_key = key
-            
-            if not val:
-                data[key] = []
-            elif val.startswith("[") and val.endswith("]"):
-                items = [v.strip().strip("\"'") for v in val[1:-1].split(",") if v.strip()]
-                data[key] = items
-            else:
-                data[key] = val.strip("\"'")
-    return data
+try:
+    from lib.frontmatter import parse_yaml_frontmatter
+except ImportError:
+    from frontmatter import parse_yaml_frontmatter
 
 
 def load_conlang_profile(world_dir: Path, lang_query: str) -> dict:
@@ -215,7 +166,7 @@ def generate_syllable(structure: str, consonants: list, vowels: list, rng: rando
 
 
 def generate_words(lang_profile: dict, count: int = 10, num_syllables: int = 2,
-                   word_type: str = "word", seed: int = None) -> list:
+                   word_type: str = "word", seed: int | None = None) -> list:
     """Generates phonotactically legal words or names according to the conlang rules."""
     rng = random.Random(seed) if seed is not None else random.Random()
     consonants = lang_profile["consonants"]
@@ -341,7 +292,7 @@ def mutate_text(text: str, rules: list, vowels: list, consonants: list) -> str:
 # CLI Entrypoint
 # ==============================================================================
 
-def resolve_world_dir(target_str: str = None) -> str:
+def resolve_world_dir(target_str: str | None = None) -> str:
     """Resolves world input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()

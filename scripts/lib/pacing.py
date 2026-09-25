@@ -25,36 +25,20 @@ Capabilities:
 Zero external runtime dependencies; 100% offline privacy.
 """
 
-import sys
-import re
-import json
-import math
-import html
 import argparse
+import html
+import json
 import logging
-from pathlib import Path
+import math
+import re
+import sys
 from collections import defaultdict
+from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write, validate_volume_name
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            if isinstance(data, (bytes, bytearray)):
-                p.write_bytes(data)
-            else:
-                p.write_text(data, encoding=encoding)
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+    from _bootstrap import atomic_write, validate_volume_name
 
 logger = logging.getLogger("arcanum.pacing")
 
@@ -176,12 +160,15 @@ def analyze_chapter_text(text: str) -> dict:
     }
 
 
-def scan_manuscript_pacing(manuscript_dir: Path, target_book: str = None) -> dict:
+def scan_manuscript_pacing(manuscript_dir: Path, target_book: str | None = None) -> dict:
     """Scans all chapters in manuscript and computes overall pacing, POV balance, and tension arc."""
     chapters = []
     pov_totals = defaultdict(int)
     pov_chapters = defaultdict(list)
     thread_chapters = defaultdict(list)
+
+    if target_book:
+        target_book = validate_volume_name(target_book)
 
     # Collect markdown files (exclude World Bible folders and non-manuscript artifacts)
     excluded_folders = {
@@ -454,7 +441,7 @@ def print_sparkline(values: list) -> str:
     return line
 
 
-def resolve_manuscript_dir(target_str: str = None) -> str:
+def resolve_manuscript_dir(target_str: str | None = None) -> str:
     """Resolves manuscript input string (path or name) to absolute directory path."""
     if target_str:
         p = Path(target_str).expanduser().resolve()

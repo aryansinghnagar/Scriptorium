@@ -4,7 +4,308 @@ All notable changes to Ars Arcanum are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Scope decisions
 behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## [Unreleased]
+## [3.7.0] - 2026-09-25
+
+### Added (The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Architecture — Phase 19)
+- **Interactive Branching Narrative Graph & Choice Engine** (`scripts/lib/branching_graph.py`, `arcanum branch`):
+  - Choice-driven interactive narrative DAG compiler with `@choice:`, `@state:`, `@req:`, and wikilink parsing.
+  - Topological diagnostics (`BRN-101` dead ends, `BRN-102` unreachable orphans, `BRN-105` missing targets).
+  - Multi-engine compilation to Playable HTML5 Reader, Inkle Ink (`.ink`), Twine 2 Twee 3 (`.twee`), and Obsidian Mermaid diagrams with 12 unit tests in `tests/test_branching_graph.py` and documentation in `docs/BRANCHING_GRAPH.md`.
+- **Local Semantic Retrieval (RAG) & Lore Recall Engine** (`scripts/lib/local_rag.py`, `arcanum rag`):
+  - Zero-dependency vector space model with TF-IDF sub-linear weighting, Robertson-Spärck Jones smoothed IDF, and SQLite FTS5 hybrid keyword rank fusion.
+  - Injection-safe LLM prompt context synthesizer (`<system_instructions>`, `<canonical_lore_context>`, `<user_query>`) with 12 unit tests in `tests/test_local_rag.py` and documentation in `docs/LOCAL_RAG.md`.
+- **Multi-Perspective Autonomous Editorial Council** (`scripts/lib/editorial_council.py`, `arcanum council`):
+  - Four distinct sovereign editorial personas: The Master Line Editor (*Lady Cassian*), The Lore Inquisitor (*Archon Vaelor*), The Story Architect (*Grand Architect Soren*), and The Continuity Overseer (*Chronicler Mirella*).
+  - Consensus readiness score ($0-100\%$), chamber dissent detection ($\ge 12\text{ pt}$ deviation), prioritized master action checklist, and interactive HTML5 dashboard with 12 unit tests in `tests/test_editorial_council.py` and documentation in `docs/EDITORIAL_COUNCIL.md`.
+- **Local AI Fine-Tuning & Dataset Synthesizer** (`scripts/lib/fine_tuning.py`, `arcanum train-data`):
+  - Multi-domain instruction tuning dataset compiler generating Alpaca, ShareGPT, and ChatML schemas from World Bibles, character sheets, and manuscripts.
+  - Automated Ollama `Modelfile` generator and train/val split partitioner with 12 unit tests in `tests/test_fine_tuning.py` and documentation in `docs/FINE_TUNING.md`.
+- **Universal Structured Corpus & RAG Dataset Exporter** (`scripts/lib/corpus_export.py`, `arcanum corpus`):
+  - Repository-wide discovery and semantic chunking engine exporting to JSON Lines (`documents.jsonl`, `chunks.jsonl`, `entities.jsonl`), relational SQLite with FTS5 search, and executive Markdown summary digest with 12 unit tests in `tests/test_corpus_export.py` and documentation in `docs/CORPUS_EXPORT.md`.
+- **Offline Neural TTS & Audio Proofreader** (`scripts/lib/tts_reader.py`, `arcanum tts`):
+  - Standalone HTML5 Web SpeechSynthesis reader with sentence karaoke highlighting, playback speed controls ($0.5\times-2.5\times$), and phonetic name pronunciation dictionary.
+  - Host speech toolchain discovery (`piper`, `espeak-ng`, `espeak`, `spd-say`, macOS `say`, Windows SAPI) with 12 unit tests in `tests/test_tts_reader.py` and documentation in `docs/TTS_READER.md`.
+- **Multi-Platform Release Distribution Packaging Engine** (`scripts/package_distribution.py`, `arcanum package`):
+  - Publication packaging engine assembling Reader Editions (EPUB+PDF+HTML), Publisher/Agent Submissions (DOCX+Query+Synopsis), watermarked Advance Reading Copies (ARCs), and World Lore Codex Bundles.
+  - SHA-256 cryptographic archive verification and `RELEASE_MANIFEST.json` generation with 12 unit tests in `tests/test_package_distribution.py` and documentation in `docs/PACKAGING.md`.
+- **World Doctor & Cosmos Integrity Diagnostics** (`scripts/lib/world_doctor.py`, `arcanum doctor`):
+  - Deep lore vault consistency auditor checking broken wikilinks (`WLD-101`), dangling frontmatter (`WLD-102`), missing fields (`WLD-103`), timeline chronology inversions (`WLD-104`), duplicate identities (`WLD-105`), frontmatter parse syntax (`WLD-106`), orphan lore notes (`WLD-107`), and manuscript entity drift (`WLD-108`).
+  - Multi-era timeline chronological comparison engine (BCE/CE, 1E/2E/3E, ordinal eras) with 12 unit tests in `tests/test_world_doctor.py` and documentation in `docs/WORLD_DOCTOR.md`.
+- **Extended Integration Harness & Milestone Metrics**:
+  - Reached 797 passing unit tests across repository with 0 failures and 0 linter violations.
+  - Master Grand Tour E2E harness extended to 21 stages validating all intelligence, editorial, and distribution workflows.
+  - Architectural Decision Records logged from ADR-103 to ADR-110.
+
+## [3.6.0] - 2026-09-24
+
+### Added (The Authoring Studios, Publishing Toolchains & Creative Scaffolding Expansion — Phase 18)
+- **Back-Matter Concordance & Dramatis Personae Indexer** (`scripts/lib/concordance.py`, `arcanum concordance`):
+  - World Lore Bible parser synthesizing publication-ready back-matter across Characters, Factions, Artifacts, Bestiary, Magic Systems, and Conlangs.
+  - Automatic cross-referencing and multi-volume `04_Back_Matter/` generator with 12 unit tests in `tests/test_concordance.py` and author guide in `docs/CONCORDANCE.md`.
+- **Sovereign Zen Drafting Studio & In-Situ Lore Drawer** (`scripts/lib/zen_studio.py`, `arcanum studio`):
+  - Single-file standalone HTML5 distraction-free drafting cockpit with centered typewriter scrolling, live telemetry (words, reading time at 200 WPM, speaking time at 150 WPM), and slide-out World Bible search vault.
+  - Client-side `localStorage` caching and one-click Markdown download with 12 unit tests in `tests/test_zen_studio.py` and author guide in `docs/ZEN_STUDIO.md`.
+- **Visual Story Canvas & Multi-Paradigm Corkboard** (`scripts/lib/story_canvas.py`, `arcanum canvas`):
+  - Interactive HTML5 drag-and-drop narrative beat board supporting 9 structural storytelling paradigms (Three-Act, Save the Cat, 8-Sequence, Hero's Journey, Kishōtenketsu, Fichtean Curve, 7-Point, Story Grid, Dan Harmon Circle).
+  - Real-time client-side act pacing recalculation, POV swimlane filtering, and 12 unit tests in `tests/test_story_canvas.py` with author guide in `docs/CANVAS_GUIDE.md`.
+- **Multi-Volume Series Omnibus Compiler** (`scripts/lib/omnibus.py`, `arcanum omnibus`):
+  - Multi-book series compiler with automatic volume discovery, standardized book dividers, unified chapter re-indexing, and master Table of Contents.
+  - Complete JSON rollup manifest exporter with 12 unit tests in `tests/test_omnibus.py` and author guide in `docs/OMNIBUS.md`.
+- **Author Portfolio & Catalog Analytics Dashboard** (`scripts/lib/portfolio.py`, `arcanum portfolio`):
+  - Multi-manuscript progress aggregator computing total catalog word counts, target completion milestones, and 5-tier editorial lifecycle stages (Scaffolding, Drafting Act I, Drafting Act II/III, Revisions, Publication-Ready).
+  - Standalone HTML5 portfolio hub with 12 unit tests in `tests/test_portfolio.py` and author guide in `docs/PORTFOLIO.md`.
+- **EPUB 3 SMIL Media Overlays & Synchronized Narration Player** (`scripts/lib/media_overlay.py`, `arcanum overlay`):
+  - Paragraph-level audio-text synchronizer generating W3C EPUB 3 Media Overlay XML (`.smil`) with millisecond timestamp precision.
+  - Standalone HTML5 browser player utilizing Web Speech Synthesis and audio timeline scrubbing with 12 unit tests in `tests/test_media_overlay.py` and author guide in `docs/MEDIA_OVERLAY.md`.
+- **Smart Typography Normalizer & Punctuation Engine** (`scripts/lib/typography_cleaner.py`, `arcanum typography`):
+  - Publication-grade typography formatter converting straight quotes to curly pairs, hyphens to em/en-dashes, dots to ellipses, and stripping trailing whitespace while protecting frontmatter and codeblocks.
+  - In-place batch processing with `.bak` safety backups and unified diff preview with 12 unit tests in `tests/test_typography_cleaner.py` and author guide in `docs/TYPOGRAPHY.md`.
+- **ISBN-13 Vector SVG/PNG Barcode Engine** (`scripts/lib/barcode.py`, `arcanum barcode`):
+  - Pure-Python zero-dependency EAN-13 and Bookland barcode generator with Modulo-10 checksum validation and legacy ISBN-10 conversion.
+  - Scalable vector SVG and pure-Python zlib-deflated PNG generation with 12 unit tests in `tests/test_barcode.py` and author guide in `docs/BARCODE.md`.
+- **Extended Integration Harness & Milestone Metrics**:
+  - Reached 750 passing unit tests across repository with 0 failures and 0 linter violations.
+  - Master Grand Tour E2E harness extended to 20 stages validating all authoring, studio, and publishing workflows.
+  - Architectural Decision Records logged from ADR-095 to ADR-102.
+
+## [3.5.0] - 2026-09-24
+
+### Added (The Worldbuilding Sciences & Narrative Mechanics Expansion — Phase 17)
+- **Focus Ambient & Binaural Soundscape Generator** (`scripts/lib/ambient.py`, `arcanum ambient`):
+  - Pure Python procedural audio synthesis with White, Pink ($1/f$), and Brown/Red (Brownian walk) noise filters.
+  - Stereo phase-offset binaural beat generator across Alpha (8–12 Hz), Theta (4–8 Hz), Beta (13–30 Hz), and Gamma (40 Hz) cognitive bands.
+  - Zero-dependency standalone HTML5 WebAudio synthesizer and 14 unit tests in `tests/test_ambient.py` with author guide in `docs/AMBIENT.md`.
+- **Dynamic Tactical Combat & Monte Carlo Skirmish Simulator** (`scripts/lib/tactical_sim.py`, `arcanum tactical`):
+  - Unit combatant modeling: HP, armor mitigation, attack bonuses, damage variance, agility dodge thresholds, weapon types, and morale collapse triggers.
+  - Battlefield terrain modifiers (Open Field, Castle Walls, Dense Forest, Dungeon Corridor) with cover defense bonuses and ranged penalties.
+  - Turn-by-turn blow-by-blow narrative fight log generator and Monte Carlo victory probability engine across 100+ simulated skirmishes.
+  - 14 unit tests in `tests/test_tactical_sim.py` and author guide in `docs/TACTICAL_SIM.md`.
+- **Motivation-Reaction Unit (MRU) Scene Mechanics Analyzer** (`scripts/lib/scene_mechanics.py`, `arcanum scene`):
+  - Swain & Butcher craft mechanics linter: Stimulus $\to$ Visceral Reflex $\to$ Emotional Response $\to$ Cognitive Thought $\to$ Action/Dialogue.
+  - Inverted/backwards MRU sequence flaw detector and Proactive Scene (Goal $\to$ Conflict $\to$ Disaster) vs. Reactive Sequel (Reaction $\to$ Dilemma $\to$ Decision) analyzer.
+  - Standalone offline HTML visualizer and 12 unit tests in `tests/test_scene_mechanics.py` with author guide in `docs/SCENE_MECHANICS.md`.
+- **Multi-Track Narrative Plot Grid & Subplot Matrix Engine** (`scripts/lib/plot_matrix.py`, `arcanum plot-matrix`):
+  - Manuscript plot tag extractor (`@plot:`, `@thread:`, `@arc:`) tracking multiple storylines across chapters.
+  - Plot health diagnostics: Abandoned/dormant thread alerts ($\ge 4$ chapter absence gaps), dangling unresolved plotline warnings, and chapter track density distribution.
+  - Interactive SVG multi-lane timeline visualizer and 12 unit tests in `tests/test_plot_matrix.py` with author guide in `docs/PLOT_MATRIX.md`.
+- **Dual-Track Chronological vs. Narrative Timeline Synchronizer** (`scripts/lib/timeline_sync.py`, `arcanum timeline`):
+  - Dual-track temporal analyzer extracting `@time:`, `@pov:`, `@location:` metadata.
+  - Automatic flashback/flashforward detection, chronological sequence sorting, and bilocation paradox detection.
+  - Standalone HTML timeline viewer and 12 unit tests in `tests/test_timeline_sync.py` with author guide in `docs/TIMELINE_SYNC.md`.
+- **Planetary Climate, Orographic Rain Shadows & Köppen Biomes** (`scripts/lib/climate.py`, `arcanum climate`):
+  - Stellar insolation, orbital flux, Bond albedo, greenhouse warming, and blackbody equilibrium temperature modeling.
+  - Atmospheric circulation cells (1-cell, 3-cell, 5-cell) and prevailing surface wind vector calculation.
+  - Orographic precipitation and leeward Foehn rain-shadow desert simulator with 14 terrestrial Köppen biome classifications.
+  - 12 unit tests in `tests/test_climate.py` and author guide in `docs/CLIMATE.md`.
+- **Trophic Food Web Ecology & Biomass Efficiency Simulator** (`scripts/lib/ecology.py`, `arcanum ecology`):
+  - World Bestiary and Flora trophic profile parser across 4 ecological levels (Producer, Herbivore, Carnivore, Apex Predator).
+  - Food web graph integrity auditor detecting circular predation loops (`ECO-303`), orphaned predators (`ECO-301`), missing primary producers (`ECO-304`), and Lindeman 10% trophic biomass deficits (`ECO-302`).
+  - Obsidian Mermaid.js food-web diagram generator, standalone HTML report, and 12 unit tests in `tests/test_ecology.py` with author guide in `docs/ECOLOGY.md`.
+- **Earth Idiom & Immersion-Breaking Eponym Linter** (`scripts/lib/idioms.py`, `arcanum idioms`):
+  - Automated manuscript prose scanner detecting Earth-specific eponyms (`IDM-101`), mythological/scriptural references (`IDM-102`), and biological cliches (`IDM-103`).
+  - Historical origin annotations with in-world replacement suggestions, customizable `configs/idioms.json`, and runtime whitelist support.
+  - Standalone HTML report and 12 unit tests in `tests/test_idioms.py` with author guide in `docs/IDIOMS.md`.
+- **19-Stage Grand Tour Master Integration Lifecycle Harness** (`tests/test_grand_tour_e2e.py`):
+  - Extended end-to-end integration test with Stage 19 validating all 8 new science, soundscape, combat, and narrative mechanics engines.
+
+## [3.4.0] - 2026-09-22
+
+### Added (The Sovereign Story Craft & Editorial Mastery — Phase 16)
+- **In-World Macroeconomics & Anachronism Matrix** (`scripts/lib/economy.py`, `arcanum economy`):
+  - World Bible economy profile parser, Purchasing Power Parity (PPP) relative exchange rate matrices, and trade cargo freight margin modeler (`calc_trade_margin`).
+  - Manuscript price anomaly linter detecting severe inflation/deflation (`ECO-101`), unregistered currencies (`ECO-102`), and technological era anachronisms (`ECO-201`).
+  - 12 comprehensive unit tests in `tests/test_economy.py` and author guide in `docs/ECONOMY.md`.
+- **Overland, Naval & Aerial Journey Expedition Modeler** (`scripts/lib/journey.py`, `arcanum journey`):
+  - Terrain friction multipliers across 14 biome types and 15 land/naval/aerial travel paces.
+  - Mathematical party supply/ration/water consumption modeler with desert modifiers and day-by-day march itineraries with starvation risk warnings.
+  - 12 unit tests in `tests/test_journey.py` and author guide in `docs/JOURNEY.md`.
+- **Offline Vector Cartography & Interactive Map Viewer** (`scripts/lib/cartography.py`, `arcanum map`):
+  - Automated vector SVG map generator with hexagonal and Cartesian grids, proximity-based trade route connection lines with travel time milestones, compass rose, and scale bars.
+  - Standalone offline vanilla JS pan/zoom HTML map viewer with landmark search filters and CSP sandbox compliance.
+  - 12 unit tests in `tests/test_cartography.py` and author guide in `docs/CARTOGRAPHY.md`.
+- **Narrative Pacing, POV Balance & Tension Arc Analytics** (`scripts/lib/pacing.py`, `arcanum pacing`):
+  - Syntactic cadence metrics: dialogue-to-exposition density ratios, sentence length variance, and staccato/flowing cadence factors.
+  - Viewpoint screen-time distribution with consecutive absence / POV starvation warnings (>3 chapters without active scene).
+  - Subplot thread momentum tracking (`@thread:`, `@plot:`) and composite chapter tension index modeling ($0 \text{ to } 100$).
+  - 12 unit tests in `tests/test_pacing.py` and author guide in `docs/PACING.md`.
+- **Multi-Paradigm Story Structure & Beat Sheet Enforcer** (`scripts/lib/structure.py`, `arcanum structure`):
+  - Full structural alignment mapping across 9 canonical story architectures (Three-Act, Save the Cat, Hero's Journey, Story Circle, Seven-Point, 8-Sequence, Fichtean Curve, Kishōtenketsu, Freytag's Pyramid).
+  - Target percentage milestone windows, structural drift penalties, and overall Structural Harmony scoring ($0 \text{ to } 100\%$).
+  - 12 unit tests in `tests/test_structure.py` and author guide in `docs/STRUCTURE.md`.
+- **Character Voice Profiler & Dialogue Fingerprint Engine** (`scripts/lib/voice.py`, `arcanum voice`):
+  - Multi-convention dialogue attribution parser (script format, post-quote, pre-quote, `@pov:` blocks).
+  - Linguistic metrics: Type-Token Ratio (TTR), mean utterance length (MUL) & variance, contraction formality ratios, punctuation cadence, and distinctive vocabulary via TF-IDF.
+  - Pairwise cosine similarity matrix with Voice Bleed warnings ($\ge 92\%$) for character linguistic homogeneity.
+  - 12 unit tests in `tests/test_voice.py` and author guide in `docs/VOICE.md`.
+- **Stylistics, Dialogue Mechanics & Readability Rhythm Engine** (`scripts/lib/stylistics.py`, `arcanum stylistics`):
+  - Overwrought said-bookisms detector, adverb-heavy dialogue tags, and quote punctuation/capitalization formatting linter (`PRO-101`).
+  - Sliding-window word echo repetition scanner with built-in zero-dependency English morphological stemmer (`PRO-102`).
+  - Readability rhythm analysis with staccato cluster alerts, monotone cadence warnings, and 4 standard readability metrics (Flesch Reading Ease, Flesch-Kincaid, Gunning Fog, Coleman-Liau).
+  - 14 unit tests in `tests/test_stylistics.py` and author guide in `docs/STYLISTICS.md`.
+- **Master Grand Tour Lifecycle Integration Harness** (`tests/test_grand_tour_e2e.py`):
+  - Extended to **Stage 18: Story Craft, Prose Mechanics & Narrative Architecture**.
+- **Architecture Decision Records**:
+  - Recorded `ADR-080` through `ADR-086` in `decisions.md`.
+
+## [3.3.0] - 2026-09-22
+
+### Added (The Sovereign Worldbuilding Codex & Arcane Mastery — Phase 15)
+- **Static World Wiki & Offline Codex Exporter** (`scripts/lib/codex_export.py`, `arcanum codex`):
+  - Standalone single-file HTML encyclopedia generator with bidirectional Obsidian `[[Wikilinks]]` resolution.
+  - Frontmatter YAML infobox generation, inlined JSON inverted search index, and multi-theme reading modes (Dark, Light, Classic Sepia).
+  - 12 comprehensive unit tests in `tests/test_codex_export.py` and author guide in `docs/CODEX_EXPORT.md`.
+- **Hard Magic Systems & Arcane Constraint Matrix** (`scripts/lib/magic_system.py`, `arcanum magic-check`, `arcanum magic-report`):
+  - Sanderson's Laws of Magic enforcement: character tier limits (`MAG-101`), catalyst/reagent validation (`MAG-102`), physical/metaphysical hard limitations (`MAG-103`), and scene fatigue overdraw (`MAG-104`).
+  - Standalone offline CSP-compliant HTML arcane audit dashboard.
+  - 12 unit tests in `tests/test_magic_system.py` and author guide in `docs/MAGIC_SYSTEM.md`.
+- **In-World Ciphers, Runes & SVG Inscription Generator** (`scripts/lib/cipher.py`, `arcanum cipher`):
+  - Cryptographic transformations: Caesar (ROT-N), Atbash, Vigenère, Rail Fence, Columnar transposition, and line.word Book Ciphers.
+  - Phonetic rune transliteration for Elder Futhark and Anglo-Saxon Futhorc with digraph handling and standalone SVG vector card generation.
+  - 12 unit tests in `tests/test_cipher.py` and author guide in `docs/CIPHERS.md`.
+- **Dynastic Genealogies & Succession Lineage Engine** (`scripts/lib/genealogy.py`, `arcanum genealogy`, `arcanum lineage`):
+  - Resolves bidirectional royal/noble family DAG trees and validates monarchical succession rankings.
+  - Biological and chronological paradox detection (`GEN-101`: lifespan inversions, premature conception, posthumous births, circular ancestry loops) and succession claim conflicts (`GEN-102`).
+  - Native Mermaid.js flowchart generator, ASCII terminal tree visualizer, and offline HTML reports.
+  - 12 unit tests in `tests/test_genealogy.py` and author guide in `docs/GENEALOGY.md`.
+- **Conlang Phonotactics & Historical Sound-Change Engine** (`scripts/lib/conlang.py`, `arcanum conlang`):
+  - Generates phonotactically valid words, names, and places across syllable templates (`CV`, `CVC`, `CCV`, etc.) with cluster filtering and deterministic seeding.
+  - Historical sound law transformation engine ($A \to B / X\_Y$) for ordered language evolution.
+  - Markdown lexicon table extraction, keyword querying, and CSV/JSON exporting.
+  - 12 unit tests in `tests/test_conlang.py` and author guide in `docs/CONLANG.md`.
+- **Geopolitical Faction Matrix & Campaign Logistics Architecture** (`scripts/lib/factions.py`, `arcanum faction`):
+  - Multilateral geopolitical relationship matrix auditing asymmetric alliances (`FAC-101`), triad tensions (`FAC-102`), vassal treason (`FAC-103`), and self-references (`FAC-104`).
+  - Lanchester combat equations (Square and Linear laws) with fortification multipliers and morale breakpoints.
+  - Military campaign logistics modeler computing food/water burn rates, wagon train requirements, and Wagon Radius limits.
+  - 12 unit tests in `tests/test_factions.py` and author guide in `docs/FACTIONS.md`.
+- **Custom Planetary Calendars & Multi-Moon Phase Synchronizer** (`scripts/lib/calendar.py`, `arcanum calendar`):
+  - Arbitrary planetary orbital cycles, non-standard year/day lengths, and custom month/weekday arithmetic.
+  - Multi-moon synodic phase tracker with illumination percentages, Unicode glyphs, and celestial syzygy / eclipse detection.
+  - Formatted ANSI monthly terminal calendar grids and standalone offline HTML reports.
+  - 12 unit tests in `tests/test_calendar.py` and author guide in `docs/CALENDARS.md`.
+- **Grand Tour Master E2E Lifecycle Verification Extension**:
+  - Extended `tests/test_grand_tour_e2e.py` to 17 comprehensive stages incorporating static codex export and arcane hard magic validation.
+- **Architectural Decision Records**:
+  - Recorded ADR-073 through ADR-079 in `decisions.md`.
+
+## [3.2.0] - 2026-09-22
+
+### Added (The Sovereign Crown & Flathub Upstream Hardening — Phase 14)
+- **Flathub Upstream Packaging Validation Suite** (`flatpak/flathub_submission_validate.py`):
+  - Automated verification of AppStream 0.16+ XML metainfo compliance, HTTPS screenshot URLs, OARS 1.1 content ratings, and Flatpak manifest finish-args.
+  - Comprehensive unit test suite in `tests/test_flathub_validation.py` (12 tests, 100% passing).
+  - Dynamic versioning support in `flatpak/build_offline_bundle.sh`.
+- **Cosmos Archive Freeze & Cryptographic Provenance Sealer** (`arcanum freeze`, `arcanum verify-archive`):
+  - Implemented `scripts/lib/archive_freeze.py` providing Merkle-style root SHA-256 digests, `ARCHIVE_MANIFEST.json` and `PROVENANCE_SEAL.md` generation.
+  - Comprehensive tamper and bit-rot detection (`FRZ-101`, `FRZ-102`, `FRZ-103`).
+  - Unit test suite in `tests/test_archive_freeze.py` (15 tests) and author guide in `docs/ARCHIVE_FREEZE.md`.
+- **Multi-Volume Dramatis Personae & Universe Cast Matrix** (`arcanum cast`, `arcanum dramatis-personae`):
+  - Implemented `scripts/lib/dramatis_personae.py` providing automated cross-volume character dossier discovery (`World/Characters/*.md`).
+  - Cross-references manuscript chapters (`@pov:`, `@char:`, `@cast:`, `@death:` tags) and flags `CAS-101` (Ghost Character), `CAS-102` (Post-Mortem Action), and `CAS-103` (Orphan Lore Character).
+  - Publication-ready Markdown Dramatis Personae appendix compiler and offline CSP-compliant HTML character gallery.
+  - Unit test suite in `tests/test_dramatis_personae.py` (15 tests) and author manual in `docs/DRAMATIS_PERSONAE.md`.
+- **Grand Tour Master E2E Lifecycle Verification Extension**:
+  - Extended `tests/test_grand_tour_e2e.py` to 16 comprehensive stages incorporating archive freeze verification and universal Dramatis Personae generation.
+- **Architectural Decision Records**:
+  - Recorded ADR-070 (Flathub Submission Validator), ADR-071 (Cosmos Archive Freeze), and ADR-072 (Multi-Volume Dramatis Personae) in `decisions.md`.
+
+## [3.1.0] - 2026-09-22
+
+### Added (The Sovereign Craft Deepening — Phase 13)
+- **Sovereign Writing Sprint & Session Analytics** (`arcanum sprint`):
+  - Implemented `scripts/lib/writing_sprint.py` providing session management, atomic `.sprint_state.json` sidecar tracking, and JSONL velocity logging (`.sprint_log.jsonl`).
+  - Computes WPM velocity, daily writing streaks, and best session milestones.
+  - Standalone offline CSP-compliant HTML velocity dashboard with progress metrics and streak indicators.
+- **Manuscript Revision Density & Churn Heatmap** (`arcanum revision-heatmap`):
+  - Implemented `scripts/lib/revision_heatmap.py` providing snapshot-based chapter churn analysis (`difflib` unified line diffs).
+  - Flags over-revised chapters (`REV-101`) and pristine/untouched drafts (`REV-102`).
+  - Offline CSP-compliant HTML heatmap with color-graded churn indicators (green/amber/red).
+- **Causal DAG & Time-Travel Consistency Suite** (`arcanum causality`):
+  - Comprehensive test suite in `tests/test_causality.py` (12 tests) and author documentation in `docs/CAUSALITY.md`.
+  - Audits Grandfather paradoxes (`CAU-101`), unregistered bootstrap loops (`CAU-102`), Novikov violations (`CAU-103`), orphan timeline branches (`CAU-104`), and temporal inversions (`CAU-105`).
+- **Prophecy Resolution Matrix & Arcane Inscription Tracker** (`arcanum prophecy`):
+  - Expanded test suite in `tests/test_prophecy.py` (12 tests) and author documentation in `docs/PROPHECY.md`.
+  - Cross-validates prophecy clause resolutions, chosen one mortality (`PRP-102`), and fulfillment status discrepancies (`PRP-103`).
+- **6D Sensory Palette & White Room Syndrome Linter** (`arcanum senses`):
+  - Expanded test suite in `tests/test_senses.py` (12 tests) and author documentation in `docs/SENSORY_PALETTE.md`.
+  - Flags White Room Syndrome (`SNS-101`) and sensory monotony / extreme visual skew (`SNS-102`).
+- **Expanded Craft Test Suites**:
+  - Expanded `tests/test_climate.py`, `tests/test_ecology.py`, and `tests/test_idioms.py` to 10 tests each.
+- **Architectural Decision Records**:
+  - Recorded ADR-065 through ADR-069 in `decisions.md`.
+
+## [3.0.0] - 2026-09-21
+
+### Added (Sovereign Studio Desktop Hub, Grand Tour Lifecycle Verification & Offline Flatpak Runtime — Phase 12)
+- **Sovereign Studio Desktop Hub** (`arcanum hub`):
+  - Implemented `scripts/lib/studio_hub.py` providing a unified offline telemetry cockpit aggregating chapter word counts, lore entity summaries, timeline event counts, paradox detection results, and three-act pacing harmony across the entire Cosmos.
+  - Single-file standalone CSP-compliant offline HTML dashboard auto-opens in the system browser with embedded REST API (`GET /api/hub`, `GET /api/chapters`, `GET /api/lore`, `GET /api/timeline`, `POST /api/refresh`).
+  - Supports static HTML export (`--export-static FILE`), headless JSON data mode (`--json`), custom `--port` / `--host` binding, and `--no-browser` server mode.
+  - Registered as `"studio_hub"` engine in `scripts/lib/registry.py` with CLI aliases: `hub`, `dashboard`, `gui-web`, `studio-hub`.
+- **13-Stage Grand Tour End-to-End Lifecycle Verification** (`tests/test_grand_tour_e2e.py`):
+  - Implemented the definitive single-test sovereign lifecycle harness covering all 40+ craft engines in sequence: Cosmos/Manuscript scaffolding → Lore Bible population → Multi-chapter authoring → World doctor → Timeline sync → Editorial council → Local RAG retrieval → Fine-tuning dataset synthesis → Branching narrative export → Corpus JSONL/SQLite export → Series omnibus compilation → SMIL media overlays → Release packaging → Studio Hub telemetry cockpit.
+  - Validates end-to-end pipeline consistency with 0 world errors, 0 timeline paradoxes, 4 editorial reviews, corpus FTS5 with ≥5 documents, omnibus compilation, SHA-256 verified release archives, and branded CSP-compliant HTML export.
+- **Sovereign Offline Flatpak Bundle Builder** (`flatpak/build_offline_bundle.sh`):
+  - Implemented shell script generating fully self-contained offline `.flatpak` bundles with Python stdlib runtime module caching, AppStream validation, and `--dry-run` / `--verbose` flags for CI pipeline integration.
+- **Documentation & Architectural Decision Records**:
+  - Published author guides in `docs/STUDIO_HUB.md` and `docs/GRAND_TOUR.md`.
+  - Recorded `ADR-063: Sovereign Studio Hub & Unified Offline Local Webview Architecture` and `ADR-064: Grand Tour End-to-End Lifecycle Verification Architecture` in `decisions.md`.
+  - Updated `docs/CHEATSHEET.md` with `arcanum hub` quick reference.
+- **Version Elevation**: Full v2.2.0 → v3.0.0 (`scripts/lib/cli.py`, `scripts/arcanum`, `debian/changelog`, `CHANGELOG.md`, `flatpak/org.arsarcanum.ArsArcanum.metainfo.xml`).
+
+## [2.2.0] - 2026-09-21
+
+### Added (Sovereign Local AI Fine-Tuning Studio, Interactive Branching Fiction Graph & Choice Engine — Phase 11)
+- **Local AI Fine-Tuning Dataset Synthesizer**:
+  - Implemented `scripts/lib/fine_tuning.py` (`arcanum train-data`, `arcanum lora-dataset`) generating fine-tuning datasets in `Alpaca`, `ShareGPT`, `ChatML`, and `Ollama Modelfile` formats from World Bibles and manuscripts.
+  - Multi-domain craft instruction generators: Character Persona Q&A, Lore Inquisitor, Prose Continuation, and Arcane Rules Compliance.
+  - Automated deterministic train/validation split (`train.jsonl` / `val.jsonl`), token distribution metrics, and draft tag stripping.
+- **Interactive Branching Narrative Graph & Choice Engine**:
+  - Built `scripts/lib/branching_graph.py` (`arcanum branch`, `arcanum branching`) parsing `@choice:`, `@state:`, `@req:`, and `@ending:` directives.
+  - Built topological integrity diagnostics: Dead-End Leaf detection (`BRN-101`), Orphan/Unreachable Passage detection (`BRN-102`), and Missing Target detection (`BRN-105`).
+  - Implemented multi-format interactive fiction compilation: Playable HTML5 reader with SVG graph visualizer, Inkle Ink (`.ink`), Twine 2 (`.twee`), and Obsidian Mermaid.
+- **Documentation & Architectural Decision Records**:
+  - Published author guides in `docs/FINE_TUNING.md` and `docs/BRANCHING_GRAPH.md`.
+  - Recorded `ADR-061: Sovereign Local LLM Fine-Tuning & Dataset Synthesis Architecture` and `ADR-062: Interactive Branching Narrative DAG & Multi-Engine Exporter` in `decisions.md`.
+
+## [2.1.0] - 2026-09-21
+
+### Added (Sovereign Local Semantic Retrieval Engine, Speculative Plugin Marketplace & Intelligence — Phase 10)
+- **Sovereign Local Semantic Retrieval (RAG) & Lore Engine**:
+  - Implemented `scripts/lib/local_rag.py` (`arcanum rag`, `arcanum query-lore`) providing zero-dependency, 100% offline hybrid TF-IDF vector space model and SQLite FTS5 exact keyword retrieval.
+  - Generates injection-safe context prompt blocks (`<system_instructions>`, `<canonical_lore_context>`, `<user_query>`) with document and entity attribution for local LLMs (Llama 3, Mistral, Gemma, Phi).
+  - Produces multi-format outputs: LLM prompt context, rich Markdown reports, structured JSON datasets, and standalone offline interactive HTML dashboards with strict CSP.
+- **Speculative Fiction Plugin Marketplace & Curated Catalog**:
+  - Built `scripts/lib/plugin_market.py` (`arcanum market`) and `configs/plugin_catalog.json` featuring curated community craft plugins (`mythic_pantheon`, `linguistic_drift`, `trope_inversion`, `hard_sf_chronometry`, `grimdark_entropy`).
+  - Added cryptographic schema verification, syntax checking, and atomic sandbox installation.
+- **Documentation & Architectural Decision Records**:
+  - Published author guides in `docs/LOCAL_RAG.md` and `docs/PLUGIN_MARKET.md`.
+  - Recorded `ADR-059: Sovereign Zero-Dependency Local Semantic Retrieval Engine` and `ADR-060: Speculative Plugin Marketplace & Signed Catalog Architecture` in `decisions.md`.
+
+## [2.0.0] - 2026-09-21
+
+### Added (Sovereign Autonomous Editorial Council, Zen Drafting Studio & Agentic Project OS — Phase 9)
+- **Multi-Perspective Autonomous Editorial Council**:
+  - Implemented `scripts/lib/editorial_council.py` (`arcanum council`) convening 4 sovereign craft personas: The Master Line Editor (*Lady Cassian*), The Lore & Worldbuilding Inquisitor (*Archon Vaelor*), The Developmental Story Architect (*Grand Architect Soren*), and The Continuity & Canon Overseer (*Chronicler Mirella*).
+  - Generates Markdown consensus audit reports and standalone interactive HTML5 visual council dashboards with dissent tracking and prioritized action checklists.
+- **Standalone Offline Zen Drafting Studio**:
+  - Built `scripts/lib/zen_studio.py` (`arcanum studio`) generating single-file offline HTML5 writing environments featuring distraction-free typewriter drafting, split-screen in-situ World Bible lore drawer, live telemetry, and local persistence.
+- **Sovereign Agentic Operating System Manifesto**:
+  - Published comprehensive `AGENTS.md` specifying deterministic agent contracts, atomic write guarantees, tool hooks, memory schemas, and self-improving verification pipelines.
+  - Published full author guides in `docs/EDITORIAL_COUNCIL.md` and `docs/ZEN_STUDIO.md`.
+
+## [1.9.0] - 2026-09-21
+
+### Added (Flathub Upstream, EPUB 3 Media Overlays & Universal Corpus Exporter — Phase 8)
+- **Flathub Upstream AppStream Compliance**:
+  - Implemented standard Freedesktop AppStream 0.16+ XML metainfo at `flatpak/org.arsarcanum.ArsArcanum.metainfo.xml` with OARS 1.1 content ratings, metadata licensing (`CC0-1.0`), and release metadata.
+  - Registered metainfo installation in `org.arsarcanum.ArsArcanum.yaml` and packaged `docs/FLATHUB_PACKAGING.md`.
+- **EPUB 3 SMIL Media Overlays & Synced Audio Narration**:
+  - Built `scripts/lib/media_overlay.py` generating standard W3C EPUB 3 `.smil` XML media overlay files pairing text paragraph anchors with audio offsets.
+  - Implemented standalone offline interactive HTML5 WebAudio player with real-time karaoke sentence highlighting and speed controls.
+- **Universal Structured Corpus & RAG Dataset Exporter**:
+  - Built `scripts/lib/corpus_export.py` traversing Cosmos/Universe lore vaults and multi-volume manuscripts.
+  - Added multi-format export pipeline: JSON Lines (`documents.jsonl`, `chunks.jsonl`, `entities.jsonl`), relational SQLite 3 database (`corpus.db`) with FTS5 full-text search, and master Markdown summary digest (`_corpus_summary.md`).
+  - Added comprehensive documentation in `docs/CORPUS_EXPORT.md`.
 
 ## [1.6.1] - 2026-09-21
 

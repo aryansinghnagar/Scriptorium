@@ -14,7 +14,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from lib.continuity import (  # noqa: E402
+from lib.continuity import (
     normalize_trait,
     extract_traits_from_text,
     extract_lore_profiles,

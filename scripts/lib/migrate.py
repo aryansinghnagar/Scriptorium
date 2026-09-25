@@ -4,26 +4,43 @@ Ars Arcanum Schema & Project Migration Engine (scripts/lib/migrate.py)
 Upgrades older project vaults, legacy folder layouts, and manifests to schema_version 1.0.
 """
 
+import argparse
 import json
 import logging
-import argparse
 from pathlib import Path
 
 try:
-    from lib.fs_utils import atomic_write
+    from lib._bootstrap import atomic_write
 except ImportError:
-    try:
-        from fs_utils import atomic_write
-    except ImportError:
-        def atomic_write(path, data, encoding="utf-8"):
-            p = Path(path)
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(data, encoding=encoding)
+    from _bootstrap import atomic_write
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("arcanum.migrate")
 
 CURRENT_SCHEMA_VERSION = "1.0"
+
+
+REQUIRED_GITIGNORE_ENTRIES = [
+    ".arcanum_cache.json",
+    ".sync_state.json",
+    "*.lock",
+]
+
+
+def ensure_gitignore_entries(repo_path: Path) -> list[str]:
+    """Ensures that repository .gitignore includes cache, sync state, and lock patterns."""
+    actions = []
+    gi_path = repo_path / ".gitignore"
+    if not gi_path.is_file():
+        return actions
+
+    content = gi_path.read_text(encoding="utf-8", errors="replace")
+    missing = [entry for entry in REQUIRED_GITIGNORE_ENTRIES if entry not in content]
+    if missing:
+        updated = content.rstrip() + "\n# Ars Arcanum Cache and Sync State\n" + "\n".join(missing) + "\n"
+        atomic_write(gi_path, updated)
+        actions.append(f"Added {', '.join(missing)} to .gitignore")
+    return actions
 
 
 def migrate_universe(u_path: Path) -> list[str]:
@@ -40,6 +57,7 @@ def migrate_universe(u_path: Path) -> list[str]:
             updated = f'schema_version: "{CURRENT_SCHEMA_VERSION}"\n' + text
             atomic_write(manifest, updated)
             actions.append(f"Added schema_version: {CURRENT_SCHEMA_VERSION} to universe.yaml")
+    actions.extend(ensure_gitignore_entries(u_path))
     return actions
 
 
@@ -74,6 +92,8 @@ def migrate_world(w_path: Path) -> list[str]:
         atomic_write(modern_manifest, content)
         actions.append(f"Created world.yaml with schema_version: {CURRENT_SCHEMA_VERSION}")
 
+    # 3. Ensure gitignore entries
+    actions.extend(ensure_gitignore_entries(w_path))
     return actions
 
 
@@ -107,6 +127,8 @@ def migrate_manuscript(m_path: Path) -> list[str]:
         atomic_write(manifest, content)
         actions.append(f"Created manuscript.yaml with schema_version: {CURRENT_SCHEMA_VERSION}")
 
+    # 3. Ensure gitignore entries
+    actions.extend(ensure_gitignore_entries(m_path))
     return actions
 
 

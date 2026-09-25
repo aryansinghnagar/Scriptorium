@@ -6,9 +6,9 @@ Defines core vs craft engine classification, metadata registry, dynamic plugin
 discovery, and capability introspection across CLI and GUI surfaces.
 """
 
+import importlib
 from dataclasses import dataclass, field
 from enum import Enum
-import importlib
 from typing import Any
 
 
@@ -416,6 +416,98 @@ _ENGINES: dict[str, EngineSpec] = {
         description="Multi-moon synodic phase tracker, celestial conjunctions, and fictional calendar math",
         module_name="lib.calendar",
         cli_command="calendar",
+        studio_tab="Worldbuilding",
+    ),
+    "local_rag": EngineSpec(
+        name="local_rag",
+        category=EngineCategory.CORE,
+        title="Sovereign Local Semantic Retrieval",
+        description="Hybrid TF-IDF vector space and SQLite FTS5 lore query engine",
+        module_name="lib.local_rag",
+        cli_command="rag",
+        aliases=["query-lore", "semantic-search", "lore-query"],
+        studio_tab="Tools",
+    ),
+    "plugin_market": EngineSpec(
+        name="plugin_market",
+        category=EngineCategory.CORE,
+        title="Speculative Fiction Plugin Marketplace",
+        description="Curated offline catalog, integrity verifier, and plugin installer",
+        module_name="lib.plugin_market",
+        cli_command="market",
+        aliases=["plugin-market", "marketplace"],
+        studio_tab="Tools",
+    ),
+    "fine_tuning": EngineSpec(
+        name="fine_tuning",
+        category=EngineCategory.CORE,
+        title="Local AI Fine-Tuning Synthesizer",
+        description="Compiles Alpaca, ShareGPT, ChatML and Ollama Modelfile datasets from lore and prose",
+        module_name="lib.fine_tuning",
+        cli_command="train-data",
+        aliases=["lora-dataset", "dataset-synth", "fine-tune"],
+        studio_tab="Tools",
+    ),
+    "branching_graph": EngineSpec(
+        name="branching_graph",
+        category=EngineCategory.CRAFT,
+        title="Interactive Branching Narrative Graph",
+        description="Topological choice DAG validator and multi-engine exporter (HTML, Ink, Twine, Mermaid)",
+        module_name="lib.branching_graph",
+        cli_command="branch",
+        aliases=["branching", "gamebook", "interactive-fiction"],
+        studio_tab="Editor",
+    ),
+    "studio_hub": EngineSpec(
+        name="studio_hub",
+        category=EngineCategory.CORE,
+        title="Sovereign Studio Desktop Hub & Dashboard",
+        description="Master unified desktop and web orchestrator dashboard unifying all 50+ craft engines",
+        module_name="lib.studio_hub",
+        cli_command="hub",
+        aliases=["dashboard", "studio-hub", "gui-web"],
+        studio_tab="Tools",
+    ),
+    # --- Phase 13: Productivity & Revision Engines ---
+    "writing_sprint": EngineSpec(
+        name="writing_sprint",
+        category=EngineCategory.CORE,
+        title="Sovereign Writing Sprint & Session Analytics",
+        description="Sprint session timer, WPM velocity analytics, daily streak tracking, and offline HTML productivity dashboard",
+        module_name="lib.writing_sprint",
+        cli_command="sprint",
+        aliases=["writing-sprint", "pomodoro", "session"],
+        studio_tab="Productivity",
+    ),
+    "revision_heatmap": EngineSpec(
+        name="revision_heatmap",
+        category=EngineCategory.CRAFT,
+        title="Manuscript Revision Density & Churn Heatmap",
+        description="Snapshot-based revision churn analyzer flagging over-revised (REV-101) and pristine-draft (REV-102) chapters",
+        module_name="lib.revision_heatmap",
+        cli_command="revision-heatmap",
+        aliases=["churn", "revision-density", "draft-churn"],
+        studio_tab="Diagnostics",
+    ),
+    # --- Phase 14: Sovereign Crown & Flathub Upstream Hardening ---
+    "archive_freeze": EngineSpec(
+        name="archive_freeze",
+        category=EngineCategory.CORE,
+        title="Cosmos Archive Freeze & Provenance Sealer",
+        description="Merkle-style root SHA-256 hash generator, ARCHIVE_MANIFEST.json and PROVENANCE_SEAL.md exporter, and bit-rot tamper validator",
+        module_name="lib.archive_freeze",
+        cli_command="freeze",
+        aliases=["archive-freeze", "seal-archive", "verify-archive"],
+        studio_tab="Publishing",
+    ),
+    "dramatis_personae": EngineSpec(
+        name="dramatis_personae",
+        category=EngineCategory.CRAFT,
+        title="Multi-Volume Dramatis Personae & Universe Cast Matrix",
+        description="Cross-volume character profile parser, manuscript POV/mention cross-referencer, lifecycle continuity auditor, and gallery generator",
+        module_name="lib.dramatis_personae",
+        cli_command="dramatis-personae",
+        aliases=["cast", "dramatis", "characters-cast"],
         studio_tab="Worldbuilding",
     ),
 }
