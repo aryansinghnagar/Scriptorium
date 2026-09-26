@@ -1,16 +1,16 @@
 # Ars Arcanum (Scriptorium) — System Status & Quality Metrics
 
-## Project Status: The Sovereign Streamlined Architecture & Engine Expansion Milestone (v4.0.0)
-- **Current Version**: `4.0.0`
+## Project Status: The Sovereign Cohesive Ecosystem & Creative Freedom Milestone (v4.1.0)
+- **Current Version**: `4.1.0`
 - **Audit Grade Progression**: `B` (GPA 2.93) $\to$ `A−` (GPA 3.4) $\to$ `A` (GPA 3.8) $\to$ **`A+` (GPA 4.0/4.0 Sovereign Operating System)**.
-- **Test Suite Status**: **681 tests collected, 100% passing, 2 skipped, 0 failures** (`python -m unittest discover tests`).
+- **Test Suite Status**: **687 tests collected, 100% passing, 2 skipped, 0 failures** (`python -m unittest discover tests`).
 - **Linter Status**: `ruff check .` **100% Clean (0 violations)** across expanded rules (`E`, `F`, `B`, `S`, `UP`, `SIM`, `I`, `RUF`, `C901`).
-- **Static Typing**: `mypy` static type checking passing cleanly across all 70 `scripts/lib` modules and test suites.
+- **Static Typing**: `mypy` static type checking passing cleanly across all 50 `scripts/lib` modules and test suites.
 - **Security Posture**: Path traversal defense, GPG symmetric/asymmetric backup encryption, bandit SAST, AST sandbox checking, and CI Dependabot.
 
 ---
 
-## Phase Milestones Completed (137/137 across Phases 0–20)
+## Phase Milestones Completed (138/138 across Phases 0–21)
 
 ### Phase 0: Triage & Quick Wins (8/8)
 1. [x] **P0-M1**: Automated Supply Chain SHA-256 Verification (`tests/test_supply_chain.py`).
@@ -198,18 +198,22 @@
 9. [x] **P20-M9**: Added bidirectional vault restore from exported JSONL/SQLite archives to `corpus_export.py` (`arcanum corpus restore <archive>`).
 10. [x] **P20-M10**: Synchronized `registry.py`, `cli.py`, `studio_hub.py`, `ui_adw.py`, and documentation. Achieved 681 tests passing (0 failures, 0 errors, 2 skipped), 0 ruff lint violations, clean mypy typing across all 70 modules.
 
+### Phase 21: Cohesive Ecosystem Integration & Advisory-First Creative Freedom (1/1)
+1. [x] **P21-M1**: Unified all 50 craft and simulation engines across CLI (`arcanum doc`), Web Studio Hub Craft Guide (`tab-guide`), and Desktop GUI (GTK3 & Libadwaita). Built bidirectional hyphen/underscore normalization, multi-word lookups, and rich worldbuilding/narrative/writing documentation with multi-pathway advisory resolution options (Hard Realism, Speculative Trope, Author Sovereignty). Elevated test suite to **687 tests** (100% passing, 0 failures, 2 skipped), 0 ruff violations, clean mypy typing across all source files (`ADR-115`).
+
 ---
 
 ## Quality Metrics Snapshot
-| Metric | Baseline (v1.6.0) | Phase 5 Baseline | Phase 19 Baseline | Current (Streamlined Architecture & Engine Expansion v4.0.0) |
+| Metric | Baseline (v1.6.0) | Phase 5 Baseline | Phase 19 Baseline | Current (Cohesive Ecosystem & Creative Freedom v4.1.0) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Passing Tests** | 281 | 339 | 795 | **681 (681 collected, 2 skipped, 0 failures)** |
+| **Passing Tests** | 281 | 339 | 795 | **687 (687 collected, 2 skipped, 0 failures)** |
 | **Bash Test Suites** | 0/8 verified | 8/8 verified | 8/8 verified | **8/8 (100% clean pass)** |
 | **Test Pass Rate** | 99.6% | 100% | 100% | **100% (0 failures)** |
 | **Linter Violations** | 12 warnings | 0 violations | 0 violations | **0 violations (Strict Expanded Rules)** |
-| **Type Checking** | None | Mypy Clean | Mypy Clean | **Mypy Clean across all 70 Modules** |
+| **Type Checking** | None | Mypy Clean | Mypy Clean | **Mypy Clean across all 50 Modules** |
 | **Path Traversal Defense** | Partial | Complete | Complete | **Complete (Bash + Python Regex Invariant)** |
 | **Backup Encryption** | Plaintext only | AES-256 + GPG | AES-256 + GPG | **AES-256 Symmetric & GPG Asymmetric** |
+| **Creative Freedom & Advisory** | None | None | Partial | **100% Advisory-First Multi-Option Resolution (ADR-115)** |
 | **Story Paradigms** | 5 models | 5 models | 9 models | **11 Canonical Advisory Models (Universal)** |
 | **Visual Corkboard** | None | None | HTML5/SVG Canvas | **Interactive HTML5/SVG Drag-and-Drop Canvas** |
 | **Timeline Synchronization**| None | None | Dual-Track | **Dual-Track (Narrative vs Chronological)** |
@@ -217,6 +221,7 @@
 | **Corpus AI / RAG Exporter** | None | None | Universal Exporter | **Universal JSONL, SQLite (FTS5) & Bidirectional Vault Restore** |
 | **Local Semantic Retrieval** | None | None | Hybrid TF-IDF/FTS5 | **Hybrid TF-IDF & SQLite FTS5 Vector Engine** |
 | **Zen Drafting Studio** | None | None | Zen Studio | **Standalone Offline HTML5 Studio & In-Situ Lore Drawer** |
+| **Craft Guide & CLI Docs** | None | None | Partial | **Interactive CLI (`arcanum doc`) & Studio Hub Craft Guide** |
 | **Agentic Manifesto** | None | None | AGENTS.md | **AGENTS.md Contracts & Momentum Engine** |
 | **Multi-Distro Packaging** | Debian only | Debian, RPM, AUR | Debian, RPM, AUR | **Debian, Fedora/RPM, Arch AUR, openSUSE** |
 | **Scheduled Automation** | None | Systemd Timer | Systemd Timer | **Systemd User Timer (`arcanum-backup.timer`)** |

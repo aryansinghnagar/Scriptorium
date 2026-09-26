@@ -52,6 +52,7 @@ class SpeculativeStudioMixin:
             ("📐 Story Paradigm Alignment", "Save the Cat, Hero's Journey, 3-Act structure pacing enforcer", self.open_structure_dialog),
             ("🎧 Focus Soundscapes & Noise", "Rainy library, cozy campfire, deep space drone synthesizer", self.open_ambient_dialog),
             ("🗺️ Multi-POV Narrative Subway Map", "Track character storyline splits and convergence points", self.open_branching_dialog),
+            ("📖 Author Craft Guide & Advisory Matrix", "100% creative sovereignty documentation, worldbuilding logic & 3-path resolutions", self.open_craft_guide_dialog),
         ]
 
         for idx, (title, desc, cb) in enumerate(engines):

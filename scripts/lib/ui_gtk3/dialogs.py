@@ -287,3 +287,54 @@ class SpeculativeDialogsMixin:
         target = self.current_manuscript_path or str(MANUSCRIPTS_DIR)
         base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "branching_graph.py"), target, "--subway"]
         self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Rendering Multi-POV Narrative Thread Subway Map...")
+
+    def open_craft_guide_dialog(self):
+        dialog, box = self._create_dialog_shell("Author Craft Guide & Advisory Matrix", 840, 600)
+        lbl = Gtk.Label(
+            label="<b>📖 Author Craft Guide & Advisory Matrix (100% Creative Sovereignty)</b>\n"
+                  "<span size='small' color='#666666'>Educational documentation for all 50 craft engines, worldbuilding logic, and multi-path advisory resolutions.</span>",
+            use_markup=True,
+            xalign=0
+        )
+        box.pack_start(lbl, False, False, 0)
+
+        search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        search_entry = Gtk.SearchEntry()
+        search_entry.set_placeholder_text("Filter craft logic, worldbuilding rules, or resolution options...")
+        search_box.pack_start(search_entry, True, True, 0)
+        box.pack_start(search_box, False, False, 0)
+
+        scrolled, out_buf = self._create_dialog_output_view()
+        box.pack_start(scrolled, True, True, 0)
+
+        try:
+            from lib.registry import format_engine_doc, get_all_engine_docs
+            docs = get_all_engine_docs()
+            sep = "\n\n" + ("=" * 80) + "\n\n"
+            all_text = sep.join(format_engine_doc(d["name"]) for d in docs)
+        except Exception as e:
+            all_text = f"Error loading engine documentation: {e}"
+
+        out_buf.set_text(all_text)
+
+        def _on_search_changed(entry):
+            q = entry.get_text().strip().lower()
+            if not q:
+                out_buf.set_text(all_text)
+                return
+            try:
+                from lib.registry import format_engine_doc, get_all_engine_docs
+                sep = "\n\n" + ("=" * 80) + "\n\n"
+                matched = [
+                    format_engine_doc(d["name"]) for d in get_all_engine_docs()
+                    if q in d["name"].lower() or q in d["title"].lower() or q in d["description"].lower() or q in d.get("logic_documentation", "").lower() or q in d.get("worldbuilding_relevance", "").lower() or q in d.get("storytelling_relevance", "").lower() or q in d.get("writing_relevance", "").lower()
+                ]
+                out_buf.set_text(sep.join(matched) if matched else f"No engines matched query: '{q}'")
+            except Exception as e:
+                out_buf.set_text(f"Error filtering: {e}")
+
+        search_entry.connect("search-changed", _on_search_changed)
+        dialog.show_all()
+        dialog.run()
+        dialog.destroy()
+

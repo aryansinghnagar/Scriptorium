@@ -72,6 +72,19 @@
 | **ADR-100** | EPUB 3 SMIL Media Overlays & Synchronized Narration Player | Accepted | 2026-09-24 | W3C SMIL 3.0 Audio Narration & Speech Synthesis |
 | **ADR-101** | Smart Typography Normalizer & Punctuation Engine | Accepted | 2026-09-24 | Publication-Grade Quotes, Dashes & Whitespace Polish |
 | **ADR-102** | ISBN-13 Vector SVG/PNG Barcode Engine | Accepted | 2026-09-24 | Pure-Python Vector EAN-13 & Bookland Barcodes |
+| **ADR-103** | Interactive Branching Narrative DAG & Choice Engine | Accepted | 2026-09-25 | Multi-Engine Gamebook Compilation & Choice DAGs |
+| **ADR-104** | Local Semantic Retrieval (RAG) & Lore Recall Engine | Accepted | 2026-09-25 | Zero-Pip Hybrid TF-IDF & SQLite FTS5 Vector Engine |
+| **ADR-105** | Multi-Perspective Autonomous Editorial Council | Accepted | 2026-09-25 | Multi-Persona Workshop & Consensus Scoring |
+| **ADR-106** | Local AI Fine-Tuning & Dataset Synthesizer | Accepted | 2026-09-25 | Private Instruction Fine-Tuning & Modelfiles |
+| **ADR-107** | Universal Structured Corpus & RAG Dataset Exporter | Accepted | 2026-09-25 | JSONL, SQLite FTS5 & Markdown Executive Summaries |
+| **ADR-108** | Offline Neural TTS & Audio Proofreader | Accepted | 2026-09-25 | Web SpeechSynthesis & Host Speech Toolchains |
+| **ADR-109** | Multi-Platform Distribution Packaging Engine | Accepted | 2026-09-25 | Reader, Submission, ARC & Lore Codex Packaging |
+| **ADR-110** | World Doctor & Cosmos Integrity Diagnostics | Accepted | 2026-09-25 | 8-Point Cross-Validation Diagnostics Suite |
+| **ADR-111** | Granular Architectural Trimming and Redundancy Decommissioning | Accepted | 2026-09-26 | Streamlined Codebase & Dead Code Elimination |
+| **ADR-112** | Non-Imposing Creative Advisory Paradigm | Accepted | 2026-09-26 | Advisory-First Diagnostics & Author Sovereignty |
+| **ADR-113** | Expanded Astrophysics, Climate Linkages & Multi-Calendar Chronology | Accepted | 2026-09-26 | Exotic Planetary Systems & Continuous Epochs |
+| **ADR-114** | Multi-POV Narrative Threading, Bidirectional Vault Restore & Interactive Cartography | Accepted | 2026-09-26 | Subway Maps, Graph Cartography & Vault Restore |
+| **ADR-115** | Advisory-First Creative Freedom Architecture & Integrated Craft Documentation | Accepted | 2026-09-26 | Multi-Pathway Guidance, `arcanum doc` & Studio Craft Guide |
 
 ---
 
@@ -466,3 +479,8 @@
 - **Context**: Multi-POV novels and complex series require tracking character thread divergences and convergences, interactive map design, and complete data mobility between exported structured datasets and live lore vaults.
 - **Decision**: Refactor `branching_graph.py` into a Multi-POV Narrative Thread & Convergence Subway Map engine (`arcanum branch`). Refactor `cartography.py` to include an interactive HTML5/SVG graphical map creator and editor. Implement bidirectional vault restore in `corpus_export.py` (`arcanum corpus restore <archive>`). Enhance `genealogy.py` with fuzzy generational lineages supporting unrecorded generations and disputed succession claims.
 - **Consequences**: Comprehensive narrative tracking, visual cartographic tools, and resilient bidirectional data roundtripping across the entire Ars Arcanum ecosystem.
+
+### ADR-115: Advisory-First Creative Freedom Architecture & Integrated Craft Engine Documentation
+- **Context**: Speculative fiction authors and worldbuilders need rich, actionable documentation on the mathematical, structural, and narrative logic behind every engine directly within their authoring environment (CLI, Web Studio Hub, and Desktop GUI). Furthermore, rigid validation rules that block or reject non-standard worldbuilding (e.g. FTL travel without warp fields, impossible orbits, paradoxical time loops, unconventional magic surges) frustrate authors and hinder creative freedom.
+- **Decision**: Formalize the Advisory-First Creative Freedom Architecture across all 50 engines in `scripts/lib/registry.py`, `scripts/lib/cli.py`, `scripts/lib/studio_hub.py`, `scripts/lib/ui_gtk3/`, and `scripts/lib/ui_adw.py`. When an unconventional configuration is encountered, the system never enforces blockers; it issues an informative diagnostic alert with multiple creative resolution pathways (Option A: Hard Realism, Option B: Speculative Trope, Option C: Author Sovereignty). Implement unified `arcanum doc <engine>` CLI lookups supporting multi-word commands and hyphen normalization, and add the interactive Craft & Lore Guide to both the Web Studio Hub and Desktop GUI.
+- **Consequences**: Authors maintain 100% creative sovereignty with full transparency into engine logic, scientific formulas, worldbuilding implications, and narrative mechanics, completely offline with zero external dependencies.

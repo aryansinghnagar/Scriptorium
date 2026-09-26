@@ -5,7 +5,7 @@
 
 [![Status: Beta (Experimental)](https://img.shields.io/badge/Status-Beta%20(Experimental)-yellow.svg)](#)
 [![Ars Arcanum CI](https://github.com/aryansinghnagar/Scriptorium/actions/workflows/ci.yml/badge.svg)](https://github.com/aryansinghnagar/Scriptorium/actions/workflows/ci.yml)
-[![Unit Tests: 681 Passing](https://img.shields.io/badge/Unit%20Tests-681%2F681%20Passing-brightgreen.svg)](#)
+[![Unit Tests: 687 Passing](https://img.shields.io/badge/Unit%20Tests-687%2F687%20Passing-brightgreen.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > [!NOTE]
@@ -14,6 +14,7 @@
 >
 > - **Comprehensive Test Suite**: Automated Python unit tests, targeted integration tests, and the 7-stage verification harness (`scripts/verify.sh`).
 > - **Offline Privacy & Zero Telemetry**: Operates strictly on your local machine with no user tracking and pure Python standard library simulation engines.
+> - **Advisory-First Creative Freedom**: Engines never force conventional rules or reject unconventional tropes; all diagnostics provide informative alerts with multiple resolution pathways (Hard Realism, Speculative Trope, Author Sovereignty), preserving full authorial control.
 > - **Fail-Closed Security Posture**: Automated SHA-256 binary digest checks, transactional directory staging, path-traversal prevention, and unprivileged daily authoring.
 > - **Zero Vendor Lock-In**: Plain Markdown files (`.md`), standard OpenXML (`.docx`), YAML manifests, and local multi-tier Git version tracking.
 

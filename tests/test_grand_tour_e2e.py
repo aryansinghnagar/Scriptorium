@@ -389,7 +389,7 @@ class TestGrandTourE2E(unittest.TestCase):
         # STAGE 13: Sovereign Studio Desktop Hub Static Telemetry Compilation
         # ---------------------------------------------------------------------
         hub_data = collect_studio_hub_data(cosmos_dir)
-        self.assertEqual(hub_data["version"], "4.0.0")
+        self.assertEqual(hub_data["version"], "4.1.0")
         self.assertEqual(hub_data["metrics"]["total_chapters"], 2)
         self.assertTrue(hub_data["metrics"]["total_lore_entities"] >= 4)
 

@@ -19,6 +19,9 @@ from lib.registry import (
     enable_engine,
     disable_engine,
     load_engine_module,
+    get_engine_docs,
+    get_all_engine_docs,
+    format_engine_doc,
 )
 
 
@@ -84,6 +87,75 @@ class TestRegistry(unittest.TestCase):
     def test_load_engine_module(self):
         mod = load_engine_module("fs_utils")
         self.assertTrue(hasattr(mod, "atomic_write"))
+
+    def test_get_engine_lookups_and_aliases(self):
+        # Hyphenated vs underscore
+        self.assertIsNotNone(get_engine("magic-system"))
+        self.assertIsNotNone(get_engine("scene-mechanics"))
+        self.assertIsNotNone(get_engine("branching-graph"))
+        self.assertIsNotNone(get_engine("series-continuity"))
+        self.assertIsNotNone(get_engine("docx-sync"))
+        self.assertIsNotNone(get_engine("world-doctor"))
+
+        # Aliases and CLI commands
+        self.assertIsNotNone(get_engine("calc astro"))
+        self.assertIsNotNone(get_engine("polish typography"))
+        self.assertIsNotNone(get_engine("astro"))
+        self.assertIsNotNone(get_engine("diff"))
+
+    def test_get_engine_docs(self):
+        doc = get_engine_docs("astrophysics")
+        self.assertIsNotNone(doc)
+        assert doc is not None
+        self.assertEqual(doc["name"], "astrophysics")
+        self.assertEqual(doc["studio_tab"], "Worldbuilding")
+        self.assertTrue(len(doc["logic_documentation"]) > 10)
+        self.assertTrue(len(doc["worldbuilding_relevance"]) > 10)
+        self.assertTrue(len(doc["storytelling_relevance"]) > 10)
+        self.assertTrue(len(doc["writing_relevance"]) > 10)
+        self.assertGreaterEqual(len(doc["advisory_guidance"]), 1)
+
+        # Hyphenated lookup in get_engine_docs
+        doc_hyphen = get_engine_docs("magic-system")
+        self.assertIsNotNone(doc_hyphen)
+        assert doc_hyphen is not None
+        self.assertEqual(doc_hyphen["name"], "magic_system")
+
+        # Non-existent
+        self.assertIsNone(get_engine_docs("non_existent_fake"))
+
+    def test_get_all_engine_docs(self):
+        all_docs = get_all_engine_docs()
+        self.assertGreaterEqual(len(all_docs), 50)
+        for d in all_docs:
+            self.assertIn("name", d)
+            self.assertIn("title", d)
+            self.assertIn("category", d)
+            self.assertIn("studio_tab", d)
+            self.assertIn("logic_documentation", d)
+            self.assertIn("worldbuilding_relevance", d)
+            self.assertIn("storytelling_relevance", d)
+            self.assertIn("writing_relevance", d)
+            self.assertIn("advisory_guidance", d)
+            for adv in d["advisory_guidance"]:
+                self.assertIn("pattern", adv)
+                self.assertIn("option_a", adv)
+                self.assertIn("option_b", adv)
+                self.assertIn("option_c", adv)
+
+    def test_format_engine_doc(self):
+        formatted = format_engine_doc("magic_system")
+        self.assertIn("MAGIC SYSTEM CONSTRAINTS", formatted)
+        self.assertIn("Engine Logic & Scientific / Structural Foundations:", formatted)
+        self.assertIn("Advisory Mechanics & Creative Freedom Resolution Pathways:", formatted)
+
+        # Formatted via hyphenated string
+        formatted_hyphen = format_engine_doc("magic-system")
+        self.assertIn("MAGIC SYSTEM CONSTRAINTS", formatted_hyphen)
+
+        # Unknown
+        unknown_fmt = format_engine_doc("fake_xyz")
+        self.assertIn("No documentation available", unknown_fmt)
 
 
 if __name__ == "__main__":

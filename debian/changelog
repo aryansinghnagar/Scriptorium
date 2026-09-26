@@ -1,3 +1,13 @@
+ars-arcanum (4.1.0-1) unstable; urgency=medium
+
+  * The Sovereign Cohesive Ecosystem & Creative Freedom Milestone — Phase 21.
+  * Added universal engine documentation and discovery via 'arcanum doc <engine>'.
+  * Implemented advisory-first creative freedom mechanics (ADR-115).
+  * Added interactive Craft Guide tab to Studio Hub and desktop GUI guide dialog.
+  * Elevated test suite to 687 passing unit tests with zero lint errors.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Sat, 26 Sep 2026 21:30:00 +0530
+
 ars-arcanum (4.0.0-1) unstable; urgency=medium
 
   * The Sovereign Streamlined Architecture & Engine Expansion Milestone — Phase 20.

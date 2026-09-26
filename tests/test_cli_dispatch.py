@@ -102,6 +102,48 @@ class TestCliDispatch(unittest.TestCase):
                 rc = main(sub)
                 self.assertIn(rc, (0, None))
 
+    def test_doc_and_guide_commands(self):
+        with patch("sys.stdout", new_callable=StringIO) as mock_out:
+            rc = main(["doc"])
+            self.assertEqual(rc, 0)
+            self.assertIn("Author Craft Guide & Advisory Matrix", mock_out.getvalue())
+
+        with patch("sys.stdout", new_callable=StringIO) as mock_out:
+            rc = main(["doc", "astrophysics"])
+            self.assertEqual(rc, 0)
+            val = mock_out.getvalue()
+            self.assertIn("ASTROPHYSICS & ORBITAL MECHANICS", val)
+            self.assertIn("Engine Logic & Scientific / Structural Foundations:", val)
+            self.assertIn("Advisory Mechanics & Creative Freedom Resolution Pathways:", val)
+
+        # Multi-word command doc lookup
+        with patch("sys.stdout", new_callable=StringIO) as mock_out:
+            rc = main(["doc", "calc", "astro"])
+            self.assertEqual(rc, 0)
+            self.assertIn("ASTROPHYSICS & ORBITAL MECHANICS", mock_out.getvalue())
+
+        # Hyphenated engine name lookup
+        with patch("sys.stdout", new_callable=StringIO) as mock_out:
+            rc = main(["doc", "magic-system"])
+            self.assertEqual(rc, 0)
+            self.assertIn("MAGIC SYSTEM CONSTRAINTS", mock_out.getvalue())
+
+        with patch("sys.stdout", new_callable=StringIO) as mock_out:
+            rc = main(["guide", "climate"])
+            self.assertEqual(rc, 0)
+            self.assertIn("PLANETARY CLIMATE & KÖPPEN BIOMES", mock_out.getvalue())
+
+        with patch("sys.stdout", new_callable=StringIO) as mock_out:
+            rc = main(["explain", "magic_system"])
+            self.assertEqual(rc, 0)
+            self.assertIn("MAGIC SYSTEM CONSTRAINTS", mock_out.getvalue())
+
+    def test_doc_unknown_engine(self):
+        with patch("sys.stderr", new_callable=StringIO) as mock_err:
+            rc = main(["doc", "totally_fake_engine"])
+            self.assertEqual(rc, 1)
+            self.assertIn("No documentation found for engine: 'totally_fake_engine'", mock_err.getvalue())
+
     def test_unknown_command_suggests_close_match(self):
         with patch("sys.stderr", new_callable=StringIO) as mock_err:
             rc = main(["prefligt"])
@@ -117,3 +159,4 @@ class TestCliDispatch(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

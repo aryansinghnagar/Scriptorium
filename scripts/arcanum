@@ -21,7 +21,7 @@ if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ] && [ -f "${SCRIPT_DIR}/verify.sh
     fi
 fi
 
-VERSION="4.0.0"
+VERSION="4.1.0"
 
 # Source shared worlds discovery library
 # shellcheck source=scripts/lib/worlds.sh

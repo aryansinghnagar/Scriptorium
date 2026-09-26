@@ -232,6 +232,7 @@ class ArcanumAppAdw:
             ("Prophecy & Oracle Matrix", "Prophecy lifecycle clauses & fulfillment verification tracker", "prophecy.py", ["verify"]),
             ("Tactical Combat Simulator", "Turn-based battle simulator & blow-by-blow choreography log", "tactical_sim.py", ["sim"]),
             ("Focus Ambient Generator", "Procedural noise & binaural beat soundscapes", "ambient.py", ["generate"]),
+            ("Author Craft Guide & Advisory Matrix", "100% creative sovereignty documentation, worldbuilding logic & 3-path resolutions", "cli.py", ["docs"]),
         ]
 
         for title, desc, script, args in engines:

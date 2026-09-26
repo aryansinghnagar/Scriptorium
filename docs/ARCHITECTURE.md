@@ -1,17 +1,17 @@
 # Ars Arcanum Technical Architecture & System Blueprint
 
-> **The Definitive, Audited Architecture Reference & System Blueprint for Ars Arcanum (Scriptorium)**
-> *A Sovereign, 100% Offline, Privacy-First Operating System & Craft Studio for Speculative Fiction Authors*
-> **Current Version**: `4.0.0` | **Quality Grade**: `A+` (GPA 4.0/4.0 Sovereign Operating System)
+> **The Definitive, Audited Architecture Reference & System Blueprint for Ars Arcanum (Scriptorium)**  
+> *A Sovereign, 100% Offline, Privacy-First Operating System & Craft Studio for Speculative Fiction Authors*  
+> **Current Version**: `4.1.0` | **Quality Grade**: `A+` (GPA 4.0/4.0 Sovereign Operating System)
 
 ---
 
 ## Part 1 — Whole-Repo Technical Deep-Dive
 
 ### 1.1 What Ars Arcanum Is
-**Ars Arcanum** (repository: `Scriptorium`) is a sovereign, local-first, 100% offline authoring operating platform and speculative worldbuilding craft studio designed for Linux workstations (Linux Mint XFCE 21/22, Debian 12/13 XFCE, Ubuntu 24.04 LTS, Arch Linux, Fedora) ([`README.md#L1-L35`](file:///README.md#L1-L35), [`project.md#L1-L30`](file:///project.md#L1-L30)). It orchestrates plain Markdown prose, OpenXML (`.docx`) bidirectional synchronization, multi-tier Git repository tracking, 70 modular Python craft and simulation engines, zero-dependency local semantic retrieval (RAG), bidirectional vault restoration, and publication-grade Typst PDF / EPUB packaging.
+**Ars Arcanum** (repository: `Scriptorium`) is a sovereign, local-first, 100% offline authoring operating platform and speculative worldbuilding craft studio designed for Linux workstations (Linux Mint XFCE 21/22, Debian 12/13 XFCE, Ubuntu 24.04 LTS, Arch Linux, Fedora) ([`README.md#L1-L35`](file:///README.md#L1-L35), [`project.md#L1-L30`](file:///project.md#L1-L30)). It orchestrates plain Markdown prose, OpenXML (`.docx`) bidirectional synchronization, multi-tier Git repository tracking, 50 modular Python craft and simulation engines, zero-dependency local semantic retrieval (RAG), bidirectional vault restoration, and publication-grade Typst PDF / EPUB packaging.
 
-All prose, character dossiers, lore bibles, and timelines are stored in standard plain Markdown (`.md`) and YAML manifests on the author's local storage with zero vendor lock-in, zero cloud telemetry, strict `default-src 'none'` Content Security Policies, and POSIX atomic crash safety.
+All prose, character dossiers, lore bibles, and timelines are stored in standard plain Markdown (`.md`) and YAML manifests on the author's local storage with zero vendor lock-in, zero cloud telemetry, strict `default-src 'none'` Content Security Policies, advisory-first creative freedom mechanics, and POSIX atomic crash safety.
 
 ---
 
@@ -26,7 +26,7 @@ All prose, character dossiers, lore bibles, and timelines are stored in standard
 | **Cross-Platform File Locking** | POSIX `fcntl.flock` + Windows `msvcrt.locking` Concurrency Locks | [`scripts/lib/lockfile.py#L1-L60`](file:///scripts/lib/lockfile.py#L1-L60) |
 | **Local Semantic Retrieval (RAG)**| Zero-Dependency Hybrid TF-IDF & SQLite FTS5 Vector Lore Search Engine | [`scripts/lib/local_rag.py#L1-L100`](file:///scripts/lib/local_rag.py#L1-L100) |
 | **Zen Drafting Studio** | Standalone Offline HTML5 Typewriter Studio & In-Situ Lore Drawer | [`scripts/lib/zen_studio.py#L1-L100`](file:///scripts/lib/zen_studio.py#L1-L100) |
-| **Studio Desktop Hub** | Unified Offline Telemetry Cockpit, REST API & JSON Headless Mode | [`scripts/lib/studio_hub.py#L1-L100`](file:///scripts/lib/studio_hub.py#L1-L100) |
+| **Studio Desktop Hub** | Unified Offline Telemetry Cockpit, REST API & Craft Guide Explorer | [`scripts/lib/studio_hub.py#L1-L100`](file:///scripts/lib/studio_hub.py#L1-L100) |
 | **Interactive Story Canvas** | Client-Side Drag-and-Drop Corkboard & Multi-Paradigm Pacing Analyzer | [`scripts/lib/story_canvas.py#L1-L100`](file:///scripts/lib/story_canvas.py#L1-L100), [`scripts/lib/structure.py#L1-L100`](file:///scripts/lib/structure.py#L1-L100) |
 | **Multi-POV Narrative Graph** | Multi-POV Narrative Thread & Convergence Subway Map Visualizer | [`scripts/lib/branching_graph.py#L1-L100`](file:///scripts/lib/branching_graph.py#L1-L100) |
 | **Universal Corpus Exporter** | Heading-Aware AST Chunker $\to$ JSONL/SQLite & Bidirectional Vault Restore | [`scripts/lib/corpus_export.py#L1-L100`](file:///scripts/lib/corpus_export.py#L1-L100) |
@@ -62,10 +62,10 @@ All prose, character dossiers, lore bibles, and timelines are stored in standard
 
 ### 1.3 Entry Points
 
-1. **Desktop GUI Application**: [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py) / [`scripts/lib/ui_gtk3/window.py`](file:///scripts/lib/ui_gtk3/window.py). Provides a 6-studio authoring dashboard (Cosmos, Drafting, Speculative Sciences, Diagnostics, Safety & Publishing) with live word counts, Visual Scene Metadata Inspector, Draft Revisions & Redline Comparator, and 70 integrated craft engines.
-2. **Authoritative Python CLI Dispatcher**: [`scripts/lib/cli.py`](file:///scripts/lib/cli.py) routing 50+ craft subcommands with strict regex validation, JSON serialization, and sub-second dispatch.
+1. **Desktop GUI Application**: [`scripts/arcanum_app.py`](file:///scripts/arcanum_app.py) / [`scripts/lib/ui_gtk3/window.py`](file:///scripts/lib/ui_gtk3/window.py). Provides a 6-studio authoring dashboard (Cosmos, Drafting, Speculative Sciences, Diagnostics, Safety & Publishing) with live word counts, Visual Scene Metadata Inspector, Draft Revisions & Redline Comparator, Craft & Lore Guide, and 50 integrated engines.
+2. **Authoritative Python CLI Dispatcher**: [`scripts/lib/cli.py`](file:///scripts/lib/cli.py) routing 50+ craft subcommands with strict regex validation, JSON serialization, `arcanum doc` craft documentation lookups, and sub-second dispatch.
 3. **POSIX Unified CLI Bootstrap**: [`scripts/arcanum`](file:///scripts/arcanum) wrapping the Python CLI dispatcher and providing standalone built-in bash subroutines for universe, world, manuscript, snapshot, backup, restore, and export operations.
-4. **Studio Desktop Hub**: [`scripts/lib/studio_hub.py`](file:///scripts/lib/studio_hub.py) (`arcanum hub`, `arcanum dashboard`) providing an offline WebAudio/HTML5 telemetry cockpit and local REST API.
+4. **Studio Desktop Hub**: [`scripts/lib/studio_hub.py`](file:///scripts/lib/studio_hub.py) (`arcanum hub`, `arcanum dashboard`) providing an offline WebAudio/HTML5 telemetry cockpit, Craft Guide tab, and local REST API.
 5. **Zen Drafting Studio**: [`scripts/lib/zen_studio.py`](file:///scripts/lib/zen_studio.py) (`arcanum studio`) generating single-file offline typewriter writing studios with in-situ lore drawer and local storage.
 6. **FreeDesktop Launchers**: [`launchers/*.desktop`](file:///launchers/) installed to `~/.local/share/applications/` and `~/Desktop`.
 7. **System Setup & Package Installer**: [`scripts/setup_arcanum.sh`](file:///scripts/setup_arcanum.sh) (multi-distribution provisioning for Debian/Mint, Fedora/RHEL, Arch/Manjaro, and openSUSE).
@@ -76,17 +76,15 @@ All prose, character dossiers, lore bibles, and timelines are stored in standard
 
 | Command | Purpose | Verification Source / Evidence | Trigger / Enforcement |
 | :--- | :--- | :--- | :--- |
-| `python -m unittest discover tests` | Full repository Python unit & integration test suite (681 tests) | [`tests/test_*.py`](file:///tests/) | Local pre-commit gate & CI required status check |
+| `python -m unittest discover tests` | Full repository Python unit & integration test suite (687 tests) | [`tests/test_*.py`](file:///tests/) | Local pre-commit gate & CI required status check |
 | `python -m unittest tests/test_<engine>.py` | Isolated single engine unit test suite (e.g. `test_local_rag.py`) | [`tests/`](file:///tests/) | Developer rapid feedback loop |
 | `python -m unittest tests/test_version_consistency.py` | Universal release version synchronization test | [`tests/test_version_consistency.py`](file:///tests/test_version_consistency.py) | Regression gate across all surfaces |
 | `python -m unittest tests/test_grand_tour_e2e.py` | Master 21-Stage full-pipeline lifecycle integration test | [`tests/test_grand_tour_e2e.py`](file:///tests/test_grand_tour_e2e.py) | Verification harness Stage 21 |
+| `arcanum doc <engine>` | Interactive engine documentation & advisory guidance viewer | [`scripts/lib/cli.py`](file:///scripts/lib/cli.py), [`scripts/lib/registry.py`](file:///scripts/lib/registry.py) | Author reference lookup |
 | `ruff check .` | Strict Python linter across rule families (`E`, `F`, `B`, `S`, `UP`, `SIM`, `I`, `RUF`, `C901`) | [`pyproject.toml#L1-L30`](file:///pyproject.toml#L1-L30) | CI required status check (0 violations) |
-| `mypy --config-file mypy.ini scripts/lib tests/*.py` | Strict static type checking across all 70 modules | [`mypy.ini#L1-L25`](file:///mypy.ini#L1-L25), [`tests/test_type_safety.py`](file:///tests/test_type_safety.py) | CI required status check |
-| `bandit -r scripts/lib -ll -ii` | Python AST Security Static Analysis (SAST) | [`.github/workflows/ci.yml#L69-L73`](file:///.github/workflows/ci.yml#L69-L73) | CI security gate |
+| `mypy --config-file mypy.ini scripts/lib tests/*.py` | Strict static type checking across all modules | [`mypy.ini#L1-L25`](file:///mypy.ini#L1-L25), [`tests/test_type_safety.py`](file:///tests/test_type_safety.py) | CI required status check |
 | `bash scripts/verify.sh` | Canonical 7-stage quality and regression test harness | [`scripts/verify.sh#L1-L496`](file:///scripts/verify.sh#L1-L496) | Local master pre-release gate |
 | `bash scripts/setup_arcanum.sh --dry-run` | Safe preview simulation of setup installer | [`scripts/setup_arcanum.sh#L35-L60`](file:///scripts/setup_arcanum.sh#L35-L60) | `verify.sh` Stage 6m |
-| `bash tests/*.sh` | Forensic Bash regression suites (audit fixes, continuity, diffs, cache, docx) | [`tests/`](file:///tests/) | CI shell regression step |
-| `shellcheck -S warning scripts/arcanum scripts/setup_arcanum.sh scripts/verify.sh` | Shell static analysis and linting (0 warnings) | [`.github/workflows/ci.yml#L99-L104`](file:///.github/workflows/ci.yml#L99-L104) | CI lint step |
 | `python flatpak/flathub_submission_validate.py` | Flathub AppStream 0.16+ XML metadata & sandbox validator | [`flatpak/flathub_submission_validate.py`](file:///flatpak/flathub_submission_validate.py) | Flathub upstream release gate |
 
 *CI Enforcement Note*: GitHub Actions workflow [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) runs on every push and pull request to `main`. Required status check enforcement is configured via GitHub repository branch protection rules on `main`.
@@ -113,14 +111,14 @@ All prose, character dossiers, lore bibles, and timelines are stored in standard
 │   ├── verify.sh            → Canonical 7-stage quality and regression test harness
 │   ├── arcanum_app.py       → GTK 3 / Libadwaita desktop application entrypoint
 │   ├── package_distribution.py → Multi-format release packaging engine
-│   └── lib/                 → 70 modular Python craft, intelligence, publishing, and simulation engines
+│   └── lib/                 → Modular Python craft, intelligence, publishing, and simulation engines
 │       └── ui_gtk3/         → Modular presentation package (<800 lines/file: window, dialogs, studios, workers)
 ├── templates/               → Scaffolding templates for World Bibles, Manuscripts, and Typst book layouts
 │   ├── demo-cosmos/         → Rich starter universe ("Eldoria-Cosmos") for instant author onboarding
 │   ├── manuscript/          → 3-Act novel hierarchies, outlines, and novelWriter XML schemas
 │   ├── typst/               → Publication-grade Typst trade templates and preview layouts
 │   └── world-bible/         → Pure Obsidian lore vault templates, fileClasses, and vendored plugins
-└── tests/                   → 80+ automated regression, unit, and integration test suites (681 tests total)
+└── tests/                   → Automated regression, unit, and integration test suites (687 tests total)
     └── fixtures/            → Sample mock universes, world lore vaults, and test manuscripts
 ```
 
@@ -146,7 +144,7 @@ All prose, character dossiers, lore bibles, and timelines are stored in standard
 
 ### 1.7 EOL / Dead-Dependency Scan
 
-- **Zero-Pip Dependency Guarantee**: All 70 craft, intelligence, parsing, simulation, and packaging modules in `scripts/lib/` execute strictly on standard-library Python primitives without external `pip` dependencies ([`AGENTS.md#L25-L30`](file:///AGENTS.md#L25-L30)).
+- **Zero-Pip Dependency Guarantee**: All 50 craft, intelligence, parsing, simulation, and packaging modules in `scripts/lib/` execute strictly on standard-library Python primitives without external `pip` dependencies ([`AGENTS.md#L25-L30`](file:///AGENTS.md#L25-L30)).
 - **Python 2.x**: Fully eliminated. All code requires modern Python 3.10+ standard library.
 - **GTK 2 / PyGTK**: Fully eliminated. Clean GTK 3.0 / GTK 4 introspection is enforced.
 - **LaTeX / PDFTeX**: Explicitly replaced with Typst (`0.14.2` musl pinned) for deterministic sub-second PDF compilation ([`ADR-003`](file:///decisions.md)).
@@ -183,9 +181,9 @@ Ars Arcanum enforces a 100% offline, plain-text and open-standard storage archit
 | :--- | :--- | :--- |
 | **Repository Remote** | `https://github.com/aryansinghnagar/Scriptorium.git` | `git remote -v` |
 | **Active Branch** | `main` | `git branch --show-current` |
-| **Head Commit** | `bf46b0617fc9ab91ac711cfc2c96b7c9c9cc56b5` | `git log -1` |
-| **Software Version** | `4.0.0` (The Sovereign Streamlined Architecture & Engine Expansion Milestone) | [`scripts/lib/cli.py`](file:///scripts/lib/cli.py), [`scripts/arcanum`](file:///scripts/arcanum), [`status.md`](file:///status.md) |
-| **Test Suite Baseline** | **681 tests collected, 681 passed, 0 failures, 2 skipped** | `python -m unittest discover tests` |
+| **Head Commit** | `32bd90b` | `git log -1` |
+| **Software Version** | `4.1.0` (The Sovereign Cohesive Ecosystem & Creative Freedom Milestone) | [`scripts/lib/cli.py`](file:///scripts/lib/cli.py), [`scripts/arcanum`](file:///scripts/arcanum), [`status.md`](file:///status.md) |
+| **Test Suite Baseline** | **687 tests collected, 687 passed, 0 failures, 2 skipped** | `python -m unittest discover tests` |
 | **License** | MIT License | [`LICENSE`](file:///LICENSE) |
 
 ---
@@ -205,11 +203,12 @@ The repository operates under the **Ars Arcanum Agentic Manifesto** ([`AGENTS.md
 
 1. **Atomic Write Invariant**: Direct unbuffered file overwrites (`open(f, 'w').write(...)`) are strictly prohibited in library engines. Use `atomic_write(target_path, content)` from `scripts/lib/_bootstrap.py`.
 2. **Identifier Token Sanitization**: All user-supplied volume names, draft identifiers, and book targets must be sanitized via regex token validation `^[A-Za-z0-9_-]+$`. Directory separators (`/`, `\`) and path traversals (`..`) are rejected immediately.
-3. **CSP Offline Enforcement**: Every generated HTML report, interactive corkboard, visual timeline, static codex, and drafting studio must include the strict offline CSP meta tag:
+3. **Creative Freedom & Advisory Invariant**: Engines must never block or reject unconventional inputs. All validation operates as advisory diagnostics providing multiple resolution options (Hard Realism, Speculative Trope, Author Sovereignty), leaving creative decisions entirely to the author ([`ADR-115`](file:///decisions.md)).
+4. **CSP Offline Enforcement**: Every generated HTML report, interactive corkboard, visual timeline, static codex, and drafting studio must include the strict offline CSP meta tag:
    ```html
    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:;">
    ```
-4. **Single Test Execution**: To run a single test module, use `python -m unittest tests.test_<name>` (or `python -m unittest tests/test_<name>.py`).
+5. **Single Test Execution**: To run a single test module, use `python -m unittest tests.test_<name>` (or `python -m unittest tests/test_<name>.py`).
 
 ---
 
@@ -223,11 +222,11 @@ The repository operates under the **Ars Arcanum Agentic Manifesto** ([`AGENTS.md
 flowchart TD
     AUTHOR["Fiction Author / Worldbuilder<br/><i>(Drafts novels, builds lore bibles, compiles ebooks & print PDFs)</i>"]
     
-    subgraph ARCANUM["Ars Arcanum Sovereign OS (v4.0.0)"]
+    subgraph ARCANUM["Ars Arcanum Sovereign OS (v4.1.0)"]
         CLI["CLI Dispatcher<br/><i>(arcanum / scripts/lib/cli.py)</i>"]
         GUI["Desktop Application<br/><i>(GTK 3 / Libadwaita)</i>"]
         HUB["Studio Desktop Hub & Zen Studio<br/><i>(Offline HTML5 / WebAudio / REST API)</i>"]
-        ENGINES["70 Craft & Simulation Engines<br/><i>(Local RAG, Astrophysics, Multi-POV Graph, Causality, World Doctor)</i>"]
+        ENGINES["50 Craft & Simulation Engines<br/><i>(Local RAG, Astrophysics, Multi-POV Graph, Causality, World Doctor)</i>"]
     end
     
     OBSIDIAN["Obsidian Lore Vaults<br/><i>(Markdown wikis, fileClasses, Dataview)</i>"]
@@ -356,6 +355,7 @@ Tier 4: Presentation & UI Dispatchers (cli.py, ui_controller.py, ui_gtk3/, arcan
 | **Concurrency & Locking** | Cross-platform non-blocking file locks with `fcntl.flock` (POSIX) and `msvcrt` (Windows) | [`scripts/lib/lockfile.py`](file:///scripts/lib/lockfile.py) |
 | **Atomic File Safety** | Temporary file creation $\to$ data flush $\to$ file sync $\to$ atomic replace $\to$ parent sync | [`scripts/lib/_bootstrap.py`](file:///scripts/lib/_bootstrap.py) |
 | **Path Traversal Defense** | Strict regex token validation `^[A-Za-z0-9_-]+$` rejecting directory separators and `..` | [`scripts/lib/_bootstrap.py`](file:///scripts/lib/_bootstrap.py), [`tests/test_path_traversal_defense.py`](file:///tests/test_path_traversal_defense.py) |
+| **Creative Freedom Invariant** | Non-imposing advisory diagnostics providing multiple resolution options (Realism, Speculative, Sovereignty) | [`scripts/lib/registry.py`](file:///scripts/lib/registry.py), [`decisions.md#ADR-115`](file:///decisions.md) |
 | **Content Security Policy** | Mandatory `<meta http-equiv="Content-Security-Policy" content="default-src 'none'...">` on all HTML | [`AGENTS.md#L32-L37`](file:///AGENTS.md#L32-L37) |
 | **Configuration** | JSON-backed configuration manager with defaults and preset overriding | [`scripts/lib/config.py`](file:///scripts/lib/config.py) |
 | **Logging & Triage** | Structured rotating file logging to `$XDG_STATE_HOME/ars-arcanum/arcanum.log` with path redaction | [`scripts/lib/diagnostics.py`](file:///scripts/lib/diagnostics.py) |
@@ -387,7 +387,7 @@ flowchart LR
   - `CorpusScanner` parses Markdown documents and extracts frontmatter aliases, wikilinks, and heading-aware semantic chunks ($\le 500$ words).
   - `TFIDFIndex` computes term frequencies and Robertson-Spärck Jones smoothed inverse document frequency $\text{IDF}(t) = \ln\left(1 + \frac{N - n_t + 0.5}{n_t + 0.5}\right)$, scoring queries via cosine similarity against sparse vector representations.
   - `query_lore()` performs reciprocal rank fusion between vector cosine similarity and SQLite FTS5 exact phrase matching.
-  - `synthesize_llm_context()` formats retrieved dossiers into structured context blocks for local LLMs (Llama 3, Mistral, Gemma, Phi) with strict file/line provenance attribution.
+  - `synthesize_llm_context()` formats retrieved dossiers into structured context blocks for local LLMs with strict file/line provenance attribution.
   - `restore_vault_from_archive()` (`arcanum corpus restore <archive>`) enables 100% bidirectional recovery of full World Bible directory hierarchies directly from exported JSONL or SQLite archives without external dependencies.
 
 ---
@@ -455,8 +455,8 @@ flowchart TD
 
 | Claim Area | Rating | Rationale & Verification Basis |
 | :--- | :---: | :--- |
-| **Test Suite Coverage & Pass Rate** | **High** | Verified by `python -m unittest discover tests` (681 tests collected, 681 passed, 0 failures, 2 skipped). |
-| **Static Typing & Linter Compliance** | **High** | Verified by `ruff check .` (0 violations) and `mypy` type checking across all 70 `scripts/lib/` modules. |
+| **Test Suite Coverage & Pass Rate** | **High** | Verified by `python -m unittest discover tests` (687 tests collected, 687 passed, 0 failures, 2 skipped). |
+| **Static Typing & Linter Compliance** | **High** | Verified by `ruff check .` (0 violations) and `mypy` type checking across all 50 `scripts/lib/` modules. |
 | **Atomic File Safety & POSIX Locking**| **High** | Verified by unit tests `tests/test_atomic_write.py`, `tests/test_lockfile.py`, and `tests/test_path_traversal_defense.py`. |
 | **Packaging & Flathub Upstream** | **High** | Verified by `tests/test_flathub_upstream.py`, `test_flathub_validation.py`, and `test_multi_distro_packaging.py`. |
 | **Local RAG & Corpus Retrieval** | **High** | Verified by dedicated test suites `tests/test_local_rag.py` and `tests/test_corpus_export.py`. |
@@ -468,10 +468,11 @@ flowchart TD
 
 - [`scripts/lib/_bootstrap.py`](file:///scripts/lib/_bootstrap.py): Shared primitives, atomic write operations, and identifier sanitization.
 - [`scripts/arcanum`](file:///scripts/arcanum): Unified POSIX bootstrap wrapper and standalone bash subroutine dispatcher.
-- [`scripts/lib/cli.py`](file:///scripts/lib/cli.py): Authoritative pure-Python CLI router dispatching 50+ commands with strict argument parsing.
+- [`scripts/lib/cli.py`](file:///scripts/lib/cli.py): Authoritative pure-Python CLI router dispatching 50+ commands with strict argument parsing and `arcanum doc` lookups.
+- [`scripts/lib/registry.py`](file:///scripts/lib/registry.py): Central engine catalog, discipline categorization, and advisory guidance repository.
 - [`scripts/lib/local_rag.py`](file:///scripts/lib/local_rag.py): Zero-dependency local semantic retrieval and prompt context synthesis engine.
 - [`scripts/lib/zen_studio.py`](file:///scripts/lib/zen_studio.py): Standalone offline typewriter writing studio with in-situ lore drawer.
-- [`scripts/lib/studio_hub.py`](file:///scripts/lib/studio_hub.py): Unified offline telemetry cockpit and REST API aggregator.
+- [`scripts/lib/studio_hub.py`](file:///scripts/lib/studio_hub.py): Unified offline telemetry cockpit, Craft Guide tab, and REST API aggregator.
 - [`scripts/lib/branching_graph.py`](file:///scripts/lib/branching_graph.py): Multi-POV narrative thread subway map visualizer and storyline tracker.
 - [`scripts/lib/corpus_export.py`](file:///scripts/lib/corpus_export.py): Universal structured corpus exporter and bidirectional vault restorer.
 - [`scripts/lib/astrophysics.py`](file:///scripts/lib/astrophysics.py): Exotic celestial mechanics, orbital dynamics, and planetary sweet-spot advisor.
@@ -481,5 +482,5 @@ flowchart TD
 - [`scripts/package_distribution.py`](file:///scripts/package_distribution.py): Release distribution packager for Reader, Submission, ARC, and Lore Codex ZIP bundles.
 - [`tests/test_grand_tour_e2e.py`](file:///tests/test_grand_tour_e2e.py): Definitive 21-stage end-to-end integration lifecycle test harness.
 - [`AGENTS.md`](file:///AGENTS.md): Sovereign Agentic Operating Manifesto and invariant engineering contracts.
-- [`decisions.md`](file:///decisions.md): Complete repository of Architectural Decision Records (ADR-001 through ADR-114).
-- [`status.md`](file:///status.md): Comprehensive system status dashboard tracking 137/137 completed phase milestones across Phases 0–20.
+- [`decisions.md`](file:///decisions.md): Complete repository of Architectural Decision Records (ADR-001 through ADR-115).
+- [`status.md`](file:///status.md): Comprehensive system status dashboard tracking 138/138 completed phase milestones across Phases 0–21.

@@ -36,7 +36,7 @@ except ImportError:
 
 logger = logging.getLogger("arcanum.studio_hub")
 
-HUB_VERSION = "4.0.0"
+HUB_VERSION = "4.1.0"
 FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
 
 
@@ -47,113 +47,29 @@ FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DO
 
 def get_engine_catalog() -> list[dict[str, Any]]:
     """Returns the comprehensive craft engine catalog and capabilities."""
-    return [
-        {
-            "id": "zen_studio",
-            "name": "Zen Drafting Studio",
-            "category": "Drafting",
-            "cli": "arcanum studio",
-            "desc": "Distraction-free typewriter drafting cockpit with in-situ lore drawer and beat tracker.",
-        },
-        {
-            "id": "writing_sprint",
-            "name": "Sovereign Writing Sprint & Session Analytics",
-            "category": "Productivity",
-            "cli": "arcanum sprint",
-            "desc": "Sprint session timer, WPM velocity analytics, daily streak tracking, and offline HTML productivity dashboard.",
-        },
-        {
-            "id": "revision_heatmap",
-            "name": "Manuscript Revision Density & Churn Heatmap",
-            "category": "Diagnostics",
-            "cli": "arcanum revision-heatmap",
-            "desc": "Snapshot-based revision churn analyzer flagging over-revised (REV-101) and pristine-draft (REV-102) chapters.",
-        },
-        {
-            "id": "causality",
-            "name": "Causal DAG & Time-Travel Consistency Validator",
-            "category": "Worldbuilding",
-            "cli": "arcanum causality",
-            "desc": "Causal graph builder, Novikov self-consistency validator, CTC loop detector, and multiverse branch analyzer.",
-        },
-        {
-            "id": "prophecy",
-            "name": "Prophecy Resolution Matrix & Arcane Inscription Tracker",
-            "category": "Worldbuilding",
-            "cli": "arcanum prophecy",
-            "desc": "Prophecy clause tracking, manuscript cross-validation, orphan detection, and resolution state machine.",
-        },
-        {
-            "id": "senses",
-            "name": "6D Sensory Palette & White Room Syndrome Linter",
-            "category": "Editorial",
-            "cli": "arcanum senses",
-            "desc": "Six-dimensional sensory immersion analysis: visual, auditory, olfactory, gustatory, tactile/thermal, kinesthetic/vestibular.",
-        },
-        {
-            "id": "story_canvas",
-            "name": "Story Canvas & Corkboard",
-            "category": "Story Architecture",
-            "cli": "arcanum canvas",
-            "desc": "Visual drag-and-drop narrative corkboard with live structural harmony recalculation.",
-        },
-        {
-            "id": "local_rag",
-            "name": "Local Semantic Retrieval (RAG)",
-            "category": "Intelligence",
-            "cli": "arcanum rag",
-            "desc": "Zero-dependency hybrid TF-IDF and SQLite FTS5 lore search engine with context synthesizers.",
-        },
-        {
-            "id": "branching_graph",
-            "name": "Branching Narrative Graph",
-            "category": "Story Architecture",
-            "cli": "arcanum branch",
-            "desc": "Multi-POV storyline thread and convergence graph parser with interactive subway map exporter.",
-        },
-        {
-            "id": "timeline_sync",
-            "name": "Dual-Track Timeline Synchronizer",
-            "category": "Worldbuilding",
-            "cli": "arcanum timeline",
-            "desc": "Chronological vs narrative sequence synchronizer with flashback and paradox detection.",
-        },
-        {
-            "id": "omnibus",
-            "name": "Series Omnibus Compiler",
-            "category": "Publishing",
-            "cli": "arcanum omnibus",
-            "desc": "Multi-volume master series compiler with unified Dramatis Personae and master timeline.",
-        },
-        {
-            "id": "corpus_export",
-            "name": "Universal Corpus & RAG Exporter",
-            "category": "Data & Interop",
-            "cli": "arcanum corpus",
-            "desc": "Structured JSONL, SQLite FTS5 database, markdown summary digest exporter, and bidirectional vault restore.",
-        },
-        {
-            "id": "world_doctor",
-            "name": "World Doctor Diagnostics",
-            "category": "Diagnostics",
-            "cli": "arcanum doctor",
-            "desc": "Deep cosmos health auditor checking broken wikilinks, orphaned lore, and dead entities.",
-        },
-        {
-            "id": "package_distribution",
-            "name": "Release Package Distribution",
-            "category": "Publishing",
-            "cli": "arcanum package",
-            "desc": "Multi-bundle packaging engine with Reader, Submission, ARC, and Codex ZIP distributions.",
-        },
-        {
-            "id": "dramatis_personae",
-            "name": "Multi-Volume Dramatis Personae & Cast Matrix",
-            "category": "Worldbuilding",
-            "cli": "arcanum cast",
-            "desc": "Cross-volume character profile parser, manuscript POV/mention cross-referencer, lifecycle continuity auditor, and gallery generator.",
-        },
-    ]
+    try:
+        from lib.registry import get_all_engine_docs
+        docs = get_all_engine_docs()
+        return [
+            {
+                "id": d["name"],
+                "name": d["title"],
+                "category": d["category"].capitalize(),
+                "studio_tab": d.get("studio_tab", ""),
+                "cli": f"arcanum {d['cli_command']}",
+                "desc": d["description"],
+                "logic_documentation": d.get("logic_documentation", ""),
+                "worldbuilding_relevance": d.get("worldbuilding_relevance", ""),
+                "storytelling_relevance": d.get("storytelling_relevance", ""),
+                "writing_relevance": d.get("writing_relevance", ""),
+                "advisory_guidance": d.get("advisory_guidance", []),
+            }
+            for d in docs
+        ]
+    except Exception as e:
+        logger.debug("Failed dynamic registry catalog fetch: %s", e)
+        return []
+
 
 
 def scan_manuscript_chapters(manuscript_dir: Path | None) -> list[dict[str, Any]]:
@@ -969,6 +885,7 @@ def generate_studio_hub_html(data: dict[str, Any], api_mode: bool = False) -> st
     <button class="nav-btn" onclick="switchTab('tab-timeline')">⏳ Timeline & Paradoxes</button>
     <button class="nav-btn" onclick="switchTab('tab-intelligence')">🧠 Local RAG & Editorial</button>
     <button class="nav-btn" onclick="switchTab('tab-engines')">⚙️ Craft Engine Matrix</button>
+    <button class="nav-btn" onclick="switchTab('tab-guide')">💡 Craft Guide & Advisory Matrix</button>
   </nav>
 
   <div class="sidebar-footer">
@@ -1197,6 +1114,51 @@ def generate_studio_hub_html(data: dict[str, Any], api_mode: bool = False) -> st
       </div>
     </div>
 
+    <!-- AUTHOR CRAFT GUIDE & ADVISORY MATRIX TAB -->
+    <div id="tab-guide" class="tab-pane">
+      <div class="section-panel">
+        <div class="section-header">
+          <h3>Author Craft Guide, Worldbuilding Logic & Advisory Resolution Matrix</h3>
+          <span class="tag tag-gold">100% Creative Sovereignty</span>
+        </div>
+        <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.5;">
+          Ars Arcanum acts as an informative creative compass, never a rigid gatekeeper. All scientific formulas, narrative structure frameworks, and linguistic checks provide advisory suggestions with multiple creative resolution pathways. You always have 100% final decision authority.
+        </p>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+          <button class="tag" style="cursor: pointer; padding: 6px 12px;" onclick="filterGuideCategory('all')">All Disciplines</button>
+          <button class="tag tag-char" style="cursor: pointer; padding: 6px 12px;" onclick="filterGuideCategory('worldbuilding')">Worldbuilding Sciences</button>
+          <button class="tag tag-loc" style="cursor: pointer; padding: 6px 12px;" onclick="filterGuideCategory('craft')">Story Architecture & Craft</button>
+          <button class="tag tag-magic" style="cursor: pointer; padding: 6px 12px;" onclick="filterGuideCategory('core')">Core Pipeline & Tools</button>
+          <button class="tag tag-fact" style="cursor: pointer; padding: 6px 12px;" onclick="filterGuideCategory('diagnostics')">Continuity & Diagnostics</button>
+          <button class="tag tag-item" style="cursor: pointer; padding: 6px 12px;" onclick="filterGuideCategory('publishing')">Publishing & Export</button>
+        </div>
+
+        <input type="text" id="guide-filter-input" class="search-input" style="width: 100%; margin-top: 10px;" placeholder="Filter craft logic, worldbuilding rules, formulas, or resolution options..." oninput="filterGuideCards(this.value)">
+
+        <div class="engine-grid" id="guide-cards-container" style="margin-top: 14px; grid-template-columns: 1fr;">
+          {"".join(f'''<div class="engine-card guide-card" data-category="{eng['category'].lower()}" data-tab="{eng.get('studio_tab', '').lower()}" data-text="{eng['name'].lower()} {eng['desc'].lower()} {eng.get('logic_documentation', '').lower()} {eng.get('worldbuilding_relevance', '').lower()} {eng.get('storytelling_relevance', '').lower()} {eng.get('writing_relevance', '').lower()} {eng.get('cli', '').lower()}">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="tag tag-magic">{eng['category']} • {eng.get('studio_tab', 'Engine')}</span>
+              <span class="engine-cli">{eng['cli']}</span>
+            </div>
+            <h4 style="font-size: 16px; margin-top: 4px;">{eng['name']}</h4>
+            <p style="color: var(--text-primary); font-size: 13px;">{eng['desc']}</p>
+            
+            <div style="background: var(--bg-sidebar); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+              <div><strong>⚙️ Logic & Scientific / Structural Foundations:</strong><br><span style="color: var(--text-secondary); font-size: 12.5px;">{eng.get('logic_documentation', 'Standard library calculation engine.')}</span></div>
+              <div><strong>🌍 Worldbuilding Application:</strong><br><span style="color: var(--text-secondary); font-size: 12.5px;">{eng.get('worldbuilding_relevance', 'Worldbuilding lore consistency.')}</span></div>
+              <div><strong>📐 Storytelling & Narrative Architecture:</strong><br><span style="color: var(--text-secondary); font-size: 12.5px;">{eng.get('storytelling_relevance', 'Plot and pacing integration.')}</span></div>
+              <div><strong>✍️ Prose Writing & Editorial Relevance:</strong><br><span style="color: var(--text-secondary); font-size: 12.5px;">{eng.get('writing_relevance', 'Writing and line-editing polish.')}</span></div>
+              
+              {"<div style='margin-top: 6px; border-top: 1px solid var(--border-color); padding-top: 8px;'><strong>💡 Creative Advisory Resolution Pathways:</strong><br>" + "".join("<div style='margin-top: 6px; font-size: 12px;'><span style='color: var(--accent-gold);'>• Pattern: " + adv.get("pattern", "Unconventional input") + "</span><br>&nbsp;&nbsp;<span style='color: var(--accent-cyan);'>Option A (Realism):</span> " + adv.get("option_a", "Standard convention") + "<br>&nbsp;&nbsp;<span style='color: var(--accent-purple);'>Option B (Trope/Magic):</span> " + adv.get("option_b", "In-world grounding") + "<br>&nbsp;&nbsp;<span style='color: var(--accent-emerald);'>Option C (Sovereignty):</span> " + adv.get("option_c", "Author creative control") + "</div>" for adv in eng.get("advisory_guidance", [])) + "</div>" if eng.get("advisory_guidance") else ""}
+            </div>
+          </div>''' for eng in data['engine_catalog'])}
+        </div>
+      </div>
+    </div>
+
+
   </div>
 </main>
 
@@ -1220,9 +1182,47 @@ def generate_studio_hub_html(data: dict[str, Any], api_mode: bool = False) -> st
       'tab-structure': 'Structure & Pacing Harmony',
       'tab-timeline': 'Timeline & Paradox Diagnostic',
       'tab-intelligence': 'Local RAG & Editorial Council',
-      'tab-engines': 'Craft Engine Matrix'
+      'tab-engines': 'Craft Engine Matrix',
+      'tab-guide': 'Author Craft Guide & Advisory Matrix'
     }};
     document.getElementById('page-title').innerText = titles[tabId] || 'Dashboard';
+  }}
+
+  function filterGuideCategory(cat) {{
+    const q = cat.toLowerCase();
+    const cards = document.querySelectorAll('.guide-card');
+    cards.forEach(c => {{
+      const cCat = (c.getAttribute('data-category') || '').toLowerCase();
+      const cTab = (c.getAttribute('data-tab') || '').toLowerCase();
+      if (q === 'all') {{
+        c.style.display = 'block';
+      }} else if (q === 'worldbuilding') {{
+        c.style.display = (cTab === 'worldbuilding' || cTab === 'cosmos') ? 'block' : 'none';
+      }} else if (q === 'craft') {{
+        c.style.display = (cTab === 'craft' || cTab === 'editor' || cCat === 'craft') ? 'block' : 'none';
+      }} else if (q === 'core') {{
+        c.style.display = (cCat === 'core' || cTab === 'tools') ? 'block' : 'none';
+      }} else if (q === 'diagnostics') {{
+        c.style.display = (cTab === 'diagnostics') ? 'block' : 'none';
+      }} else if (q === 'publishing') {{
+        c.style.display = (cTab === 'publishing') ? 'block' : 'none';
+      }} else {{
+        c.style.display = (cCat === q || cTab === q) ? 'block' : 'none';
+      }}
+    }});
+  }}
+
+  function filterGuideCards(query) {{
+    const q = query.trim().toLowerCase();
+    const cards = document.querySelectorAll('.guide-card');
+    cards.forEach(c => {{
+      const text = c.getAttribute('data-text') || '';
+      if (!q || text.includes(q)) {{
+        c.style.display = 'block';
+      }} else {{
+        c.style.display = 'none';
+      }}
+    }});
   }}
 
   function cycleTheme() {{
@@ -1349,6 +1349,8 @@ class SovereignStudioHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(self.data.get("timeline_events", []))
         elif path == "/api/metrics":
             self._send_json(self.data.get("metrics", {}))
+        elif path in ("/api/docs", "/api/engines"):
+            self._send_json(self.data.get("engine_catalog", []))
         elif path == "/api/all":
             self._send_json(self.data)
         else:

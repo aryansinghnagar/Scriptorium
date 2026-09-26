@@ -20,7 +20,7 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-VERSION = "4.0.0"
+VERSION = "4.1.0"
 
 # Add scripts directory to path
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent
@@ -43,6 +43,7 @@ Usage:
   studio [MS] [-w WORLD]       Standalone offline Zen drafting studio & in-situ lore drawer
   word [MS]                    Open manuscript in Microsoft Word / LibreOffice (alias: writer)
   docx <build|sync|import|open> Manage Word .docx manuscript synchronization
+  import <SOURCE> [options]    Import Scrivener, Word (.docx), or Markdown into sovereign vault
   new <type> <NAME> [opts]     Scaffold new project (type: manuscript | draft | world | universe | volume)
   draft <MS> [DRAFT_NAME]      Fork next manuscript draft version (alias: new draft, init-draft)
   compare <MS> [D_NEW] [D_OLD] Visual Redline changelog comparison between drafts (alias: diff, redline)
@@ -68,6 +69,7 @@ Usage:
   package [MS] [-t TARGET]     Multi-platform release packager: Reader, Submission, ARC (OPS-101)
   sprint [MS]                  Sovereign writing sprint timer & productivity analytics
   revision-heatmap [MS]        Manuscript revision density & churn heatmap
+  doc [ENGINE]                 Display educational craft logic documentation & advisory resolution guide (alias: guide, explain)
 
 🪐 Universe, World Lore & Series Continuity:
   universe [NAME] [--list]     Create or list narrative universes in ~/Universes/
@@ -192,6 +194,47 @@ def handle_engines_command(argv: list[str]) -> int:
     return 0
 
 
+def handle_doc_command(argv: list[str]) -> int:
+    from lib.registry import format_engine_doc, get_all_engine_docs, get_engine, list_engines
+
+    if not argv or argv[0] in ("--all", "-a", "all"):
+        docs = get_all_engine_docs()
+        print(f"🏛️  Ars Arcanum Author Craft Guide & Advisory Matrix ({len(docs)} Engines Available)\n")
+        print("To view deep craft logic, scientific foundations, and advisory guidance for an engine, run:")
+        print("  arcanum doc <ENGINE_NAME_OR_COMMAND> (e.g. 'arcanum doc astrophysics', 'arcanum doc structure')\n")
+        print(f"{'Command':<20} {'Category':<12} {'Engine Title':<32} {'Relevance Summary'}")
+        print("=" * 95)
+        for d in sorted(docs, key=lambda x: (x['category'], x['name'])):
+            rel_summary = d['worldbuilding_relevance'][:40] + "..." if len(d['worldbuilding_relevance']) > 40 else d['worldbuilding_relevance']
+            print(f"arcanum {d['cli_command']:<12} [{d['category'].upper():<10}] {d['title']:<32} {rel_summary}")
+        return 0
+
+    target_full = " ".join(argv).strip().lower()
+    spec = get_engine(target_full)
+    if not spec and len(argv) > 1:
+        spec = get_engine(argv[0].strip().lower())
+
+    if not spec:
+        from difflib import get_close_matches
+        all_names = [e.name for e in list_engines()] + [e.cli_command for e in list_engines()]
+        for e in list_engines():
+            all_names.extend(e.aliases)
+            all_names.append(e.name.replace("_", "-"))
+        matches = get_close_matches(target_full, all_names, n=1, cutoff=0.5)
+        if not matches and len(argv) > 1:
+            matches = get_close_matches(argv[0], all_names, n=1, cutoff=0.5)
+
+        if matches:
+            print(f"Error: No documentation found for engine: '{target_full}'. Did you mean 'arcanum doc {matches[0]}'?", file=sys.stderr)
+        else:
+            print(f"Error: No documentation found for engine: '{target_full}'. Run 'arcanum doc' to list all engines.", file=sys.stderr)
+        return 1
+
+    print(format_engine_doc(spec))
+    return 0
+
+
+
 def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
@@ -208,6 +251,12 @@ def main(argv: list[str] | None = None) -> int:
     rest = argv[1:]
 
     # --- Core Authoring & Editorial Craft ---
+    if cmd in ("doc", "docs", "explain", "guide", "craft-docs"):
+        return handle_doc_command(rest)
+
+    if cmd in ("import", "importer", "import-manuscript"):
+        return dispatch_subcommand("lib.importer", rest)
+
     if cmd in ("write", "open"):
         return dispatch_script("lib/ui_controller.py", rest)
 
@@ -520,6 +569,8 @@ def main(argv: list[str] | None = None) -> int:
         "hub", "dashboard", "gui-web", "studio-hub",
         "sprint", "writing-sprint", "revision-heatmap", "churn", "revision-density",
         "cast", "dramatis-personae", "dramatis", "characters-cast",
+        "canvas", "story-canvas", "timeline", "timeline-sync", "omnibus", "import", "importer",
+        "doc", "docs", "explain", "guide", "craft-docs",
     ]
 
     matches = difflib.get_close_matches(cmd, known_commands, n=1, cutoff=0.55)

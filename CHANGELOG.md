@@ -4,6 +4,23 @@ All notable changes to Ars Arcanum are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Scope decisions
 behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## [4.1.0] - 2026-09-26
+
+### Added (The Sovereign Cohesive Ecosystem & Creative Freedom Architecture — Phase 21)
+- **Universal Engine Documentation & Discovery (`arcanum doc <engine>`)**:
+  - Comprehensive in-CLI and interactive documentation for all 50 core and craft engines (`scripts/lib/cli.py`, `scripts/lib/registry.py`).
+  - Detailed domain breakdowns for each engine: Scientific & Structural Foundations, Worldbuilding Relevance, Storytelling Relevance, and Prose Writing Relevance.
+  - Bidirectional hyphen/underscore normalization and multi-word lookup parsing (e.g., `arcanum doc calc astro`, `arcanum doc magic-system`).
+- **Advisory-First Creative Freedom Mechanics (`ADR-115`)**:
+  - Non-imposing diagnostic alerts with multi-option resolution pathways: *Option A (Hard Realism)*, *Option B (Speculative Trope)*, and *Option C (Author Sovereignty)*.
+  - Guarantees 100% authorial creative control without rigid blocker rules or forced tropes.
+- **Studio Hub Interactive Craft Guide (`tab-guide`)**:
+  - Dedicated Craft Guide explorer inside the offline Studio Hub (`scripts/lib/studio_hub.py`) with instant search, category filtering, and discipline tags (Worldbuilding, Craft, Diagnostics, Publishing, Tools).
+- **Desktop GUI Craft Guide Integration**:
+  - Integrated Craft & Lore Guide dialog across GTK 3 (`scripts/lib/ui_gtk3/dialogs.py`) and Libadwaita (`scripts/lib/ui_adw.py`) interfaces.
+- **Quality & Test Elevation**:
+  - Added unit test coverage in `tests/test_registry.py` and `tests/test_cli_dispatch.py`, elevating total passing tests to **687 tests** (0 failures, 2 skipped, 0 Ruff violations, clean Mypy typing).
+
 ## [4.0.0] - 2026-09-26
 
 ### Removed (Architectural Trimming & Decommissioning)
