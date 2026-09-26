@@ -174,3 +174,4 @@ def extract_frontmatter_and_body(content: str) -> tuple[dict[str, Any], str]:
     fm_dict = parse_yaml_frontmatter(content)
     body = content[fm_match.end():]
     return fm_dict, body
+

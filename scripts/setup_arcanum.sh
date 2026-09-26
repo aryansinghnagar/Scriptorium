@@ -482,8 +482,8 @@ elif [ "${#INSTALL_ERRORS[@]}" -gt 0 ]; then
     else
         echo "1. Resolve the warnings above, or re-run: bash scripts/setup_arcanum.sh"
     fi
-    echo "2. Double-click 'New World Vault Creator' (or run ./scripts/init_world.sh) to start a lore vault"
-    echo "3. Double-click 'New Manuscript Creator' (or run ./scripts/init_manuscript.sh) to start a novel"
+    echo "2. Double-click 'New World Vault Creator' (or run ./scripts/arcanum new world) to start a lore vault"
+    echo "3. Double-click 'New Manuscript Creator' (or run ./scripts/arcanum new manuscript) to start a novel"
     echo "4. Open Control Center on your desktop (or run ./scripts/arcanum control-center)"
     echo "5. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_arcanum_rules.json"
     echo "6. Connect an external drive and configure Déjà Dup for 3-2-1 backups."
@@ -492,8 +492,8 @@ else
     echo "  [SUCCESS] Ars Arcanum Writing Setup Installed Successfully!"
     echo "============================================================"
     echo "Next Steps:"
-    echo "1. Double-click 'New World Vault Creator' (or run ./scripts/init_world.sh) to start a lore vault"
-    echo "2. Double-click 'New Manuscript Creator' (or run ./scripts/init_manuscript.sh) to start a novel"
+    echo "1. Double-click 'New World Vault Creator' (or run ./scripts/arcanum new world) to start a lore vault"
+    echo "2. Double-click 'New Manuscript Creator' (or run ./scripts/arcanum new manuscript) to start a novel"
     echo "3. Open Control Center on your desktop (or run ./scripts/arcanum control-center)"
     echo "4. Open Firefox and import focus rules: ${PROJECT_ROOT}/configs/leechblock_arcanum_rules.json"
     echo "5. Connect an external drive and configure Déjà Dup for 3-2-1 backups."

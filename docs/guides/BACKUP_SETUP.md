@@ -45,7 +45,7 @@ Your writing represents years of intellectual effort. Ars Arcanum adheres to the
 
 ## Native Ars Arcanum Dual-Target Disaster Recovery Backups
 
-In addition to system-level Déjà Dup backups, Ars Arcanum includes a native, standalone dual-target archive manager (`scripts/backup_world.sh`) with SHA-256 integrity validation.
+In addition to system-level Déjà Dup backups, Ars Arcanum includes a native, standalone dual-target archive manager (`arcanum backup`) with SHA-256 integrity validation.
 
 ### 1. Configure Secondary Secure Destination (External / USB)
 You can configure a persistent secondary replication target via CLI or the GTK Desktop Control Center:

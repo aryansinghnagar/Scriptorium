@@ -3,7 +3,7 @@
 Ars Arcanum GTK 3 Publishing & Typesetting Studio (scripts/lib/ui_gtk3/studios/publishing.py)
 ============================================================================================
 Provides Studio 4 tab interface for print PDF typesetting (Typst), EPUB (Pandoc/Calibre),
-submission DOCX, ISBN barcodes, and frontmatter scaffolding.
+submission DOCX, pre-flight linting, and frontmatter scaffolding.
 """
 
 import logging
@@ -63,9 +63,9 @@ class PublishingStudioMixin:
         btn_preflight.connect("clicked", lambda b: self.open_preflight_dialog())
         pub_tools_box.pack_start(btn_preflight, False, False, 0)
 
-        btn_barcode = Gtk.Button(label="🏷️ ISBN-13 Vector Barcode Generator")
-        btn_barcode.connect("clicked", lambda b: self.open_barcode_dialog())
-        pub_tools_box.pack_start(btn_barcode, False, False, 0)
+        btn_corpus = Gtk.Button(label="📦 Universal Structured Corpus Exporter")
+        btn_corpus.connect("clicked", lambda b: self.open_corpus_dialog())
+        pub_tools_box.pack_start(btn_corpus, False, False, 0)
 
         btn_fm = Gtk.Button(label="📚 Modular Front & Back Matter Builder")
         btn_fm.connect("clicked", lambda b: self.open_frontmatter_dialog())
@@ -124,8 +124,11 @@ class PublishingStudioMixin:
         vol = self.combo_draft_vol.get_active_id() if self.combo_draft_vol else "Book-01"
         draft = self.combo_draft_list.get_active_id() if self.combo_draft_list else "Draft-01"
 
+        import sys
         cmd = [
-            str(PROJECT_ROOT / "scripts" / "export_book.sh"),
+            sys.executable,
+            str(PROJECT_ROOT / "scripts" / "lib" / "cli.py"),
+            "export",
             self.current_manuscript_path,
             "--format", fmt,
             "--book", vol,
@@ -137,7 +140,7 @@ class PublishingStudioMixin:
 
         def _worker():
             res = subprocess.run(
-                ["bash", *cmd],
+                cmd,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",

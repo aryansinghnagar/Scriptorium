@@ -90,32 +90,11 @@ class SpeculativeDialogsMixin:
         base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "senses.py"), target]
         self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Analyzing 6D Sensory Grounding Palette...")
 
-    def open_cipher_prophecy_dialog(self):
-        dialog, box = self._create_dialog_shell("In-World Ciphers & Phonetic Runes", 720, 480)
-        grid = Gtk.Grid()
-        grid.set_column_spacing(8)
-        grid.set_row_spacing(6)
-        grid.attach(Gtk.Label(label="Plaintext:", xalign=0), 0, 0, 1, 1)
-        entry_text = Gtk.Entry()
-        entry_text.set_text("The secret of the silver spire lies within.")
-        grid.attach(entry_text, 1, 0, 1, 1)
-        box.pack_start(grid, False, False, 0)
-
-        btn_enc = Gtk.Button(label="🔐 Encode Vigenere / Runes")
-        btn_enc.get_style_context().add_class("suggested-action")
-        scrolled, out_buf = self._create_dialog_output_view()
-        box.pack_start(btn_enc, False, False, 0)
-        box.pack_start(scrolled, True, True, 0)
-
-        def _do_enc():
-            txt = entry_text.get_text().strip() or "Secret"
-            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "cipher.py"), "encode", "vigenere", txt, "--key", "ARCANUM"]
-            self._run_dialog_cmd(cmd, out_buf, "Encoding cipher...")
-
-        btn_enc.connect("clicked", lambda b: _do_enc())
-        dialog.show_all()
-        dialog.run()
-        dialog.destroy()
+    def open_prophecy_dialog(self):
+        target_w = self.current_world_path or str(WORLDS_DIR)
+        target_m = self.current_manuscript_path or str(MANUSCRIPTS_DIR)
+        base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "prophecy.py"), target_w, "-m", target_m]
+        self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Verifying Prophecy Clauses & Lifecycle Matrix...")
 
     # -------------------------------------------------------------------------
     # Craft, Editorial, Publishing & Operations Dialogs
@@ -174,29 +153,22 @@ class SpeculativeDialogsMixin:
         base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "preflight.py"), target]
         self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Running Pre-Flight Publishing Linter...")
 
-    def open_barcode_dialog(self):
-        dialog, box = self._create_dialog_shell("ISBN-13 Barcode Generator", 680, 420)
-        grid = Gtk.Grid()
-        grid.set_column_spacing(8)
-        grid.set_row_spacing(6)
-        grid.attach(Gtk.Label(label="ISBN Number:", xalign=0), 0, 0, 1, 1)
-        entry_isbn = Gtk.Entry()
-        entry_isbn.set_text("978-0-345-39180-3")
-        grid.attach(entry_isbn, 1, 0, 1, 1)
-        box.pack_start(grid, False, False, 0)
-
-        btn_gen = Gtk.Button(label="🏷️ Generate Vector SVG Barcode")
-        btn_gen.get_style_context().add_class("suggested-action")
+    def open_corpus_dialog(self):
+        target = self.current_manuscript_path or str(MANUSCRIPTS_DIR)
+        dialog, box = self._create_dialog_shell("Universal Structured Corpus Exporter", 720, 480)
+        lbl = Gtk.Label(label=f"Export structured JSONL/SQLite RAG corpus for {Path(target).name}.")
+        box.pack_start(lbl, False, False, 0)
+        btn_exp = Gtk.Button(label="📦 Export Structured Corpus")
+        btn_exp.get_style_context().add_class("suggested-action")
         scrolled, out_buf = self._create_dialog_output_view()
-        box.pack_start(btn_gen, False, False, 0)
+        box.pack_start(btn_exp, False, False, 0)
         box.pack_start(scrolled, True, True, 0)
 
-        def _do_gen():
-            isbn = entry_isbn.get_text().strip() or "978-0-345-39180-3"
-            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "barcode.py"), isbn]
-            self._run_dialog_cmd(cmd, out_buf, "Generating barcode...")
+        def _do_exp():
+            cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "corpus_export.py"), "export", target]
+            self._run_dialog_cmd(cmd, out_buf, "Exporting structured corpus...")
 
-        btn_gen.connect("clicked", lambda b: _do_gen())
+        btn_exp.connect("clicked", lambda b: _do_exp())
         dialog.show_all()
         dialog.run()
         dialog.destroy()
@@ -311,7 +283,7 @@ class SpeculativeDialogsMixin:
         base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "portfolio.py")]
         self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Generating Portfolio Hub...")
 
-    def open_tts_dialog(self):
+    def open_branching_dialog(self):
         target = self.current_manuscript_path or str(MANUSCRIPTS_DIR)
-        base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "tts_reader.py"), target]
-        self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Launching Audio Proofreader...")
+        base_cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "branching_graph.py"), target, "--subway"]
+        self._run_dialog_html_cmd(base_cmd, is_svg=False, status_msg="Rendering Multi-POV Narrative Thread Subway Map...")

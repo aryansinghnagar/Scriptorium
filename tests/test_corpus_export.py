@@ -306,5 +306,36 @@ This is paragraph in section two with [[High-Sanctuary]].
             self.assertIn("total_words", data)
 
 
+    def test_restore_corpus_from_jsonl(self):
+        """Verifies restoring a corpus from a JSONL file."""
+        scanner = CorpusScanner(self.root)
+        scanner.scan()
+        out_dir = self.root / "dist" / "corpus"
+        export_jsonl(scanner, out_dir)
+        
+        restore_dir = self.root / "restore_jsonl"
+        from scripts.lib.corpus_export import restore_corpus_from_jsonl
+        restore_corpus_from_jsonl(out_dir / "documents.jsonl", restore_dir)
+        
+        # Verify
+        self.assertTrue((restore_dir / "Characters" / "Aeloria_Vael.md").exists() or (restore_dir / "Characters" / "Aeloria.md").exists() or (restore_dir / "characters" / "Aeloria.md").exists() or list(restore_dir.rglob("*.md")))
+        found_mds = list(restore_dir.rglob("*.md"))
+        self.assertEqual(len(found_mds), 4)
+        
+    def test_restore_corpus_from_sqlite(self):
+        """Verifies restoring a corpus from a SQLite file."""
+        scanner = CorpusScanner(self.root)
+        scanner.scan()
+        db_file = self.root / "dist" / "corpus.db"
+        export_sqlite(scanner, db_file)
+        
+        restore_dir = self.root / "restore_sqlite"
+        from scripts.lib.corpus_export import restore_corpus_from_sqlite
+        restore_corpus_from_sqlite(db_file, restore_dir)
+        
+        # Verify
+        found_mds = list(restore_dir.rglob("*.md"))
+        self.assertEqual(len(found_mds), 4)
+
 if __name__ == "__main__":
     unittest.main()

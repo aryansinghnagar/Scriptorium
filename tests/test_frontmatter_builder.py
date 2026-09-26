@@ -66,5 +66,5 @@ class TestFrontmatterBuilder(unittest.TestCase):
         self.assertIn("by Old Author", copyright_content)
 
 
-if __name__ == "__main__":
-    unittest.main()
+
+

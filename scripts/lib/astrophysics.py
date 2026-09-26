@@ -46,6 +46,12 @@ try:
 except ImportError:
     from _bootstrap import atomic_write
 
+try:
+    from lib.climate import calc_atmospheric_circulation, calc_planetary_insolation
+except ImportError:
+    from climate import calc_atmospheric_circulation, calc_planetary_insolation
+
+
 # --- Physical & Astronomical Constants (SI Units) ---
 C = 299792458.0                          # Speed of light in vacuum (m/s)
 C_SQ = C * C                             # c^2 (m^2/s^2)
@@ -429,6 +435,109 @@ def calc_habitability_gravity(mass_kg: float, radius_m: float, star_luminosity_w
     }
 
 
+
+def calc_planetary_dossier(
+    mass_kg: float, radius_m: float, star_luminosity_watts: float,
+    semi_major_axis_au: float, planet_type: str = "standard",
+    albedo: float = 0.30, greenhouse_k: float = 33.0,
+    rotation_hours: float = 24.0
+) -> dict:
+    hab = calc_habitability_gravity(mass_kg, radius_m, star_luminosity_watts)
+    
+    climate_ins = calc_planetary_insolation(
+        stellar_luminosity=star_luminosity_watts / SOLAR_LUMINOSITY,
+        semi_major_axis_au=semi_major_axis_au,
+        bond_albedo=albedo,
+        greenhouse_warming_k=greenhouse_k
+    )
+    
+    if planet_type == "tidally-locked":
+        # Rough approximation of orbital period in hours assuming 1 solar mass
+        rotation_hours = math.sqrt(semi_major_axis_au ** 3) * 365.25 * 24
+    
+    climate_circ = calc_atmospheric_circulation(rotation_period_hours=rotation_hours)
+
+    warnings = []
+    
+    g_ratio = hab["surface_gravity_g"]
+    if g_ratio > 3.0:
+        warnings.append("High surface gravity: Biological structures would need to be exceptionally squat and robust. Atmosphere will be highly compressed.")
+    elif g_ratio < 0.3:
+        warnings.append("Low surface gravity: May struggle to retain a dense atmosphere over geological timecales.")
+        
+    if planet_type == "tidally-locked":
+        warnings.append("Tidally locked: Permanent dayside and nightside. Expected 'eyeball' world configuration with habitable terminator zone if atmosphere transfers heat.")
+    elif planet_type == "gas-giant-exomoon":
+        warnings.append("Exomoon: Significant tidal heating expected. Day/night cycle dominated by orbit around primary. Watch for eclipses and intense radiation belts.")
+    elif planet_type == "brown-dwarf-world":
+        warnings.append("Brown dwarf system: Minimal visible light, dominated by infrared. Photosynthesis would require specialized pigments. Small habitable zone.")
+    elif planet_type == "circumbinary":
+        warnings.append("Circumbinary (P/S-type): Orbital stability is complex. Insolation will vary significantly over the orbit, leading to extreme seasons.")
+    elif planet_type == "hycean":
+        warnings.append("Hycean: Global ocean with hydrogen-rich atmosphere. High pressures at ocean floor. Biosignatures may differ from Earth-like worlds.")
+
+    if not climate_ins["liquid_water_habitable"]:
+        warnings.append(f"Temperature Drift: Equilibrium surface temp is {climate_ins['surface_temp_c']} °C, outside standard liquid water range.")
+
+    return {
+        "planet_type": planet_type,
+        "habitability_metrics": hab,
+        "climate_insolation": climate_ins,
+        "climate_circulation": climate_circ,
+        "scientific_plausibility_warnings": warnings
+    }
+
+def generate_dossier_html_report(title: str, dossier: dict, output_file: Path):
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{html.escape(title)} — Star System Dossier</title>
+<style>
+  :root {{ --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #c9d1d9; --accent: #58a6ff; --warning: #d29922; }}
+  body {{ background-color: var(--bg); color: var(--text); font-family: sans-serif; padding: 24px; }}
+  .container {{ max-width: 900px; margin: 0 auto; }}
+  .card {{ background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }}
+  h1, h2 {{ color: var(--accent); }}
+  .warning {{ color: var(--warning); font-weight: bold; }}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌌 {html.escape(title)}</h1>
+  <div class="card">
+    <h2>Dossier Overview</h2>
+    <p>Planet Type: <strong>{html.escape(dossier['planet_type'])}</strong></p>
+    <p>Surface Gravity: {dossier['habitability_metrics']['surface_gravity_g']:.2f} g</p>
+    <p>Surface Temp: {dossier['climate_insolation']['surface_temp_c']} °C</p>
+  </div>
+  <div class="card">
+    <h2>Scientific Plausibility Warnings</h2>
+    <ul>
+"""
+    for w in dossier['scientific_plausibility_warnings']:
+        html_content += f"      <li class='warning'>{html.escape(w)}</li>\n"
+    html_content += """
+    </ul>
+  </div>
+</div>
+</body>
+</html>
+"""
+    atomic_write(output_file, html_content)
+
+def generate_dossier_markdown_report(title: str, dossier: dict, output_file: Path):
+    md = f"# {title} - Star System Dossier\n\n"
+    md += f"**Planet Type**: {dossier['planet_type']}\n"
+    md += f"**Surface Gravity**: {dossier['habitability_metrics']['surface_gravity_g']:.2f} g\n"
+    md += f"**Surface Temp**: {dossier['climate_insolation']['surface_temp_c']} °C\n\n"
+    md += "## Scientific Plausibility Warnings\n"
+    for w in dossier['scientific_plausibility_warnings']:
+        md += f"- {w}\n"
+    atomic_write(output_file, md)
+
 # ==============================================================================
 # HTML Export Generator
 # ==============================================================================
@@ -589,6 +698,17 @@ def main():
     p_hab.add_argument("--star-lum", default="1.0", help="Host star luminosity relative to Sun (default: 1.0)")
     p_hab.add_argument("--json", action="store_true", help="Output machine-readable JSON")
 
+    
+    p_dossier = subparsers.add_parser("dossier", help="Generate comprehensive Star System Dossier for non-standard planets")
+    p_dossier.add_argument("--mass", default="1.0", help="Planet mass in Earth masses")
+    p_dossier.add_argument("--radius", default="1.0", help="Planet radius in Earth radii")
+    p_dossier.add_argument("--star-lum", default="1.0", help="Host star luminosity relative to Sun")
+    p_dossier.add_argument("--distance-au", default="1.0", help="Orbital semi-major axis in AU")
+    p_dossier.add_argument("--type", default="standard", choices=["standard", "tidally-locked", "gas-giant-exomoon", "brown-dwarf-world", "circumbinary", "hycean"], help="Non-standard planetary configuration")
+    p_dossier.add_argument("--html", help="Path to export interactive HTML report")
+    p_dossier.add_argument("--md", help="Path to export Markdown report")
+    p_dossier.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+
     args = parser.parse_args()
 
     if not args.subcommand:
@@ -624,6 +744,52 @@ def main():
                 out_p = Path(args.html)
                 generate_astrophysics_html_report(f"Brachistochrone Flight ({args.distance})", {"Trajectory Metrics": res}, out_p)
                 print(f"Interactive HTML report written to: {out_p}")
+
+        
+        elif args.subcommand == "dossier":
+            m_str = str(args.mass).strip().lower()
+            m_kg = float(m_str[:-2]) if m_str.endswith("kg") else float(m_str) * EARTH_MASS
+
+            r_str = str(args.radius).strip().lower()
+            if r_str.endswith("km"):
+                r_m = float(r_str[:-2]) * 1000.0
+            elif r_str.endswith("m"):
+                r_m = float(r_str[:-1])
+            else:
+                r_m = float(r_str) * EARTH_RADIUS
+
+            l_star = float(args.star_lum) * SOLAR_LUMINOSITY
+            d_au = float(args.distance_au)
+
+            res = calc_planetary_dossier(
+                mass_kg=m_kg, radius_m=r_m, star_luminosity_watts=l_star,
+                semi_major_axis_au=d_au, planet_type=args.type
+            )
+
+            if args.json:
+                print(json.dumps(res, indent=2))
+            else:
+                table = [
+                    ("Configuration Type", res["planet_type"]),
+                    ("Surface Gravity", f"{res['habitability_metrics']['surface_gravity_g']:.3f} g"),
+                    ("Surface Temp (Equilibrium)", f"{res['climate_insolation']['surface_temp_c']:.1f} °C"),
+                    ("Habitable (Liquid Water)", str(res['climate_insolation']['liquid_water_habitable'])),
+                ]
+                print_table("Star System Dossier Overview", table)
+                if res['scientific_plausibility_warnings']:
+                    print("\033[1;33mPlausibility & Drift Warnings:\033[0m")
+                    for w in res['scientific_plausibility_warnings']:
+                        print(f"  - {w}")
+                    print()
+
+            if args.html:
+                out_p = Path(args.html)
+                generate_dossier_html_report(f"Dossier ({args.type})", res, out_p)
+                print(f"HTML Dossier exported to {out_p}")
+            if args.md:
+                out_p = Path(args.md)
+                generate_dossier_markdown_report(f"Dossier ({args.type})", res, out_p)
+                print(f"Markdown Dossier exported to {out_p}")
 
         elif args.subcommand == "time-dilation":
             beta_val = args.beta

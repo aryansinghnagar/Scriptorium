@@ -67,16 +67,16 @@ scripts/
 │   ├── _bootstrap.py          # Atomic write, path resolution & common primitives
 │   ├── cli.py                 # Authoritative Python CLI dispatcher (v2.0.0)
 │   ├── ui_gtk3/               # Modular presentation package (<800 lines/file)
+│   ├── ui_adw.py              # Modern Libadwaita interface
 │   ├── registry.py            # Core vs. Craft engine discovery matrix
-│   ├── plugins.py             # Zero-dependency speculative plugin framework
-│   ├── editorial_council.py   # Multi-perspective autonomous review council
+│   ├── studio_hub.py          # Cross-platform browser-based Studio Hub
 │   ├── zen_studio.py          # Standalone offline drafting studio & lore drawer
 │   ├── story_canvas.py        # Visual drag-and-drop story corkboard
 │   ├── timeline_sync.py       # Dual-track narrative vs chronological synchronizer
 │   ├── omnibus.py             # Multi-volume series omnibus compiler
-│   ├── corpus_export.py       # Universal structured JSONL/SQLite RAG exporter
-│   ├── media_overlay.py       # EPUB 3 SMIL media overlays & audio player
-│   └── [40+ Craft Engines]    # Astrophysics, climate, genealogy, conlang, cipher...
+│   ├── corpus_export.py       # Universal structured JSONL/SQLite RAG exporter & vault restore
+│   ├── local_rag.py           # Zero-dependency hybrid TF-IDF & SQLite FTS5 semantic retriever
+│   └── [Craft Engines]        # Astrophysics, climate, genealogy, conlang, causality, magic...
 ```
 
 ---

@@ -36,7 +36,7 @@ class TestStructureEngine(unittest.TestCase):
         expected = [
             "three_act", "save_the_cat", "heros_journey", "story_circle",
             "seven_point", "eight_sequence", "fichtean_curve", "kishotenketsu",
-            "freytags_pyramid"
+            "freytags_pyramid", "romancing_the_beat", "virgins_promise"
         ]
         for p in expected:
             self.assertIn(p, PARADIGMS)

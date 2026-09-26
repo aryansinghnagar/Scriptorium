@@ -199,8 +199,128 @@ def run_monte_carlo(side1_data: list[dict], side2_data: list[dict], terrain: str
     }
 
 
+def plan_warfare_scenario(
+    attacker: dict,
+    defender: dict,
+    terrain: str = "open_field",
+    season: str = "summer"
+) -> dict:
+    """High-level author warfare scenario planner providing qualitative narrative dynamics and Lanchester analysis."""
+    t_mod = TERRAIN_MODIFIERS.get(terrain, TERRAIN_MODIFIERS["open_field"])
+    
+    att_troops = max(1, attacker.get("troops", 1000))
+    def_troops = max(1, defender.get("troops", 1000))
+    att_tech = attacker.get("tech_level", "medieval")
+    def_tech = defender.get("tech_level", "medieval")
+    att_morale = attacker.get("morale", 70)
+    def_morale = defender.get("morale", 70)
+    att_supplies_days = attacker.get("supplies_days", 30)
+
+    # Lanchester Square Law relative combat power: P = quality * (quantity ^ 2)
+    def_mult = 1.0 + (t_mod["def_bonus"] * 0.25)
+    if terrain == "castle_walls":
+        def_mult *= 2.5
+    elif terrain == "dense_forest":
+        def_mult *= 1.3
+
+    att_quality = 1.0 * (1.2 if att_tech == "advanced" else 1.0) * (att_morale / 70.0)
+    def_quality = def_mult * (1.2 if def_tech == "advanced" else 1.0) * (def_morale / 70.0)
+
+    att_combat_power = att_quality * (att_troops ** 2)
+    def_combat_power = def_quality * (def_troops ** 2)
+
+    ratio = att_combat_power / max(1.0, def_combat_power)
+
+    if ratio > 2.0:
+        outcome = "Decisive Attacker Victory"
+        turning_point = "Attacker breaks through the defensive line with overwhelming concentrated force."
+    elif ratio > 1.2:
+        outcome = "Costly Attacker Victory (Pyrrhic)"
+        turning_point = "Heavy attrition forces a grinding advance; defender retreats in orderly fashion."
+    elif ratio > 0.8:
+        outcome = "Contested Stalemate / War of Attrition"
+        turning_point = "Neither side achieves breakthrough; battlefield degenerates into bloody trench/standoff."
+    elif ratio > 0.4:
+        outcome = "Defender Victory / Repulse"
+        turning_point = "Defensive terrain and superior discipline shatter the attacker's forward vanguard."
+    else:
+        outcome = "Catastrophic Attacker Rout"
+        turning_point = "Attacker suffers devastating flanking or defensive trap, causing mass morale collapse."
+
+    frictions = []
+    if att_supplies_days < 14:
+        frictions.append("Critical supply line vulnerability: Attacker risks starvation within two weeks.")
+    if terrain == "dungeon_corridor" or terrain == "dense_forest":
+        frictions.append(f"Terrain friction ({t_mod['name']}): Chokepoints negate numerical superiority.")
+    if season in ("winter", "monsoon"):
+        frictions.append(f"Harsh weather ({season}): Disease, hypothermia, and mud double operational fatigue.")
+
+    narrative_beats = [
+        "1. Opening Engagement: Scouts skirmish; artillery / archer volleys test defensive perimeter.",
+        f"2. Tactical Friction: {frictions[0] if frictions else 'Frontlines clash with intense local friction.'}",
+        f"3. Dramatic Pivot / Turning Point: {turning_point}",
+        f"4. Climax & Resolution: {outcome} with significant political fallout for the region."
+    ]
+
+    return {
+        "scenario": f"{attacker.get('name', 'Attacker')} vs {defender.get('name', 'Defender')}",
+        "terrain": t_mod["name"],
+        "season": season,
+        "predicted_outcome": outcome,
+        "combat_power_ratio": round(ratio, 2),
+        "frictions": frictions,
+        "narrative_turning_point": turning_point,
+        "story_beats": narrative_beats,
+        "lanchester_analysis": {
+            "attacker_effective_power": round(att_combat_power, 1),
+            "defender_effective_power": round(def_combat_power, 1),
+            "theoretical_law": "Lanchester Square Law (aimed/ranged fire) & Linear Law (melee attrition)"
+        }
+    }
+
+
+def get_lanchester_warfare_guide() -> str:
+    """Returns the comprehensive author's reference documentation on Lanchester combat laws and military doctrine."""
+    return """# Ars Arcanum — Writer's Tactical Warfare & Battle Doctrine Reference Guide
+
+## 1. The Mathematics of Warfare: Lanchester's Laws
+
+When crafting realistic battles, narrative tension often hinges on the distinction between two fundamental modes of combat:
+
+### 1.1 Lanchester's Linear Law (Ancient / Unaimed Melee Warfare)
+Applicable when combatants fight in individual one-on-one duels (e.g. ancient shield walls, dense sword skirmishes, or blind area bombardment):
+$$\\frac{dx}{dt} = -\\beta \\cdot y, \\quad \\frac{dy}{dt} = -\\alpha \\cdot x$$
+- **Key Takeaway for Writers**: Combat power is **linear** with troop counts: $P \\propto N$. 
+- Two armies of equal skill will suffer casualties directly proportional to their size. A 2:1 numerical advantage simply requires the larger army to lose half its forces to wipe out the smaller army.
+
+### 1.2 Lanchester's Square Law (Modern / Concentrated Ranged Warfare)
+Applicable when all units on one side can simultaneously target and focus fire on any unit on the other side (e.g. archer volleys, firearms, spellcaster artillery, starship fleet battles):
+$$\\alpha \\cdot (x_0^2 - x^2) = \\beta \\cdot (y_0^2 - y^2)$$
+- **Key Takeaway for Writers**: Combat power scales with the **square of troop numbers**: $P \\propto N^2$.
+- A 2:1 numerical advantage in ranged combat represents a **4:1 combat effectiveness advantage**! The smaller army is decimated with negligible losses to the larger force unless terrain or surprise disrupts concentrated fire.
+
+---
+
+## 2. Terrain & Tactical Asymmetry Multipliers
+
+| Terrain Type | Defender Multiplier | Tactical Narrative Effect |
+|---|---|---|
+| **Castle Walls / Hill Fortress** | $2.5\\times - 3.0\\times$ | Eliminates numerical superiority; requires $3:1$ or $4:1$ attacking force to breach. |
+| **Chokepoint / Thermopylae Pass** | Eliminates $N^2$ | Forces Square Law combat into Linear Law duels where elite quality trumps sheer numbers. |
+| **Dense Forest / Urban Ruins** | $1.3\\times - 1.5\\times$ | Breaks line-of-sight, rendering ranged focus fire impossible and favoring ambush/guerilla tactics. |
+| **Open Plains** | $1.0\\times$ (Neutral) | Maximizes cavalry flanking, shock charges, and ranged concentration. |
+
+---
+
+## 3. The Anatomy of Battle: Narrative Turning Points
+1. **The Fog of War (Clausewitzian Friction)**: Orders get delayed, couriers die, weather ruins bowstrings, and friendly fire occurs.
+2. **Morale Collapse (The Real Killer)**: In pre-modern warfare, $< 10\\%$ of casualties occurred in the battle line; $> 80\\%$ occurred during the rout once an army broke and ran.
+3. **Logistical Exhaustion**: Armies do not lose to swords; they lose to empty granaries, tainted water, dysentery, and severed supply wagons.
+"""
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Ars Arcanum Tactical Combat Simulator (WOR-104)")
+    parser = argparse.ArgumentParser(description="Ars Arcanum Tactical Combat Simulator & Scenario Planner (WOR-104)")
     subparsers = parser.add_subparsers(dest="command", help="Simulation mode")
 
     p_sim = subparsers.add_parser("sim", help="Run skirmish simulation")
@@ -211,11 +331,48 @@ def main():
     p_sim.add_argument("--narrative", action="store_true", help="Print blow-by-blow narrative combat log")
     p_sim.add_argument("--json", action="store_true", help="Output JSON results")
 
+    p_plan = subparsers.add_parser("plan", help="Generate high-level warfare scenario analysis and story beats")
+    p_plan.add_argument("--attacker", help="Attacker name", default="Imperial Legion")
+    p_plan.add_argument("--attacker-troops", type=int, default=2500, help="Attacker troop count")
+    p_plan.add_argument("--defender", help="Defender name", default="Highland Rebels")
+    p_plan.add_argument("--defender-troops", type=int, default=1200, help="Defender troop count")
+    p_plan.add_argument("--terrain", choices=list(TERRAIN_MODIFIERS.keys()), default="castle_walls", help="Battlefield terrain")
+    p_plan.add_argument("--season", choices=["spring", "summer", "autumn", "winter"], default="autumn", help="Campaign season")
+    p_plan.add_argument("--json", action="store_true", help="Output JSON results")
+
+    p_guide = subparsers.add_parser("guide", help="Print the author's Lanchester battle reference guide")
+    p_guide.add_argument("--markdown", action="store_true", help="Print as raw markdown")
+
     args = parser.parse_args()
 
     if not args.command:
         parser.print_help()
         sys.exit(0)
+
+    if args.command == "guide":
+        print(get_lanchester_warfare_guide())
+        return
+
+    if args.command == "plan":
+        att = {"name": args.attacker, "troops": args.attacker_troops}
+        dfn = {"name": args.defender, "troops": args.defender_troops}
+        res = plan_warfare_scenario(att, dfn, terrain=args.terrain, season=args.season)
+        if args.json:
+            print(json.dumps(res, indent=2))
+        else:
+            print(f"=== Warfare Scenario Analysis: {res['scenario']} ===")
+            print(f"Terrain:           {res['terrain']}")
+            print(f"Season:            {res['season']}")
+            print(f"Predicted Outcome: {res['predicted_outcome']} (Ratio: {res['combat_power_ratio']})")
+            print(f"Turning Point:     {res['narrative_turning_point']}")
+            if res["frictions"]:
+                print("\n⚠️ Tactical & Logistical Frictions:")
+                for f in res["frictions"]:
+                    print(f"  • {f}")
+            print("\n📖 Suggested Story Beats:")
+            for b in res["story_beats"]:
+                print(f"  {b}")
+        return
 
     side1 = DEFAULT_SIDE1
     side2 = DEFAULT_SIDE2
@@ -255,3 +412,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

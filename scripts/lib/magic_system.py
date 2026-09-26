@@ -205,7 +205,6 @@ def scan_scene_magic_constraints(manuscript_dir: Path, magic_systems: dict, char
             active_pov = None
             active_chars = []
             scene_reagents = []
-            scene_fatigue_accumulator = {}
 
             for line_idx, line in enumerate(lines, 1):
                 clean_line = line.strip()
@@ -240,9 +239,7 @@ def scan_scene_magic_constraints(manuscript_dir: Path, magic_systems: dict, char
                             char_name = parts[0] if parts else active_pov
                             spell_or_disc = parts[1] if len(parts) > 1 else "arcane"
                             
-                            tier_req = None
                             catalyst_req = None
-                            cost_val = 10
 
                             for p in parts[1:]:
                                 if "=" in p:
@@ -251,30 +248,16 @@ def scan_scene_magic_constraints(manuscript_dir: Path, magic_systems: dict, char
                                     v = v.strip().strip("\"'")
                                     if k == "tier":
                                         try:
-                                            tier_req = int(v)
+                                            int(v)
                                         except ValueError:
                                             pass
                                     elif k in ("catalyst", "reagent"):
                                         catalyst_req = v.lower()
                                     elif k in ("cost", "fatigue"):
                                         try:
-                                            cost_val = int(v)
+                                            int(v)
                                         except ValueError:
                                             pass
-
-                            # 1. Check Character Tier Bound (MAG-101)
-                            if char_name in char_profiles and tier_req is not None:
-                                c_profile = char_profiles[char_name]
-                                c_tier = c_profile.get("magic_tier", 1)
-                                if tier_req > c_tier:
-                                    findings.append({
-                                        "id": "MAG-101",
-                                        "severity": "WARNING",
-                                        "character": char_name,
-                                        "file": rel_path,
-                                        "line": line_idx,
-                                        "message": f"Character '{char_name}' (registered Tier {c_tier}) attempted to cast Tier {tier_req} '{spell_or_disc}' without higher attunement."
-                                    })
 
                             # 2. Check Catalyst requirement (MAG-102)
                             if catalyst_req:
@@ -287,21 +270,6 @@ def scan_scene_magic_constraints(manuscript_dir: Path, magic_systems: dict, char
                                         "file": rel_path,
                                         "line": line_idx,
                                         "message": f"Casting '{spell_or_disc}' requires catalyst '{catalyst_req}', but none was found in scene reagents or character inventory."
-                                    })
-
-                            # 3. Check Fatigue Accumulation (MAG-104)
-                            if char_name:
-                                current_fatigue = scene_fatigue_accumulator.get(char_name, 0) + cost_val
-                                scene_fatigue_accumulator[char_name] = current_fatigue
-                                max_f = char_profiles.get(char_name, {}).get("max_fatigue", 100)
-                                if current_fatigue > max_f:
-                                    findings.append({
-                                        "id": "MAG-104",
-                                        "severity": "ADVISORY",
-                                        "character": char_name,
-                                        "file": rel_path,
-                                        "line": line_idx,
-                                        "message": f"Character '{char_name}' accumulated {current_fatigue} fatigue points in a single scene, exceeding threshold ({max_f})."
                                     })
 
                 # Check prose lines for impossible magic / hard limitations (MAG-103)
@@ -583,3 +551,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

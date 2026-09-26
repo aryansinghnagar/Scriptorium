@@ -681,21 +681,112 @@ def export_markdown_summary(scanner: CorpusScanner, output_file: Path) -> Path:
     return output_file
 
 
+def restore_corpus_from_jsonl(source_path: Path, target_dir: Path) -> None:
+    """Restores corpus documents from a documents.jsonl file."""
+    target_dir.mkdir(parents=True, exist_ok=True)
+    with open(source_path, encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            doc = json.loads(line)
+            # Reconstruct content
+            content_parts = []
+            if doc.get("frontmatter"):
+                content_parts.append("---")
+                # Ensure frontmatter is serialized properly (simple YAML representation)
+                for k, v in doc["frontmatter"].items():
+                    if isinstance(v, list):
+                        content_parts.append(f"{k}:")
+                        for item in v:
+                            content_parts.append(f"  - {json.dumps(item) if isinstance(item, str) else item}")
+                    else:
+                        content_parts.append(f"{k}: {json.dumps(v) if isinstance(v, str) else v}")
+                content_parts.append("---")
+            if doc.get("body"):
+                content_parts.append(doc["body"])
+            else:
+                # If body is missing but chunks exist, reconstruct from chunks
+                # For basic jsonl without body, this is a best effort
+                pass
+            
+            content = "\n".join(content_parts)
+            out_file = target_dir / doc["path"]
+            out_file.parent.mkdir(parents=True, exist_ok=True)
+            atomic_write(out_file, content)
+
+def restore_corpus_from_sqlite(source_path: Path, target_dir: Path) -> None:
+    """Restores corpus documents from a corpus.db SQLite file."""
+    target_dir.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(source_path))
+    cursor = conn.cursor()
+    cursor.execute("SELECT path, frontmatter_json, body FROM documents")
+    for row in cursor.fetchall():
+        path_str, fm_json, body = row
+        out_file = target_dir / path_str
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        fm = json.loads(fm_json) if fm_json else {}
+        content_parts = []
+        if fm:
+            content_parts.append("---")
+            for k, v in fm.items():
+                if isinstance(v, list):
+                    content_parts.append(f"{k}:")
+                    for item in v:
+                        content_parts.append(f"  - {json.dumps(item) if isinstance(item, str) else item}")
+                else:
+                    content_parts.append(f"{k}: {json.dumps(v) if isinstance(v, str) else v}")
+            content_parts.append("---")
+        
+        if body:
+            content_parts.append(body)
+            
+        content = "\n".join(content_parts)
+        atomic_write(out_file, content)
+    conn.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Ars Arcanum Universal Structured Corpus & RAG Dataset Exporter")
-    parser.add_argument("target", help="Universe, World Bible, Manuscript directory or Markdown file")
-    parser.add_argument("--format", "-f", choices=["jsonl", "sqlite", "summary", "both", "all"], default="both", help="Export format (default: both)")
-    parser.add_argument("--output", "-o", help="Output directory or database file path")
-    parser.add_argument("--chunk-size", type=int, default=250, help="Target semantic chunk word size (default: 250)")
-    parser.add_argument("--json", action="store_true", help="Print export summary JSON to stdout")
-    parser.add_argument("--dry-run", action="store_true", help="Scan and report metrics without writing files")
+    subparsers = parser.add_subparsers(dest="subcommand", help="Corpus subcommands (export, restore)")
+    
+    # export command
+    p_export = subparsers.add_parser("export", help="Export corpus to JSONL, SQLite, or Markdown")
+    p_export.add_argument("target", help="Universe, World Bible, Manuscript directory or Markdown file")
+    p_export.add_argument("--format", "-f", choices=["jsonl", "sqlite", "summary", "both", "all"], default="both", help="Export format (default: both)")
+    p_export.add_argument("--output", "-o", help="Output directory or database file path")
+    p_export.add_argument("--chunk-size", type=int, default=250, help="Target semantic chunk word size (default: 250)")
+    p_export.add_argument("--json", action="store_true", help="Print export summary JSON to stdout")
+    p_export.add_argument("--dry-run", action="store_true", help="Scan and report metrics without writing files")
 
-    # If first argument is 'export', strip it for CLI consistency (e.g. arcanum corpus export <target>)
+    # restore command
+    p_restore = subparsers.add_parser("restore", help="Restore corpus from JSONL or SQLite")
+    p_restore.add_argument("source", help="Source file (documents.jsonl or corpus.db)")
+    p_restore.add_argument("target", help="Target directory to restore into")
+
     raw_args = sys.argv[1:]
-    if raw_args and raw_args[0] == "export":
-        raw_args = raw_args[1:]
+    if raw_args and raw_args[0] not in ("export", "restore", "-h", "--help"):
+        # Fallback for legacy arcanum corpus <target> invocation
+        raw_args = ["export", *raw_args]
 
     args = parser.parse_args(raw_args)
+
+    if getattr(args, "subcommand", None) == "restore":
+        print(f"Restoring from {args.source} to {args.target}...")
+        source_path = Path(args.source)
+        target_dir = Path(args.target)
+        if not source_path.exists():
+            print(f"Error: Source file does not exist: {source_path}", file=sys.stderr)
+            sys.exit(1)
+        if source_path.suffix.lower() == ".db":
+            restore_corpus_from_sqlite(source_path, target_dir)
+        elif source_path.suffix.lower() == ".jsonl":
+            restore_corpus_from_jsonl(source_path, target_dir)
+        else:
+            print("Error: Source file must be a .db or .jsonl file", file=sys.stderr)
+            sys.exit(1)
+        print("Restore complete.")
+        sys.exit(0)
 
     target_path = Path(args.target)
     if not target_path.exists():
@@ -759,3 +850,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

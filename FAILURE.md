@@ -19,7 +19,7 @@
 | Risk ID | Description | Severity | Mitigation Strategy | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **R-01** | Obsidian Plugin Hash Drift | High | `tests/test_supply_chain.py` running in CI on every commit | Mitigated |
-| **R-02** | Backup Archive Corruption | Critical | `tar -tzf` pre-verification in `backup_world.sh` | Mitigated |
+| **R-02** | Backup Archive Corruption | Critical | `tar -tzf` pre-verification in `scripts/arcanum backup` | Mitigated |
 | **R-03** | WCAG Contrast Failure in Diffs | Medium | Palette refined & verified via `tests/test_wcag_contrast.py` | Mitigated |
 | **R-04** | Multi-Tier Git Embedded Gitlink Dangling Pointers | High | Formalize `.gitmodules` submodule tracking in Phase 2 | Planned (P2-M4) |
 | **R-05** | `world_doctor` Cyclomatic Complexity (74) | High | Decompose `check_world` into modular category checkers | Planned (P1-M2) |

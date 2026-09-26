@@ -819,7 +819,7 @@ class ArcanumApp(
         if dialog.run() == Gtk.ResponseType.OK:
             name = entry.get_text().strip()
             if name:
-                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "init_universe.sh"), name]
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "universe", name]
                 self.set_status(f"Creating universe '{name}'...")
 
                 def on_universe_created():
@@ -852,7 +852,7 @@ class ArcanumApp(
         if dialog.run() == Gtk.ResponseType.OK:
             wname = entry.get_text().strip()
             if wname:
-                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "init_world.sh"), wname]
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "world", wname]
                 if self.current_universe:
                     cmd.extend(["--universe", self.current_universe])
                 self.set_status(f"Scaffolding world lore vault '{wname}'...")
@@ -890,7 +890,7 @@ class ArcanumApp(
         if dialog.run() == Gtk.ResponseType.OK:
             mname = entry.get_text().strip()
             if mname:
-                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "init_manuscript.sh"), mname]
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "new", "manuscript", mname]
                 if self.current_universe:
                     cmd.extend(["--universe", self.current_universe])
                 if self.current_world_path:
@@ -934,7 +934,7 @@ class ArcanumApp(
 
         if dialog.run() == Gtk.ResponseType.OK:
             note = entry.get_text().strip()
-            cmd = ["bash", str(PROJECT_ROOT / "scripts" / "save_snapshot.sh"), target, "--note", note]
+            cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "snapshot", target, "-m", note]
             self.set_status("Saving version snapshot...")
             self._start_worker(self._run_async_command, args=(cmd, "Snapshot recorded successfully!", self.refresh_snapshot_history))
         dialog.destroy()
@@ -947,7 +947,7 @@ class ArcanumApp(
         note = self.entry_snap_note.get_text().strip() if hasattr(self, "entry_snap_note") else ""
         if not note:
             note = f"Snapshot: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "save_snapshot.sh"), target, "--note", note]
+        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "snapshot", target, "-m", note]
         self.set_status("Saving version milestone snapshot...")
         self._start_worker(self._run_async_command, args=(cmd, "Snapshot recorded successfully!", self.refresh_snapshot_history))
 
@@ -956,7 +956,7 @@ class ArcanumApp(
         if not target:
             self.show_error("Please select an active project first.")
             return
-        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "backup_world.sh"), target]
+        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "backup", target]
         self.set_status("Creating standalone verified backup archive...")
         self._start_worker(self._run_async_command, args=(cmd, "Backup archive created with SHA-256 digest!"))
 
@@ -990,9 +990,9 @@ class ArcanumApp(
 
             if name_dialog.run() == Gtk.ResponseType.OK:
                 target_name = name_entry.get_text().strip()
-                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "restore_world.sh"), "--archive", archive_path, "--target", target_name]
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "restore", archive_path, "--target", target_name]
                 if self.current_universe:
-                    cmd.extend(["--universe", self.current_universe])
+                    cmd.extend(["--dest", f"{UNIVERSES_DIR}/{self.current_universe}"])
                 self.set_status("Restoring project from archive...")
                 self._start_worker(self._run_async_command, args=(cmd, "Project restored and verified successfully!", self.refresh_all_discovery))
             name_dialog.destroy()
@@ -1017,7 +1017,8 @@ class ArcanumApp(
         export_fmt = export_fmt or "book"
 
         cmd = [
-            "bash", str(PROJECT_ROOT / "scripts" / "export_book.sh"),
+            "bash", str(PROJECT_ROOT / "scripts" / "arcanum"),
+            "export",
             target,
             "--title", title,
             "--author", author,
@@ -1125,7 +1126,7 @@ class ArcanumApp(
         if dialog.run() == Gtk.ResponseType.OK:
             vol_name = entry.get_text().strip()
             if vol_name:
-                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "add_book.sh"), target, vol_name]
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "volume", target, vol_name]
                 self.set_status(f"Scaffolding volume '{vol_name}'...")
                 self._start_worker(self._run_async_command, args=(cmd, f"Volume '{vol_name}' created successfully!", self.refresh_after_add_volume))
         dialog.destroy()
@@ -1141,9 +1142,9 @@ class ArcanumApp(
         self.set_status("Scaffolding demo cosmos and manuscript...")
 
         def _worker():
-            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_universe.sh"), demo_uni], capture_output=True, timeout=120)
-            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_world.sh"), demo_world, "--universe", demo_uni], capture_output=True, timeout=120)
-            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "init_manuscript.sh"), demo_ms, "--universe", demo_uni, "--world", demo_world], capture_output=True, timeout=120)
+            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "universe", demo_uni], capture_output=True, timeout=120)
+            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "world", demo_world, "--universe", demo_uni], capture_output=True, timeout=120)
+            subprocess.run(["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "new", "manuscript", demo_ms, "--universe", demo_uni, "--world", demo_world], capture_output=True, timeout=120)
             if HAS_GTK and GLib is not None:
                 GLib.idle_add(self.refresh_all_discovery)
                 GLib.idle_add(self.set_status, "Demo Cosmos & Manuscript created successfully!")
@@ -1303,7 +1304,7 @@ class ArcanumApp(
         if dialog.run() == Gtk.ResponseType.OK:
             draft_name = entry.get_text().strip()
             if draft_name:
-                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "init_draft.sh"), target, draft_name, "-b", vol]
+                cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "draft", target, draft_name, "-b", vol]
                 self.set_status(f"Forking draft '{draft_name}'...")
 
                 def _after_fork():
@@ -1327,7 +1328,7 @@ class ArcanumApp(
             self.show_error("Target draft and prior draft must be different to view changes.")
             return
 
-        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "compare_drafts.sh"), target, draft_b, draft_a, "-b", vol, "--browser"]
+        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "manuscript_diff.py"), target, draft_b, draft_a, "-b", vol, "--browser"]
         self.set_status(f"Generating Redline diff: {draft_a} vs {draft_b}...")
         self._start_worker(self._run_async_command, args=(cmd, "Redline diff opened in browser!"))
 
@@ -1342,7 +1343,7 @@ class ArcanumApp(
         if not draft_b or not draft_a:
             self.show_error("Please select both drafts.")
             return
-        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "compare_drafts.sh"), target, draft_b, draft_a, "-b", vol, "--libreoffice"]
+        cmd = [sys.executable, str(PROJECT_ROOT / "scripts" / "lib" / "manuscript_diff.py"), target, draft_b, draft_a, "-b", vol, "--libreoffice"]
         self.set_status("Launching LibreOffice Writer Track Changes comparison...")
         self._start_worker(self._run_async_command, args=(cmd, "LibreOffice Writer comparison launched."))
 

@@ -138,6 +138,18 @@ An isolated shrine hidden deep in the hills.
         self.assertIn("Crystal Spires", content)
         self.assertIn("const locations =", content)
 
+    def test_generate_html_cartography_viewer_editor_ui(self):
+        locations = [{"id": "Loc1", "name": "Crystal Spires", "type": "capital", "faction": "Mages", "biome": "tundra", "x": 300, "y": 400, "description": "Spires"}]
+        out_html = self.world_dir / "editor_ui.html"
+        generate_cartography_html_viewer(locations, "Editor UI", out_html)
+        content = out_html.read_text(encoding="utf-8")
+        self.assertIn("btn-pan", content)
+        self.assertIn("btn-landmass", content)
+        self.assertIn("btn-poi", content)
+        self.assertIn("btn-route", content)
+        self.assertIn("btn-boundary", content)
+        self.assertIn("exportSVG()", content)
+
     def test_location_type_icons(self):
         self.assertEqual(TYPE_ICONS["capital"], "👑")
         self.assertEqual(TYPE_ICONS["citadel"], "🏰")

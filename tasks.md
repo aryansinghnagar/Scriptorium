@@ -17,15 +17,22 @@
 - [x] Complete Phase 11 (Sovereign Local AI Fine-Tuning Studio & Interactive Branching Fiction Graph - 7/7).
 - [x] Complete Phase 12 (Sovereign Studio Desktop Hub, Grand Tour Lifecycle Verification & Offline Flatpak Runtime - 7/7).
 - [x] Complete Phase 13 (The Sovereign Craft Deepening & Productivity Intelligence - 7/7).
-- [x] Achieve Sovereign OS Grade A+ Release Readiness across 504 tests (502 passed, 2 skipped, 0 failures) — v3.1.0 The Sovereign Craft Deepening.
+- [x] Complete Phase 14 (The Sovereign Crown & Flathub Upstream Hardening - 5/5).
+- [x] Complete Phase 15 (Narrative Diagnostics Expansion - 5/5).
+- [x] Complete Phase 16 (Seven Narrative Craft Engines — Test Expansion & Documentation - 7/7).
+- [x] Complete Phase 17 (Worldbuilding Sciences & Narrative Mechanics Expansion - 8/8).
+- [x] Complete Phase 18 (Authoring Studios, Publishing Toolchains & Creative Scaffolding Expansion - 8/8).
+- [x] Complete Phase 19 (The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Architecture - 8/8).
+- [x] Complete Phase 20 (Granular Trimming, Modernization & Engine Expansion - 10/10).
+- [x] Achieve Sovereign OS Grade A+ Release Readiness across 681 tests (681 passed, 2 skipped, 0 failures) — v4.0.0 Sovereign Streamlined Architecture & Engine Expansion.
 
-### `next` (Post-3.1.0 Ecosystem & Community Growth)
+### `next` (Post-4.0.0 Ecosystem & Community Growth)
 1. **Flathub Submission**: Submit finalized Flathub pull request with `flatpak/build_offline_bundle.sh` offline bundle.
-2. **Community Plugin Submissions**: Accept third-party speculative fiction plugins into the verified catalog.
-3. **Local LLM Fine-Tuning Pipeline**: Automated LoRA dataset formatting from exported SQLite/JSONL corpus.
+2. **Community Starter Universes**: Create additional genre-specific starter universes (Hard Sci-Fi, Cyberpunk, Urban Fantasy).
+3. **Advanced Conlang Sound Law Simulators**: Extended sound-shift chaining visualizations for historical linguistics.
 
 ### `blocked`
-- *None.* All 13 modernization, extensibility, craft, and sovereign AI phases complete with 100% test pass rate across 504 tests (502 passed, 2 skipped, 0 failures). v3.1.0 released.
+- *None.* All 20 modernization, extensibility, craft, and sovereign authoring phases complete with 100% test pass rate across 681 tests (681 passed, 2 skipped, 0 failures). v4.0.0 released.
 
 ### `improve` (Evaluation & Quality Backlog)
 - [x] Add `mypy` type checking in CI and local test suite (`tests/test_type_safety.py`).
@@ -39,11 +46,12 @@
 - [x] Open-source governance charter & funding model (`docs/GOVERNANCE.md`, `docs/SUSTAINABILITY.md`).
 - [x] Multi-distribution package management (Debian, Fedora, Arch AUR, openSUSE).
 - [x] Automated systemd user backup timer (`configs/systemd/arcanum-backup.timer`).
+- [x] Engine streamlining and consolidation of redundant scripts.
 
 ### `recurring` (Automated Sweeps & Invariants)
 - **CI Supply-Chain Sweep**: Daily verification of all 10 Obsidian plugin digests via `tests/test_supply_chain.py`.
 - **Version Parity Check**: Verification of release version synchronization across all surfaces via `tests/test_version_consistency.py`.
 - **Contrast Regression Gate**: Automated WCAG AA ratio calculation via `tests/test_wcag_contrast.py`.
 - **Demo Cosmos Health Check**: Verification that demo cosmos passes doctor with 0 issues via `tests/test_demo_cosmos.py`.
-- **Shell Syntax Gate**: Static `bash -n` verification of all 27 `.sh` scripts via `tests/test_shell_scripts_syntax.py`.
+- **Shell Syntax Gate**: Static `bash -n` verification of shell scripts via `tests/test_shell_scripts_syntax.py`.
 - **Packaging Integrity Gate**: Automated check of Arch PKGBUILD, RPM spec, and systemd units via `tests/test_multi_distro_packaging.py`.

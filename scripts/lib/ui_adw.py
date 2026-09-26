@@ -143,14 +143,14 @@ class ArcanumAppAdw:
         row_new_univ = make_action_row("Create New Universe", "Scaffold an overarching cosmos container")
         btn_u = Gtk.Button(label="New Universe")
         btn_u.set_valign(Gtk.Align.CENTER)
-        btn_u.connect("clicked", lambda x: self._run_script_dialog("init_universe.sh", "Universe Name:"))
+        btn_u.connect("clicked", lambda x: self._run_bg(["bash", str(SCRIPT_DIR / "arcanum"), "universe"], "Universe created"))
         row_new_univ.add_suffix(btn_u)
         group.add(row_new_univ)
 
         row_new_world = make_action_row("Create New World Vault", "Scaffold an Obsidian Lore Bible with full plugin suite")
         btn_w = Gtk.Button(label="New World")
         btn_w.set_valign(Gtk.Align.CENTER)
-        btn_w.connect("clicked", lambda x: self._run_script_dialog("init_world.sh", "World Name:"))
+        btn_w.connect("clicked", lambda x: self._run_bg(["bash", str(SCRIPT_DIR / "arcanum"), "world"], "World vault created"))
         row_new_world.add_suffix(btn_w)
         group.add(row_new_world)
 
@@ -203,12 +203,12 @@ class ArcanumAppAdw:
         row_struct.add_suffix(btn_struct)
         group.add(row_struct)
 
-        row_tts = make_action_row("Audio Proofreader (TTS)", "Listen to chapters with neural WebAudio playback")
-        btn_tts = Gtk.Button(label="Audio Read")
-        btn_tts.set_valign(Gtk.Align.CENTER)
-        btn_tts.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "tts_reader.py"), str(MANUSCRIPTS_DIR)], "Audio Reader opened"))
-        row_tts.add_suffix(btn_tts)
-        group.add(row_tts)
+        row_branch = make_action_row("Multi-POV Narrative Threads", "Subway map visualizer of character storyline splits & rejoins")
+        btn_branch = Gtk.Button(label="Narrative Map")
+        btn_branch.set_valign(Gtk.Align.CENTER)
+        btn_branch.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "branching_graph.py"), str(MANUSCRIPTS_DIR), "--subway"], "Narrative subway map opened"))
+        row_branch.add_suffix(btn_branch)
+        group.add(row_branch)
 
         page.add(group)
         return page
@@ -228,8 +228,8 @@ class ArcanumAppAdw:
             ("Economy & Tech Eras", "PPP commodity basket, price outlier scanner, tech era linter", "economy.py", ["check"]),
             ("Causal DAGs & Multiverse", "Timeline DAG visualizer, Novikov paradox checker", "causality.py", ["check"]),
             ("Climate & Trophic Webs", "Stellar flux insolation, Lindeman 10% trophic webs", "climate.py", ["--star-lum", "1.0"]),
-            ("Earth Idioms & 6D Senses", "Immersion de-eponym linter, 6D sensory palette analyzer", "idioms.py", []),
-            ("Ciphers & Prophecy Matrix", "Caesar/Vigenere/runes SVG cards, oracle fulfillment tracker", "cipher.py", ["runes", "Speak friend"]),
+            ("Earth Idioms & 6D Senses", "Immersion de-eponym linter, 6D sensory palette analyzer", "stylistics.py", ["idiom"]),
+            ("Prophecy & Oracle Matrix", "Prophecy lifecycle clauses & fulfillment verification tracker", "prophecy.py", ["verify"]),
             ("Tactical Combat Simulator", "Turn-based battle simulator & blow-by-blow choreography log", "tactical_sim.py", ["sim"]),
             ("Focus Ambient Generator", "Procedural noise & binaural beat soundscapes", "ambient.py", ["generate"]),
         ]
@@ -248,7 +248,7 @@ class ArcanumAppAdw:
 
     def _create_publishing_page(self) -> Gtk.Widget:
         page = Adw.PreferencesPage()
-        group = make_pref_group("Pre-Flight Typesetting & Publishing Compliance", "Verification, ISBN barcodes, front matter & distribution packaging")
+        group = make_pref_group("Pre-Flight Typesetting & Publishing Compliance", "Verification, structured corpus export, front matter & distribution packaging")
 
         row_preflight = make_action_row("Pre-Flight Typesetting Linter", "Check formatting, metadata, and print-on-demand compliance")
         btn_pref = Gtk.Button(label="Run Pre-Flight")
@@ -257,12 +257,12 @@ class ArcanumAppAdw:
         row_preflight.add_suffix(btn_pref)
         group.add(row_preflight)
 
-        row_barcode = make_action_row("ISBN-13 Barcode Generator", "Generate crisp vector SVG/PNG publishing barcode")
-        btn_bar = Gtk.Button(label="Generate Barcode")
-        btn_bar.set_valign(Gtk.Align.CENTER)
-        btn_bar.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "barcode.py"), "978-0-345-39180-3"], "Barcode generated"))
-        row_barcode.add_suffix(btn_bar)
-        group.add(row_barcode)
+        row_corpus = make_action_row("Structured Corpus Export", "Export or restore complete manuscript and lore corpus")
+        btn_corpus = Gtk.Button(label="Export Corpus")
+        btn_corpus.set_valign(Gtk.Align.CENTER)
+        btn_corpus.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "corpus_export.py"), "export", str(MANUSCRIPTS_DIR)], "Corpus export generated"))
+        row_corpus.add_suffix(btn_corpus)
+        group.add(row_corpus)
 
         row_matter = make_action_row("Modular Front & Back Matter", "Build copyright, dedication, epigraph, and discussion questions")
         btn_mat = Gtk.Button(label="Build Matter")
@@ -317,7 +317,7 @@ class ArcanumAppAdw:
         row_bak = make_action_row("Create Backup Tarball", "Standalone SHA-256 archive of worlds and manuscripts")
         btn_bak = Gtk.Button(label="Backup Now")
         btn_bak.set_valign(Gtk.Align.CENTER)
-        btn_bak.connect("clicked", lambda x: self._run_bg([str(SCRIPT_DIR / "backup_world.sh")], "Backup created successfully"))
+        btn_bak.connect("clicked", lambda x: self._run_bg(["bash", str(SCRIPT_DIR / "arcanum"), "backup", str(WORLDS_DIR)], "Backup created successfully"))
         row_bak.add_suffix(btn_bak)
         group.add(row_bak)
 
@@ -359,14 +359,14 @@ class ArcanumAppAdw:
         row_doc = make_action_row("Run World Doctor", "Verify link integrity, YAML schemas, and chronology")
         btn_doc = Gtk.Button(label="Scan Lore")
         btn_doc.set_valign(Gtk.Align.CENTER)
-        btn_doc.connect("clicked", lambda x: self._run_bg([str(SCRIPT_DIR / "world_doctor.sh"), "--fast"], "World Doctor scan complete"))
+        btn_doc.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "world_doctor.py"), "--fast", str(WORLDS_DIR)], "World Doctor scan complete"))
         row_doc.add_suffix(btn_doc)
         group.add(row_doc)
 
         row_con = make_action_row("Build Concordance", "Generate Dramatis Personae & Glossary back-matter")
         btn_con = Gtk.Button(label="Generate")
         btn_con.set_valign(Gtk.Align.CENTER)
-        btn_con.connect("clicked", lambda x: self._run_bg([str(SCRIPT_DIR / "generate_concordance.sh")], "Concordance generated"))
+        btn_con.connect("clicked", lambda x: self._run_bg([sys.executable, str(SCRIPT_DIR / "lib" / "concordance.py"), str(WORLDS_DIR)], "Concordance generated"))
         row_con.add_suffix(btn_con)
         group.add(row_con)
 
@@ -381,10 +381,10 @@ class ArcanumAppAdw:
         return page
 
     def _on_quick_snapshot(self, widget):
-        self._run_bg([str(SCRIPT_DIR / "save_snapshot.sh"), "-m", "Quick Snapshot via Adw Studio"], "Snapshot saved successfully")
+        self._run_bg(["bash", str(SCRIPT_DIR / "arcanum"), "snapshot", str(MANUSCRIPTS_DIR), "-m", "Quick Snapshot via Adw Studio"], "Snapshot saved successfully")
 
     def _on_export_clicked(self, widget):
-        self._run_bg([str(SCRIPT_DIR / "export_book.sh")], "Export build completed")
+        self._run_bg(["bash", str(SCRIPT_DIR / "arcanum"), "export", str(MANUSCRIPTS_DIR)], "Export build completed")
 
     def _on_check_continuity(self, widget):
         cont_script = SCRIPT_DIR / "lib" / "continuity.py"

@@ -72,5 +72,12 @@ class TestSeriesContinuityEngine(unittest.TestCase):
         self.assertIn("Series Cross-Book Continuity Ledger", out_html.read_text(encoding="utf-8"))
 
 
+
+    def test_custom_attributes(self):
+        (self.b1_dir / "01_Ch.md").write_text("---\nname: Lyra\ncybernetics: arm\n---\n", encoding="utf-8")
+        (self.b2_dir / "01_Ch.md").write_text("---\nname: Lyra\ncybernetics: leg\n---\n", encoding="utf-8")
+        report = scan_series_continuity(self.series_dir)
+        self.assertTrue(any(c["trait"] == "Custom: cybernetics" for c in report["contradictions"]))
+
 if __name__ == "__main__":
     unittest.main()

@@ -118,6 +118,18 @@ def load_calendar_spec(world_dir: Path) -> dict:
                     spec["hours_per_day"] = int(fm.get("hours_per_day", fm.get("day_length_hours", 24)))
                 if "weekdays" in fm and isinstance(fm["weekdays"], list):
                     spec["weekdays"] = fm["weekdays"]
+                if "eras" in fm and isinstance(fm["eras"], list):
+                    parsed_eras = []
+                    for e in fm["eras"]:
+                        if isinstance(e, dict) and "name" in e:
+                            parsed_eras.append({
+                                "name": str(e.get("name")),
+                                "short": str(e.get("short", "")),
+                                "offset": int(e.get("offset", 0)),
+                                "format": str(e.get("format", "{day} {month}, {year} {era}"))
+                            })
+                    if parsed_eras:
+                        spec["eras"] = parsed_eras
                 if "months" in fm and isinstance(fm["months"], list):
                     # Convert list of names to month dicts
                     month_list = []
@@ -198,6 +210,34 @@ def absolute_day_to_date(abs_day: int, cal_spec: dict) -> tuple:
 
     dow_idx = abs_day % len(cal_spec["weekdays"])
     return (year, month_idx, day, dow_idx)
+
+
+def format_date(year: int, month_idx: int, day: int, cal_spec: dict) -> str:
+    """Formats a date string according to the era's custom syntax template."""
+    m_name = cal_spec["months"][month_idx]["name"]
+    abs_day = date_to_absolute_day(year, month_idx, day, cal_spec)
+    dow_idx = abs_day % len(cal_spec["weekdays"])
+    dow_name = cal_spec["weekdays"][dow_idx]
+
+    applicable_era = cal_spec["eras"][0] if cal_spec.get("eras") else {"name": "", "short": "", "offset": 0, "format": "{weekday}, {month} {day}, Year {year}"}
+    for era in sorted(cal_spec.get("eras", []), key=lambda e: e.get("offset", 0), reverse=True):
+        if year >= era.get("offset", 0):
+            applicable_era = era
+            break
+            
+    fmt = applicable_era.get("format", "{weekday}, {month} {day}, Year {year} {era}")
+    era_year = year - applicable_era.get("offset", 0)
+    if era_year <= 0:
+        era_year = abs(era_year) + 1
+        
+    return fmt.format(
+        day=day,
+        month=m_name,
+        year=era_year,
+        era=applicable_era.get("short", ""),
+        era_full=applicable_era.get("name", ""),
+        weekday=dow_name
+    ).strip()
 
 
 def get_moon_phase(abs_day: int, moon: dict) -> dict:
@@ -479,7 +519,8 @@ def main():
 
     # Terminal output
     print(f"\n\033[1;36m=== Ars Arcanum Planetary Calendar: {cal_spec['world']} ===\033[0m")
-    print(f"Current Date: \033[1m{current_dow}, {current_m_name} {calc_day}, Year {calc_yr}\033[0m (Day {abs_day:,} of Era)")
+    formatted = format_date(calc_yr, calc_m_idx, calc_day, cal_spec)
+    print(f"Current Date: \033[1m{formatted}\033[0m (Day {abs_day:,} of Epoch)")
     print(f"Planetary Cycle: \033[32m{cal_spec['days_per_year']} days/year\033[0m | \033[33m{cal_spec['hours_per_day']} hours/day\033[0m\n")
 
     print("\033[1mMoon Phases & Illuminations:\033[0m")
@@ -505,3 +546,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

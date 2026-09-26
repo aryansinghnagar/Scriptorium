@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Ars Arcanum Unified CLI
-# Purpose: Intuitive, human-friendly command-line interface for novel writing,
-#          worldbuilding, typesetting, continuity diagnostics, and backups.
+# Purpose: Intuitive, fail-safe, 100% offline command-line interface for novel
+#          writing, worldbuilding, typesetting, continuity, and backups.
 # ==============================================================================
 
 set -euo pipefail
 
-# PKG-01: dereference symlinks so packaged installs
-# (/usr/bin/arcanum -> /usr/share/ars-arcanum/scripts/arcanum,
-#  /app/bin/arcanum -> /app/share/ars-arcanum/scripts/arcanum)
-# resolve to the real script directory instead of /usr/bin or /app/bin.
+# PKG-01: Dereference symlinks to find real script and project directories
 _RESOLVED_SCRIPT="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || realpath "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
 SCRIPT_DIR="$(cd "$(dirname "${_RESOLVED_SCRIPT}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
@@ -24,7 +21,11 @@ if [ ! -f "${PROJECT_ROOT}/scripts/verify.sh" ] && [ -f "${SCRIPT_DIR}/verify.sh
     fi
 fi
 
-VERSION="3.7.0"
+VERSION="4.0.0"
+
+# Source shared worlds discovery library
+# shellcheck source=scripts/lib/worlds.sh
+source "${PROJECT_ROOT}/scripts/lib/worlds.sh"
 
 usage() {
     cat << USAGE
@@ -38,51 +39,56 @@ Usage:
 ✍️  Core Authoring & Editorial Craft:
   hub [TARGET] [--port PORT]   Launch Sovereign Studio Desktop Hub & Telemetry Dashboard
   write [TARGET]               Open writing workspace in novelWriter or Obsidian (alias: open)
+  studio [MS] [-w WORLD]       Standalone offline Zen drafting studio & in-situ lore drawer
   word [MS]                    Open manuscript in Microsoft Word / LibreOffice (alias: writer)
   docx <build|sync|import|open> Manage Word .docx manuscript synchronization
   new <type> <NAME> [opts]     Scaffold new project (type: manuscript | draft | world | universe | volume)
   draft <MS> [DRAFT_NAME]      Fork next manuscript draft version (alias: new draft, init-draft)
   compare <MS> [D_NEW] [D_OLD] Visual Redline changelog comparison between drafts (alias: diff, redline)
   save [TARGET] [-m "note"]    Save an instant Git version milestone (alias: snapshot)
-  publish [MS] [options]       Compile to print PDF, EPUB, or DOCX (alias: export)
+  publish [MS] [options]       Compile to print PDF, EPUB, or DOCX (alias: export, compile)
   preflight [MS]               Pre-flight typesetting & compliance validator (PUB-101)
-  barcode <ISBN>               Generate publication-grade ISBN-13 vector SVG/PNG barcode (PUB-102)
   matter build [MS]            Generate modular front matter and back matter files (PUB-103)
   query [MS]                   Scaffold submission package: query letter, synopsis, tracker (PUB-106)
   polish typography [TARGET]   Normalize smart curly quotes, em-dashes, and ellipses (PRO-104)
-  read [TARGET] [--speak|--html] Offline neural audio proofreading & WebAudio player (INT-101)
+  rag <QUERY> [opts]           Sovereign local semantic retrieval & LLM context synthesis (alias: query-lore)
+  branch <TARGET> [opts]       Multi-POV narrative thread & convergence subway map (PLT-103)
   words [MS] [--md|--json|--pov] Show live word counts and chapter analytics (alias: report, count)
   pace [MS] [--pov|--html]     Analyze dialogue/action density & prose rhythm
   tension [MS] [--html]        Model chapter tension curve & narrative arcs
   plot [MS] [--html|--matrix]  Multi-track plot grid & subplot pacing matrix (PLT-101)
-  structure [MS] [-p PARADIGM] Story paradigm enforcer: 3-Act, Save the Cat, Hero's Journey (PLT-102)
-  freeze [TARGET] [options]    Cosmos archive freeze & cryptographic provenance seal
-  ambient [PROFILE]            Focus noise & binaural beat synthesizer (PLT-106)
+  structure [MS] [-p PARADIGM] Story paradigm enforcer: 3-Act, 8-Sequence, Kishotenketsu (PLT-102)
+  canvas [MS] [--html|--json]  Interactive visual story canvas & corkboard drag-and-drop
+  timeline [MS|WORLD] [--html] Dual-track chronological vs narrative timeline synchronizer
+  omnibus <UNIVERSE> [--html]  Compile multi-volume series omnibus with unified lore
+  corpus <TARGET> [-f FORMAT]  Universal structured JSONL, SQLite & RAG dataset exporter
+  ambient [PROFILE]            Focus soundscape loop player (PLT-106)
   portfolio [DIR] [--html]     Multi-manuscript catalog dashboard & drafting velocity (OPS-103)
   package [MS] [-t TARGET]     Multi-platform release packager: Reader, Submission, ARC (OPS-101)
+  sprint [MS]                  Sovereign writing sprint timer & productivity analytics
+  revision-heatmap [MS]        Manuscript revision density & churn heatmap
 
 🪐 Universe, World Lore & Series Continuity:
   universe [NAME] [--list]     Create or list narrative universes in ~/Universes/
   world <NAME> [-u UNIVERSE]   Scaffold an Obsidian World Lore Vault
   cast [UNIVERSE] [--html|--md] Multi-volume Dramatis Personae & Universe Cast Matrix (alias: dramatis-personae)
-  map <WORLD> [--html|--svg]   Interactive offline vector cartography & map viewer (WOR-101)
+  map <WORLD> [--html|--svg]   Interactive offline vector cartography & map editor (WOR-101)
   codex <WORLD> [--html]       Compile static offline World Wiki encyclopedia (WOR-102)
   series [TARGET] [--html]     Multi-book series continuity & character trait ledger (WOR-103)
-  sim battle [options]         Turn-based tactical skirmish & battle simulator (WOR-104)
+  sim battle [options]         High-level tactical battle scenario planner (WOR-104)
   concordance <TARGET> [-b]    Generate Dramatis Personae & Glossary back-matter
   continuity [-w W -m MS]      Analyze character traits & narrative consistency (alias: check-continuity)
   faction [WORLD] [--html]     Geopolitical relationship matrix & diplomatic paradoxes
   economy [WORLD] [-m MS]      Macroeconomic currencies, commodity baskets & PPP rates
-  causality [WORLD] [MS]       Causal DAGs, time-travel loop & multiverse branching engine
+  causality [WORLD] [MS]       Multi-paradigm causal DAGs & time-travel validator
   ecology [WORLD] [--html]     Trophic energy pyramids (10% rule) & bestiary food-web
-  magic-check [-w W -m MS]     Verify hard magic system constraints & tier limits
+  magic-check [-w W -m MS]     Verify hard magic system constraints & axioms (advisory)
   magic-report [-w W]          Export comprehensive arcane constraint report
   prophecy [WORLD] [-m MS]     Prophecy lifecycle clauses & fulfillment verification
   genealogy <House|Char>       Compile dynastic lineage trees & Mermaid flowcharts
   lineage <House>              Display succession rank roster & claimants
   conlang <gen|mut|lex> <Lang> Conlang phonotactics, sound-law shift & lexicon
-  cipher <encode|decode|runes> In-world ciphers, Vigenere, Atbash & phonetic runes
-  calendar [WORLD] [--phases]  Planetary calendar arithmetic & multi-moon syzygy
+  calendar [WORLD] [--phases]  Multi-calendar/multi-era invariant chronology & arithmetic
   calc <subcommand>            Astrophysics, climate, battle, logistics & journey calculator
   audit <subcommand>           Prose audits: dialogue, echoes, voice, scenes, structure, tech, idioms, senses
 
@@ -99,13 +105,817 @@ Usage:
   menu                         Launch interactive numbered terminal dashboard (alias: interactive)
   verify                       Run canonical 7-stage test harness
   setup [--dry-run]            Install core packages, typography fonts, and launchers
-  uninstall [--dry-run]        Revert desktop launchers and system components
 
 Global Options:
   -v, --version                Display Ars Arcanum version
   -h, --help                   Display this help menu
 USAGE
 }
+
+# ==============================================================================
+# Built-in Core Operations Subroutines
+# ==============================================================================
+
+cmd_universe() {
+    local list_mode=0
+    local uname=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -l|--list) list_mode=1; shift ;;
+            -n|--name) uname="$2"; shift 2 ;;
+            -h|--help)
+                echo "Usage: arcanum universe [NAME] [--list]"
+                return 0 ;;
+            *) uname="$1"; shift ;;
+        esac
+    done
+
+    mkdir -p "${UNIVERSES_BASE}"
+    if [ "${list_mode}" -eq 1 ] || { [ -z "${uname}" ] && [ ! -t 0 ]; }; then
+        echo "Discovered Universes in ${UNIVERSES_BASE}:"
+        local count=0
+        while IFS= read -r -d '' d; do
+            local bn
+            bn="$(basename "$d")"
+            local worlds_count
+            worlds_count=$(find "${d}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' ! -name '.git' 2>/dev/null | wc -l || echo 0)
+            echo "  • ${bn} (${worlds_count} worlds) -> ${d}"
+            count=$((count + 1))
+        done < <(find "${UNIVERSES_BASE}" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -print0 2>/dev/null)
+        [ "${count}" -eq 0 ] && echo "  (No Universes found yet. Create one with: arcanum universe <name>)"
+        return 0
+    fi
+
+    if [ -z "${uname}" ]; then
+        if has_gui; then
+            uname=$(zenity --entry --title="New Universe" --text="Enter Universe Name:" --entry-text="Default-Universe" || true)
+        else
+            read -rp "Enter Universe Name (default: Default-Universe): " uname
+        fi
+        [ -z "${uname}" ] && uname="Default-Universe"
+    fi
+
+    uname="$(printf '%s' "${uname}" | tr ' ' '-' | tr -cd 'A-Za-z0-9_-' | cut -c1-64)"
+    if [ -z "${uname}" ] || [ "${uname}" = "." ] || [ "${uname}" = ".." ]; then
+        echo "Error: Invalid universe name." >&2; return 1
+    fi
+
+    local target_dir="${UNIVERSES_BASE}/${uname}"
+    if [ -d "${target_dir}" ]; then
+        echo "Universe '${uname}' already exists at: ${target_dir}"
+        return 0
+    fi
+
+    echo "Scaffolding Narrative Universe: ${uname} ..."
+    mkdir -p "${target_dir}"
+
+    cat << EOF > "${target_dir}/universe.yaml"
+# Ars Arcanum Universe Manifest
+schema_version: "1.0"
+name: "${uname}"
+created_at: "$(date +%Y-%m-%d)"
+description: "Narrative Universe housing interconnected worlds and lore."
+EOF
+
+    cat << EOF > "${target_dir}/Universe-Index.md"
+---
+type: universe_index
+universe: "${uname}"
+created: "$(date +%Y-%m-%d)"
+tags:
+  - meta/universe
+---
+
+# 🌌 ${uname} — Narrative Universe Hub
+
+**Universe**: \`${uname}\`  
+**Created**: $(date +%Y-%m-%d)  
+
+This central index coordinates all interconnected worlds, overarching continuity, shared celestial mechanics, and cross-world lore across the **${uname}** cosmos.
+EOF
+
+    cat << 'EOF' > "${target_dir}/.gitignore"
+*.bak
+*.tmp
+*.log
+.DS_Store
+EOF
+
+    if command -v git &>/dev/null; then
+        (
+            cd "${target_dir}"
+            git init -q
+            git add .
+            git_commit_safe "Initial Ars Arcanum universe repository: ${uname}"
+        ) || true
+    fi
+
+    echo "[✓] Universe '${uname}' created successfully at: ${target_dir}"
+}
+
+cmd_world() {
+    local wname=""
+    local uname=""
+    local legacy_root=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -u|--universe) uname="$2"; shift 2 ;;
+            -n|--name) wname="$2"; shift 2 ;;
+            --legacy-worlds-dir) legacy_root=1; shift ;;
+            -h|--help)
+                echo "Usage: arcanum world <NAME> [-u UNIVERSE] [--legacy-worlds-dir]"
+                return 0 ;;
+            *) wname="$1"; shift ;;
+        esac
+    done
+
+    if [ -z "${wname}" ]; then
+        if has_gui; then
+            wname=$(zenity --entry --title="New World Lore Vault" --text="Enter World Name:" --entry-text="New-World" || true)
+        else
+            read -rp "Enter World Name: " wname
+        fi
+    fi
+
+    wname="$(printf '%s' "${wname}" | tr ' ' '-' | tr -cd 'A-Za-z0-9_-' | cut -c1-64)"
+    if [ -z "${wname}" ] || [ "${wname}" = "." ] || [ "${wname}" = ".." ]; then
+        echo "Error: Invalid world name." >&2; return 1
+    fi
+
+    local dest_parent=""
+    if [ "${legacy_root}" -eq 1 ]; then
+        dest_parent="${LEGACY_WORLDS_BASE}"
+    elif [ -n "${uname}" ]; then
+        dest_parent="${UNIVERSES_BASE}/${uname}"
+    else
+        dest_parent="${UNIVERSES_BASE}/Default-Universe"
+    fi
+    mkdir -p "${dest_parent}"
+
+    local target_dir="${dest_parent}/${wname}"
+    if [ -d "${target_dir}" ]; then
+        echo "Error: World '${wname}' already exists at: ${target_dir}" >&2
+        return 1
+    fi
+
+    echo "Scaffolding World Lore Bible: ${wname} ..."
+    local tpl_dir="${PROJECT_ROOT}/templates/world-bible"
+    if [ -d "${tpl_dir}" ]; then
+        cp -r "${tpl_dir}" "${target_dir}"
+    else
+        mkdir -p "${target_dir}/Characters" "${target_dir}/Locations" "${target_dir}/Factions" "${target_dir}/Magic" "${target_dir}/Cosmology" "${target_dir}/Timeline" "${target_dir}/05-Backups"
+    fi
+
+    cat << EOF > "${target_dir}/world.yaml"
+# Ars Arcanum World Bible Manifest
+schema_version: "1.0"
+world_name: "${wname}"
+universe: "${uname:-Default-Universe}"
+created_at: "$(date +%Y-%m-%d)"
+EOF
+
+    cat << 'EOF' > "${target_dir}/.gitignore"
+.obsidian/workspace.json
+.obsidian/cache
+*.bak
+*.tmp
+*.log
+.DS_Store
+05-Backups/
+Backups/
+Exports/
+EOF
+
+    if command -v git &>/dev/null; then
+        (
+            cd "${target_dir}"
+            git init -q
+            git add .
+            git_commit_safe "Initial Ars Arcanum World Lore Vault: ${wname}"
+        ) || true
+    fi
+
+    echo "[✓] World Lore Bible '${wname}' created successfully at: ${target_dir}"
+}
+
+cmd_manuscript() {
+    local mname=""
+    local uname=""
+    local wname=""
+    local author="Author Name"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -u|--universe) uname="$2"; shift 2 ;;
+            -w|--world) wname="$2"; shift 2 ;;
+            -a|--author) author="$2"; shift 2 ;;
+            -n|--name) mname="$2"; shift 2 ;;
+            -h|--help)
+                echo "Usage: arcanum manuscript <NAME> [-u UNIVERSE] [-w WORLD] [-a AUTHOR]"
+                return 0 ;;
+            *) mname="$1"; shift ;;
+        esac
+    done
+
+    if [ -z "${mname}" ]; then
+        if has_gui; then
+            mname=$(zenity --entry --title="New Manuscript" --text="Enter Manuscript Name:" --entry-text="My-Novel" || true)
+        else
+            read -rp "Enter Manuscript Name: " mname
+        fi
+    fi
+
+    mname="$(printf '%s' "${mname}" | tr ' ' '-' | tr -cd 'A-Za-z0-9_-' | cut -c1-64)"
+    if [ -z "${mname}" ] || [ "${mname}" = "." ] || [ "${mname}" = ".." ]; then
+        echo "Error: Invalid manuscript name." >&2; return 1
+    fi
+
+    local target_dir="${MANUSCRIPTS_BASE}/${mname}"
+    mkdir -p "${MANUSCRIPTS_BASE}"
+
+    if [ -d "${target_dir}" ]; then
+        echo "Error: Manuscript '${mname}' already exists at: ${target_dir}" >&2
+        return 1
+    fi
+
+    echo "Scaffolding Manuscript Project: ${mname} ..."
+    local tpl_dir="${PROJECT_ROOT}/templates/manuscript"
+    if [ -d "${tpl_dir}" ]; then
+        cp -r "${tpl_dir}" "${target_dir}"
+    else
+        mkdir -p "${target_dir}/Book-01/01_Act_I" "${target_dir}/Book-01/02_Act_II" "${target_dir}/Book-01/03_Act_III" "${target_dir}/03-Art" "${target_dir}/04-Publishing" "${target_dir}/05-Backups"
+    fi
+
+    cat << EOF > "${target_dir}/manuscript.yaml"
+# Ars Arcanum Manuscript Manifest
+schema_version: "1.0"
+title: "${mname}"
+author: "${author}"
+universe: "${uname:-Default-Universe}"
+world: "${wname:-}"
+created_at: "$(date +%Y-%m-%d)"
+EOF
+
+    cat << 'EOF' > "${target_dir}/.gitignore"
+*.bak
+*.tmp
+*.log
+.DS_Store
+05-Backups/
+Backups/
+04-Publishing/
+Exports/
+EOF
+
+    if command -v git &>/dev/null; then
+        (
+            cd "${target_dir}"
+            git init -q
+            git add .
+            git_commit_safe "Initial Ars Arcanum Manuscript: ${mname}"
+        ) || true
+    fi
+
+    echo "[✓] Manuscript '${mname}' created successfully at: ${target_dir}"
+}
+
+cmd_volume() {
+    local ms_target=""
+    local vol_name=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -m|--manuscript) ms_target="$2"; shift 2 ;;
+            -n|--name) vol_name="$2"; shift 2 ;;
+            -h|--help)
+                echo "Usage: arcanum add-volume <MANUSCRIPT> [VOLUME_NAME]"
+                return 0 ;;
+            *)
+                if [ -z "${ms_target}" ]; then ms_target="$1"; else vol_name="$1"; fi
+                shift ;;
+        esac
+    done
+
+    local resolved_ms
+    resolved_ms="$(resolve_manuscript_dir "${ms_target}")"
+    if [ -z "${resolved_ms}" ] || [ ! -d "${resolved_ms}" ]; then
+        resolved_ms="$(resolve_target_dir "${ms_target}")"
+    fi
+    if [ -z "${resolved_ms}" ] || [ ! -d "${resolved_ms}" ]; then
+        echo "Error: Manuscript '${ms_target}' not found." >&2; return 1
+    fi
+
+    if [ -z "${vol_name}" ]; then
+        local highest=1
+        for b in "${resolved_ms}"/Book-*; do
+            if [ -d "${b}" ]; then
+                local num
+                num="$(basename "$b" | grep -oE '[0-9]+$' || echo 0)"
+                [ "${num}" -gt "${highest}" ] && highest="${num}"
+            fi
+        done
+        local next_num=$((highest + 1))
+        vol_name=$(printf "Book-%02d" "${next_num}")
+    fi
+
+    arcanum_validate_volume_name "${vol_name}" || return 2
+    local target_vol="${resolved_ms}/${vol_name}"
+    if [ -d "${target_vol}" ]; then
+        echo "Error: Volume '${vol_name}' already exists in '${resolved_ms}'." >&2; return 1
+    fi
+
+    echo "Adding Volume '${vol_name}' to '${resolved_ms}'..."
+    mkdir -p "${target_vol}/01_Act_I" "${target_vol}/02_Act_II" "${target_vol}/03_Act_III" "${target_vol}/04_Back_Matter"
+
+    cat << EOF > "${target_vol}/01_Act_I/01_Chapter_01.md"
+# Chapter 1
+
+Begin writing ${vol_name} here...
+EOF
+
+    if command -v git &>/dev/null; then
+        (
+            cd "${target_vol}"
+            git init -q
+            git add .
+            git_commit_safe "Initial volume repository: ${vol_name}"
+        ) || true
+    fi
+
+    echo "[✓] Volume '${vol_name}' scaffolded at: ${target_vol}"
+}
+
+cmd_draft() {
+    local ms_target="${1:-}"
+    local draft_name="${2:-Draft-02}"
+    local vol="Book-01"
+    shift 2 2>/dev/null || true
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -b|--book|--volume) vol="$2"; shift 2 ;;
+            *) shift ;;
+        esac
+    done
+
+    local resolved_ms
+    resolved_ms="$(resolve_manuscript_dir "${ms_target}")"
+    if [ -z "${resolved_ms}" ] || [ ! -d "${resolved_ms}" ]; then
+        resolved_ms="$(resolve_target_dir "${ms_target}")"
+    fi
+    if [ -z "${resolved_ms}" ] || [ ! -d "${resolved_ms}" ]; then
+        echo "Error: Manuscript '${ms_target}' not found." >&2; return 1
+    fi
+
+    local book_dir="${resolved_ms}/${vol}"
+    if [ ! -d "${book_dir}" ]; then
+        book_dir="${resolved_ms}"
+    fi
+
+    local target_draft="${book_dir}/${draft_name}"
+    if [ -d "${target_draft}" ]; then
+        echo "Error: Draft '${draft_name}' already exists in '${book_dir}'." >&2; return 1
+    fi
+
+    echo "Forking draft '${draft_name}' in '${book_dir}'..."
+    mkdir -p "${target_draft}"
+
+    # Copy chapters from primary acts
+    for act in "${book_dir}"/0[1-9]_Act_*; do
+        if [ -d "${act}" ]; then
+            local act_name
+            act_name="$(basename "${act}")"
+            cp -r "${act}" "${target_draft}/${act_name}"
+        fi
+    done
+
+    echo "[✓] Draft '${draft_name}' created at: ${target_draft}"
+}
+
+cmd_snapshot() {
+    local target_input=""
+    local note=""
+    local universe_filter=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -w|--world|-m|--manuscript) target_input="$2"; shift 2 ;;
+            -u|--universe) universe_filter="$2"; shift 2 ;;
+            -m|--note) note="$2"; shift 2 ;;
+            -h|--help)
+                echo "Usage: arcanum snapshot [TARGET] [-m NOTE]"
+                return 0 ;;
+            *)
+                if [ -z "${target_input}" ]; then target_input="$1"; else note="$1"; fi
+                shift ;;
+        esac
+    done
+
+    if ! command -v git &>/dev/null; then
+        echo "Error: git is required to create snapshots." >&2; return 2
+    fi
+
+    discover_worlds WORLDS
+    discover_manuscripts MANUSCRIPTS
+
+    local selected=""
+    if [ -n "${target_input}" ]; then
+        selected="$(resolve_target_dir "${target_input}" "${universe_filter}")"
+    elif [ ${#WORLDS[@]} -eq 1 ] && [ ${#MANUSCRIPTS[@]} -eq 0 ]; then
+        selected="${WORLDS[0]}"
+    elif [ ${#WORLDS[@]} -eq 0 ] && [ ${#MANUSCRIPTS[@]} -eq 1 ]; then
+        selected="${MANUSCRIPTS[0]}"
+    else
+        local all_t=("${MANUSCRIPTS[@]}" "${WORLDS[@]}")
+        if [ ${#all_t[@]} -eq 1 ]; then
+            selected="${all_t[0]}"
+        elif [ ${#all_t[@]} -gt 1 ]; then
+            selected="${all_t[0]}"
+        fi
+    fi
+
+    if [ -z "${selected}" ] || [ ! -d "${selected}" ]; then
+        echo "Error: Target '${target_input}' not found." >&2; return 2
+    fi
+
+    local target_name
+    target_name="$(basename "${selected}")"
+    cd "${selected}"
+
+    if [ ! -d ".git" ]; then
+        git init -q
+        cat << 'EOF' > .gitignore
+.obsidian/workspace.json
+.obsidian/cache
+*.bak
+*.tmp
+*.log
+.DS_Store
+Backups/
+05-Backups/
+Exports/
+04-Publishing/
+EOF
+        git -c advice.addEmbeddedRepo=false add .
+        git_commit_safe "Initial repository creation for ${target_name}" || true
+    fi
+
+    local ts
+    ts="$(date '+%Y-%m-%d %H:%M')"
+    [ -z "${note}" ] && note="Snapshot: ${ts}"
+
+    git -c advice.addEmbeddedRepo=false add -A
+    if git diff --cached --quiet; then
+        echo "No uncommitted changes in '${target_name}' since last snapshot."
+        return 0
+    fi
+
+    if git_commit_safe "${note}"; then
+        echo "[✓] Snapshot saved successfully for '${target_name}'! (Note: ${note})"
+    else
+        echo "[!] Snapshot failed: git commit rejected the change." >&2; return 1
+    fi
+}
+
+cmd_backup() {
+    local target_input=""
+    local dest_cli=""
+    local no_local=0
+    local encrypted=0
+    local passphrase=""
+    local universe_cli=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -w|--world|-m|--manuscript) target_input="$2"; shift 2 ;;
+            -u|--universe) universe_cli="$2"; shift 2 ;;
+            -d|--dest) dest_cli="$2"; shift 2 ;;
+            --no-local) no_local=1; shift ;;
+            --symmetric|--encrypted) encrypted=1; shift ;;
+            --passphrase) passphrase="$2"; shift 2 ;;
+            -h|--help)
+                echo "Usage: arcanum backup [TARGET] [-d DEST] [--no-local] [--symmetric] [--passphrase PASS]"
+                return 0 ;;
+            *)
+                if [ -z "${target_input}" ]; then target_input="$1"; fi
+                shift ;;
+        esac
+    done
+
+    local world_dir
+    world_dir="$(resolve_target_dir "${target_input}" "${universe_cli}")"
+    if [ -z "${world_dir}" ] || [ ! -d "${world_dir}" ]; then
+        echo "Error: Directory not found: ${target_input}" >&2; return 2
+    fi
+
+    local world_name
+    world_name="$(basename "${world_dir}")"
+    local timestamp
+    timestamp="$(date +%Y%m%d-%H%M%S)"
+    local safe_name
+    safe_name="$(sanitize_name "${world_name}" "project")"
+
+    local local_backup_dir="${world_dir}/05-Backups"
+    [ ! -d "${local_backup_dir}" ] && local_backup_dir="${world_dir}/Backups"
+    mkdir -p "${local_backup_dir}"
+
+    local primary_backup_dir="${local_backup_dir}"
+    if [ -n "${dest_cli}" ] && [ "${no_local}" -eq 1 ]; then
+        primary_backup_dir="${dest_cli}"
+    fi
+    mkdir -p "${primary_backup_dir}"
+
+    local archive_base="${safe_name}-backup-${timestamp}"
+    local archive_tar="${primary_backup_dir}/${archive_base}.tar.gz"
+    local checksum_file="${primary_backup_dir}/${archive_base}.sha256"
+    local meta_file="${primary_backup_dir}/${archive_base}.meta.json"
+
+    echo "Creating verified backup archive for: ${world_name} ..."
+    local parent_dir
+    parent_dir="$(dirname "${world_dir}")"
+    local dir_basename
+    dir_basename="$(basename "${world_dir}")"
+
+    tar -czf "${archive_tar}" \
+        -C "${parent_dir}" \
+        --sort=name \
+        --owner=0 --group=0 --numeric-owner \
+        --exclude="${dir_basename}/05-Backups" \
+        --exclude="${dir_basename}/Backups" \
+        --exclude="${dir_basename}/Exports" \
+        --exclude="${dir_basename}/04-Publishing" \
+        --exclude="${dir_basename}/.obsidian/workspace.json" \
+        --exclude="${dir_basename}/.obsidian/cache" \
+        --exclude="*.bak" \
+        --exclude="*.tmp" \
+        --exclude="*.log" \
+        "${dir_basename}"
+
+    if [ ! -s "${archive_tar}" ] || ! tar -tzf "${archive_tar}" >/dev/null 2>&1; then
+        echo "Error: Backup archive creation failed or corrupt: ${archive_tar}" >&2
+        rm -f "${archive_tar}"
+        return 1
+    fi
+
+    local final_archive="${archive_tar}"
+    local final_archive_name="${archive_base}.tar.gz"
+    local enc_type="none"
+
+    if [ "${encrypted}" -eq 1 ]; then
+        local gpg_cmd="gpg"
+        command -v gpg &>/dev/null || gpg_cmd="gpg2"
+        local archive_gpg="${primary_backup_dir}/${archive_base}.tar.gz.gpg"
+        local gpg_args=(--batch --yes)
+        [ -n "${passphrase}" ] && gpg_args+=(--pinentry-mode loopback --passphrase "${passphrase}")
+        "${gpg_cmd}" "${gpg_args[@]}" --symmetric --cipher-algo AES256 -o "${archive_gpg}" "${archive_tar}"
+        rm -f "${archive_tar}"
+        final_archive="${archive_gpg}"
+        final_archive_name="${archive_base}.tar.gz.gpg"
+        enc_type="symmetric"
+    fi
+
+    local actual_sha
+    actual_sha="$(sha256sum "${final_archive}" | cut -d' ' -f1)"
+    echo "${actual_sha}  ${final_archive_name}" > "${checksum_file}"
+
+    local git_commit="none"
+    if [ -d "${world_dir}/.git" ] && command -v git &>/dev/null; then
+        git_commit="$(git -C "${world_dir}" rev-parse HEAD 2>/dev/null || echo "none")"
+    fi
+    local archive_bytes
+    archive_bytes="$(wc -c < "${final_archive}" | tr -d ' ')"
+
+    python3 -c '
+import json, sys
+meta = {
+    "world": sys.argv[1],
+    "timestamp": sys.argv[2],
+    "archive": sys.argv[3],
+    "sha256": sys.argv[4],
+    "size_bytes": int(sys.argv[5]),
+    "git_commit": sys.argv[6],
+    "note": "auto-backup",
+    "encrypted": sys.argv[7] == "1",
+    "encryption_type": sys.argv[8],
+}
+with open(sys.argv[9], "w", encoding="utf-8") as f:
+    json.dump(meta, f, indent=2)
+    f.write("\n")
+' "${world_name}" "${timestamp}" "${final_archive_name}" "${actual_sha}" "${archive_bytes}" "${git_commit}" "${encrypted}" "${enc_type}" "${meta_file}"
+
+    echo "[✓] Primary backup archive created and verified:"
+    echo "    Archive:  ${final_archive}"
+    echo "    SHA-256:  ${actual_sha}"
+    echo "    Metadata: ${meta_file}"
+}
+
+cmd_restore() {
+    local archive_input=""
+    local target_name=""
+    local dest_cli=""
+    local force=0
+    local passphrase=""
+    local skip_checksum=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -a|--archive) archive_input="$2"; shift 2 ;;
+            -t|--target) target_name="$2"; shift 2 ;;
+            -d|--dest) dest_cli="$2"; shift 2 ;;
+            -f|--force) force=1; shift ;;
+            --skip-checksum) skip_checksum=1; shift ;;
+            --passphrase) passphrase="$2"; shift 2 ;;
+            -h|--help)
+                echo "Usage: arcanum restore <ARCHIVE.tar.gz> [--target NAME] [--dest DEST] [--force] [--passphrase PASS]"
+                return 0 ;;
+            *)
+                if [ -z "${archive_input}" ]; then archive_input="$1"; fi
+                shift ;;
+        esac
+    done
+
+    if [ -z "${archive_input}" ] || [ ! -f "${archive_input}" ]; then
+        echo "Error: Archive file not found: '${archive_input}'." >&2; return 1
+    fi
+
+    local archive_path
+    archive_path="$(realpath "${archive_input}" 2>/dev/null || echo "${archive_input}")"
+    local archive_dir
+    archive_dir="$(dirname "${archive_path}")"
+    local archive_file
+    archive_file="$(basename "${archive_path}")"
+
+    # Checksum validation
+    local sha_file=""
+    local base_no_gpg="${archive_file%.gpg}"
+    local base_no_tar="${base_no_gpg%.tar.gz}"
+    if [ -f "${archive_dir}/${base_no_tar}.sha256" ]; then
+        sha_file="${archive_dir}/${base_no_tar}.sha256"
+    elif [ -f "${archive_dir}/${archive_file}.sha256" ]; then
+        sha_file="${archive_dir}/${archive_file}.sha256"
+    fi
+
+    if [ "${skip_checksum}" -eq 0 ] && [ -n "${sha_file}" ]; then
+        local expected_sha
+        expected_sha="$(head -n 1 "${sha_file}" | cut -d' ' -f1)"
+        local actual_sha
+        actual_sha="$(sha256sum "${archive_path}" | cut -d' ' -f1)"
+        if [ "${expected_sha}" != "${actual_sha}" ]; then
+            echo "Error: SHA-256 checksum verification failed!" >&2; return 1
+        fi
+        echo "[✓] SHA-256 Checksum Verified."
+    fi
+
+    local staging_dir
+    staging_dir="$(mktemp -d -t arcanum_restore_XXXXXX)"
+    trap 'rm -rf "${staging_dir:-}"' RETURN EXIT
+
+    local target_tar="${archive_path}"
+    if [[ "${archive_file}" == *.gpg ]]; then
+        local gpg_cmd="gpg"
+        command -v gpg &>/dev/null || gpg_cmd="gpg2"
+        local dec_tar="${staging_dir}/decrypted.tar.gz"
+        local gpg_args=(--batch --yes)
+        [ -n "${passphrase}" ] && gpg_args+=(--pinentry-mode loopback --passphrase "${passphrase}")
+        if ! "${gpg_cmd}" "${gpg_args[@]}" --decrypt -o "${dec_tar}" "${archive_path}" 2>/dev/null; then
+            echo "Error: GPG decryption failed." >&2; return 1
+        fi
+        target_tar="${dec_tar}"
+    fi
+
+    tar -xzf "${target_tar}" -C "${staging_dir}" --no-same-owner --no-same-permissions
+
+    local extracted_dir
+    extracted_dir="$(find "${staging_dir}" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+    if [ -z "${extracted_dir}" ] || [ ! -d "${extracted_dir}" ]; then
+        echo "Error: Archive did not contain a root project directory." >&2; return 1
+    fi
+
+    local orig_name
+    orig_name="$(basename "${extracted_dir}")"
+    local final_name="${target_name:-${orig_name}}"
+    final_name="$(printf '%s' "${final_name}" | tr ' ' '-' | tr -cd 'A-Za-z0-9_-' | cut -c1-64)"
+    if [ -z "${final_name}" ] || [ "${final_name}" = "." ] || [ "${final_name}" = ".." ]; then
+        echo "Error: Invalid restore target name." >&2; return 1
+    fi
+
+    local dest_parent="${dest_cli}"
+    if [ -z "${dest_parent}" ]; then
+        if [ -f "${extracted_dir}/manuscript.yaml" ] || [ -d "${extracted_dir}/Book-01" ]; then
+            dest_parent="${MANUSCRIPTS_BASE}"
+        else
+            dest_parent="${UNIVERSES_BASE}/Default-Universe"
+        fi
+    fi
+    mkdir -p "${dest_parent}"
+
+    local final_target="${dest_parent}/${final_name}"
+    if [ -d "${final_target}" ]; then
+        if [ "${force}" -eq 1 ]; then
+            rm -rf "${final_target}"
+        else
+            echo "Error: Target directory '${final_target}' already exists. Use --force to overwrite." >&2
+            return 1
+        fi
+    fi
+
+    mv "${extracted_dir}" "${final_target}"
+    echo "[✓] Project successfully restored to: ${final_target}"
+}
+
+cmd_export() {
+    local target_input=""
+    local title=""
+    local author="Author Name"
+    local volume="Book-01"
+    local paper_size="us-trade"
+    local export_fmt="book"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --title) title="$2"; shift 2 ;;
+            --author) author="$2"; shift 2 ;;
+            -b|--book|--volume) volume="$2"; shift 2 ;;
+            -p|--paper-size) paper_size="$2"; shift 2 ;;
+            -f|--format) export_fmt="$2"; shift 2 ;;
+            --docx) export_fmt="docx"; shift ;;
+            -h|--help)
+                echo "Usage: arcanum export <MANUSCRIPT> [--format book|submission|all] [--book Book-01] [--paper-size us-trade]"
+                return 0 ;;
+            *)
+                if [ -z "${target_input}" ]; then target_input="$1"; fi
+                shift ;;
+        esac
+    done
+
+    local target_dir
+    target_dir="$(resolve_manuscript_dir "${target_input}")"
+    if [ -z "${target_dir}" ] || [ ! -d "${target_dir}" ]; then
+        target_dir="$(resolve_target_dir "${target_input}")"
+    fi
+    if [ -z "${target_dir}" ] || [ ! -d "${target_dir}" ]; then
+        echo "Error: Target manuscript not found: '${target_input}'." >&2; return 1
+    fi
+
+    [ -z "${title}" ] && title="$(basename "${target_dir}")"
+    local pub_dir="${target_dir}/04-Publishing"
+    [ ! -d "${pub_dir}" ] && pub_dir="${target_dir}/Exports"
+    mkdir -p "${pub_dir}"
+
+    local safe_stem
+    safe_stem="$(sanitize_name "${title}_${volume}" "novel")"
+    local pdf_out="${pub_dir}/${safe_stem}.pdf"
+    local epub_out="${pub_dir}/${safe_stem}.epub"
+    local docx_out="${pub_dir}/${safe_stem}_Submission.docx"
+
+    echo "Compiling manuscript '${title}' (${volume})..."
+    local temp_work_dir
+    temp_work_dir="$(mktemp -d -t arcanum_exp_XXXXXX)"
+    trap 'rm -rf "${temp_work_dir:-}"' RETURN EXIT
+
+    local combined_md="${temp_work_dir}/manuscript_combined.md"
+    touch "${combined_md}"
+
+    local search_dir="${target_dir}/${volume}"
+    [ ! -d "${search_dir}" ] && search_dir="${target_dir}"
+
+    for md_file in $(find "${search_dir}" -type f -name "*.md" ! -name ".*" | sort); do
+        cat "${md_file}" >> "${combined_md}"
+        printf "\n\n" >> "${combined_md}"
+    done
+
+    if [ "${export_fmt}" = "submission" ] || [ "${export_fmt}" = "docx" ] || [ "${export_fmt}" = "all" ]; then
+        if command -v python3 &>/dev/null && [ -f "${PROJECT_ROOT}/scripts/lib/docx_sync.py" ]; then
+            python3 - "${combined_md}" "${docx_out}" "${title}" "${author}" "${PROJECT_ROOT}/scripts/lib" << 'PYEOF' 2>/dev/null || true
+import sys
+from pathlib import Path
+combined_md, docx_output, book_title, author_name, lib_dir = sys.argv[1:6]
+sys.path.insert(0, lib_dir)
+from docx_sync import parse_markdown_to_paragraphs, build_docx_package, get_docx_config
+md_text = Path(combined_md).read_text(encoding='utf-8')
+paragraphs = parse_markdown_to_paragraphs(md_text)
+config = get_docx_config()
+build_docx_package(Path(docx_output), paragraphs, config, title=book_title, author=author_name, is_full_manuscript=True)
+PYEOF
+            [ -s "${docx_out}" ] && echo "[✓] Standard Submission DOCX generated: ${docx_out}"
+        fi
+    fi
+
+    if [ "${export_fmt}" = "book" ] || [ "${export_fmt}" = "all" ]; then
+        if command -v pandoc &>/dev/null; then
+            pandoc "${combined_md}" -o "${epub_out}" --metadata title="${title}" --metadata author="${author}" 2>/dev/null && echo "[✓] EPUB generated: ${epub_out}" || true
+        fi
+        if command -v typst &>/dev/null; then
+            local typst_src="${temp_work_dir}/manuscript.typ"
+            cat << 'EOF' > "${typst_src}"
+#set page(paper: "us-trade", margin: (x: 1.8cm, top: 2.2cm, bottom: 2.2cm))
+#set text(font: "Linux Libertine O", size: 10.5pt)
+#set par(justify: true, leading: 0.72em, first-line-indent: 1.25em)
+EOF
+            cat "${combined_md}" >> "${typst_src}"
+            typst compile "${typst_src}" "${pdf_out}" 2>/dev/null && echo "[✓] Print PDF generated: ${pdf_out}" || true
+        fi
+    fi
+
+    echo "[✓] Manuscript compilation complete for '${title}'."
+}
+
+# ==============================================================================
+# Interactive Terminal Dashboard Menu
+# ==============================================================================
 
 interactive_menu() {
     while true; do
@@ -116,7 +926,7 @@ interactive_menu() {
   [1] 🪐 Studio 1: Cosmos & Worlds (Universes, World Lore, Map, Codex, Series)
   [2] ✍️ Studio 2: Manuscripts & Drafting (Write, Word/DOCX, Drafts, Plot Grid)
   [3] 🔮 Studio 3: Speculative Fiction & Mechanics (Astrophysics, Magic, Battle Sim...)
-  [4] 📚 Studio 4: Publishing & Typesetting (Preflight, Barcode, Matter, Exports)
+  [4] 📚 Studio 4: Publishing & Typesetting (Preflight, Matter, Exports, Packages)
   [5] 🔒 Studio 5: Vault Safety & Version History (Git Snapshots, Backup Archives)
   [6] 🩺 Studio 6: Diagnostics & Prose Audits (Dialogue, Voice, Echoes, Health)
   ------------------------------------------------------------------------------
@@ -139,9 +949,9 @@ MENU
                 echo "  b) Back"
                 read -r -p "Choose action: " S1_CHOICE || break
                 case "${S1_CHOICE}" in
-                    1) bash "${PROJECT_ROOT}/scripts/init_universe.sh" --list ;;
-                    2) read -r -p "Universe name: " UNAME && [ -n "$UNAME" ] && bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$UNAME" ;;
-                    3) read -r -p "World name: " WNAME && [ -n "$WNAME" ] && bash "${PROJECT_ROOT}/scripts/init_world.sh" "$WNAME" ;;
+                    1) cmd_universe --list ;;
+                    2) read -r -p "Universe name: " UNAME && [ -n "$UNAME" ] && cmd_universe "$UNAME" ;;
+                    3) read -r -p "World name: " WNAME && [ -n "$WNAME" ] && cmd_world "$WNAME" ;;
                     4) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/cartography.py" "$WDIR" ;;
                     5) read -r -p "World path: " WDIR && [ -n "$WDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/codex_export.py" "$WDIR" ;;
                     6) read -r -p "Series path: " SDIR && [ -n "$SDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/series_continuity.py" "$SDIR" ;;
@@ -153,21 +963,17 @@ MENU
                 echo "--- Studio 2: Manuscripts & Drafting ---"
                 echo "  1) Create New Manuscript"
                 echo "  2) Fork Next Draft Version"
-                echo "  3) Compare Drafts (Visual Redline Diff)"
-                echo "  4) Multi-Track Plot Grid"
-                echo "  5) Story Paradigm Enforcer"
-                echo "  6) Audio Proofreader (TTS)"
-                echo "  7) Portfolio Hub"
+                echo "  3) Multi-Track Plot Grid"
+                echo "  4) Story Paradigm Enforcer"
+                echo "  5) Portfolio Hub"
                 echo "  b) Back"
                 read -r -p "Choose action: " S2_CHOICE || break
                 case "${S2_CHOICE}" in
-                    1) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$MNAME" ;;
-                    2) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/init_draft.sh" "$MNAME" ;;
-                    3) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/compare_drafts.sh" "$MNAME" ;;
-                    4) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/plot_matrix.py" "$MDIR" ;;
-                    5) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/structure.py" "$MDIR" ;;
-                    6) read -r -p "Chapter path: " CPATH && [ -n "$CPATH" ] && python3 "${PROJECT_ROOT}/scripts/lib/tts_reader.py" "$CPATH" ;;
-                    7) python3 "${PROJECT_ROOT}/scripts/lib/portfolio.py" ;;
+                    1) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && cmd_manuscript "$MNAME" ;;
+                    2) read -r -p "Manuscript name: " MNAME && [ -n "$MNAME" ] && cmd_draft "$MNAME" ;;
+                    3) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/plot_matrix.py" "$MDIR" ;;
+                    4) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/structure.py" "$MDIR" ;;
+                    5) python3 "${PROJECT_ROOT}/scripts/lib/portfolio.py" ;;
                     *) ;;
                 esac
                 ;;
@@ -196,22 +1002,20 @@ MENU
                 echo ""
                 echo "--- Studio 4: Publishing & Typesetting ---"
                 echo "  1) Pre-Flight Typesetting Linter"
-                echo "  2) Generate ISBN-13 Barcode"
-                echo "  3) Build Modular Front & Back Matter"
-                echo "  4) Scaffold Query Submission Package"
-                echo "  5) Polish Typography (Quotes & Dashes)"
-                echo "  6) Export Complete Book (PDF/EPUB/DOCX)"
-                echo "  7) Package Distribution Release"
+                echo "  2) Build Modular Front & Back Matter"
+                echo "  3) Scaffold Query Submission Package"
+                echo "  4) Polish Typography (Quotes & Dashes)"
+                echo "  5) Export Complete Book (PDF/EPUB/DOCX)"
+                echo "  6) Package Distribution Release"
                 echo "  b) Back"
                 read -r -p "Choose action: " S4_CHOICE || break
                 case "${S4_CHOICE}" in
                     1) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/preflight.py" "$MDIR" ;;
-                    2) read -r -p "ISBN number: " ISBN && [ -n "$ISBN" ] && python3 "${PROJECT_ROOT}/scripts/lib/barcode.py" "$ISBN" ;;
-                    3) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/frontmatter_builder.py" build "$MDIR" ;;
-                    4) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/init_query.py" "$MDIR" ;;
-                    5) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/typography_cleaner.py" "$TARG" -i ;;
-                    6) read -r -p "Manuscript to export: " MNAME && [ -n "$MNAME" ] && bash "${PROJECT_ROOT}/scripts/export_book.sh" "$MNAME" ;;
-                    7) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/package_distribution.py" "$MDIR" ;;
+                    2) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/lib/frontmatter_builder.py" build "$MDIR" ;;
+                    3) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/init_query.py" "$MDIR" ;;
+                    4) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/typography_cleaner.py" "$TARG" -i ;;
+                    5) read -r -p "Manuscript to export: " MNAME && [ -n "$MNAME" ] && cmd_export "$MNAME" ;;
+                    6) read -r -p "Manuscript path: " MDIR && [ -n "$MDIR" ] && python3 "${PROJECT_ROOT}/scripts/package_distribution.py" "$MDIR" ;;
                     *) ;;
                 esac
                 ;;
@@ -225,9 +1029,9 @@ MENU
                 echo "  b) Back"
                 read -r -p "Choose action: " S5_CHOICE || break
                 case "${S5_CHOICE}" in
-                    1) read -r -p "Target name or path: " TARG && [ -n "$TARG" ] && bash "${PROJECT_ROOT}/scripts/save_snapshot.sh" "$TARG" ;;
-                    2) read -r -p "Target name or path: " TARG && [ -n "$TARG" ] && bash "${PROJECT_ROOT}/scripts/backup_world.sh" "$TARG" ;;
-                    3) read -r -p "Archive path: " ARCH && [ -n "$ARCH" ] && bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$ARCH" ;;
+                    1) read -r -p "Target name or path: " TARG && [ -n "$TARG" ] && cmd_snapshot "$TARG" ;;
+                    2) read -r -p "Target name or path: " TARG && [ -n "$TARG" ] && cmd_backup "$TARG" ;;
+                    3) read -r -p "Archive path: " ARCH && [ -n "$ARCH" ] && cmd_restore "$ARCH" ;;
                     4) python3 "${PROJECT_ROOT}/scripts/lib/config.py" backup-dest get ;;
                     *) ;;
                 esac
@@ -244,7 +1048,7 @@ MENU
                 echo "  b) Back"
                 read -r -p "Choose action: " S6_CHOICE || break
                 case "${S6_CHOICE}" in
-                    1) bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" ;;
+                    1) python3 "${PROJECT_ROOT}/scripts/lib/diagnostics.py" doctor ;;
                     2) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" dialogue "$TARG" ;;
                     3) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/voice.py" "$TARG" ;;
                     4) read -r -p "Target path: " TARG && [ -n "$TARG" ] && python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" echoes "$TARG" ;;
@@ -254,11 +1058,7 @@ MENU
                 esac
                 ;;
             g|G|gui)
-                if [ -f "${PROJECT_ROOT}/scripts/arcanum_app.py" ]; then
-                    python3 "${PROJECT_ROOT}/scripts/arcanum_app.py"
-                else
-                    bash "${PROJECT_ROOT}/scripts/control_center.sh"
-                fi
+                python3 "${PROJECT_ROOT}/scripts/arcanum_app.py"
                 ;;
             h|H|help)
                 usage
@@ -292,36 +1092,18 @@ case "${COMMAND}" in
     new|create)
         if [ $# -eq 0 ]; then
             echo "Usage: arcanum new <manuscript|draft|world|universe|volume> <name> [options]" >&2
-            echo "" >&2
-            echo "Available project types:" >&2
-            echo "  manuscript <name> [-u UNIVERSE] [-w WORLD]  Create a novel manuscript" >&2
-            echo "  draft <manuscript> [draft_name]             Fork next manuscript draft version" >&2
-            echo "  world <name> [-u UNIVERSE]                  Create a World Lore Vault" >&2
-            echo "  universe <name>                             Create a narrative Universe" >&2
-            echo "  volume <manuscript> [volume]                Add Book-02/Book-03 to manuscript" >&2
             exit 2
         fi
         SUBTYPE="$1"
         shift
         case "${SUBTYPE}" in
-            manuscript|novel|book)
-                exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
-                ;;
-            draft|new-draft|revision)
-                exec bash "${PROJECT_ROOT}/scripts/init_draft.sh" "$@"
-                ;;
-            world|lore|vault)
-                exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
-                ;;
-            universe|cosmos|multiverse)
-                exec bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$@"
-                ;;
-            volume|add-volume|add-book|new-book)
-                exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
-                ;;
+            manuscript|novel|book) cmd_manuscript "$@" ;;
+            draft|new-draft|revision) cmd_draft "$@" ;;
+            world|lore|vault) cmd_world "$@" ;;
+            universe|cosmos|multiverse) cmd_universe "$@" ;;
+            volume|add-volume|add-book|new-book) cmd_volume "$@" ;;
             *)
                 echo "Error: Unknown project type '${SUBTYPE}' for 'arcanum new'." >&2
-                echo "Valid types: manuscript, draft, world, universe, volume." >&2
                 exit 2
                 ;;
         esac
@@ -331,18 +1113,11 @@ case "${COMMAND}" in
     write|open|launch)
         TARGET="${1:-}"
         if [ -n "${TARGET}" ]; then
-            # shellcheck source=scripts/lib/worlds.sh
-            source "${PROJECT_ROOT}/scripts/lib/worlds.sh"
             RESOLVED="$(resolve_target_dir "${TARGET}")"
             if [ -n "${RESOLVED}" ] && [ -d "${RESOLVED}" ]; then
-                # Check for novelWriter project
                 NW_PROJ=""
-                if [ -f "${RESOLVED}/nwProject.nwx" ]; then
-                    NW_PROJ="${RESOLVED}/nwProject.nwx"
-                elif [ -f "${RESOLVED}/01-Manuscript/nwProject.nwx" ]; then
-                    NW_PROJ="${RESOLVED}/01-Manuscript/nwProject.nwx"
-                fi
-
+                [ -f "${RESOLVED}/nwProject.nwx" ] && NW_PROJ="${RESOLVED}/nwProject.nwx"
+                [ -f "${RESOLVED}/01-Manuscript/nwProject.nwx" ] && NW_PROJ="${RESOLVED}/01-Manuscript/nwProject.nwx"
                 if [ -n "${NW_PROJ}" ]; then
                     if command -v flatpak &>/dev/null && flatpak info io.gitlab.novelwriter.novelWriter &>/dev/null; then
                         exec flatpak run io.gitlab.novelwriter.novelWriter "${NW_PROJ}"
@@ -352,8 +1127,6 @@ case "${COMMAND}" in
                         exec xdg-open "$(dirname "${NW_PROJ}")"
                     fi
                 fi
-
-                # Check for World Lore Vault (Obsidian)
                 if [ -d "${RESOLVED}/Characters" ] || [ -f "${RESOLVED}/world.yaml" ] || [ -d "${RESOLVED}/.obsidian" ] || [ -d "${RESOLVED}/00-World-Bible" ]; then
                     OBS_TARGET="${RESOLVED}"
                     [ -d "${RESOLVED}/00-World-Bible" ] && OBS_TARGET="${RESOLVED}/00-World-Bible"
@@ -365,24 +1138,18 @@ case "${COMMAND}" in
                         exec xdg-open "${OBS_TARGET}"
                     fi
                 fi
-
                 exec xdg-open "${RESOLVED}"
             fi
         fi
-        # Default: Launch Control Center GUI
-        if [ -f "${PROJECT_ROOT}/scripts/arcanum_app.py" ]; then
-            exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
-        else
-            exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
-        fi
+        exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
         ;;
 
-    # --- Universe & World Lore ---
-    universe|multiverse)
-        exec bash "${PROJECT_ROOT}/scripts/init_universe.sh" "$@"
+    # --- Core Universe, World Lore & Series Continuity ---
+    universe|multiverse|init-universe)
+        cmd_universe "$@"
         ;;
     world|init-world|init)
-        exec bash "${PROJECT_ROOT}/scripts/init_world.sh" "$@"
+        cmd_world "$@"
         ;;
     map|cartography)
         exec python3 "${PROJECT_ROOT}/scripts/lib/cartography.py" "$@"
@@ -397,7 +1164,7 @@ case "${COMMAND}" in
         exec python3 "${PROJECT_ROOT}/scripts/lib/dramatis_personae.py" "$@"
         ;;
     concordance|glossary)
-        exec bash "${PROJECT_ROOT}/scripts/generate_concordance.sh" "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/concordance.py" "$@"
         ;;
     continuity|check-continuity)
         exec python3 "${PROJECT_ROOT}/scripts/lib/continuity.py" "$@"
@@ -418,19 +1185,16 @@ case "${COMMAND}" in
         exec python3 "${PROJECT_ROOT}/scripts/lib/climate.py" "$@"
         ;;
     idioms|idiom|eponyms|immersion)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/idioms.py" "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" idioms "$@"
         ;;
     senses|sensory|palette)
         exec python3 "${PROJECT_ROOT}/scripts/lib/senses.py" "$@"
-        ;;
-    cipher|ciphers|runes|inscription)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/cipher.py" "$@"
         ;;
     prophecy|prophecies|oracle)
         exec python3 "${PROJECT_ROOT}/scripts/lib/prophecy.py" "$@"
         ;;
     world-doctor|lore-doctor)
-        exec bash "${PROJECT_ROOT}/scripts/world_doctor.sh" "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/world_doctor.py" "$@"
         ;;
     magic-check)
         exec python3 "${PROJECT_ROOT}/scripts/lib/magic_system.py" check "$@"
@@ -454,55 +1218,46 @@ case "${COMMAND}" in
         exec python3 "${PROJECT_ROOT}/scripts/lib/calendar.py" "$@"
         ;;
 
-    # --- Speculative Calculations & Simulation ---
+    # --- Calculations & Mechanics ---
     calc|calculator)
         if [ $# -eq 0 ]; then
-            echo "Usage: arcanum calc <transit|time-dilation|orbit|comms|habitability|journey|battle|logistics|climate> [args...]" >&2
+            echo "Usage: arcanum calc <transit|time-dilation|orbit|comms|habitability|journey|battle|logistics|climate|system-dossier> [args...]" >&2
             exit 2
         fi
         CALC_SUB="$1"
         shift
         case "${CALC_SUB}" in
             journey|travel|overland)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/journey.py" "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/journey.py" "$@" ;;
             battle|lanchester|siege)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/factions.py" battle "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/factions.py" battle "$@" ;;
             logistics|supply|wagon)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/factions.py" logistics "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/factions.py" logistics "$@" ;;
             climate|insolation|weather)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/climate.py" "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/climate.py" "$@" ;;
             trade|ppp|currency)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/economy.py" trade "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/economy.py" trade "$@" ;;
             transit|flight|brachistochrone)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" transit "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" transit "$@" ;;
             time-dilation|dilation|lorentz)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" time-dilation "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" time-dilation "$@" ;;
             orbit|hohmann|transfer)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" orbit "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" orbit "$@" ;;
             comms|communication|latency)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" comms "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" comms "$@" ;;
             habitability|gravity|hab)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" habitability "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" habitability "$@" ;;
+            system-dossier|dossier)
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" system-dossier "$@" ;;
             *)
-                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" "${CALC_SUB}" "$@"
-                ;;
+                exec python3 "${PROJECT_ROOT}/scripts/lib/astrophysics.py" "${CALC_SUB}" "$@" ;;
         esac
         ;;
     sim|simulate)
         if [ $# -gt 0 ] && [ "$1" = "battle" ]; then
             shift
         fi
-        exec python3 "${PROJECT_ROOT}/scripts/lib/tactical_sim.py" sim "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/tactical_sim.py" plan "$@"
         ;;
     ambient|soundscape|noise)
         exec python3 "${PROJECT_ROOT}/scripts/lib/ambient.py" generate "$@"
@@ -513,7 +1268,7 @@ case "${COMMAND}" in
 
     # --- Manuscripts & Drafting ---
     manuscript|init-manuscript|novel)
-        exec bash "${PROJECT_ROOT}/scripts/init_manuscript.sh" "$@"
+        cmd_manuscript "$@"
         ;;
     docx|docx-sync|sync-docx)
         exec python3 "${PROJECT_ROOT}/scripts/lib/docx_sync.py" "$@"
@@ -522,22 +1277,19 @@ case "${COMMAND}" in
         exec python3 "${PROJECT_ROOT}/scripts/lib/docx_sync.py" open "$@"
         ;;
     draft|drafts|init-draft|new-draft|revision)
-        exec bash "${PROJECT_ROOT}/scripts/init_draft.sh" "$@"
+        cmd_draft "$@"
         ;;
     compare|diff|redline|changelog)
-        exec bash "${PROJECT_ROOT}/scripts/compare_drafts.sh" "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/manuscript_diff.py" "$@"
         ;;
     add-volume|add-book|new-book|volume)
-        exec bash "${PROJECT_ROOT}/scripts/add_book.sh" "$@"
+        cmd_volume "$@"
         ;;
     export|publish|build|compile)
-        exec bash "${PROJECT_ROOT}/scripts/export_book.sh" "$@"
+        cmd_export "$@"
         ;;
     preflight|pre-flight)
         exec python3 "${PROJECT_ROOT}/scripts/lib/preflight.py" "$@"
-        ;;
-    barcode|isbn)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/barcode.py" "$@"
         ;;
     matter|frontmatter|backmatter)
         if [ $# -gt 0 ] && [ "$1" = "build" ]; then
@@ -554,9 +1306,6 @@ case "${COMMAND}" in
         fi
         exec python3 "${PROJECT_ROOT}/scripts/lib/typography_cleaner.py" "$@"
         ;;
-    read|tts|listen|audio-proof)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/tts_reader.py" "$@"
-        ;;
     plot|plot-matrix|subplot)
         exec python3 "${PROJECT_ROOT}/scripts/lib/plot_matrix.py" "$@"
         ;;
@@ -569,35 +1318,29 @@ case "${COMMAND}" in
     rag|query-lore|semantic-search|lore-query)
         exec python3 "${PROJECT_ROOT}/scripts/lib/local_rag.py" "$@"
         ;;
-    market|plugin-market|marketplace)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/plugin_market.py" "$@"
-        ;;
-    train-data|lora-dataset|dataset-synth|fine-tune)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/fine_tuning.py" "$@"
-        ;;
-    branch|branching|gamebook|interactive-fiction|branch-graph)
+    branch|branching|narrative-threads|subway-map)
         exec python3 "${PROJECT_ROOT}/scripts/lib/branching_graph.py" "$@"
         ;;
     hub|dashboard|gui-web|studio-hub)
         exec python3 "${PROJECT_ROOT}/scripts/lib/studio_hub.py" "$@"
         ;;
-    causality|causal|time-travel|ctc|multiverse)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/causality.py" "$@"
+    canvas|corkboard)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/story_canvas.py" "$@"
         ;;
-    prophecy|oracle|arcane-inscription|prophecy-matrix)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/prophecy.py" "$@"
+    timeline|timeline-sync)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/timeline_sync.py" "$@"
         ;;
-    senses|sensory|immersion|white-room)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/senses.py" "$@"
+    omnibus)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/omnibus.py" "$@"
+        ;;
+    corpus|corpus-export|corpus-restore)
+        exec python3 "${PROJECT_ROOT}/scripts/lib/corpus_export.py" "$@"
         ;;
     sprint|writing-sprint|pomodoro|session)
         exec python3 "${PROJECT_ROOT}/scripts/lib/writing_sprint.py" "$@"
         ;;
     revision-heatmap|churn|revision-density|draft-churn)
         exec python3 "${PROJECT_ROOT}/scripts/lib/revision_heatmap.py" "$@"
-        ;;
-    freeze|archive-freeze|seal-archive|verify-archive)
-        exec python3 "${PROJECT_ROOT}/scripts/lib/archive_freeze.py" "$@"
         ;;
     package|dist|bundle)
         exec python3 "${PROJECT_ROOT}/scripts/package_distribution.py" "$@"
@@ -606,7 +1349,7 @@ case "${COMMAND}" in
         exec python3 "${PROJECT_ROOT}/scripts/lib/migrate.py" "$@"
         ;;
     report|wordcount|words|count|stats)
-        exec bash "${PROJECT_ROOT}/scripts/wordcount_report.sh" "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/diagnostics.py" words "$@"
         ;;
     pace|pacing)
         exec python3 "${PROJECT_ROOT}/scripts/lib/pacing.py" pace "$@"
@@ -629,10 +1372,10 @@ case "${COMMAND}" in
 
     # --- Data Safety & Snapshots ---
     snapshot|snap|save|commit)
-        exec bash "${PROJECT_ROOT}/scripts/save_snapshot.sh" "$@"
+        cmd_snapshot "$@"
         ;;
     backup)
-        exec bash "${PROJECT_ROOT}/scripts/backup_world.sh" "$@"
+        cmd_backup "$@"
         ;;
     backup-dest|backup-destination)
         exec python3 "${PROJECT_ROOT}/scripts/lib/config.py" backup-dest "$@"
@@ -641,7 +1384,7 @@ case "${COMMAND}" in
         exec python3 "${PROJECT_ROOT}/scripts/lib/config.py" "$@"
         ;;
     restore)
-        exec bash "${PROJECT_ROOT}/scripts/restore_world.sh" "$@"
+        cmd_restore "$@"
         ;;
 
     # --- System Diagnostics & Prose Audits ---
@@ -679,7 +1422,7 @@ case "${COMMAND}" in
                     ;;
                 idioms|idiom|eponyms)
                     shift
-                    exec python3 "${PROJECT_ROOT}/scripts/lib/idioms.py" "$@"
+                    exec python3 "${PROJECT_ROOT}/scripts/lib/stylistics.py" idioms "$@"
                     ;;
                 senses|sensory|palette)
                     shift
@@ -691,10 +1434,10 @@ case "${COMMAND}" in
                     ;;
             esac
         fi
-        exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/diagnostics.py" "$@"
         ;;
     doctor|check)
-        exec bash "${PROJECT_ROOT}/scripts/arcanum_doctor.sh" "$@"
+        exec python3 "${PROJECT_ROOT}/scripts/lib/diagnostics.py" "$@"
         ;;
     engines|plugins)
         exec python3 "${PROJECT_ROOT}/scripts/lib/cli.py" engines "$@"
@@ -704,20 +1447,13 @@ case "${COMMAND}" in
         exit 0
         ;;
     control-center|dashboard|gui|app|ui)
-        if [ -f "${PROJECT_ROOT}/scripts/arcanum_app.py" ]; then
-            exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
-        else
-            exec bash "${PROJECT_ROOT}/scripts/control_center.sh" "$@"
-        fi
+        exec python3 "${PROJECT_ROOT}/scripts/arcanum_app.py" "$@"
         ;;
     verify|test|tests)
         exec bash "${PROJECT_ROOT}/scripts/verify.sh" "$@"
         ;;
     setup)
         exec bash "${PROJECT_ROOT}/scripts/setup_arcanum.sh" "$@"
-        ;;
-    uninstall)
-        exec bash "${PROJECT_ROOT}/scripts/uninstall_arcanum.sh" "$@"
         ;;
 
     # --- Global Flags ---
@@ -739,17 +1475,17 @@ import difflib
 cmd = sys.argv[1]
 known_commands = [
     "write", "open", "new", "create", "save", "snapshot", "publish", "export",
-    "preflight", "barcode", "matter", "query", "polish", "typography", "read",
-    "tts", "plot", "structure", "ambient", "portfolio", "package", "map", "codex",
+    "preflight", "matter", "query", "polish", "typography",
+    "plot", "structure", "branch", "ambient", "portfolio", "package", "map", "codex",
     "series", "sim", "draft", "drafts", "compare", "diff", "redline", "changelog",
     "words", "count", "report", "universe", "world", "manuscript", "volume",
     "add-volume", "concordance", "continuity", "check-continuity", "doctor",
     "check", "world-doctor", "backup", "backup-dest", "config", "restore", "cache",
     "calc", "magic-check", "magic-report", "genealogy", "lineage", "conlang",
     "faction", "economy", "causality", "ecology", "climate", "idioms", "senses",
-    "cipher", "prophecy", "audit", "pace", "tension", "voice", "calendar", "journey",
-    "gui", "control-center", "menu", "interactive", "verify", "setup", "uninstall", "version", "help",
-    "freeze", "archive-freeze", "seal-archive", "verify-archive", "cast", "dramatis-personae", "dramatis", "characters-cast"
+    "prophecy", "audit", "pace", "tension", "voice", "calendar", "journey",
+    "gui", "control-center", "menu", "interactive", "verify", "setup", "version", "help",
+    "cast", "dramatis-personae", "dramatis", "characters-cast", "corpus", "rag", "canvas", "timeline", "omnibus"
 ]
 
 matches = difflib.get_close_matches(cmd, known_commands, n=1, cutoff=0.55)

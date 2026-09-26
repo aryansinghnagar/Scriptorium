@@ -47,7 +47,7 @@ trap cleanup EXIT
 
 echo "[1/7] Script syntax & Python compilation validation..."
 # TST-02: same bash -n file set as CI (ci.yml) — scripts + lib + facade + tests.
-for f in scripts/*.sh scripts/lib/*.sh scripts/arcanum scripts/ars-arcanum tests/*.sh; do
+for f in scripts/*.sh scripts/lib/*.sh scripts/arcanum tests/*.sh; do
     if [ -f "$f" ]; then
         if ! bash -n "$f"; then
             echo "  FAIL $f (bash syntax)" >&2
@@ -230,7 +230,7 @@ unset DISPLAY WAYLAND_DISPLAY 2>/dev/null || true
 
 # 6a. Universe initialization
 UNIVERSE="TestMultiverse"
-bash scripts/init_universe.sh "${UNIVERSE}" >/dev/null
+bash scripts/arcanum new universe "${UNIVERSE}" >/dev/null
 [ -d "${HOME}/Universes/${UNIVERSE}" ] || { echo "  FAIL universe directory missing"; exit 1; }
 [ -d "${HOME}/Universes/${UNIVERSE}/.git" ] || { echo "  FAIL universe git repository missing"; exit 1; }
 [ -f "${HOME}/Universes/${UNIVERSE}/universe.yaml" ] || { echo "  FAIL universe yaml manifest missing"; exit 1; }
@@ -239,7 +239,7 @@ echo "  OK init_universe (Universe directory + Universe Git repository + Index H
 
 # 6b. Pure World Lore Vault initialization inside Universe
 WORLD="VerifyWorld"
-bash scripts/init_world.sh "${WORLD}" --universe "${UNIVERSE}" >/dev/null
+bash scripts/arcanum new world "${WORLD}" --universe "${UNIVERSE}" >/dev/null
 WORLD_PATH="${HOME}/Universes/${UNIVERSE}/${WORLD}"
 [ -d "${WORLD_PATH}/Characters" ] || { echo "  FAIL world Characters taxonomy missing"; exit 1; }
 [ -d "${WORLD_PATH}/Bestiary" ] || { echo "  FAIL world Bestiary taxonomy missing"; exit 1; }
@@ -252,7 +252,7 @@ echo "  OK init_world (Pure World Lore Vault + Obsidian Plugin Suite + Discrete 
 
 # 6c. Standalone Manuscript Project initialization linked to Universe & World
 MANUSCRIPT="VerifyManuscript"
-bash scripts/init_manuscript.sh "${MANUSCRIPT}" --universe "${UNIVERSE}" --world "${WORLD}" >/dev/null
+bash scripts/arcanum new manuscript "${MANUSCRIPT}" --universe "${UNIVERSE}" --world "${WORLD}" >/dev/null
 MS_PATH="${HOME}/Manuscripts/${MANUSCRIPT}"
 [ -f "${MS_PATH}/manuscript.yaml" ] || { echo "  FAIL manuscript.yaml manifest missing"; exit 1; }
 [ -f "${MS_PATH}/nwProject.nwx" ] || { echo "  FAIL nwProject.nwx missing"; exit 1; }
@@ -284,11 +284,11 @@ EOF
 
 # 6e. Export book compilation (Testing specific volume selection, paper size, submission format & omnibus)
 set +e
-bash scripts/export_book.sh "${MS_PATH}" --book Book-01 --paper-size trade --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_b1.log" 2>&1
+bash scripts/arcanum export "${MS_PATH}" --book Book-01 --paper-size trade --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_b1.log" 2>&1
 EXPORT_B1_RC=$?
-bash scripts/export_book.sh "${MS_PATH}" --book all --paper-size us-trade --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_all.log" 2>&1
+bash scripts/arcanum export "${MS_PATH}" --book all --paper-size us-trade --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_all.log" 2>&1
 EXPORT_ALL_RC=$?
-bash scripts/export_book.sh "${MS_PATH}" --book Book-01 --format submission --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_docx.log" 2>&1
+bash scripts/arcanum export "${MS_PATH}" --book Book-01 --format submission --title "Verify Book" --author "Verify Author" > "${TMP_VERIFY}/export_docx.log" 2>&1
 EXPORT_DOCX_RC=$?
 set -e
 
@@ -372,7 +372,7 @@ EOF
 # TST-03: explicit exit-code handling — 0/1 are valid doctor outcomes
 # (clean/findings); 2+ is a harness failure and must abort loudly.
 set +e
-DOCTOR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json 2>"${TMP_VERIFY}/doctor1.err")"
+DOCTOR_JSON="$(bash scripts/arcanum doctor "${WORLD_PATH}" --json 2>"${TMP_VERIFY}/doctor1.err")"
 DOCTOR_RC=$?
 set -e
 if [ "${DOCTOR_RC}" -gt 1 ]; then
@@ -401,7 +401,7 @@ A chronologically inverted paradox lord.
 EOF
 
 set +e
-DOCTOR_ERR_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --json 2>"${TMP_VERIFY}/doctor2.err")"
+DOCTOR_ERR_JSON="$(bash scripts/arcanum doctor "${WORLD_PATH}" --json 2>"${TMP_VERIFY}/doctor2.err")"
 DOCTOR_RC=$?
 set -e
 if [ "${DOCTOR_RC}" -gt 1 ]; then
@@ -427,7 +427,7 @@ A scene referencing unindexed lore entities.
 EOF
 
 set +e
-DOCTOR_DRIFT_JSON="$(bash scripts/world_doctor.sh "${WORLD_PATH}" --manuscript "${MS_PATH}" --json 2>"${TMP_VERIFY}/doctor3.err")"
+DOCTOR_DRIFT_JSON="$(bash scripts/arcanum doctor "${WORLD_PATH}" --manuscript "${MS_PATH}" --json 2>"${TMP_VERIFY}/doctor3.err")"
 DOCTOR_RC=$?
 set -e
 if [ "${DOCTOR_RC}" -gt 1 ]; then
@@ -507,19 +507,19 @@ grep -q "Aethel" "${MS_PATH}/Book-01/04_Back_Matter/02_Glossary_and_Concordance.
 echo "  OK generate_concordance (Dramatis Personae + Glossary back-matter)"
 
 # 6h. Wordcount & Progress Analytics
-bash scripts/wordcount_report.sh "${MS_PATH}" --markdown > "${TMP_VERIFY}/wc.md"
+bash scripts/arcanum words "${MS_PATH}" --md > "${TMP_VERIFY}/wc.md"
 [ -s "${TMP_VERIFY}/wc.md" ] || { echo "  FAIL wordcount report empty"; exit 1; }
-bash scripts/wordcount_report.sh "${MS_PATH}" --json > "${TMP_VERIFY}/wc.json"
+bash scripts/arcanum words "${MS_PATH}" --json > "${TMP_VERIFY}/wc.json"
 python3 -c "import json; d = json.load(open('${TMP_VERIFY}/wc.json')); assert d['total_words'] >= 0; assert d['chapter_count'] >= 1"
 echo "  OK wordcount_report (markdown + json)"
 
 # 6i. Save Snapshot (Git Versioning across Lore & Manuscript with positional syntax)
-bash scripts/save_snapshot.sh "${WORLD}" --note "verify.sh world snapshot test" > "${TMP_VERIFY}/snap_world.log" 2>&1 \
+bash scripts/arcanum snapshot "${WORLD}" --note "verify.sh world snapshot test" > "${TMP_VERIFY}/snap_world.log" 2>&1 \
     || { echo "  FAIL save_snapshot world:"; tail -n 5 "${TMP_VERIFY}/snap_world.log"; exit 1; }
 git -C "${WORLD_PATH}" log --oneline | grep -q "verify.sh world snapshot test" \
     || { echo "  FAIL snapshot note not committed to world"; exit 1; }
 
-bash scripts/save_snapshot.sh "${MANUSCRIPT}" --note "verify.sh manuscript snapshot test" > "${TMP_VERIFY}/snap_ms.log" 2>&1 \
+bash scripts/arcanum snapshot "${MANUSCRIPT}" --note "verify.sh manuscript snapshot test" > "${TMP_VERIFY}/snap_ms.log" 2>&1 \
     || { echo "  FAIL save_snapshot manuscript:"; tail -n 5 "${TMP_VERIFY}/snap_ms.log"; exit 1; }
 git -C "${MS_PATH}" log --oneline | grep -q "verify.sh manuscript snapshot test" \
     || { echo "  FAIL snapshot note not committed to manuscript"; exit 1; }
@@ -527,13 +527,13 @@ echo "  OK save_snapshot (multi-tier Git snapshots recorded)"
 
 # 6j. Decoupled Backup & Verified Restore Drill
 echo "  Running backup & restore verification drill..."
-bash scripts/backup_world.sh --world "${WORLD}" --note "harness drill" > "${TMP_VERIFY}/backup_w.log" 2>&1 \
+bash scripts/arcanum backup --world "${WORLD}" --note "harness drill" > "${TMP_VERIFY}/backup_w.log" 2>&1 \
     || { echo "  FAIL backup_world:"; tail -n 5 "${TMP_VERIFY}/backup_w.log"; exit 1; }
 BACKUP_ARCHIVE="$(find "${WORLD_PATH}/Backups" -name '*.tar.gz' -print -quit)"
 [ -n "${BACKUP_ARCHIVE}" ] || { echo "  FAIL backup archive not created"; exit 1; }
 [ -f "${BACKUP_ARCHIVE%.tar.gz}.sha256" ] || { echo "  FAIL backup sha256 missing"; exit 1; }
 
-bash scripts/backup_world.sh --manuscript "${MANUSCRIPT}" --note "ms drill" > "${TMP_VERIFY}/backup_m.log" 2>&1 \
+bash scripts/arcanum backup --manuscript "${MANUSCRIPT}" --note "ms drill" > "${TMP_VERIFY}/backup_m.log" 2>&1 \
     || { echo "  FAIL backup manuscript:"; tail -n 5 "${TMP_VERIFY}/backup_m.log"; exit 1; }
 MS_BACKUP_ARCHIVE="$(find "${MS_PATH}/Backups" -name '*.tar.gz' -print -quit)"
 [ -n "${MS_BACKUP_ARCHIVE}" ] || { echo "  FAIL ms backup archive not created"; exit 1; }
@@ -542,7 +542,7 @@ echo "  OK backup_world (world & manuscript archives + sha256 created)"
 
 # Restore drill
 RESTORE_TARGET="RestoredWorld"
-bash scripts/restore_world.sh --archive "${BACKUP_ARCHIVE}" --target "${RESTORE_TARGET}" --universe "${UNIVERSE}" > "${TMP_VERIFY}/restore.log" 2>&1 \
+bash scripts/arcanum restore --archive "${BACKUP_ARCHIVE}" --target "${RESTORE_TARGET}" --universe "${UNIVERSE}" > "${TMP_VERIFY}/restore.log" 2>&1 \
     || { echo "  FAIL restore_world:"; tail -n 5 "${TMP_VERIFY}/restore.log"; exit 1; }
 RESTORED_PATH="${HOME}/Universes/${UNIVERSE}/${RESTORE_TARGET}"
 [ -d "${RESTORED_PATH}/Characters" ] || { echo "  FAIL restored world bible missing"; exit 1; }
@@ -551,7 +551,7 @@ echo "  OK restore_world (drill verified: archive -> restore -> verify content)"
 
 # 6k. Unified Ars Arcanum Doctor
 set +e
-bash scripts/arcanum_doctor.sh --world "${RESTORE_TARGET}" --manuscript "${MANUSCRIPT}" > "${TMP_VERIFY}/doc.log" 2>&1
+bash scripts/arcanum doctor --world "${RESTORE_TARGET}" --manuscript "${MANUSCRIPT}" > "${TMP_VERIFY}/doc.log" 2>&1
 DOC_RC=$?
 set -e
 [ "${DOC_RC}" -eq 0 ] || [ "${DOC_RC}" -eq 1 ] || { echo "  FAIL arcanum_doctor failed with exit code ${DOC_RC}:"; cat "${TMP_VERIFY}/doc.log"; exit 1; }
@@ -578,7 +578,7 @@ echo "  OK docx synchronization & word processor integration tests"
 # 6m. Dry-run simulation tests
 bash scripts/setup_arcanum.sh --dry-run --force > "${TMP_VERIFY}/setup_dryrun.log" 2>&1 \
     || { echo "  FAIL setup_arcanum --dry-run:"; tail -n 5 "${TMP_VERIFY}/setup_dryrun.log"; exit 1; }
-bash scripts/uninstall_arcanum.sh --dry-run --force > "${TMP_VERIFY}/uninstall_dryrun.log" 2>&1 \
+bash scripts/arcanum uninstall --dry-run --force > "${TMP_VERIFY}/uninstall_dryrun.log" 2>&1 \
     || { echo "  FAIL uninstall_arcanum --dry-run:"; tail -n 5 "${TMP_VERIFY}/uninstall_dryrun.log"; exit 1; }
 echo "  OK setup & uninstall --dry-run simulations"
 
@@ -620,7 +620,6 @@ bash scripts/arcanum ecology --help >/dev/null
 bash scripts/arcanum climate --help >/dev/null
 bash scripts/arcanum idioms --help >/dev/null
 bash scripts/arcanum senses --help >/dev/null
-bash scripts/arcanum cipher --help >/dev/null
 bash scripts/arcanum prophecy --help >/dev/null
 bash scripts/arcanum calc battle --help >/dev/null
 bash scripts/arcanum calc logistics --help >/dev/null
@@ -635,13 +634,18 @@ bash scripts/arcanum audit scenes --help >/dev/null
 bash scripts/arcanum audit structure --help >/dev/null
 bash scripts/arcanum polish typography --help >/dev/null
 bash scripts/arcanum preflight --help >/dev/null
-bash scripts/arcanum barcode --help >/dev/null
 bash scripts/arcanum matter build --help >/dev/null
 bash scripts/arcanum query --help >/dev/null
-bash scripts/arcanum read --help >/dev/null
-bash scripts/arcanum tts --help >/dev/null
 bash scripts/arcanum plot --help >/dev/null
 bash scripts/arcanum structure --help >/dev/null
+bash scripts/arcanum branch --help >/dev/null
+bash scripts/arcanum canvas --help >/dev/null
+bash scripts/arcanum timeline --help >/dev/null
+bash scripts/arcanum omnibus --help >/dev/null
+bash scripts/arcanum corpus --help >/dev/null
+bash scripts/arcanum sprint --help >/dev/null
+bash scripts/arcanum revision-heatmap --help >/dev/null
+bash scripts/arcanum rag --help >/dev/null
 bash scripts/arcanum ambient --help >/dev/null
 bash scripts/arcanum portfolio --help >/dev/null
 bash scripts/arcanum package --help >/dev/null
@@ -649,8 +653,7 @@ bash scripts/arcanum map --help >/dev/null
 bash scripts/arcanum codex --help >/dev/null
 bash scripts/arcanum series --help >/dev/null
 bash scripts/arcanum sim battle --help >/dev/null
-bash scripts/ars-arcanum --version >/dev/null
-echo "  OK arcanum and ars-arcanum CLI entrypoints and subcommands"
+echo "  OK arcanum CLI entrypoints and subcommands"
 record_pass
 
 echo ""

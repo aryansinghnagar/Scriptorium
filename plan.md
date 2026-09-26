@@ -165,3 +165,90 @@ This living plan outlines the phased modernization, quality hardening, and archi
 - [x] **P13-M6**: Expanded craft test suites for planetary climate (`tests/test_climate.py`), food web ecology (`tests/test_ecology.py`), and earth idiom linters (`tests/test_idioms.py`) to 10 tests each; Grand Tour elevated to 15 stages (`tests/test_grand_tour_e2e.py`).
 - [x] **P13-M7**: Full regression test suite elevated to **504 tests collected (502 passed, 2 skipped, 0 failures)**, 100% clean Ruff pass (0 violations), and clean mypy static type checking across 78 source modules; version bumped to v3.1.0.
 
+---
+
+## Phase 14: The Sovereign Crown & Flathub Upstream Hardening (Completed)
+**Theme**: Flathub packaging validation, Merkle archive freeze provenance, multi-volume Dramatis Personae, 16-stage Grand Tour, and v3.2.0 parity.
+- [x] **P14-M1**: Flathub Upstream Packaging Validator (`flatpak/flathub_submission_validate.py`) checking AppStream 0.16+ XML compliance, HTTPS screenshot URLs, OARS 1.1 content ratings, and sandbox finish-args with `tests/test_flathub_validation.py` (12 tests) and dynamic versioning in `flatpak/build_offline_bundle.sh`.
+- [x] **P14-M2**: Cosmos Archive Freeze & Cryptographic Merkle-Root Provenance Sealer (`scripts/lib/archive_freeze.py`, `arcanum freeze`, `arcanum verify-archive`) with Merkle root SHA-256 generation, `ARCHIVE_MANIFEST.json` and `PROVENANCE_SEAL.md` generation, tamper audits (`FRZ-101`, `FRZ-102`, `FRZ-103`), and `tests/test_archive_freeze.py` (15 tests).
+- [x] **P14-M3**: Multi-Volume Dramatis Personae & Universe Cast Matrix (`scripts/lib/dramatis_personae.py`, `arcanum cast`, `arcanum dramatis-personae`) with cross-volume character dossier discovery (`World/Characters/*.md`), manuscript `@pov:`/`@char:`/`@death:` tags cross-referencing, continuity linters (`CAS-101`, `CAS-102`, `CAS-103`), markdown appendix export, offline CSP-compliant HTML gallery, and `tests/test_dramatis_personae.py` (15 tests).
+- [x] **P14-M4**: Master 16-Stage Grand Tour End-to-End Lifecycle Verification Suite (`tests/test_grand_tour_e2e.py`) integrating archive freeze verification and universal Dramatis Personae synthesis.
+- [x] **P14-M5**: Universal Version Parity & Dispatcher Consolidation: CLI router (`scripts/lib/cli.py`), Bash bootstrap (`scripts/arcanum`), Debian changelog (`debian/changelog`), AppStream metainfo (`flatpak/org.arsarcanum.ArsArcanum.metainfo.xml`), Studio Hub catalog (`scripts/lib/studio_hub.py`), and `CHANGELOG.md` synchronized to v3.2.0. ADR-070 through ADR-072 recorded in `decisions.md`. Full test suite elevated to **544 tests** (542 passed, 2 skipped, 0 failures), 100% clean Ruff, strict mypy across 80 modules.
+
+---
+
+## Phase 15: Narrative Diagnostics Expansion (Completed)
+**Theme**: Causal DAG expansion, Prophecy Resolution Matrix, 6D Sensory Immersion, Flathub Validator, and Stage 17 Grand Tour (v3.3.0).
+- [x] **P15-M1**: Causal DAG & Time-Travel Consistency Validator (`scripts/lib/causality.py`, `tests/test_causality.py`, `docs/CAUSALITY.md`). ADR-073 recorded.
+- [x] **P15-M2**: Prophecy Resolution Matrix (`scripts/lib/prophecy.py`, `tests/test_prophecy.py`, `docs/PROPHECY.md`). ADR-074 recorded.
+- [x] **P15-M3**: 6D Sensory Immersion Palette Linter (`scripts/lib/senses.py`, `tests/test_senses.py`, `docs/SENSES.md`). ADR-075 recorded.
+- [x] **P15-M4**: Flathub Upstream AppStream Validator (`scripts/lib/flathub_validator.py`, `tests/test_flathub_validator.py`). ADR-076 recorded.
+- [x] **P15-M5**: Grand Tour Stage 17, version parity to v3.3.0, ADR-077 through ADR-079. Test suite elevated to **585 tests** (0 failures).
+
+---
+
+## Phase 16: Seven Narrative Craft Engines — Test Expansion & Documentation (Completed)
+**Theme**: Economy, Journey, Cartography, Pacing, Structure, Voice, and Stylistics deep test suites (12+ tests each) and manuals (v3.4.0).
+- [x] **P16-M1**: Economy Engine Deep Test Coverage (`tests/test_economy.py` → 12 tests) & Author Guide (`docs/ECONOMY.md`). ADR-080 recorded.
+- [x] **P16-M2**: Journey Planner Deep Test Coverage (`tests/test_journey.py` → 12 tests) & Author Guide (`docs/JOURNEY.md`). ADR-081 recorded.
+- [x] **P16-M3**: Cartography Engine Deep Test Coverage (`tests/test_cartography.py` → 12 tests) & Author Guide (`docs/CARTOGRAPHY.md`). ADR-082 recorded.
+- [x] **P16-M4**: Pacing Analyzer Deep Test Coverage (`tests/test_pacing.py` → 12 tests) & Author Guide (`docs/PACING.md`). ADR-083 recorded.
+- [x] **P16-M5**: Structure Paradigm Engine Deep Test Coverage (`tests/test_structure.py` → 12 tests) & Author Guide (`docs/STRUCTURE.md`). ADR-084 recorded.
+- [x] **P16-M6**: Voice Profiler Deep Test Coverage (`tests/test_voice.py` → 12 tests) & Author Guide (`docs/VOICE.md`). ADR-085 recorded.
+- [x] **P16-M7**: Stylistics Analyzer Deep Test Coverage (`tests/test_stylistics.py` → 14 tests) & Author Guide (`docs/STYLISTICS.md`), Grand Tour Stage 18, version parity to v3.4.0, ADR-086. Test suite elevated to **631 tests** (629 passed, 2 skipped, 0 failures), 0 ruff violations.
+
+---
+
+## Phase 17: Worldbuilding Sciences & Narrative Mechanics Expansion (Completed)
+**Theme**: Focus Ambient, Tactical Combat, MRU Scene Mechanics, Plot Matrix, Dual-Track Timeline, Climate, Ecology, and Idioms deep test suites and manuals (v3.5.0).
+- [x] **P17-M1**: Focus Ambient & Binaural Soundscape Generator Deep Test Coverage (`tests/test_ambient.py` → 14 tests) & Author Guide (`docs/AMBIENT.md`). ADR-087 recorded.
+- [x] **P17-M2**: Dynamic Tactical Combat & Monte Carlo Skirmish Simulator Deep Test Coverage (`tests/test_tactical_sim.py` → 14 tests) & Author Guide (`docs/TACTICAL_SIM.md`). ADR-088 recorded.
+- [x] **P17-M3**: Motivation-Reaction Unit (MRU) Scene Mechanics Analyzer Deep Test Coverage (`tests/test_scene_mechanics.py` → 12 tests) & Author Guide (`docs/SCENE_MECHANICS.md`). ADR-089 recorded.
+- [x] **P17-M4**: Multi-Track Narrative Plot Grid & Subplot Matrix Deep Test Coverage (`tests/test_plot_matrix.py` → 12 tests) & Author Guide (`docs/PLOT_MATRIX.md`). ADR-090 recorded.
+- [x] **P17-M5**: Dual-Track Chronological vs Narrative Timeline Synchronizer Deep Test Coverage (`tests/test_timeline_sync.py` → 12 tests) & Author Guide (`docs/TIMELINE_SYNC.md`). ADR-091 recorded.
+- [x] **P17-M6**: Planetary Climate, Orographic Rain Shadows & Köppen Biomes Deep Test Coverage (`tests/test_climate.py` → 12 tests) & Author Guide (`docs/CLIMATE.md`). ADR-092 recorded.
+- [x] **P17-M7**: Trophic Food Web Ecology & Biomass Efficiency Simulator Deep Test Coverage (`tests/test_ecology.py` → 12 tests) & Author Guide (`docs/ECOLOGY.md`). ADR-093 recorded.
+- [x] **P17-M8**: Earth Idiom & Immersion-Breaking Eponym Linter Deep Test Coverage (`tests/test_idioms.py` → 12 tests) & Author Guide (`docs/IDIOMS.md`), Grand Tour Stage 19, version parity to v3.5.0, ADR-094. Test suite elevated to **682 tests** (680 passed, 2 skipped, 0 failures), 0 ruff violations.
+
+---
+
+## Phase 18: Authoring Studios, Publishing Toolchains & Creative Scaffolding Expansion (Completed)
+**Theme**: Back-Matter Concordance, Zen Studio, Story Canvas, Series Omnibus, Portfolio Dashboard, Media Overlays, Typography, and Barcodes deep test suites and manuals (v3.6.0).
+- [x] **P18-M1**: Back-Matter Concordance & Dramatis Personae Indexer Deep Test Coverage (`tests/test_concordance.py` → 12 tests) & Author Guide (`docs/CONCORDANCE.md`). ADR-095 recorded.
+- [x] **P18-M2**: Sovereign Zen Drafting Studio & In-Situ Lore Drawer Deep Test Coverage (`tests/test_zen_studio.py` → 12 tests) & Author Guide (`docs/ZEN_STUDIO.md`). ADR-096 recorded.
+- [x] **P18-M3**: Visual Story Canvas & Multi-Paradigm Corkboard Deep Test Coverage (`tests/test_story_canvas.py` → 12 tests) & Author Guide (`docs/CANVAS_GUIDE.md`). ADR-097 recorded.
+- [x] **P18-M4**: Multi-Volume Series Omnibus Compiler Deep Test Coverage (`tests/test_omnibus.py` → 12 tests) & Author Guide (`docs/OMNIBUS.md`). ADR-098 recorded.
+- [x] **P18-M5**: Author Portfolio & Catalog Analytics Dashboard Deep Test Coverage (`tests/test_portfolio.py` → 12 tests) & Author Guide (`docs/PORTFOLIO.md`). ADR-099 recorded.
+- [x] **P18-M6**: EPUB 3 SMIL Media Overlays & Synchronized Narration Player Deep Test Coverage (`tests/test_media_overlay.py` → 12 tests) & Author Guide (`docs/MEDIA_OVERLAY.md`). ADR-100 recorded.
+- [x] **P18-M7**: Smart Typography Normalizer & Punctuation Engine Deep Test Coverage (`tests/test_typography_cleaner.py` → 12 tests) & Author Guide (`docs/TYPOGRAPHY.md`). ADR-101 recorded.
+- [x] **P18-M8**: ISBN-13 Vector SVG/PNG Barcode Engine Deep Test Coverage (`tests/test_barcode.py` → 12 tests) & Author Guide (`docs/BARCODE.md`), Grand Tour Stage 20, version parity to v3.6.0, ADR-102. Test suite elevated to **750 tests** (748 passed, 2 skipped, 0 failures), 0 ruff violations.
+
+---
+
+## Phase 19: The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Architecture (Completed)
+**Theme**: Branching Graph, Local RAG, Editorial Council, Local Fine-Tuning, Corpus Export, TTS Reader, Package Distribution, and World Doctor deep test suites (12+ tests each) and manuals (v3.7.0).
+- [x] **P19-M1**: Branching Narrative Choice Engine & Interactive Graph Deep Test Coverage (`tests/test_branching_graph.py` → 12 tests) & Author Guide (`docs/BRANCHING_GRAPH.md`). ADR-103 recorded.
+- [x] **P19-M2**: Local Semantic Retrieval & Hybrid TF-IDF/FTS5 Engine Deep Test Coverage (`tests/test_local_rag.py` → 12 tests) & Author Guide (`docs/LOCAL_RAG.md`). ADR-104 recorded.
+- [x] **P19-M3**: Autonomous Multi-Perspective Editorial Council Deep Test Coverage (`tests/test_editorial_council.py` → 12 tests) & Author Guide (`docs/EDITORIAL_COUNCIL.md`). ADR-105 recorded.
+- [x] **P19-M4**: Sovereign Local AI Fine-Tuning & Dataset Synthesizer Deep Test Coverage (`tests/test_fine_tuning.py` → 12 tests) & Author Guide (`docs/FINE_TUNING.md`). ADR-106 recorded.
+- [x] **P19-M5**: Universal Structured Corpus & RAG Exporter Deep Test Coverage (`tests/test_corpus_export.py` → 12 tests) & Author Guide (`docs/CORPUS_EXPORT.md`). ADR-107 recorded.
+- [x] **P19-M6**: Zero-Dependency Text-to-Speech & WebAudio Narration Deep Test Coverage (`tests/test_tts_reader.py` → 12 tests) & Author Guide (`docs/TTS_READER.md`). ADR-108 recorded.
+- [x] **P19-M7**: Reader Edition, Submission & ARC Packaging Engine Deep Test Coverage (`tests/test_package_distribution.py` → 12 tests) & Author Guide (`docs/PACKAGING.md`). ADR-109 recorded.
+- [x] **P19-M8**: World Doctor 8-Point Cross-Validation Diagnostics Deep Test Coverage (`tests/test_world_doctor.py` → 12 tests) & Author Guide (`docs/WORLD_DOCTOR.md`), Grand Tour Stage 21, version parity to v3.7.0, ADR-110. Test suite elevated to **797 tests** (795 passed, 2 skipped, 0 failures), 0 ruff violations.
+
+---
+
+## Phase 20: Granular Trimming, Modernization & Engine Expansion (Completed)
+**Theme**: Decommissioning niche engines and redundant scripts, expanding core worldbuilding craft engines, and consolidating documentation (v4.0.0 — The Sovereign Streamlined Milestone).
+- [x] **P20-M1**: Decommissioned 8 obsolete/niche engines (`fine_tuning.py`, `cipher.py`, `editorial_council.py`, `barcode.py`, `archive_freeze.py`, `tts_reader.py`, `media_overlay.py`, `plugins.py`/`plugin_market.py`) and their test suites. ADR-111 recorded.
+- [x] **P20-M2**: Pruned 17 single-command shell script wrappers in `scripts/`, standardizing on canonical `scripts/arcanum`, `scripts/verify.sh`, and `scripts/setup_arcanum.sh`.
+- [x] **P20-M3**: Consolidated `idioms.py` directly into `stylistics.py` as an optional cultural immersion check; consolidated frontmatter parsing into `frontmatter_builder.py`.
+- [x] **P20-M4**: Expanded `astrophysics.py` with non-standard planetary configurations (eyeball worlds, gas giant exomoons, brown dwarfs, circumbinaries, hyceans), parameter tinkering sweet-spot engine, scientific plausibility advisor, Star System Dossier export, and biome/insolation linkage with `climate.py`. ADR-113 recorded.
+- [x] **P20-M5**: Expanded `calendar.py` with multi-calendar/multi-era registry, custom date syntax templates and era suffixes, and continuous epoch chronology.
+- [x] **P20-M6**: Refactored `branching_graph.py` into a Multi-POV Narrative Thread & Convergence Subway Map engine tracking character storyline splits and rejoins. ADR-114 recorded.
+- [x] **P20-M7**: Upgraded `cartography.py` with an interactive HTML5/SVG graphical map creator and editor interface.
+- [x] **P20-M8**: Enhanced `genealogy.py` with fuzzy generational builders and disputed succession claims; updated `magic_system.py`, `structure.py` (11+ paradigms), and `tactical_sim.py` with non-imposing creative advisory doctrine. ADR-112 recorded.
+- [x] **P20-M9**: Added bidirectional vault restore from exported JSONL/SQLite archives to `corpus_export.py` (`arcanum corpus restore <archive>`).
+- [x] **P20-M10**: Synchronized `registry.py`, `cli.py`, `studio_hub.py`, `ui_adw.py`, and documentation. Achieved 681 tests passing (0 failures, 0 errors, 2 skipped), 0 ruff lint violations, clean mypy typing across all 70 modules.
+
+

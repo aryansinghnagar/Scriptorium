@@ -138,6 +138,8 @@ def load_conlang_profile(world_dir: Path, lang_query: str) -> dict:
     return {
         "file": str(matched_file.relative_to(world_dir)).replace("\\", "/"),
         "name": fm.get("name") or matched_file.stem,
+        "proto_language": fm.get("proto_language") or fm.get("parent"),
+        "language_family": fm.get("language_family") or fm.get("family"),
         "consonants": consonants,
         "vowels": vowels,
         "syllable_structures": syllables,
@@ -146,6 +148,44 @@ def load_conlang_profile(world_dir: Path, lang_query: str) -> dict:
         "sound_changes": sound_changes,
         "lexicon": lexicon,
     }
+
+def load_all_conlangs(world_dir: Path) -> dict:
+    """Loads all language profiles to build a family tree registry."""
+    dirs_to_check = [
+        world_dir / "Languages",
+        world_dir / "00-World-Bible" / "Languages",
+    ]
+    langs = {}
+    for ldir in dirs_to_check:
+        if not ldir.is_dir():
+            continue
+        for md_file in ldir.rglob("*.md"):
+            if "Template" in md_file.name:
+                continue
+            try:
+                prof = load_conlang_profile(world_dir, md_file.stem)
+                langs[prof["name"]] = prof
+            except Exception:
+                pass
+    return langs
+
+def print_family_tree(langs: dict, root_name: str, prefix: str = "", visited: set | None = None):
+    """Recursively prints the language family tree."""
+    if visited is None:
+        visited = set()
+    if root_name in visited or root_name not in langs:
+        return
+    visited.add(root_name)
+    print(f"{prefix}\033[1;36m{root_name}\033[0m")
+    
+    children = [name for name, p in langs.items() if p.get("proto_language") == root_name]
+    for i, child in enumerate(children):
+        is_last = (i == len(children) - 1)
+        sub_prefix = prefix + (" └── " if is_last else " ├── ")
+        next_prefix = prefix + ("     " if is_last else " │   ")
+        print(f"{sub_prefix}", end="")
+        print_family_tree(langs, child, next_prefix, visited)
+
 
 
 # ==============================================================================
@@ -360,10 +400,30 @@ def main():
     p_lex.add_argument("--markdown", action="store_true", help="Print as Markdown table")
     p_lex.add_argument("--json", action="store_true", help="Output machine-readable JSON")
 
+    # 4. family-tree
+    p_fam = subparsers.add_parser("family-tree", help="Display proto-language family tree registry")
+    p_fam.add_argument("-w", "--world", "--world-dir", dest="world_flag", help="World Bible lore directory")
+    p_fam.add_argument("-r", "--root", help="Root language to display tree for (optional)")
+    p_fam.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+
+    # 5. primer
+    subparsers.add_parser("primer", help="Show comprehensive beginner conlanging primer")
+
     args = parser.parse_args()
 
     if not args.subcommand:
         parser.print_help()
+        sys.exit(0)
+
+    if args.subcommand == "primer":
+        print("\n\033[1;36m=== Beginner Conlanging Primer ===\033[0m")
+        print("Welcome to Ars Arcanum's Conlanging Engine!")
+        print("1. **Phonotactics**: Syllable structures like CV, CVC define how sounds combine.")
+        print("2. **Inventories**: The consonant and vowel charts define the basic sounds of your language.")
+        print("3. **Sound Shifts**: Historical changes follow the format 'A > B / X_Y', meaning 'A becomes B when preceded by X and followed by Y'.")
+        print("   - Example: 'p > f / V_V' (p becomes f between two vowels).")
+        print("4. **Language Families**: Define 'proto_language: Name' in your YAML frontmatter to build a family tree.")
+        print("Use the 'generate', 'mutate', and 'lexicon' commands to play with your language.")
         sys.exit(0)
 
     # Discover world
@@ -375,6 +435,24 @@ def main():
         sys.exit(2)
 
     try:
+        if args.subcommand == "family-tree":
+            langs = load_all_conlangs(Path(world_dir))
+            if args.json:
+                print(json.dumps({"languages": langs}, indent=2))
+            else:
+                print("\n\033[1;36m=== Language Family Trees ===\033[0m\n")
+                if args.root:
+                    if args.root in langs:
+                        print_family_tree(langs, args.root)
+                    else:
+                        print(f"Language '{args.root}' not found.")
+                else:
+                    roots = [name for name, p in langs.items() if not p.get("proto_language")]
+                    for root in roots:
+                        print_family_tree(langs, root)
+                        print()
+            sys.exit(0)
+
         profile = load_conlang_profile(Path(world_dir), args.language)
 
         if args.subcommand == "generate":
@@ -455,3 +533,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

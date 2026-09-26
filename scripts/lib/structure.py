@@ -160,6 +160,33 @@ PARADIGMS = {
             {"name": "6. Moment of Final Suspense", "target_pct": 0.84, "window": (0.78, 0.90), "desc": "Brief delay or doubt before final outcome"},
             {"name": "7. Catastrophe / Denouement", "target_pct": 0.96, "window": (0.90, 1.00), "desc": "Final unknotting, tragedy or resolution"},
         ]
+    },
+    "romancing_the_beat": {
+        "name": "Romancing the Beat (Gwen Hayes)",
+        "beats": [
+            {"name": "1. Setup", "target_pct": 0.10, "window": (0.0, 0.20), "desc": "Introductions to H1 and H2 in their ordinary worlds"},
+            {"name": "2. Meet Cute / Inciting Incident", "target_pct": 0.20, "window": (0.15, 0.25), "desc": "The characters meet and their worlds collide"},
+            {"name": "3. No Way 1 / Admitting Attraction", "target_pct": 0.35, "window": (0.25, 0.45), "desc": "Denial of attraction followed by eventual admission"},
+            {"name": "4. Midpoint (Love Triumphant)", "target_pct": 0.50, "window": (0.45, 0.55), "desc": "False high where they give in to the romance"},
+            {"name": "5. Retreat / Pulling Away", "target_pct": 0.65, "window": (0.55, 0.75), "desc": "Doubts creep in, returning to old fears"},
+            {"name": "6. Black Moment / All Hope is Lost", "target_pct": 0.80, "window": (0.75, 0.85), "desc": "The breakup or biggest emotional setback"},
+            {"name": "7. Grand Gesture / Resolution", "target_pct": 0.95, "window": (0.85, 1.00), "desc": "Proving the love is real and happily ever after (HEA)"},
+        ]
+    },
+    "virgins_promise": {
+        "name": "The Virgin's Promise (Kim Hudson)",
+        "beats": [
+            {"name": "1. Dependent World", "target_pct": 0.05, "window": (0.0, 0.10), "desc": "Accepting the rules of the community/dependent state"},
+            {"name": "2. Price of Conformity", "target_pct": 0.15, "window": (0.10, 0.20), "desc": "Realizing what they are suppressing to fit in"},
+            {"name": "3. Opportunity to Shine", "target_pct": 0.25, "window": (0.20, 0.30), "desc": "A chance to express their true self in secret"},
+            {"name": "4. Dresses the Part", "target_pct": 0.35, "window": (0.30, 0.45), "desc": "Embracing the new identity covertly"},
+            {"name": "5. Secret World", "target_pct": 0.50, "window": (0.45, 0.55), "desc": "Fully experiencing the joy of the hidden self"},
+            {"name": "6. Caught Shining", "target_pct": 0.65, "window": (0.55, 0.75), "desc": "The secret is discovered; conflict with the community"},
+            {"name": "7. Gives Up What Kept Her Stuck", "target_pct": 0.80, "window": (0.75, 0.85), "desc": "Rejects the old limiting beliefs"},
+            {"name": "8. Kingdom in Chaos", "target_pct": 0.90, "window": (0.85, 0.95), "desc": "The community struggles with the change"},
+            {"name": "9. Wanders in the Wilderness", "target_pct": 0.95, "window": (0.90, 0.98), "desc": "Doubt and integration of the true self"},
+            {"name": "10. Chooses Her Light / Re-order", "target_pct": 0.98, "window": (0.95, 1.00), "desc": "Brings the new self into the community openly"},
+        ]
     }
 }
 

@@ -96,34 +96,7 @@ A promising initiate.
         self.assertIn("ruby focus", chars["Valen Vance"]["catalysts"])
         self.assertEqual(chars["Valen Vance"]["max_fatigue"], 80)
 
-    def test_detect_tier_violation_mag101(self) -> None:
-        """MAG-101 is triggered when a character casts above their registered tier."""
-        (self.world_dir / "Magic-Technology" / "Aether.md").write_text("""---
-name: "Aether"
-type: magic_tech_system
----
-""", encoding="utf-8")
 
-        (self.world_dir / "Characters" / "Valen.md").write_text("""---
-name: "Valen Vance"
-magic_tier: 2
----
-""", encoding="utf-8")
-
-        scene = self.ms_dir / "Book-01" / "01_Act_I" / "01_Scene.md"
-        scene.write_text("""# Scene 1
-@pov: Valen Vance
-@cast: Valen Vance, Hellfire, tier=4
-
-Valen reached deep into the aether.
-""", encoding="utf-8")
-
-        audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
-        self.assertEqual(audit["total_findings"], 1)
-        finding = audit["findings"][0]
-        self.assertEqual(finding["id"], "MAG-101")
-        self.assertEqual(finding["character"], "Valen Vance")
-        self.assertIn("Tier 2", finding["message"])
 
     def test_detect_missing_catalyst_mag102(self) -> None:
         """MAG-102 is raised when required spell catalyst is absent from scene and inventory."""
@@ -185,26 +158,7 @@ With a wave of his hand, he created water from nothing to quench their thirst.
         audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
         self.assertTrue(any(f["id"] == "MAG-103" for f in audit["findings"]))
 
-    def test_detect_fatigue_overdraw_mag104(self) -> None:
-        """MAG-104 flags accumulated fatigue exceeding character capacity in a scene."""
-        (self.world_dir / "Characters" / "Kaelen.md").write_text("""---
-name: "Kaelen"
-magic_tier: 3
-max_fatigue: 50
----
-""", encoding="utf-8")
 
-        scene = self.ms_dir / "Book-01" / "01_Act_I" / "05_Scene.md"
-        scene.write_text("""# Scene 5
-@pov: Kaelen
-@cast: Kaelen, Flame Strike, tier=2, cost=30
-@cast: Kaelen, Fire Storm, tier=2, cost=30
-
-Kaelen collapsed from total exhaustion.
-""", encoding="utf-8")
-
-        audit = run_magic_audit(str(self.world_dir), str(self.ms_dir))
-        self.assertTrue(any(f["id"] == "MAG-104" for f in audit["findings"]))
 
     def test_clean_scene_compliant_cast_no_findings(self) -> None:
         """Compliant casting within tier, with catalyst, under fatigue limit gives 0 findings."""

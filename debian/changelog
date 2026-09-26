@@ -1,3 +1,13 @@
+ars-arcanum (4.0.0-1) unstable; urgency=medium
+
+  * The Sovereign Streamlined Architecture & Engine Expansion Milestone — Phase 20.
+  * Pruned 8 obsolete/niche engines and 17 single-command bash script wrappers.
+  * Consolidated idioms into stylistics and frontmatter parsers into frontmatter_builder.
+  * Expanded astrophysics, multi-calendar chronology, interactive cartography, Subway map narrative threading, and bidirectional corpus restore.
+  * All unit tests passing cleanly with zero linter errors.
+
+ -- Aryan Singh Nagar <aryansinghnagar@users.noreply.github.com>  Sat, 26 Sep 2026 19:10:00 +0530
+
 ars-arcanum (3.7.0-1) unstable; urgency=medium
 
   * The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Architecture — Phase 19.

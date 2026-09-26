@@ -121,10 +121,10 @@ class SafetyStudioMixin:
         target = self.current_manuscript_path or self.current_world_path or str(UNIVERSES_DIR)
         now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
         note = f"Quick Snapshot: {now_str}"
-        cmd = [str(PROJECT_ROOT / "scripts" / "save_snapshot.sh"), target, "--note", note]
+        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "snapshot", target, "-m", note]
 
         def _worker():
-            res = subprocess.run(["bash", *cmd], capture_output=True, text=True)
+            res = subprocess.run(cmd, capture_output=True, text=True)
             if HAS_GTK and GLib is not None:
                 if res.returncode == 0:
                     GLib.idle_add(lambda: self.set_status(f"Quick Snapshot recorded for {Path(target).name}!"))
@@ -137,10 +137,10 @@ class SafetyStudioMixin:
     def on_save_snapshot_clicked(self, btn):
         target = self.current_manuscript_path or self.current_world_path or str(UNIVERSES_DIR)
         note = self.entry_snap_note.get_text().strip() or f"Snapshot: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        cmd = [str(PROJECT_ROOT / "scripts" / "save_snapshot.sh"), target, "--note", note]
+        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "snapshot", target, "-m", note]
 
         def _worker():
-            res = subprocess.run(["bash", *cmd], capture_output=True, text=True)
+            res = subprocess.run(cmd, capture_output=True, text=True)
             if HAS_GTK and GLib is not None:
                 if res.returncode == 0:
                     GLib.idle_add(lambda: self.set_status(f"Snapshot saved: {note}"))
@@ -157,11 +157,11 @@ class SafetyStudioMixin:
             self.show_error("Please select an active World or Manuscript first.")
             return
 
-        cmd = [str(PROJECT_ROOT / "scripts" / "backup_world.sh"), target]
+        cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "backup", target]
         self.set_status(f"Creating verified backup for {Path(target).name}...")
 
         def _worker():
-            res = subprocess.run(["bash", *cmd], capture_output=True, text=True)
+            res = subprocess.run(cmd, capture_output=True, text=True)
             if HAS_GTK and GLib is not None:
                 if res.returncode == 0:
                     GLib.idle_add(lambda: self.set_status("Backup completed and verified cleanly!"))
@@ -188,11 +188,11 @@ class SafetyStudioMixin:
         dialog.destroy()
 
         if res == Gtk.ResponseType.OK and archive_path:
-            cmd = [str(PROJECT_ROOT / "scripts" / "restore_world.sh"), archive_path]
+            cmd = ["bash", str(PROJECT_ROOT / "scripts" / "arcanum"), "restore", archive_path]
             self.set_status(f"Restoring {Path(archive_path).name}...")
 
             def _worker():
-                res_proc = subprocess.run(["bash", *cmd], capture_output=True, text=True)
+                res_proc = subprocess.run(cmd, capture_output=True, text=True)
                 if HAS_GTK and GLib is not None:
                     if res_proc.returncode == 0:
                         GLib.idle_add(self.refresh_all_discovery)

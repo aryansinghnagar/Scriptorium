@@ -63,8 +63,7 @@ class TestBackupEncryption(unittest.TestCase):
         if not (self.has_bash and self.has_gpg):
             self.skipTest("Bash and/or GPG not available in environment")
 
-        backup_script = (self.project_root / "scripts" / "backup_world.sh").as_posix()
-        restore_script = (self.project_root / "scripts" / "restore_world.sh").as_posix()
+        arcanum_script = (self.project_root / "scripts" / "arcanum").as_posix()
         dest_dir = self.temp_dir / "Backups"
         dest_dir.mkdir(parents=True, exist_ok=True)
         passphrase = "SecretTestPassphrase123!"
@@ -73,7 +72,8 @@ class TestBackupEncryption(unittest.TestCase):
         res = subprocess.run(
             [
                 "bash",
-                backup_script,
+                arcanum_script,
+                "backup",
                 "-w",
                 self.world_dir.as_posix(),
                 "-d",
@@ -106,7 +106,8 @@ class TestBackupEncryption(unittest.TestCase):
         res_restore = subprocess.run(
             [
                 "bash",
-                restore_script,
+                arcanum_script,
+                "restore",
                 "-a",
                 archive_path.as_posix(),
                 "-d",

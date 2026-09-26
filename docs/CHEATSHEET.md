@@ -50,7 +50,7 @@ arcanum write [TARGET]               # Open writing workspace in novelWriter / O
 arcanum studio [MS] [-w WORLD]       # Standalone offline Zen drafting studio & in-situ lore drawer
 arcanum portfolio [ROOT] [--html]    # Author portfolio dashboard, catalog velocity & progress rollups
 arcanum typography [TARGET] [-i]     # Smart typography normalizer (curly quotes, em/en-dashes, ellipses)
-arcanum barcode <ISBN> [-o OUT.svg]  # Print-ready vector SVG and PNG ISBN-13 / Bookland barcode generator
+arcanum corpus <export|restore> [TARGET] # Universal structured corpus (JSONL/SQLite) and vault restore
 arcanum word [MS]                    # Open manuscript in Microsoft Word / LibreOffice (alias: writer)
 arcanum docx sync [MS]               # Bidirectional synchronization between Word (.docx) & Markdown
 arcanum new <manuscript|world|universe|volume> <NAME>  # Scaffold new project components
@@ -59,28 +59,25 @@ arcanum compare <MS> [NEW] [OLD]     # Visual Redline changelog comparison in br
 arcanum save [TARGET] -m "Note"      # Save Git version milestone snapshot (alias: snapshot)
 arcanum words [MS] [--pov|--json]    # Live word count report and POV balance breakdown
 
-# Local AI Semantic Lore Retrieval & Fine-Tuning Synthesis
+# Local AI Semantic Lore Retrieval & Craft Engines
 arcanum rag <QUERY> [-d DB] [-f FMT] # Sovereign hybrid TF-IDF/FTS5 semantic lore retrieval & LLM context
-arcanum market <list|info|install>   # Curated community speculative fiction plugin marketplace
-arcanum train-data <TARGET> [-f FMT] # Synthesize Alpaca/ShareGPT/ChatML instruction fine-tuning datasets
-arcanum branch <TARGET> [--html|--ink]# Interactive branching fiction DAG validator & multi-engine compiler
+arcanum branch [MS] [--subway]       # Multi-POV narrative thread subway map & storyline convergence tracker
+arcanum ambient [PROFILE]            # Procedural focus soundscape loop player (Rain, Campfire, Drone)
 arcanum hub [TARGET] [--port PORT]   # Sovereign Studio Desktop Hub — unified offline telemetry cockpit
 arcanum sprint <start|stop|status|stats|report> # Writing sprint timer, WPM velocity analytics & dashboard
 arcanum revision-heatmap [MS] [--html] # Snapshot revision churn heatmap & over-revised chapter detector
 arcanum causality [MS] [-w WORLD]     # Causal DAG builder, Novikov self-consistency & loop detector
 arcanum prophecy [MS] [-w WORLD]      # Prophecy resolution matrix & clause cross-validation
 arcanum senses [MS] [--html]          # 6D sensory palette immersion analyzer & White Room linter
-arcanum freeze [TARGET] [--verify M]  # Cosmos archive freeze & cryptographic Merkle-root provenance seal
 arcanum cast [UNIVERSE] [--html|--md] # Multi-volume Dramatis Personae & Universe Cast Matrix
 arcanum codex [WORLD] [-o OUT.html]   # Single-file standalone offline World Wiki & Codex exporter
 arcanum magic-check [WORLD] [-m MS]   # Sanderson hard magic tier, catalyst & fatigue constraint validator
-arcanum cipher <encode|decode|runes>  # In-world ciphers (Caesar, Vigenère, Book) & Rune SVG cards
 arcanum faction <check|battle|logistics> # Geopolitical relations, Lanchester combat & campaign logistics
 arcanum economy <check|ppp|trade>     # Macroeconomic commodity PPP, trade freight margins & anachronisms
 arcanum journey --dist <D> --mode <M> # Overland/naval expedition modeler, terrain friction & supply math
 arcanum map [WORLD] [--svg|--html]    # Offline vector SVG cartography & interactive HTML map viewer
 arcanum pacing [MS] [--html]          # Narrative pacing, POV balance, thread momentum & tension curves
-arcanum structure [MS] -p <PARADIGM>  # 9-Paradigm story structure & beat window enforcer (3-Act, STC, Kisho...)
+arcanum structure [MS] -p <PARADIGM>  # 11-Paradigm story structure & beat window enforcer (3-Act, STC, Kisho...)
 arcanum voice [MS] [--html]           # Character dialogue profiler, TTR, formality & voice bleed detector
 arcanum stylistics [TARGET] [--html]  # Prose linter, said-bookisms, word echoes & readability rhythm
 arcanum ambient [--profile P] [--html]# Procedural focus soundscapes & offline WebAudio studio

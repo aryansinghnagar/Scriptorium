@@ -124,13 +124,37 @@ def load_characters_and_houses(world_dir: Path) -> dict:
                 name = fm.get("name") or md_file.stem
                 
                 # Normalize parents
-                parents = fm.get("parents") or fm.get("parent") or []
-                if isinstance(parents, str):
-                    parents = [parents]
-                if "father" in fm and clean_wikilink(fm["father"]) not in parents:
-                    parents.append(clean_wikilink(fm["father"]))
-                if "mother" in fm and clean_wikilink(fm["mother"]) not in parents:
-                    parents.append(clean_wikilink(fm["mother"]))
+                parents_raw = fm.get("parents") or fm.get("parent") or []
+                if isinstance(parents_raw, str):
+                    parents_raw = [parents_raw]
+                if "father" in fm and fm["father"] not in parents_raw:
+                    parents_raw.append(fm["father"])
+                if "mother" in fm and fm["mother"] not in parents_raw:
+                    parents_raw.append(fm["mother"])
+                
+                parents = []
+                fuzzy_parents = set()
+                for p_raw in parents_raw:
+                    if not p_raw:
+                        continue
+                    p_str = str(p_raw).strip()
+                    is_fuzzy = "~" in p_str or "unknown" in p_str.lower()
+                    
+                    m = re.search(r"\[\[(.*?)\]\]", p_str)
+                    if m:
+                        target = m.group(1).split("|")[0].strip()
+                    else:
+                        if is_fuzzy and " from " in p_str:
+                            target = p_str.split(" from ")[-1].strip().strip("\"'")
+                        elif is_fuzzy and " to " in p_str:
+                            target = p_str.split(" to ")[-1].strip().strip("\"'")
+                        else:
+                            target = clean_wikilink(p_str)
+                    
+                    if target and target.lower() != "unknown":
+                        parents.append(target)
+                        if is_fuzzy:
+                            fuzzy_parents.add(target)
 
                 # Normalize spouses
                 spouses = fm.get("spouses") or fm.get("spouse") or fm.get("consort") or []
@@ -163,6 +187,7 @@ def load_characters_and_houses(world_dir: Path) -> dict:
                     "gender": fm.get("gender", ""),
                     "house": house,
                     "parents": [clean_wikilink(p) for p in parents if p],
+                    "fuzzy_parents": fuzzy_parents,
                     "spouses": [clean_wikilink(s) for s in spouses if s],
                     "children": [clean_wikilink(c) for c in children if c],
                     "born": born,
@@ -243,6 +268,8 @@ def validate_genealogy(chars: dict) -> list:
 
         # Parent vs Child birth dates
         for p_name in c["parents"]:
+            if p_name in c.get("fuzzy_parents", set()):
+                continue
             if p_name in chars:
                 p = chars[p_name]
                 p_b_num = p["born_numeric"]
@@ -279,10 +306,10 @@ def validate_genealogy(chars: dict) -> list:
             claimants = [m["name"] for m in members if m["succession_order"] == dup]
             findings.append({
                 "id": "GEN-102",
-                "severity": "WARNING",
+                "severity": "INFO",
                 "house": h_name,
                 "file": members[0]["file"],
-                "message": f"House '{h_name}' has conflicting succession rank #{dup} claimed by: {', '.join(claimants)}"
+                "message": f"House '{h_name}' has disputed succession rank #{dup} claimed by: {', '.join(claimants)}. (Allowed under fuzzy genealogy rules)"
             })
 
     return findings
@@ -672,3 +699,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

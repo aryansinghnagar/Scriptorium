@@ -51,7 +51,7 @@ class SpeculativeStudioMixin:
             ("📊 Multi-Track Plot Matrix", "Interactive 2D storyline grid mapping subplots across chapters", self.open_plot_matrix_dialog),
             ("📐 Story Paradigm Alignment", "Save the Cat, Hero's Journey, 3-Act structure pacing enforcer", self.open_structure_dialog),
             ("🎧 Focus Soundscapes & Noise", "Rainy library, cozy campfire, deep space drone synthesizer", self.open_ambient_dialog),
-            ("🎧 Auditory Proofreading (TTS)", "Offline neural voice reader for chapter proofreading", self.open_tts_dialog),
+            ("🗺️ Multi-POV Narrative Subway Map", "Track character storyline splits and convergence points", self.open_branching_dialog),
         ]
 
         for idx, (title, desc, cb) in enumerate(engines):

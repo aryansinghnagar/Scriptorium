@@ -102,6 +102,7 @@ class StoryNode:
     choices: list[ChoiceOption] = field(default_factory=list)
     state_mutations: list[dict[str, str]] = field(default_factory=list)
     requirements: list[str] = field(default_factory=list)
+    povs: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -163,6 +164,12 @@ class BranchingNarrativeEngine:
             is_death = bool(fm.get("death", False))
             is_victory = bool(fm.get("victory", False))
 
+            raw_pov = fm.get("pov") or fm.get("povs") or []
+            if isinstance(raw_pov, str):
+                povs = [p.strip() for p in raw_pov.split(",") if p.strip()]
+            else:
+                povs = [str(p) for p in raw_pov if p]
+
             choices: list[ChoiceOption] = []
             state_mutations: list[dict[str, str]] = []
             requirements: list[str] = []
@@ -214,6 +221,7 @@ class BranchingNarrativeEngine:
                 choices=choices,
                 state_mutations=state_mutations,
                 requirements=requirements,
+                povs=povs,
                 metadata=fm,
             )
             self.nodes[node_id] = node
@@ -565,6 +573,154 @@ class BranchingNarrativeEngine:
 </html>
 """
 
+    def export_subway_html(self) -> str:
+        """Generates a Multi-POV Narrative Thread & Convergence Subway Map engine HTML visualization."""
+        nodes_json = json.dumps({nid: n.to_dict() for nid, n in self.nodes.items()}, ensure_ascii=False)
+        
+        # Determine all POVs for color coding
+        all_povs = set()
+        for n in self.nodes.values():
+            all_povs.update(n.povs)
+        
+        pov_colors = {}
+        colors = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316"]
+        for i, p in enumerate(sorted(all_povs)):
+            pov_colors[p] = colors[i % len(colors)]
+        
+        povs_json = json.dumps(pov_colors)
+        
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:;">
+    <title>Multi-POV Subway Map</title>
+    <style>
+        body {{ background: #0f172a; color: #f8fafc; font-family: system-ui, sans-serif; margin: 0; padding: 20px; }}
+        h1 {{ margin-top: 0; color: #38bdf8; }}
+        .legend {{ display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }}
+        .legend-item {{ display: flex; align-items: center; gap: 0.5rem; }}
+        .color-box {{ width: 16px; height: 16px; border-radius: 4px; }}
+        .svg-container {{ overflow: auto; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 20px; }}
+        svg {{ min-width: 800px; min-height: 600px; }}
+    </style>
+</head>
+<body>
+    <h1>Multi-POV Narrative Convergence Map</h1>
+    <div class="legend" id="legend"></div>
+    <div class="svg-container">
+        <svg id="subway-map" width="100%" height="100%"></svg>
+    </div>
+    
+    <script>
+        const nodes = {nodes_json};
+        const povColors = {povs_json};
+        
+        const legend = document.getElementById('legend');
+        for (const [pov, color] of Object.entries(povColors)) {{
+            legend.innerHTML += `<div class="legend-item"><div class="color-box" style="background: ${{color}}"></div>${{pov}}</div>`;
+        }}
+        
+        // Simple DAG topological sort and layer assignment
+        const layers = {{}};
+        const nodeArr = Object.values(nodes);
+        
+        // Assign layers via BFS
+        const queue = [];
+        const inDegree = {{}};
+        nodeArr.forEach(n => inDegree[n.id] = 0);
+        nodeArr.forEach(n => {{
+            n.choices.forEach(ch => {{
+                if (inDegree[ch.target_id] !== undefined) inDegree[ch.target_id]++;
+            }});
+        }});
+        
+        nodeArr.forEach(n => {{
+            if (inDegree[n.id] === 0) {{
+                layers[n.id] = 0;
+                queue.push(n.id);
+            }}
+        }});
+        
+        while (queue.length > 0) {{
+            const curr = queue.shift();
+            const node = nodes[curr];
+            if (!node) continue;
+            node.choices.forEach(ch => {{
+                if (layers[ch.target_id] === undefined || layers[ch.target_id] < layers[curr] + 1) {{
+                    layers[ch.target_id] = layers[curr] + 1;
+                    queue.push(ch.target_id);
+                }}
+            }});
+        }}
+        
+        // Fallback for cycles
+        nodeArr.forEach(n => {{ if (layers[n.id] === undefined) layers[n.id] = 0; }});
+        
+        const layerGroups = {{}};
+        nodeArr.forEach(n => {{
+            const l = layers[n.id];
+            if (!layerGroups[l]) layerGroups[l] = [];
+            layerGroups[l].push(n);
+        }});
+        
+        const maxLayer = Math.max(...Object.keys(layerGroups).map(Number));
+        const svgWidth = (maxLayer + 2) * 200;
+        const svgHeight = Math.max(...Object.values(layerGroups).map(g => g.length)) * 150 + 100;
+        
+        const svg = document.getElementById('subway-map');
+        svg.setAttribute('viewBox', `0 0 ${{svgWidth}} ${{svgHeight}}`);
+        
+        const coords = {{}};
+        for (const l in layerGroups) {{
+            const group = layerGroups[l];
+            group.forEach((n, idx) => {{
+                const x = parseInt(l) * 200 + 100;
+                const y = idx * 150 + 100;
+                coords[n.id] = {{x, y}};
+            }});
+        }}
+        
+        // Draw edges
+        let edgeElements = '';
+        nodeArr.forEach(n => {{
+            const start = coords[n.id];
+            const activePovs = n.povs.length > 0 ? n.povs : ['default'];
+            n.choices.forEach((ch, cIdx) => {{
+                const target = coords[ch.target_id];
+                if (start && target) {{
+                    activePovs.forEach((pov, pIdx) => {{
+                        const color = povColors[pov] || '#64748b';
+                        const offset = (pIdx - (activePovs.length-1)/2) * 8;
+                        edgeElements += `<path d="M ${{start.x}} ${{start.y + offset}} C ${{start.x + 100}} ${{start.y + offset}}, ${{target.x - 100}} ${{target.y + offset}}, ${{target.x}} ${{target.y + offset}}" fill="none" stroke="${{color}}" stroke-width="4" stroke-opacity="0.7" />`;
+                    }});
+                }}
+            }});
+        }});
+        svg.innerHTML += edgeElements;
+        
+        // Draw nodes
+        let nodeElements = '';
+        nodeArr.forEach(n => {{
+            const pos = coords[n.id];
+            if (pos) {{
+                const fill = n.is_ending ? '#ef4444' : (n.is_root ? '#10b981' : '#334155');
+                const rad = n.povs.length > 1 ? 14 : 10;
+                nodeElements += `<circle cx="${{pos.x}}" cy="${{pos.y}}" r="${{rad}}" fill="${{fill}}" stroke="#f8fafc" stroke-width="2" />`;
+                nodeElements += `<text x="${{pos.x}}" y="${{pos.y + 25}}" fill="#f8fafc" font-size="12" text-anchor="middle" font-weight="bold">${{n.title}}</text>`;
+                if (n.povs.length > 0) {{
+                    nodeElements += `<text x="${{pos.x}}" y="${{pos.y + 40}}" fill="#94a3b8" font-size="10" text-anchor="middle">${{n.povs.join(', ')}}</text>`;
+                }}
+            }}
+        }});
+        svg.innerHTML += nodeElements;
+        
+    </script>
+</body>
+</html>
+"""
+
 
 # ==============================================================================
 # CLI Entry Point
@@ -577,6 +733,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("target", help="Path to branching manuscript or world directory")
     parser.add_argument("--html", help="Export standalone playable HTML gamebook reader to file")
+    parser.add_argument("--subway", help="Export Multi-POV subway map visualization to file")
     parser.add_argument("--ink", help="Export Inkle Ink narrative script (.ink) to file")
     parser.add_argument("--twine", help="Export Twine 2 Twee 3 format (.twee) to file")
     parser.add_argument("--mermaid", help="Export Obsidian Mermaid flowchart to file")
@@ -622,6 +779,11 @@ def main(argv: list[str] | None = None) -> int:
         atomic_write(out_html, engine.export_playable_html())
         print(f"\n✓ Playable HTML reader exported to: {out_html}")
 
+    if args.subway:
+        out_subway = Path(args.subway).resolve()
+        atomic_write(out_subway, engine.export_subway_html())
+        print(f"\n✓ Multi-POV subway map exported to: {out_subway}")
+
     if args.ink:
         out_ink = Path(args.ink).resolve()
         atomic_write(out_ink, engine.export_ink())
@@ -637,8 +799,8 @@ def main(argv: list[str] | None = None) -> int:
         atomic_write(out_mermaid, engine.export_mermaid())
         print(f"✓ Mermaid flowchart exported to: {out_mermaid}")
 
-    if not (args.html or args.ink or args.twine or args.mermaid):
-        print("\nPass --html, --ink, --twine, or --mermaid to export narrative formats.")
+    if not (args.html or args.subway or args.ink or args.twine or args.mermaid):
+        print("\nPass --html, --subway, --ink, --twine, or --mermaid to export narrative formats.")
 
     if args.audit and any(d.severity == "error" for d in engine.diagnostics):
         return 1
@@ -648,3 +810,5 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+

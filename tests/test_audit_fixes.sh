@@ -626,11 +626,7 @@ python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert "findings
 python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert "overall_percentages" in d' "${TMP_DIR}/senses.json"
 echo "  OK Test 36 passed: Idiom immersion audit and 6D Sensory Palette verified"
 
-echo "[Test 37] Inscriptions, In-World Ciphers & Prophecy Matrix..."
-bash scripts/arcanum cipher encode "SECRET VAULT" --type vigenere --key "LORE" --json > "${TMP_DIR}/cipher.json"
-python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["ciphertext"] != "SECRET VAULT"' "${TMP_DIR}/cipher.json"
-bash scripts/arcanum cipher runes "Thor" --json > "${TMP_DIR}/runes.json"
-python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert len(d["runes"]) > 0' "${TMP_DIR}/runes.json"
+echo "[Test 37] Prophecy Lifecycle & Fulfillment Matrix..."
 cat > "${WORLD_PATH}/Cosmology/Prophecies/Sun_Prophecy.md" << 'EOF'
 ---
 name: "Sun Prophecy"
@@ -642,6 +638,6 @@ clauses:
 EOF
 bash scripts/arcanum prophecy "${WORLD_PATH}" --json > "${TMP_DIR}/prophecy.json"
 python3 -c 'import sys, json; d = json.load(open(sys.argv[1])); assert d["prophecies_count"] >= 1' "${TMP_DIR}/prophecy.json"
-echo "  OK Test 37 passed: Ciphers, Runes & Prophecy Matrix verified"
+echo "  OK Test 37 passed: Prophecy Matrix verified"
 
 echo "ALL TARGETED TESTS PASSED SUCCESSFULLY!"

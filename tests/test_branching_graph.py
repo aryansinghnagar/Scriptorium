@@ -187,21 +187,51 @@ class TestBranchingNarrativeGraph(unittest.TestCase):
         self.assertIn("default-src 'none'", html_doc)
         self.assertIn("The Crossroads", html_doc)
 
+    def test_multi_pov_parsing_and_subway_export(self) -> None:
+        """Verifies parsing of POV storylines and subway map HTML export."""
+        sub_dir = self.root / "MultiPOV"
+        sub_dir.mkdir(parents=True, exist_ok=True)
+        (sub_dir / "01_Start.md").write_text(
+            "---\nid: start\ntitle: The Journey Begins\npov: Kaelen\nroot: true\n---\n"
+            "@choice: \"Follow Elara\" -> elara_path\n"
+            "@choice: \"Go alone\" -> solo_path\n",
+            encoding="utf-8",
+        )
+        (sub_dir / "Elara_Path.md").write_text(
+            "---\nid: elara_path\ntitle: The Elven Trail\npovs: [Kaelen, Elara]\nending: true\n---\n"
+            "@ending: true\n",
+            encoding="utf-8",
+        )
+        
+        engine = BranchingNarrativeEngine()
+        engine.load_from_directory(sub_dir)
+        
+        self.assertIn("Kaelen", engine.nodes["start"].povs)
+        self.assertIn("Elara", engine.nodes["elara_path"].povs)
+        
+        subway_html = engine.export_subway_html()
+        self.assertIn("Kaelen", subway_html)
+        self.assertIn("Elara", subway_html)
+        self.assertIn("<svg id=\"subway-map\"", subway_html)
+
     def test_cli_execution(self) -> None:
         """Verifies CLI execution with multi-format outputs."""
         out_html = self.root / "gamebook.html"
+        out_subway = self.root / "subway.html"
         out_ink = self.root / "story.ink"
         out_twine = self.root / "story.twee"
 
         code = branching_main([
             str(self.root),
             "--html", str(out_html),
+            "--subway", str(out_subway),
             "--ink", str(out_ink),
             "--twine", str(out_twine),
             "--audit",
         ])
         self.assertEqual(code, 0)
         self.assertTrue(out_html.is_file())
+        self.assertTrue(out_subway.is_file())
         self.assertTrue(out_ink.is_file())
         self.assertTrue(out_twine.is_file())
 

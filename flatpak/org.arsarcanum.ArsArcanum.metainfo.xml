@@ -17,8 +17,8 @@
       <li>Interactive Visual Story Canvas: Drag-and-drop scene corkboard with live pacing harmony score recalculation.</li>
       <li>Dual-Track Timeline Synchronizer: Aligns narrative reading order with in-world chronological epochs and detects temporal paradoxes.</li>
       <li>Multi-Volume Series Omnibus Compiler: Compiles multi-book series into unified omnibus editions with merged Dramatis Personae.</li>
-      <li>Speculative Fiction Plugin Architecture: Extensible zero-dependency craft and world lore linters.</li>
-      <li>Publication Toolchain: Compiles to Print PDF (Typst), EPUB3 (with SMIL Media Overlays), and Word DOCX.</li>
+      <li>Speculative Fiction Craft Engines: Invariant craft and world lore linters across astrophysics, climate, genealogy, conlang, and magic.</li>
+      <li>Publication Toolchain: Compiles to Print PDF (Typst), EPUB3, and Word DOCX.</li>
       <li>Fail-Safe Data Protection: Atomic writes, multi-tier Git version milestones, and optional GPG AES-256 encrypted backups.</li>
     </ul>
   </description>
@@ -55,6 +55,11 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="4.0.0" date="2026-09-26">
+      <description>
+        <p>Phase 20 Release — Sovereign Modernization, Trimming &amp; Craft Architecture v4.0.0: Consolidated zero-dependency craft engines, Multi-POV Narrative Thread Subway Map (arcanum branch --subway), Universal Structured Corpus Exporter &amp; Vault Restore (arcanum corpus), Custom Planetary &amp; Non-Standard Astrophysics Configurations (arcanum calc astro), Invariant Multi-Calendar Chronology Engine (arcanum calendar), Interactive Vector Cartography &amp; Coordinate Landmark Editor (arcanum map), and 21-Stage Grand Tour Master Integration Lifecycle Harness.</p>
+      </description>
+    </release>
     <release version="3.7.0" date="2026-09-25">
       <description>
         <p>Phase 19 Release — The Sovereign Local Intelligence, Editorial Intelligence &amp; Narrative Distribution Architecture: Interactive Branching Narrative Graph &amp; Choice Engine (arcanum branch), Local Semantic Retrieval RAG &amp; Context Synthesis Engine (arcanum rag), Multi-Perspective Autonomous Editorial Council Engine (arcanum council), Local AI Fine-Tuning &amp; Dataset Synthesizer (arcanum train-data), Universal Structured Corpus &amp; RAG Dataset Exporter (arcanum corpus), Offline Neural TTS &amp; Audio Proofreader (arcanum tts), Multi-Platform Distribution &amp; Packaging Engine (arcanum package), World Doctor &amp; Cosmos Integrity Diagnostics (arcanum doctor), and 21-Stage Grand Tour Master Integration Lifecycle Harness.</p>

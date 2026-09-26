@@ -208,7 +208,7 @@ def audit_causality(events: dict, timelines: dict) -> list:
         cycle_nodes = [events[c] for c in cycle if c in events]
         paradox_types = {c.get("paradox_type", "") for c in cycle_nodes if c.get("paradox_type")}
 
-        if "novikov-violation" in paradox_types or "novikov_violation" in paradox_types:
+        if "novikov-violation" in paradox_types or "novikov_violation" in paradox_types or "fixed" in paradox_types:
             findings.append({
                 "id": "CAU-103",
                 "severity": "ERROR",
@@ -216,6 +216,26 @@ def audit_causality(events: dict, timelines: dict) -> list:
                 "cycle": cycle,
                 "file": cycle_nodes[0]["file"] if cycle_nodes else "",
             })
+        elif "dynamic" in paradox_types or "mutable" in paradox_types:
+            findings.append({
+                "id": "CAU-201",
+                "severity": "WARNING",
+                "message": f"Butterfly Effect Overwrite (Dynamic): {cycle_str}",
+                "cycle": cycle,
+                "file": cycle_nodes[0]["file"] if cycle_nodes else "",
+            })
+        elif "multiverse" in paradox_types or "everett" in paradox_types:
+             continue
+        elif "time-loop" in paradox_types or "groundhog" in paradox_types:
+             findings.append({
+                "id": "CAU-202",
+                "severity": "WARNING",
+                "message": f"Groundhog Reset Loop: {cycle_str}",
+                "cycle": cycle,
+                "file": cycle_nodes[0]["file"] if cycle_nodes else "",
+            })
+        elif "relativistic" in paradox_types or "chrono-bubble" in paradox_types:
+             continue
         elif "bootstrap" in paradox_types or "predestination" in paradox_types:
             # Self-consistent closed timelike curve
             continue
@@ -623,3 +643,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

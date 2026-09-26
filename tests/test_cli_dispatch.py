@@ -44,13 +44,7 @@ class TestCliDispatch(unittest.TestCase):
             self.assertIn("astrophysics", output)
             self.assertIn("cartography", output)
 
-    def test_engines_filtered_flags(self):
-        with patch("sys.stdout", new_callable=StringIO) as mock_out:
-            rc = main(["plugins", "--craft"])
-            self.assertEqual(rc, 0)
-            output = mock_out.getvalue()
-            self.assertIn("[CRAFT]", output)
-
+    
     def test_calc_subcommands_route_help(self):
         calc_targets = [
             "transit", "time-dilation", "orbit", "comms",
@@ -84,7 +78,6 @@ class TestCliDispatch(unittest.TestCase):
             ["genealogy", "--help"],
             ["lineage", "--help"],
             ["conlang", "--help"],
-            ["cipher", "--help"],
             ["calendar", "--help"],
             ["concordance", "--help"],
             ["series", "--help"],
@@ -96,8 +89,7 @@ class TestCliDispatch(unittest.TestCase):
             ["structure", "--help"],
             ["ambient", "--help"],
             ["portfolio", "--help"],
-            ["read", "--help"],
-            ["barcode", "--help"],
+            
             ["matter", "--help"],
             ["polish", "typography", "--help"],
             ["preflight", "--help"],

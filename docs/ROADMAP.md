@@ -156,10 +156,10 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] Scene mechanics & MRU analyzer (`scripts/lib/scene_mechanics.py`, `arcanum audit scenes`): Goal-Conflict-Disaster and Motivation-Reaction Unit validation (`SCN-101` to `SCN-103`).
 - [x] Procedural WebAudio & WAV ambient sound generator (`scripts/lib/ambient.py`, `arcanum ambient`): Distraction-free synthesized sound generator (rain, crackling hearth, cosmic drone, library whispers, mechanical clock) with HTML5 WebAudio player and offline WAV generator.
 
-### M24: Pre-Flight Typesetting, Barcodes & Publishing Compliance (L4)
+### M24: Pre-Flight Typesetting, Matter & Publishing Compliance (L4)
 - [x] Pre-flight publication linter (`scripts/lib/preflight.py`, `arcanum preflight`): Automated print PDF and EPUB compliance validation for trim size, gutter margin ratios, straight quotes in prose, missing cover art, and metadata integrity (`PRF-101` to `PRF-105`).
-- [x] ISBN-13 & EAN-13 vector SVG/PNG barcode generator (`scripts/lib/barcode.py`, `arcanum barcode`): Checksum validation, 5-digit price extension, vector SVG with typography labels, and optional PNG rasterization.
-- [x] Front & Back matter modular builder (`scripts/lib/frontmatter_builder.py`, `arcanum frontmatter`): Automated Copyright page generation (Berne/US Copyright/CC), Dedication, Epigraph, Acknowledgments, Also-by-Author matrix, and Reader Magnet CTAs.
+- [x] Universal structured corpus exporter & vault restore (`scripts/lib/corpus_export.py`, `arcanum corpus`): Heading-aware AST chunking to JSONL/SQLite and bidirectional vault recovery.
+- [x] Front & Back matter modular builder (`scripts/lib/frontmatter_builder.py`, `arcanum matter build`): Automated Copyright page generation (Berne/US Copyright/CC), Dedication, Epigraph, Acknowledgments, Also-by-Author matrix, and Reader Magnet CTAs.
 - [x] Publishing submission query & synopsis packager (`scripts/init_query.py`, `arcanum query`): Generates 1-Page Synopsis, 3-Paragraph Query Letter, 250-Word Elevator Pitch, and Logline from manuscript metadata.
 
 ### M25: Interactive Cartography, Codex Wiki & Series Continuity (L5)
@@ -173,26 +173,24 @@ Ars Arcanum is a purpose-built, distraction-free, low-effort writing and worldbu
 - [x] Executive portfolio project dashboard (`scripts/lib/portfolio.py`, `arcanum portfolio`): Aggregated metrics across all `~/Manuscripts/` and `~/Universes/` with wordcount velocity, stage breakdown, and publication readiness scores.
 
 ### M27: Desktop Experience & Dual-GUI Modernization
-- [x] Native GTK 3 desktop integration: Updated `scripts/lib/ui_gtk3.py` with 6-studio workflow layout, integrated diagnostic actions, wordcount velocity charts, and draft management.
+- [x] Native GTK 3 desktop integration: Updated `scripts/lib/ui_gtk3/` with modular 6-studio presentation package, integrated diagnostic actions, wordcount velocity charts, and draft management.
 - [x] GTK 4 / Libadwaita modern desktop layer: Updated `scripts/lib/ui_adw.py` with responsive viewports, system dark mode sync, and toast notifications.
 
-### M28: Sovereign Privacy-First Audio Proofreader (Intelligence)
-- [x] Offline neural audio proofreading player (`scripts/lib/tts_reader.py`, `arcanum read`): Local auditory proofreading engine with Piper TTS / espeak-ng subprocess bridge, paragraph tracking, speed modulation (`0.75x` to `2.0x`), and WAV compilation.
-
-### M30: Sovereign Intelligence, Extensibility & Long-Term Sustainability (Phases 8–19)
-- [x] **Universal Corpus & Local Semantic RAG**: Universal structured RAG exporter (`scripts/lib/corpus_export.py`), hybrid TF-IDF + FTS5 vector lore query engine (`scripts/lib/local_rag.py`), and local AI fine-tuning dataset synthesizer (`scripts/lib/fine_tuning.py`).
-- [x] **Autonomous Editorial Intelligence & Zen Studio**: 4-persona autonomous editorial council (`scripts/lib/editorial_council.py`), standalone distraction-free Zen drafting studio (`scripts/lib/zen_studio.py`), and visual story canvas (`scripts/lib/story_canvas.py`).
-- [x] **Branching Fiction & Audio Overlays**: Interactive branching narrative graph compiler (`scripts/lib/branching_graph.py`), EPUB 3 SMIL media overlays (`scripts/lib/media_overlay.py`), and multi-volume series omnibus compiler (`scripts/lib/omnibus.py`).
-- [x] **Craft Deepening & System Hardening**: Writing sprint analytics (`scripts/lib/writing_sprint.py`), revision churn density heatmap (`scripts/lib/revision_heatmap.py`), causal DAG paradox validator (`scripts/lib/causality.py`), prophecy resolution matrix (`scripts/lib/prophecy.py`), 6D sensory immersion palette (`scripts/lib/senses.py`), and cryptographic archive freeze sealer (`scripts/lib/archive_freeze.py`).
-- [x] **Desktop Hub & Grand Tour**: Studio Desktop Hub (`scripts/lib/studio_hub.py`), 21-stage Grand Tour E2E integration lifecycle harness (`tests/test_grand_tour_e2e.py`), and offline self-contained Flatpak runtime bundle builder.
+### M28: Sovereign Craft Architecture & Multi-POV Narrative Subway Map (v4.0.0)
+- [x] Multi-POV narrative thread subway map (`scripts/lib/branching_graph.py`, `arcanum branch --subway`): Visualizer tracking character storyline splits, convergences, and POV momentum.
+- [x] Universal structured corpus exporter & bidirectional vault restorer (`scripts/lib/corpus_export.py`, `arcanum corpus`).
+- [x] Invariant multi-calendar & multi-era temporal projection engine (`scripts/lib/calendar.py`, `arcanum calendar`).
+- [x] Non-standard planetary configuration engine (`scripts/lib/astrophysics.py`, `arcanum calc astro`).
+- [x] 11-paradigm non-imposing story structure mapper (`scripts/lib/structure.py`, `arcanum structure`).
+- [x] Zero-pip dependency guarantee across all 18 craft and authoring engines.
 
 ---
 
 ## 5. Real-Time Operational Status & Momentum Queues
 
 ### Operational State
-- **Active Status**: The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Milestone (**v3.7.0**).
-- **Verification**: **100% Pass Rate across 797 Python tests** (795 passed, 0 failures, 2 skipped) and the canonical 7-stage verification harness (`scripts/verify.sh`).
+- **Active Status**: Sovereign Modernization, Trimming & Craft Architecture (**v4.0.0**).
+- **Verification**: **100% Pass Rate across 681 Python tests** (681 passed, 0 failures, 2 skipped) and canonical 7-stage verification harness (`scripts/verify.sh`).
 - **Code Quality**: Zero Ruff linter violations across expanded rule sets, strict static typing via `mypy`, 100% pure Python standard library core craft engines, zero external pip dependencies.
 
 ---

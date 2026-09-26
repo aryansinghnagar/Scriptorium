@@ -4,6 +4,39 @@ All notable changes to Ars Arcanum are documented in this file. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Scope decisions
 behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## [4.0.0] - 2026-09-26
+
+### Removed (Architectural Trimming & Decommissioning)
+- **Pruned 8 Obsolete/Niche Engines**: Removed `fine_tuning.py`, `cipher.py`, `editorial_council.py`, `barcode.py`, `archive_freeze.py`, `tts_reader.py`, `media_overlay.py`, and `plugins.py`/`plugin_market.py` along with their corresponding unit tests, eliminating dead code and maintenance overhead.
+- **Pruned Redundant Shell Scripts**: Removed 17 auxiliary single-line shell scripts in `scripts/`, standardizing repository execution exclusively on canonical `scripts/arcanum`, `scripts/verify.sh`, and `scripts/setup_arcanum.sh`.
+
+### Changed & Consolidated
+- **Consolidated Stylistics & Cultural Idioms**: Merged `idioms.py` directly into `scripts/lib/stylistics.py` as an optional cultural immersion check; consolidated duplicate frontmatter parsing into `frontmatter_builder.py`.
+- **Non-Imposing Creative Advisory Doctrine**: Replaced rigid blocking validation with advisory diagnostic linters across magic systems, story structure paradigms, and tactical battle planning (`ADR-112`).
+- **Synchronized Registry, CLI & Studio Hub**: Updated `registry.py`, `cli.py`, `studio_hub.py`, `ui_adw.py`, and `ui_gtk3` presentation packages to reflect the streamlined engine matrix.
+
+### Added (Craft & Worldbuilding Engine Expansions)
+- **Astrophysics & Exotic Planetary Configurations** (`scripts/lib/astrophysics.py`, `arcanum calc system-dossier`):
+  - Support for non-standard planetary configurations: tidally locked eyeball worlds, habitable gas giant exomoons, brown dwarf worlds, circumbinary P/S-types, and hycean worlds.
+  - Parameter tinkering sweet-spot calculation engine, scientific plausibility warning advisor, and Star System Dossier export with direct orbital insolation integration for `climate.py` (`ADR-113`).
+- **Multi-Calendar & Multi-Era Chronology** (`scripts/lib/calendar.py`, `arcanum calendar`):
+  - Multi-calendar registry with custom date syntax templates and era suffixes (no hardcoded dd/mm/yyyy or BC/AD).
+  - Continuous underlying epoch timeline projection across arbitrary fictional calendar systems.
+- **Multi-POV Narrative Thread & Convergence Subway Map** (`scripts/lib/branching_graph.py`, `arcanum branch`):
+  - Reworked from gamebook choice DAGs into a Multi-POV Narrative Thread & Convergence Subway Map tracking character storyline splits, convergences, and timeline milestones (`ADR-114`).
+- **Interactive HTML5/SVG Graphical Map Creator** (`scripts/lib/cartography.py`, `arcanum map --creator`):
+  - In-browser interactive graphical world map editor and SVG/PNG exporter.
+- **Bidirectional Structured Corpus & Vault Restore** (`scripts/lib/corpus_export.py`, `arcanum corpus restore`):
+  - Full bidirectional restoration of World Bibles and Manuscripts from exported JSONL or SQLite archives.
+- **Expanded Story Structure Paradigms** (`scripts/lib/structure.py`, `arcanum structure`):
+  - Expanded advisory structural mapping across 11+ paradigms (Three-Act, Save the Cat, Hero's Journey, Dan Harmon Story Circle, Kishōtenketsu, 8-Sequence, Fichtean Curve, 7-Point, Freytag's Pyramid, Romancing the Beat, Virgin's Promise).
+- **Fuzzy Dynastic Genealogies** (`scripts/lib/genealogy.py`, `arcanum genealogy`):
+  - Relaxed generational builder supporting unrecorded/collapsed generations and disputed succession claims.
+- **Multi-Paradigm Causality & Time-Travel Consistency** (`scripts/lib/causality.py`, `arcanum causality`):
+  - Validates Fixed/Novikov self-consistency, Dynamic Butterfly divergence, Multiverse Branching, Time Loops, and Chrono-bubbles.
+- **Custom Character Attributes & Cross-Volume Evolution** (`scripts/lib/series_continuity.py`, `arcanum continuity`):
+  - Arbitrary user-defined character attribute tracking and cross-volume progression.
+
 ## [3.7.0] - 2026-09-25
 
 ### Added (The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Architecture — Phase 19)
@@ -691,3 +724,7 @@ behind each wave are recorded in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Co-located `sha256.manifest` backups are documented as integrity-only
   (bit-rot protection), not authenticity — stated plainly in SECURITY.md and
   the backup code comments.
+
+
+## Phase 3 Update
+causality.py and series_continuity.py have been updated with multi-paradigm time-travel validation and custom attribute tracking.

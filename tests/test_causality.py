@@ -301,5 +301,13 @@ class TestCausalityEngine(unittest.TestCase):
         )
 
 
+
+    def test_dynamic_butterfly(self):
+        self._write(self.ms_dir, "event-1.md", "---\ncauses: [event-2]\nparadox_type: dynamic\n---\n@timeline: prime\n")
+        self._write(self.ms_dir, "event-2.md", "---\ncauses: [event-1]\nparadox_type: dynamic\n---\n@timeline: prime\n")
+        events, timelines = extract_causal_nodes(self.world_dir, self.ms_dir)
+        findings = audit_causality(events, timelines)
+        self.assertTrue(any(f["id"] == "CAU-201" for f in findings))
+
 if __name__ == "__main__":
     unittest.main()

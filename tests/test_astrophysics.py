@@ -17,7 +17,7 @@ from lib.astrophysics import (
     G0, AU, LIGHT_YEAR, EARTH_MASS, EARTH_RADIUS,
     parse_distance, parse_acceleration, format_duration, format_distance,
     calc_brachistochrone, calc_time_dilation, calc_orbital_transfer,
-    calc_comms_delay, calc_habitability_gravity, generate_astrophysics_html_report
+    calc_comms_delay, calc_habitability_gravity, generate_astrophysics_html_report, calc_planetary_dossier
 )
 
 
@@ -129,6 +129,20 @@ class TestAstrophysicsEngine(unittest.TestCase):
             content = out_file.read_text(encoding="utf-8")
             self.assertIn("Test Flight", content)
             self.assertIn("Ars Arcanum Relativistic & Astrophysics Engine", content)
+
+
+
+    def test_planetary_dossier(self):
+        dossier = calc_planetary_dossier(
+            mass_kg=EARTH_MASS, radius_m=EARTH_RADIUS,
+            star_luminosity_watts=3.828e26, semi_major_axis_au=1.0,
+            planet_type="tidally-locked"
+        )
+        self.assertEqual(dossier["planet_type"], "tidally-locked")
+        self.assertIn("habitability_metrics", dossier)
+        self.assertIn("climate_insolation", dossier)
+        self.assertIn("climate_circulation", dossier)
+        self.assertTrue(any("Tidally locked" in w for w in dossier["scientific_plausibility_warnings"]))
 
 
 if __name__ == "__main__":

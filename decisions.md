@@ -446,3 +446,23 @@
 
 
 
+
+### ADR-111: Granular Architectural Trimming and Redundancy Decommissioning
+- **Context**: Over iterative development phases, speculative sub-features (offline AI fine-tuning datasets, synthetic speech readers, classical ciphers, barcode generators, plugin marketplace, editorial council personas, Merkle freeze provenance, and redundant single-command shell wrappers) introduced architectural weight and maintenance overhead without commensurate everyday authoring utility.
+- **Decision**: Decommission 8 obsolete/niche engines (`fine_tuning.py`, `cipher.py`, `editorial_council.py`, `barcode.py`, `archive_freeze.py`, `tts_reader.py`, `media_overlay.py`, `plugins.py`/`plugin_market.py`) and 17 auxiliary shell scripts in `scripts/`. Consolidate `idioms.py` directly into `stylistics.py` and consolidate frontmatter parsing into `frontmatter_builder.py`.
+- **Consequences**: Streamlines repository surface area, eliminates dead code, reduces unit test execution time, and focuses the codebase on core speculative worldbuilding, drafting, manuscript syncing, and publishing workflows.
+
+### ADR-112: Non-Imposing Creative Advisory Paradigm
+- **Context**: Worldbuilding and authoring tools that rigidly reject creative choices (such as hard magic limits, strict 3-act percentage targets, or strict Lanchester combat models) restrict narrative flow and conflict with speculative fiction flexibility.
+- **Decision**: Establish a non-imposing creative advisor doctrine across all craft engines (`magic_system.py`, `structure.py`, `tactical_sim.py`, `astrophysics.py`). Engines provide helpful diagnostic warnings, plausibility advice, and consistency detection without enforcing artificial blockers on creative drafts.
+- **Consequences**: Authors maintain full creative sovereignty while receiving mathematically sound, context-aware suggestions and contradiction warnings.
+
+### ADR-113: Expanded Astrophysics, Climate Linkages & Multi-Calendar Chronology
+- **Context**: Sci-fi and fantasy worldbuilders require non-standard planetary configurations (tidally locked eyeball worlds, habitable gas giant moons, brown dwarf systems, circumbinaries, hycean worlds) and complex in-universe calendar systems with custom date templates and epoch numbering.
+- **Decision**: Enhance `astrophysics.py` with non-standard planetary configurations, parameter tinkering sweet-spot guidance, Star System Dossier export, and direct orbital insolation integration with `climate.py`. Enhance `calendar.py` with multi-calendar and multi-era registries, customizable date formatting syntax, and continuous epoch timeline projection.
+- **Consequences**: Worldbuilders can simulate exotic astrophysical systems and track intricate multi-era chronologies with precision and ease.
+
+### ADR-114: Multi-POV Narrative Threading, Bidirectional Vault Restore & Interactive Cartography
+- **Context**: Multi-POV novels and complex series require tracking character thread divergences and convergences, interactive map design, and complete data mobility between exported structured datasets and live lore vaults.
+- **Decision**: Refactor `branching_graph.py` into a Multi-POV Narrative Thread & Convergence Subway Map engine (`arcanum branch`). Refactor `cartography.py` to include an interactive HTML5/SVG graphical map creator and editor. Implement bidirectional vault restore in `corpus_export.py` (`arcanum corpus restore <archive>`). Enhance `genealogy.py` with fuzzy generational lineages supporting unrecorded generations and disputed succession claims.
+- **Consequences**: Comprehensive narrative tracking, visual cartographic tools, and resilient bidirectional data roundtripping across the entire Ars Arcanum ecosystem.

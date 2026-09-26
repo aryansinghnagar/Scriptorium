@@ -20,7 +20,7 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-VERSION = "3.7.0"
+VERSION = "4.0.0"
 
 # Add scripts directory to path
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent
@@ -49,16 +49,11 @@ Usage:
   save [TARGET] [-m "note"]    Save an instant Git version milestone (alias: snapshot)
   publish [MS] [options]       Compile to print PDF, EPUB, or DOCX (alias: export, compile)
   preflight [MS]               Pre-flight typesetting & compliance validator (PUB-101)
-  barcode <ISBN>               Generate publication-grade ISBN-13 vector SVG/PNG barcode (PUB-102)
   matter build [MS]            Generate modular front matter and back matter files (PUB-103)
   query [MS]                   Scaffold submission package: query letter, synopsis, tracker (PUB-106)
   polish typography [TARGET]   Normalize smart curly quotes, em-dashes, and ellipses (PRO-104)
-  read [TARGET] [--speak|--html] Offline neural audio proofreading & WebAudio player (INT-101)
-  overlay [MS] [--html|--smil] EPUB 3 SMIL Media Overlays & synchronized narration player
-  council [MS] [-w WORLD]      Multi-perspective editorial council workshop audit
   rag <QUERY> [opts]           Sovereign local semantic retrieval & LLM context synthesis (alias: query-lore)
-  train-data <TARGET> [opts]   Synthesize Alpaca/ShareGPT/ChatML instruction datasets (alias: lora-dataset)
-  branch <TARGET> [opts]       Interactive branching narrative graph & choice engine (alias: branching)
+  branch <TARGET> [opts]       Multi-POV narrative thread & convergence subway map (PLT-103)
   words [MS] [--md|--json|--pov] Show live word counts and chapter analytics (alias: report, count)
   pace [MS] [--pov|--html]     Analyze dialogue/action density & prose rhythm
   tension [MS] [--html]        Model chapter tension curve & narrative arcs
@@ -68,33 +63,33 @@ Usage:
   timeline [MS|WORLD] [--html] Dual-track chronological vs narrative timeline synchronizer
   omnibus <UNIVERSE> [--html]  Compile multi-volume series omnibus with unified lore
   corpus <TARGET> [-f FORMAT]  Universal structured JSONL, SQLite & RAG dataset exporter
-  freeze [TARGET] [options]    Cosmos archive freeze & cryptographic provenance seal
-  ambient [PROFILE]            Focus noise & binaural beat synthesizer (PLT-106)
+  ambient [PROFILE]            Focus soundscape loop player (PLT-106)
   portfolio [DIR] [--html]     Multi-manuscript catalog dashboard & drafting velocity (OPS-103)
   package [MS] [-t TARGET]     Multi-platform release packager: Reader, Submission, ARC (OPS-101)
+  sprint [MS]                  Sovereign writing sprint timer & productivity analytics
+  revision-heatmap [MS]        Manuscript revision density & churn heatmap
 
 🪐 Universe, World Lore & Series Continuity:
   universe [NAME] [--list]     Create or list narrative universes in ~/Universes/
   world <NAME> [-u UNIVERSE]   Scaffold an Obsidian World Lore Vault
   cast [UNIVERSE] [--html|--md] Multi-volume Dramatis Personae & Universe Cast Matrix (alias: dramatis-personae)
-  map <WORLD> [--html|--svg]   Interactive offline vector cartography & map viewer (WOR-101)
+  map <WORLD> [--html|--svg]   Interactive offline vector cartography & map editor (WOR-101)
   codex <WORLD> [--html]       Compile static offline World Wiki encyclopedia (WOR-102)
   series [TARGET] [--html]     Multi-book series continuity & character trait ledger (WOR-103)
-  sim battle [options]         Turn-based tactical skirmish & battle simulator (WOR-104)
+  sim battle [options]         High-level tactical battle scenario planner (WOR-104)
   concordance <TARGET> [-b]    Generate Dramatis Personae & Glossary back-matter
   continuity [-w W -m MS]      Analyze character traits & narrative consistency (alias: check-continuity)
   faction [WORLD] [--html]     Geopolitical relationship matrix & diplomatic paradoxes
   economy [WORLD] [-m MS]      Macroeconomic currencies, commodity baskets & PPP rates
-  causality [WORLD] [MS]       Causal DAGs, time-travel loop & multiverse branching engine
+  causality [WORLD] [MS]       Multi-paradigm causal DAGs & time-travel validator
   ecology [WORLD] [--html]     Trophic energy pyramids (10% rule) & bestiary food-web
-  magic-check [-w W -m MS]     Verify hard magic system constraints & tier limits
+  magic-check [-w W -m MS]     Verify hard magic system constraints & axioms (advisory)
   magic-report [-w W]          Export comprehensive arcane constraint report
   prophecy [WORLD] [-m MS]     Prophecy lifecycle clauses & fulfillment verification
   genealogy <House|Char>       Compile dynastic lineage trees & Mermaid flowcharts
   lineage <House>              Display succession rank roster & claimants
   conlang <gen|mut|lex> <Lang> Conlang phonotactics, sound-law shift & lexicon
-  cipher <encode|decode|runes> In-world ciphers, Vigenere, Atbash & phonetic runes
-  calendar [WORLD] [--phases]  Planetary calendar arithmetic & multi-moon syzygy
+  calendar [WORLD] [--phases]  Multi-calendar/multi-era invariant chronology & arithmetic
   calc <subcommand>            Astrophysics, climate, battle, logistics & journey calculator
   audit <subcommand>           Prose audits: dialogue, echoes, voice, scenes, structure, tech, idioms, senses
 
@@ -112,9 +107,6 @@ Usage:
   verify                       Run canonical 7-stage test harness
   setup [--dry-run]            Install core packages, typography fonts, and launchers
   uninstall [--dry-run]        Revert desktop launchers and system components
-  plugin <list|info|run|create> Manage speculative fiction craft plugins
-  market <list|info|install>   Curated speculative fiction plugin marketplace (alias: plugin-market)
-  engines [--craft|--core]     List all registered core and craft engine plugins
 
 Global Options:
   -v, --version                Display Ars Arcanum version
@@ -232,36 +224,33 @@ def main(argv: list[str] | None = None) -> int:
         sub_type = rest[0].lower()
         sub_args = rest[1:]
         if sub_type in ("manuscript", "novel", "book"):
-            return dispatch_script("init_manuscript.sh", sub_args)
+            return dispatch_script("arcanum", ["new", "manuscript", *sub_args])
         elif sub_type in ("draft", "revision"):
-            return dispatch_script("init_draft.sh", sub_args)
+            return dispatch_script("arcanum", ["draft", *sub_args])
         elif sub_type in ("world", "lore", "vault"):
-            return dispatch_script("init_world.sh", sub_args)
+            return dispatch_script("arcanum", ["new", "world", *sub_args])
         elif sub_type in ("universe", "cosmos"):
-            return dispatch_script("init_universe.sh", sub_args)
+            return dispatch_script("arcanum", ["new", "universe", *sub_args])
         elif sub_type in ("volume", "book-volume"):
-            return dispatch_script("add_book.sh", sub_args)
+            return dispatch_script("arcanum", ["add-volume", *sub_args])
         else:
             print(f"Unknown project type '{sub_type}'. Choose: manuscript, draft, world, universe, volume.", file=sys.stderr)
             return 2
 
     if cmd in ("draft", "drafts", "init-draft", "new-draft", "revision"):
-        return dispatch_script("init_draft.sh", rest)
+        return dispatch_script("arcanum", ["draft", *rest])
 
     if cmd in ("compare", "diff", "redline", "changelog"):
-        return dispatch_script("compare_drafts.sh", rest)
+        return dispatch_script("arcanum", ["compare", *rest])
 
     if cmd in ("save", "snapshot", "snap", "commit"):
-        return dispatch_script("save_snapshot.sh", rest)
+        return dispatch_script("arcanum", ["snapshot", *rest])
 
     if cmd in ("publish", "export", "compile"):
-        return dispatch_script("export_book.sh", rest)
+        return dispatch_script("arcanum", ["export", *rest])
 
     if cmd in ("preflight", "pre-flight"):
         return dispatch_subcommand("lib.preflight", rest)
-
-    if cmd in ("barcode", "isbn"):
-        return dispatch_subcommand("lib.barcode", rest)
 
     if cmd in ("matter", "frontmatter", "backmatter"):
         if rest and rest[0] == "build":
@@ -276,31 +265,16 @@ def main(argv: list[str] | None = None) -> int:
             return dispatch_subcommand("lib.typography_cleaner", rest[1:])
         return dispatch_subcommand("lib.typography_cleaner", rest)
 
-    if cmd in ("read", "tts", "listen", "audio-proof"):
-        return dispatch_subcommand("lib.tts_reader", rest)
-
-    if cmd in ("overlay", "smil", "media-overlay", "narration"):
-        return dispatch_subcommand("lib.media_overlay", rest)
-
-    if cmd in ("council", "editorial", "workshop", "editorial-council"):
-        return dispatch_subcommand("lib.editorial_council", rest)
-
     if cmd in ("studio", "zen", "zen-studio", "editor"):
         return dispatch_subcommand("lib.zen_studio", rest)
 
-    if cmd in ("corpus", "corpus-export", "export-corpus", "rag-export"):
+    if cmd in ("corpus", "corpus-export", "export-corpus", "rag-export", "corpus-restore"):
         return dispatch_subcommand("lib.corpus_export", rest)
 
     if cmd in ("rag", "query-lore", "semantic-search", "lore-query"):
         return dispatch_subcommand("lib.local_rag", rest)
 
-    if cmd in ("market", "plugin-market", "marketplace"):
-        return dispatch_subcommand("lib.plugin_market", rest)
-
-    if cmd in ("train-data", "lora-dataset", "dataset-synth", "fine-tune"):
-        return dispatch_subcommand("lib.fine_tuning", rest)
-
-    if cmd in ("branch", "branching", "gamebook", "interactive-fiction", "branch-graph"):
+    if cmd in ("branch", "branching", "gamebook", "interactive-fiction", "branch-graph", "subway-map"):
         return dispatch_subcommand("lib.branching_graph", rest)
 
     if cmd in ("hub", "dashboard", "gui-web", "studio-hub"):
@@ -322,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
         return dispatch_subcommand("lib.revision_heatmap", rest)
 
     if cmd in ("words", "wordcount", "report", "count", "stats"):
-        return dispatch_script("wordcount_report.sh", rest)
+        return dispatch_script("arcanum", ["words", *rest])
 
     if cmd in ("pace", "pacing"):
         return dispatch_subcommand("lib.pacing", ["pace", *rest] if not (rest and rest[0] in ("pace", "tension", "pov")) else rest)
@@ -358,16 +332,16 @@ def main(argv: list[str] | None = None) -> int:
 
     # --- Universe, World Lore & Series Continuity ---
     if cmd in ("universe", "init-universe", "cosmos"):
-        return dispatch_script("init_universe.sh", rest)
+        return dispatch_script("arcanum", ["universe", *rest])
 
     if cmd in ("world", "init-world"):
-        return dispatch_script("init_world.sh", rest)
+        return dispatch_script("arcanum", ["world", *rest])
 
     if cmd in ("manuscript", "init-manuscript", "novel"):
-        return dispatch_script("init_manuscript.sh", rest)
+        return dispatch_script("arcanum", ["manuscript", *rest])
 
     if cmd in ("volume", "add-volume", "add-book", "new-book"):
-        return dispatch_script("add_book.sh", rest)
+        return dispatch_script("arcanum", ["add-volume", *rest])
 
     if cmd in ("map", "cartography"):
         return dispatch_subcommand("lib.cartography", rest)
@@ -382,9 +356,6 @@ def main(argv: list[str] | None = None) -> int:
         if rest and rest[0] == "battle":
             return dispatch_subcommand("lib.tactical_sim", ["sim", *rest[1:]])
         return dispatch_subcommand("lib.tactical_sim", rest)
-
-    if cmd in ("freeze", "archive-freeze", "seal-archive", "verify-archive"):
-        return dispatch_subcommand("lib.archive_freeze", rest)
 
     if cmd in ("cast", "dramatis-personae", "dramatis", "characters-cast"):
         return dispatch_subcommand("lib.dramatis_personae", rest)
@@ -427,8 +398,6 @@ def main(argv: list[str] | None = None) -> int:
     if cmd in ("conlang", "lexicon"):
         return dispatch_subcommand("lib.conlang", rest)
 
-    if cmd in ("cipher", "runes"):
-        return dispatch_subcommand("lib.cipher", rest)
 
     if cmd in ("calendar", "moons"):
         return dispatch_subcommand("lib.calendar", rest)
@@ -477,19 +446,17 @@ def main(argv: list[str] | None = None) -> int:
         elif sub in ("structure", "paradigm"):
             return dispatch_subcommand("lib.structure", sub_args)
         elif sub in ("idioms", "idiom", "eponyms"):
-            return dispatch_subcommand("lib.idioms", sub_args)
+            return dispatch_subcommand("lib.stylistics", ["idiom", *sub_args])
         elif sub in ("senses", "sensory", "palette"):
             return dispatch_subcommand("lib.senses", sub_args)
         elif sub in ("tech", "technology", "anachronisms"):
             return dispatch_subcommand("lib.economy", ["tech", *sub_args])
-        elif sub in ("plugin", "plugins"):
-            return dispatch_subcommand("lib.plugins", ["run", *sub_args])
         else:
             return dispatch_subcommand("lib.diagnostics", rest)
 
     # --- Data Protection & Safety ---
     if cmd in ("backup", "backup-world"):
-        return dispatch_script("backup_world.sh", rest)
+        return dispatch_script("arcanum", ["backup", *rest])
 
     if cmd in ("backup-dest", "backup-destination"):
         return dispatch_subcommand("lib.config", ["backup-dest", *rest])
@@ -498,7 +465,7 @@ def main(argv: list[str] | None = None) -> int:
         return dispatch_subcommand("lib.config", rest)
 
     if cmd in ("restore", "restore-world"):
-        return dispatch_script("restore_world.sh", rest)
+        return dispatch_script("arcanum", ["restore", *rest])
 
     # --- System Health & Diagnostics ---
     if cmd in ("doctor", "check", "diagnostics"):
@@ -519,10 +486,6 @@ def main(argv: list[str] | None = None) -> int:
     if cmd in ("migrate", "upgrade"):
         return dispatch_subcommand("lib.migrate", rest)
 
-    if cmd in ("plugin", "plugins", "ext", "extension"):
-        if cmd == "plugins" and (not rest or rest[0] in ("--craft", "--core")):
-            return handle_engines_command(rest)
-        return dispatch_subcommand("lib.plugins", rest)
 
     if cmd == "engines":
         return handle_engines_command(rest)
@@ -539,29 +502,23 @@ def main(argv: list[str] | None = None) -> int:
     if cmd == "setup":
         return dispatch_script("setup_arcanum.sh", rest)
 
-    if cmd == "uninstall":
-        return dispatch_script("uninstall_arcanum.sh", rest)
-
-    # --- Unknown Command with Smart Suggestion ---
     known_commands = [
         "write", "open", "new", "create", "save", "snapshot", "publish", "export",
-        "preflight", "barcode", "matter", "query", "polish", "typography", "read",
-        "tts", "plot", "structure", "ambient", "portfolio", "package", "map", "codex",
+        "preflight", "matter", "query", "polish", "typography",
+        "plot", "structure", "ambient", "portfolio", "package", "map", "codex",
         "series", "sim", "draft", "drafts", "compare", "diff", "redline", "changelog",
         "words", "count", "report", "universe", "world", "manuscript", "volume",
         "add-volume", "concordance", "continuity", "check-continuity", "doctor",
         "check", "world-doctor", "backup", "backup-dest", "config", "restore", "cache",
         "calc", "magic-check", "magic-report", "genealogy", "lineage", "conlang",
-        "faction", "economy", "causality", "ecology", "climate", "idioms", "senses",
-        "cipher", "prophecy", "audit", "pace", "tension", "voice", "calendar", "journey",
+        "faction", "economy", "causality", "causal", "time-travel", "ecology",
+        "climate", "idioms", "senses", "sensory", "immersion",
+        "prophecy", "oracle", "audit", "pace", "tension", "voice", "calendar", "journey",
         "gui", "control-center", "menu", "interactive", "verify", "setup", "uninstall",
-        "version", "help", "docx", "word", "engines", "plugins", "overlay", "smil", "corpus", "council", "studio", "zen",
-        "rag", "query-lore", "market", "plugin-market", "train-data", "lora-dataset", "branch", "branching",
+        "version", "help", "docx", "word", "corpus", "studio", "zen",
+        "rag", "query-lore", "branch", "branching",
         "hub", "dashboard", "gui-web", "studio-hub",
-        "causality", "causal", "time-travel", "prophecy", "oracle",
-        "senses", "sensory", "immersion", "sprint", "writing-sprint",
-        "revision-heatmap", "churn", "revision-density",
-        "freeze", "archive-freeze", "seal-archive", "verify-archive",
+        "sprint", "writing-sprint", "revision-heatmap", "churn", "revision-density",
         "cast", "dramatis-personae", "dramatis", "characters-cast",
     ]
 
@@ -576,3 +533,5 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+

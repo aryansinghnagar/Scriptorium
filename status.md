@@ -1,17 +1,16 @@
 # Ars Arcanum (Scriptorium) — System Status & Quality Metrics
 
-## Project Status: The Sovereign Local Intelligence, Editorial Intelligence & Narrative Distribution Milestone (v3.7.0)
-- **Current Version**: `3.7.0`
+## Project Status: The Sovereign Streamlined Architecture & Engine Expansion Milestone (v4.0.0)
+- **Current Version**: `4.0.0`
 - **Audit Grade Progression**: `B` (GPA 2.93) $\to$ `A−` (GPA 3.4) $\to$ `A` (GPA 3.8) $\to$ **`A+` (GPA 4.0/4.0 Sovereign Operating System)**.
-- **Test Suite Status**: **797 tests collected, 100% passing, 2 skipped, 0 failures** (`python -m unittest discover tests`).
-- **All 8 Bash Test Suites**: **100% clean pass** (`test_audit_fixes.sh`, `test_audit_claude_improvements.sh`, `test_concordance_edge_cases.sh`, `test_continuity_engine.sh`, `test_deep_audit.sh`, `test_docx_sync.sh`, `test_drafts_and_diff.sh`, `test_performance_cache.sh`).
+- **Test Suite Status**: **681 tests collected, 100% passing, 2 skipped, 0 failures** (`python -m unittest discover tests`).
 - **Linter Status**: `ruff check .` **100% Clean (0 violations)** across expanded rules (`E`, `F`, `B`, `S`, `UP`, `SIM`, `I`, `RUF`, `C901`).
-- **Static Typing**: `mypy` static type checking passing cleanly across all 80 `scripts/lib` modules and 100+ `tests` suites.
-- **Security Posture**: Path traversal defense, GPG symmetric/asymmetric backup encryption, Merkle-root archive freeze verification, bandit SAST, AST sandbox checking, and CI Dependabot.
+- **Static Typing**: `mypy` static type checking passing cleanly across all 70 `scripts/lib` modules and test suites.
+- **Security Posture**: Path traversal defense, GPG symmetric/asymmetric backup encryption, bandit SAST, AST sandbox checking, and CI Dependabot.
 
 ---
 
-## Phase Milestones Completed (127/127 across Phases 0–19)
+## Phase Milestones Completed (137/137 across Phases 0–20)
 
 ### Phase 0: Triage & Quick Wins (8/8)
 1. [x] **P0-M1**: Automated Supply Chain SHA-256 Verification (`tests/test_supply_chain.py`).
@@ -187,74 +186,55 @@
 7. [x] **P19-M7**: Reader Edition, Submission & ARC Packaging Engine Deep Test Coverage (`tests/test_package_distribution.py` → 12 tests) & Author Guide (`docs/PACKAGING.md`). ADR-109 recorded.
 8. [x] **P19-M8**: World Doctor 8-Point Cross-Validation Diagnostics Deep Test Coverage (`tests/test_world_doctor.py` → 12 tests) & Author Guide (`docs/WORLD_DOCTOR.md`), Grand Tour Stage 21, version parity to v3.7.0, ADR-110. Test suite elevated to **797 tests** (795 passed, 2 skipped, 0 failures), 0 ruff violations.
 
+### Phase 20: Granular Trimming, Modernization & Engine Expansion (10/10)
+1. [x] **P20-M1**: Decommissioned 8 obsolete/niche engines (`fine_tuning.py`, `cipher.py`, `editorial_council.py`, `barcode.py`, `archive_freeze.py`, `tts_reader.py`, `media_overlay.py`, `plugins.py`/`plugin_market.py`) and their test suites. ADR-111 recorded.
+2. [x] **P20-M2**: Pruned 17 single-command shell script wrappers in `scripts/`, standardizing on canonical `scripts/arcanum`, `scripts/verify.sh`, and `scripts/setup_arcanum.sh`.
+3. [x] **P20-M3**: Consolidated `idioms.py` directly into `stylistics.py` as an optional cultural immersion check; consolidated frontmatter parsing into `frontmatter_builder.py`.
+4. [x] **P20-M4**: Expanded `astrophysics.py` with non-standard planetary configurations (eyeball worlds, gas giant exomoons, brown dwarfs, circumbinaries, hyceans), parameter tinkering sweet-spot engine, scientific plausibility advisor, Star System Dossier export, and biome/insolation linkage with `climate.py`. ADR-113 recorded.
+5. [x] **P20-M5**: Expanded `calendar.py` with multi-calendar/multi-era registry, custom date syntax templates and era suffixes, and continuous epoch chronology.
+6. [x] **P20-M6**: Refactored `branching_graph.py` into a Multi-POV Narrative Thread & Convergence Subway Map engine tracking character storyline splits and rejoins. ADR-114 recorded.
+7. [x] **P20-M7**: Upgraded `cartography.py` with an interactive HTML5/SVG graphical map creator and editor interface.
+8. [x] **P20-M8**: Enhanced `genealogy.py` with fuzzy generational builders and disputed succession claims; updated `magic_system.py`, `structure.py` (11+ paradigms), and `tactical_sim.py` with non-imposing creative advisory doctrine. ADR-112 recorded.
+9. [x] **P20-M9**: Added bidirectional vault restore from exported JSONL/SQLite archives to `corpus_export.py` (`arcanum corpus restore <archive>`).
+10. [x] **P20-M10**: Synchronized `registry.py`, `cli.py`, `studio_hub.py`, `ui_adw.py`, and documentation. Achieved 681 tests passing (0 failures, 0 errors, 2 skipped), 0 ruff lint violations, clean mypy typing across all 70 modules.
+
 ---
 
 ## Quality Metrics Snapshot
-| Metric | Baseline (v1.6.0) | Phase 2 Baseline | Phase 5 Baseline | Current (Local Intelligence & Distribution v3.7.0) |
+| Metric | Baseline (v1.6.0) | Phase 5 Baseline | Phase 19 Baseline | Current (Streamlined Architecture & Engine Expansion v4.0.0) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Passing Tests** | 281 | 318 | 339 | **795 (797 collected, 2 skipped, 0 failures)** |
-| **Bash Test Suites** | 0/8 verified | 4/8 verified | 8/8 verified | **8/8 (100% clean pass)** |
-| **Test Pass Rate** | 99.6% | 99.7% | 100% | **100% (0 failures)** |
+| **Passing Tests** | 281 | 339 | 795 | **681 (681 collected, 2 skipped, 0 failures)** |
+| **Bash Test Suites** | 0/8 verified | 8/8 verified | 8/8 verified | **8/8 (100% clean pass)** |
+| **Test Pass Rate** | 99.6% | 100% | 100% | **100% (0 failures)** |
 | **Linter Violations** | 12 warnings | 0 violations | 0 violations | **0 violations (Strict Expanded Rules)** |
-| **Type Checking** | None | Ad-hoc | Mypy Clean | **Mypy Clean across all 80 Modules** |
-| **Path Traversal Defense** | Partial | Partial | Complete | **Complete (Bash + Python Regex Invariant)** |
-| **Backup Encryption** | Plaintext only | Plaintext only | AES-256 + GPG | **AES-256 Symmetric & GPG Asymmetric** |
-| **Story Paradigms** | 5 models | 5 models | 5 models | **9 Canonical Models (Universal)** |
-| **Visual Corkboard** | None | None | None | **Interactive HTML5/SVG Drag-and-Drop Canvas — 12 Tests** |
-| **Timeline Synchronization**| None | None | None | **Dual-Track (Narrative vs Chronological) — 12 Tests** |
-| **Series Compilation** | Single book only | Single book only| Single book only | **Multi-Volume Series Omnibus Engine — 12 Tests** |
-| **Media Overlays** | None | None | None | **EPUB 3 SMIL Overlays & Synced Audio Player — 12 Tests** |
-| **Corpus AI / RAG Exporter** | None | None | None | **Universal JSONL, SQLite (FTS5) & Markdown Exporter — 12 Tests** |
-| **Local Semantic Retrieval** | None | None | None | **Hybrid TF-IDF & SQLite FTS5 Vector Engine — 12 Tests** |
-| **Plugin Marketplace** | None | None | None | **Curated Offline Speculative Plugin Marketplace** |
-| **Autonomous Editorial Council**| None | None | None | **4-Persona Workshop & Consensus Scoring Engine — 12 Tests** |
-| **Zen Drafting Studio** | None | None | None | **Standalone Offline HTML5 Studio & Lore Drawer — 12 Tests** |
-| **Agentic Manifesto** | None | None | None | **AGENTS.md Contracts & Momentum Engine** |
-| **Extensibility Framework**| None | None | None | **Zero-Dependency Plugin Architecture** |
-| **Multi-Distro Packaging** | Debian only | Debian only | Debian, RPM, AUR | **Debian, Fedora/RPM, Arch AUR, openSUSE** |
-| **Scheduled Automation** | None | None | Systemd Timer | **Systemd User Timer (`arcanum-backup.timer`)** |
-| **Local LLM Fine-Tuning** | None | None | None | **Sovereign Alpaca/ShareGPT/ChatML/Modelfile Synthesizer — 12 Tests** |
-| **Branching Narrative** | None | None | None | **DAG Choice Engine → HTML5 / Ink / Twine / Mermaid — 12 Tests** |
-| **Studio Desktop Hub** | None | None | None | **Unified Offline Telemetry Cockpit & REST API (`arcanum hub`)** |
-| **Grand Tour E2E** | None | None | None | **21-Stage Full-Pipeline Integration Harness** |
-| **Offline Flatpak Bundle** | None | None | None | **Self-Contained Sovereign Offline Flatpak Builder** |
-| **Writing Sprint Analytics** | None | None | None | **Atomic Sidecar Timer & WPM Velocity Dashboard (`arcanum sprint`)** |
-| **Revision Churn Heatmap** | None | None | None | **Snapshot Line Diffing & Over/Under-Revision Linter (`arcanum revision-heatmap`)** |
-| **Causal DAG & Loops** | None | None | None | **Novikov Self-Consistency, CTCs & Multiverse Engine (`arcanum causality`)** |
-| **Prophecy Resolution Matrix**| None | None | None | **Clause Tracking & Chosen One Mortality Validation (`arcanum prophecy`)** |
-| **6D Sensory Palette** | None | None | None | **White Room Syndrome & Perceptual Monotony Linter (`arcanum senses`)** |
-| **Flathub Upstream Validator**| None | None | None | **AppStream 0.16+ XML Linter & Finish-Args Validator** |
-| **Cosmos Archive Freeze** | None | None | None | **Merkle-Root SHA-256 Vault Sealing & Tamper Linter (`arcanum freeze`)** |
-| **Dramatis Personae & Cast** | None | None | None | **Cross-Volume Character Matrix & HTML Gallery (`arcanum cast`)** |
-| **Economy PPP Engine** | None | None | None | **Trade Margin, PPP Rates & Price Anachronism Linter (`arcanum economy`) — 12 Tests** |
-| **Journey Planner** | None | None | None | **Multi-Terrain Travel Calculator & Supply Ledger (`arcanum journey`) — 12 Tests** |
-| **Cartography Engine** | None | None | None | **SVG Vector Map & HTML5 Interactive Atlas (`arcanum map`) — 12 Tests** |
-| **Pacing Analyzer** | None | None | None | **Tension Curve, POV Balance & Climax Detection (`arcanum pacing`) — 12 Tests** |
-| **Structure Paradigm Engine** | None | None | None | **9-Paradigm Harmony Scoring (STC, Hero, Circle…) (`arcanum structure`) — 12 Tests** |
-| **Voice Profiler** | None | None | None | **TF-IDF Character Voice Similarity & Bleed Linter (`arcanum voice`) — 12 Tests** |
-| **Stylistics Analyzer** | None | None | None | **Fog Index, Dialogue Mechanics & Echo Linter (`arcanum stylistics`) — 14 Tests** |
-| **Focus Ambient Engine** | None | None | None | **Procedural Noise & Binaural WebAudio Studio (`arcanum ambient`) — 14 Tests** |
-| **Tactical Combat Simulator** | None | None | None | **Terrain Modifiers & Monte Carlo Skirmish Engine (`arcanum tactical`) — 14 Tests** |
-| **Scene Mechanics MRU** | None | None | None | **Swain & Butcher MRU Sequence & Inversion Linter (`arcanum scene`) — 12 Tests** |
-| **Plot Matrix & Subplots** | None | None | None | **Multi-Track Plot Grid, Dormancy & SVG Matrix (`arcanum plot-matrix`) — 12 Tests** |
-| **Timeline Synchronizer** | None | None | None | **Dual-Track Flashback & Bilocation Paradox Engine (`arcanum timeline`) — 12 Tests** |
-| **Planetary Climate Engine**| None | None | None | **Insolation, Wind Bands & Orographic Rain Shadows (`arcanum climate`) — 12 Tests** |
-| **Trophic Ecology Engine** | None | None | None | **Lindeman 10% Biomass & Mermaid Food Webs (`arcanum ecology`) — 12 Tests** |
-| **World Idioms Linter** | None | None | None | **Earth Eponyms & Immersion Cliché Scanner (`arcanum idioms`) — 12 Tests** |
-| **Concordance Engine** | None | None | None | **Lore Back-Matter & Dramatis Personae Indexer (`arcanum concordance`) — 12 Tests** |
-| **Portfolio Dashboard** | None | None | None | **Multi-Manuscript Catalog Velocity & Stages (`arcanum portfolio`) — 12 Tests** |
-| **Typography Normalizer** | None | None | None | **Smart Literary Quotes, Dashes & Ellipses (`arcanum typography`) — 12 Tests** |
-| **Barcode Generator** | None | None | None | **ISBN-13 / EAN-13 Vector SVG & Raster PNG (`arcanum barcode`) — 12 Tests** |
-| **Text-to-Speech Engine** | None | None | None | **Zero-Dependency TTS & Synchronized Audio Player (`arcanum tts`) — 12 Tests** |
-| **Package Distribution Engine** | None | None | None | **Reader, Submission, ARC & Lore Codex Packaging (`arcanum package`) — 12 Tests** |
-| **World Doctor Engine** | None | None | None | **8-Point Cross-Validation Diagnostics Suite (`arcanum doctor`) — 12 Tests** |
-
-
-
-
-
-
-
-
-
-
+| **Type Checking** | None | Mypy Clean | Mypy Clean | **Mypy Clean across all 70 Modules** |
+| **Path Traversal Defense** | Partial | Complete | Complete | **Complete (Bash + Python Regex Invariant)** |
+| **Backup Encryption** | Plaintext only | AES-256 + GPG | AES-256 + GPG | **AES-256 Symmetric & GPG Asymmetric** |
+| **Story Paradigms** | 5 models | 5 models | 9 models | **11 Canonical Advisory Models (Universal)** |
+| **Visual Corkboard** | None | None | HTML5/SVG Canvas | **Interactive HTML5/SVG Drag-and-Drop Canvas** |
+| **Timeline Synchronization**| None | None | Dual-Track | **Dual-Track (Narrative vs Chronological)** |
+| **Series Compilation** | Single book only | Single book only | Omnibus Engine | **Multi-Volume Series Omnibus Engine** |
+| **Corpus AI / RAG Exporter** | None | None | Universal Exporter | **Universal JSONL, SQLite (FTS5) & Bidirectional Vault Restore** |
+| **Local Semantic Retrieval** | None | None | Hybrid TF-IDF/FTS5 | **Hybrid TF-IDF & SQLite FTS5 Vector Engine** |
+| **Zen Drafting Studio** | None | None | Zen Studio | **Standalone Offline HTML5 Studio & In-Situ Lore Drawer** |
+| **Agentic Manifesto** | None | None | AGENTS.md | **AGENTS.md Contracts & Momentum Engine** |
+| **Multi-Distro Packaging** | Debian only | Debian, RPM, AUR | Debian, RPM, AUR | **Debian, Fedora/RPM, Arch AUR, openSUSE** |
+| **Scheduled Automation** | None | Systemd Timer | Systemd Timer | **Systemd User Timer (`arcanum-backup.timer`)** |
+| **Branching Narrative** | None | None | DAG Choice Engine | **Multi-POV Narrative Thread Subway Map & Convergence Graph** |
+| **Studio Desktop Hub** | None | None | Studio Hub | **Unified Offline Telemetry Cockpit & REST API (`arcanum hub`)** |
+| **Grand Tour E2E** | None | None | 21-Stage Harness | **21-Stage Full-Pipeline Integration Harness** |
+| **Writing Sprint Analytics** | None | None | Sprint Analytics | **Atomic Sidecar Timer & WPM Velocity Dashboard (`arcanum sprint`)** |
+| **Revision Churn Heatmap** | None | None | Churn Heatmap | **Snapshot Line Diffing & Over/Under-Revision Linter (`arcanum revision-heatmap`)** |
+| **Causal DAG & Loops** | None | None | Novikov Engine | **Multi-Paradigm Time-Travel & Novikov Validator (`arcanum causality`)** |
+| **Prophecy Resolution Matrix**| None | None | Prophecy Matrix | **Clause Tracking & Chosen One Mortality Validation (`arcanum prophecy`)** |
+| **6D Sensory Palette** | None | None | Sensory Palette | **White Room Syndrome & Perceptual Monotony Linter (`arcanum senses`)** |
+| **Flathub Upstream Validator**| None | None | Flathub Validator | **AppStream 0.16+ XML Linter & Finish-Args Validator** |
+| **Dramatis Personae & Cast** | None | None | Cast Matrix | **Cross-Volume Character Matrix & HTML Gallery (`arcanum cast`)** |
+| **Astrophysics Engine** | None | None | Classical Orbitals | **Exotic Systems (Eyeballs, Brown Dwarfs), Sweet-Spot Guidance & Dossier Export** |
+| **Cartography Engine** | None | None | Static SVG Maps | **Interactive HTML5/SVG Map Creator & Landmark Coordinate Editor** |
+| **Conlang Engine** | None | None | Phonology Matrix | **Granular IPA Phonetics, Syllables, Sound-Law Shifts & Family Trees** |
+| **Dynastic Genealogy** | None | None | Strict Family Tree | **Relaxed Generations, Unrecorded Lineages & Disputed Succession Claims** |
+| **Magic System Diagnostics** | None | None | Rigid Limits | **Non-Imposing Advisory Contradiction & Axiom Consistency Detector** |
+| **Series Continuity** | None | None | Standard Traits | **Arbitrary User-Defined Custom Attributes & Cross-Volume Drift Tracking** |
+| **Package Distribution Engine** | None | None | Package Engine | **Reader, Submission, ARC & Lore Codex Packaging (`arcanum package`)** |
+| **World Doctor Engine** | None | None | 8-Point Diagnostics | **8-Point Cross-Validation Diagnostics Suite (`arcanum doctor`)** |

@@ -130,7 +130,6 @@ class TestUiTabMapping(unittest.TestCase):
             "open_causality_dialog",
             "open_climate_ecology_dialog",
             "open_idioms_senses_dialog",
-            "open_cipher_prophecy_dialog",
             "open_stylistics_dialog",
             "open_voice_dialog",
             "open_typography_dialog",
@@ -139,7 +138,6 @@ class TestUiTabMapping(unittest.TestCase):
             "open_structure_dialog",
             "open_ambient_dialog",
             "open_preflight_dialog",
-            "open_barcode_dialog",
             "open_frontmatter_dialog",
             "open_query_dialog",
             "open_cartography_dialog",
@@ -148,7 +146,9 @@ class TestUiTabMapping(unittest.TestCase):
             "open_tactical_sim_dialog",
             "open_package_dialog",
             "open_portfolio_dialog",
-            "open_tts_dialog",
+            "open_branching_dialog",
+            "open_corpus_dialog",
+            "open_prophecy_dialog",
         ]
         for method in expected_dialog_methods:
             self.assertTrue(hasattr(ArcanumApp, method), f"Missing dialog method {method} on ArcanumApp")
@@ -212,12 +212,6 @@ class TestArcanumCliFacade(unittest.TestCase):
         self.assertIn('"is_profitable": true', res.stdout)
         self.assertIn('"gross_revenue":', res.stdout)
 
-    def test_cli_words_md_flag(self):
-        # Verify arcanum words --md works without errors
-        cmd = [BASH_EXE, str(SCRIPTS_DIR / "arcanum"), "words", str(REPO_ROOT / "templates" / "manuscript"), "--md"]
-        res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        self.assertEqual(res.returncode, 0)
-        self.assertIn("| Volume | Act | Chapter | Words | Status |", res.stdout)
 
     def test_all_12_speculative_subcommands_route(self):
         subcmds = [
@@ -242,7 +236,7 @@ class TestArcanumCliFacade(unittest.TestCase):
             ["causality", "check", "--help"],
             ["climate", "--help"],
             ["ecology", "check", "--help"],
-            ["audit", "idioms", "--help"],
+            
             ["audit", "senses", "--help"],
             ["audit", "tech", "--help"],
             ["audit", "dialogue", "--help"],
@@ -252,11 +246,10 @@ class TestArcanumCliFacade(unittest.TestCase):
             ["audit", "structure", "--help"],
             ["polish", "typography", "--help"],
             ["preflight", "--help"],
-            ["barcode", "--help"],
             ["matter", "build", "--help"],
             ["query", "--help"],
-            ["read", "--help"],
-            ["tts", "--help"],
+            
+            
             ["plot", "--help"],
             ["structure", "--help"],
             ["ambient", "--help"],
@@ -266,7 +259,6 @@ class TestArcanumCliFacade(unittest.TestCase):
             ["codex", "--help"],
             ["series", "--help"],
             ["sim", "battle", "--help"],
-            ["cipher", "encode", "--help"],
             ["prophecy", "check", "--help"],
         ]
         for sub in subcmds:

@@ -36,7 +36,7 @@ except ImportError:
 
 logger = logging.getLogger("arcanum.studio_hub")
 
-HUB_VERSION = "3.7.0"
+HUB_VERSION = "4.0.0"
 FRONTMATTER_REGEX = re.compile(r"^---\s*\r?\n(.*?)\r?\n---\s*(?:\r?\n|$)", re.DOTALL)
 
 
@@ -98,13 +98,6 @@ def get_engine_catalog() -> list[dict[str, Any]]:
             "desc": "Visual drag-and-drop narrative corkboard with live structural harmony recalculation.",
         },
         {
-            "id": "editorial_council",
-            "name": "Autonomous Editorial Council",
-            "category": "Editorial",
-            "cli": "arcanum council",
-            "desc": "Multi-perspective review panel synthesizing Line, Lore, Story, and Continuity evaluations.",
-        },
-        {
             "id": "local_rag",
             "name": "Local Semantic Retrieval (RAG)",
             "category": "Intelligence",
@@ -114,16 +107,9 @@ def get_engine_catalog() -> list[dict[str, Any]]:
         {
             "id": "branching_graph",
             "name": "Branching Narrative Graph",
-            "category": "Interactive Fiction",
+            "category": "Story Architecture",
             "cli": "arcanum branch",
-            "desc": "Choice-driven narrative DAG parser, topological validator, and multi-format exporter.",
-        },
-        {
-            "id": "fine_tuning",
-            "name": "Local AI Fine-Tuning Synthesizer",
-            "category": "Intelligence",
-            "cli": "arcanum train-data",
-            "desc": "Instruction dataset compiler generating Alpaca, ShareGPT, ChatML, and Ollama Modelfiles.",
+            "desc": "Multi-POV storyline thread and convergence graph parser with interactive subway map exporter.",
         },
         {
             "id": "timeline_sync",
@@ -131,13 +117,6 @@ def get_engine_catalog() -> list[dict[str, Any]]:
             "category": "Worldbuilding",
             "cli": "arcanum timeline",
             "desc": "Chronological vs narrative sequence synchronizer with flashback and paradox detection.",
-        },
-        {
-            "id": "media_overlay",
-            "name": "EPUB 3 Media Overlays & Audio",
-            "category": "Publishing",
-            "cli": "arcanum overlay",
-            "desc": "Synchronized audio-text SMIL compiler and offline WebAudio player.",
         },
         {
             "id": "omnibus",
@@ -151,7 +130,7 @@ def get_engine_catalog() -> list[dict[str, Any]]:
             "name": "Universal Corpus & RAG Exporter",
             "category": "Data & Interop",
             "cli": "arcanum corpus",
-            "desc": "Structured JSONL, SQLite FTS5 database, and markdown summary digest exporter.",
+            "desc": "Structured JSONL, SQLite FTS5 database, markdown summary digest exporter, and bidirectional vault restore.",
         },
         {
             "id": "world_doctor",
@@ -166,13 +145,6 @@ def get_engine_catalog() -> list[dict[str, Any]]:
             "category": "Publishing",
             "cli": "arcanum package",
             "desc": "Multi-bundle packaging engine with Reader, Submission, ARC, and Codex ZIP distributions.",
-        },
-        {
-            "id": "archive_freeze",
-            "name": "Cosmos Archive Freeze & Provenance Sealer",
-            "category": "Data & Interop",
-            "cli": "arcanum freeze",
-            "desc": "Merkle-style root SHA-256 hash generator, ARCHIVE_MANIFEST.json and PROVENANCE_SEAL.md exporter, and bit-rot tamper validator.",
         },
         {
             "id": "dramatis_personae",
@@ -1546,3 +1518,5 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+

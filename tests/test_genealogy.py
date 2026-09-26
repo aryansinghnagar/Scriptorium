@@ -120,6 +120,30 @@ born: "145 AC"
         findings = validate_genealogy(chars)
         self.assertTrue(any(f["id"] == "GEN-101" and "deceased" in f["message"] for f in findings))
 
+    def test_fuzzy_generational_builder_skips_chron_checks(self) -> None:
+        """Fuzzy generation connections bypass GEN-101 chron checks."""
+        (self.chars_dir / "AncientAncestor.md").write_text("""---
+name: "AncientAncestor"
+born: "100 AC"
+died: "150 AC"
+---
+""", encoding="utf-8")
+
+        (self.chars_dir / "LateDescendant.md").write_text("""---
+name: "LateDescendant"
+parents: ["direct descendant via ~4 unrecorded generations from [[AncientAncestor]]"]
+born: "300 AC"
+---
+""", encoding="utf-8")
+        
+        chars = load_characters_and_houses(self.world_dir)
+        self.assertIn("AncientAncestor", chars["LateDescendant"]["parents"])
+        self.assertIn("AncientAncestor", chars["LateDescendant"]["fuzzy_parents"])
+        
+        findings = validate_genealogy(chars)
+        # Should not flag GEN-101 for LateDescendant
+        self.assertFalse(any(f["id"] == "GEN-101" and f["character"] == "LateDescendant" for f in findings))
+
     def test_lifespan_sanity_died_before_born_gen101(self) -> None:
         """GEN-101 flags when a character's death year precedes their birth year."""
         (self.chars_dir / "TimeTraveler.md").write_text("""---

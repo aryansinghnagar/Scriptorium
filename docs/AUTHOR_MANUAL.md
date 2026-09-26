@@ -34,7 +34,7 @@ Zero programming or terminal experience is required for daily writing. Everythin
    - [Wave 9: Causal DAGs, Time Travel Loops & Multiverse Branching](#wave-9-causal-dags-time-travel-loops--multiverse-branching)
    - [Wave 10: Planetary Climate, Orographic Biomes & Trophic Food-Webs](#wave-10-planetary-climate-orographic-biomes--trophic-food-webs)
    - [Wave 11: Earth-Eponym Scanner, Idiom De-Immersion & 6D Sensory Palette](#wave-11-earth-eponym-scanner-idiom-de-immersion--6d-sensory-palette)
-   - [Wave 12: Inscriptions, In-World Ciphers & Prophecy Resolution](#wave-12-inscriptions-in-world-ciphers--prophecy-resolution)
+   - [Wave 12: Prophecy Resolution & Oracle Lifecycle](#wave-12-prophecy-resolution--oracle-lifecycle)
 10. [Authorial Craft, Editorial Linters, Plotting & Publishing Tools](#10-authorial-craft-editorial-linters-plotting--publishing-tools)
 
 ---
@@ -161,13 +161,13 @@ The Ars Arcanum desktop application is organized into **6 dedicated workflow stu
   9. **Causal DAGs & Multiverse**: Timeline branch visualizer, Novikov self-consistency paradox auditor, and DAG graphs.
   10. **Climate & Trophic Webs**: Planetary stellar flux insolation, orographic rain shadows, and Lindeman 10% trophic food webs.
   11. **Idioms & Sensory Palettes**: Earth-eponym scanner, colloquialism detector, and 6D sensory palette coverage.
-  12. **Ciphers & Prophecies**: In-world cryptographic encoders (Vigenère, Atbash, Runes) and prophecy lifecycle clause checkers.
+  12. **Prophecy Resolution**: In-world prophecy lifecycle verification, clause satisfiability, and mortality validation.
 
 ### Studio 4: 📚 Publishing & Exports
 - **1-Click Typesetting & Export**: Turn your Markdown manuscript into a print-ready vector PDF (Typst), distributor EPUB (Pandoc), or submission DOCX.
 - **Modular Front & Back Matter Builder**: Scaffold standard Title, Copyright, Dedication, Epigraph, and CTA matter.
 - **Pre-Flight Linter**: Automated verification of orphan headings, missing scenes, broken cross-references, and typographic errors.
-- **Vector Barcode Generator**: Standalone ISBN-13 vector SVG barcode generator with checksum validation.
+- **Universal Structured Corpus Exporter**: Export structured JSONL/SQLite RAG corpus and perform bidirectional vault restore.
 - **Query Letter & Submission Package**: Scaffold agent query letters, 1-page synopses, and submission trackers.
 - **Smart Typography Normalizer**: 1-click normalization of curly quotes (“ ” ‘ ’), em-dashes (—), en-dashes (–), and ellipses (…).
 
@@ -934,14 +934,9 @@ arcanum audit senses Solaris-Rising
 
 ---
 
-### Wave 12: Inscriptions, In-World Ciphers & Prophecy Resolution
+### Wave 12: Prophecy Resolution & Oracle Lifecycle
 
-The in-world cipher and prophecy suite (`scripts/lib/cipher.py`, `scripts/lib/prophecy.py` / `arcanum cipher`, `arcanum prophecy`) encodes and translates ancient inscriptions into phonetic runes and tracks prophecy fulfillment across the narrative.
-
-#### In-World Cipher & Phonetic Rune Engine:
-- **Historical Cipher Algorithms**: Caesar shift, Atbash reflection, Vigenère polyalphabetic cipher, Rail Fence transposition, Columnar transposition.
-- **Phonetic Runes**: Translates Latin script into authentic Elder Futhark (`ᚠᚢᚦᚨᚱᚲ`) and Anglo-Saxon Futhorc (`ᚠᚢᚦⲟᚱᚳ`).
-- **Vector Inscription Cards**: Generates high-resolution standalone SVG artifact inscription cards for inclusion in World Bibles and reader-facing notes.
+The prophecy resolution engine (`scripts/lib/prophecy.py` / `arcanum prophecy`) tracks ancient prophecies and oracle fulfillment clauses across the narrative, validating satisfaction against world lore and manuscript drafts.
 
 #### Prophecy Resolution Matrix:
 Tracks ancient oracles and prophecies in `Cosmology/Prophecies/<Prophecy-Name>.md`:
@@ -966,12 +961,6 @@ clauses:
 
 #### Example Usage:
 ```bash
-# Encode secret message using Vigenère cipher with an arcane keyword
-arcanum cipher encode "THE VAULT OPENS AT MIDNIGHT" --type vigenere --key "SOLARIS"
-
-# Translate text to phonetic Elder Futhark runes and export vector SVG card
-arcanum cipher runes "Speak friend and enter" --alphabet futhark --svg rune_inscription.svg
-
 # Audit prophecy resolution and fulfillment lifecycle across world and manuscript
 arcanum prophecy Solaris-Prime Solaris-Rising
 ```
@@ -980,7 +969,7 @@ arcanum prophecy Solaris-Prime Solaris-Rising
 
 ## 10. Authorial Craft, Editorial Linters, Plotting & Publishing Tools
 
-Ars Arcanum includes a full suite of editorial linters, visual plotting matrix engines, publication pre-flight compliance checkers, interactive offline cartography, and auditory proofreaders.
+Ars Arcanum includes a full suite of editorial linters, visual plotting matrix engines, publication pre-flight compliance checkers, interactive offline cartography, and multi-POV narrative subway maps.
 
 ---
 
@@ -1070,7 +1059,7 @@ arcanum ambient hearth --wav hearth.wav --duration 300
 
 ---
 
-### 📚 Publishing Pre-Flight, Barcodes & Queries
+### 📚 Publishing Pre-Flight, Matter & Queries
 
 #### 1. Publication Pre-Flight Compliance Linter (`scripts/lib/preflight.py`)
 Validates print PDF and EPUB compliance: trim size dimensions (6x9, 5.5x8.5, 5x8), gutter margin ratios for target page count, unformatted straight quotes in prose, missing cover art, and metadata integrity.
@@ -1080,12 +1069,15 @@ Validates print PDF and EPUB compliance: trim size dimensions (6x9, 5.5x8.5, 5x8
 arcanum preflight Solaris-Rising
 ```
 
-#### 2. ISBN-13 & EAN-13 Vector Barcode Engine (`scripts/lib/barcode.py`)
-Generates print-ready vector SVG and high-resolution PNG EAN-13 barcodes with dynamic ISBN prefixes (`978` or `979`) and optional 5-digit price extensions.
+#### 2. Universal Structured Corpus Exporter & Vault Restore (`scripts/lib/corpus_export.py`)
+Exports structured JSONL, SQLite FTS5 database, and markdown summary digests from your entire world bible and manuscript corpus, with full bidirectional vault restoration.
 
 ```bash
-# Generate vector SVG barcode with price extension
-arcanum barcode 978-1-234567-89-0 --price 19.99 --output cover-barcode.svg
+# Export structured RAG corpus for external query tools
+arcanum corpus export Solaris-Rising --output ~/Corpus/
+
+# Restore entire cosmos vault from JSONL archive
+arcanum corpus restore ~/Corpus/Solaris-Rising.jsonl --target ~/Universes/Solaris-Restored/
 ```
 
 #### 3. Front & Back Matter Modular Builder (`scripts/lib/frontmatter_builder.py`)
@@ -1093,7 +1085,7 @@ Generates standardized Copyright pages (Berne Convention, US Copyright, CC), Ded
 
 ```bash
 # Generate publication front and back matter
-arcanum frontmatter Solaris-Rising --inject
+arcanum matter build Solaris-Rising
 ```
 
 #### 4. Publishing Submission Query & Synopsis Scaffolder (`scripts/init_query.py`)
@@ -1142,7 +1134,7 @@ arcanum sim battle -a 10000 -d 5000 --fort 2
 
 ---
 
-### 📦 Distribution Packaging & Audio Proofreading
+### 📦 Distribution Packaging & Narrative Subway Map
 
 #### 1. Multi-Platform Distribution Packager (`scripts/package_distribution.py`)
 Packages ready-to-distribute bundles for Amazon KDP (with exact spine calculation), IngramSpark, Apple Books, Kobo, and direct sales.
@@ -1160,12 +1152,12 @@ Scans all manuscripts and universes, providing wordcount velocity, stage breakdo
 arcanum portfolio
 ```
 
-#### 3. Offline Neural Audio Proofreader (`scripts/lib/tts_reader.py`)
-Auditory proofreader using local Piper TTS / espeak-ng to read chapters aloud, catching cadence and rhythm hiccups by ear.
+#### 3. Multi-POV Narrative Thread Subway Map (`scripts/lib/branching_graph.py`)
+Visualizes narrative storyline branches, character viewpoint splits, convergence milestones, and timeline concurrency as an interactive subway map.
 
 ```bash
-# Read chapter aloud at 1.25x speed
-arcanum read Solaris-Rising 01_Chapter.md --speed 1.25
+# Render multi-POV narrative thread subway map
+arcanum branch Solaris-Rising --subway
 ```
 
 ---

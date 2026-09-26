@@ -375,11 +375,13 @@ class DraftingStudioMixin:
         if res == Gtk.ResponseType.OK and ms_name:
             def _worker():
                 cmd = [
-                    str(PROJECT_ROOT / "scripts" / "init_manuscript.sh"),
-                    "--name", ms_name,
+                    "bash",
+                    str(PROJECT_ROOT / "scripts" / "arcanum"),
+                    "new", "manuscript",
+                    ms_name,
                     "--author", author_name
                 ]
-                subprocess.run(["bash", *cmd], capture_output=True, text=True)
+                subprocess.run(cmd, capture_output=True, text=True)
                 if HAS_GTK and GLib is not None:
                     GLib.idle_add(self.refresh_all_discovery)
             self._start_worker(_worker)
@@ -409,11 +411,13 @@ class DraftingStudioMixin:
         if res == Gtk.ResponseType.OK and vol_name:
             def _worker():
                 cmd = [
-                    str(PROJECT_ROOT / "scripts" / "add_book.sh"),
-                    "--manuscript", Path(self.current_manuscript_path).name,
-                    "--name", vol_name
+                    "bash",
+                    str(PROJECT_ROOT / "scripts" / "arcanum"),
+                    "volume",
+                    Path(self.current_manuscript_path).name,
+                    vol_name
                 ]
-                subprocess.run(["bash", *cmd], capture_output=True, text=True)
+                subprocess.run(cmd, capture_output=True, text=True)
                 if HAS_GTK and GLib is not None:
                     GLib.idle_add(self.refresh_all_discovery)
             self._start_worker(_worker)
@@ -443,11 +447,13 @@ class DraftingStudioMixin:
         if res == Gtk.ResponseType.OK and d_name:
             def _worker():
                 cmd = [
-                    str(PROJECT_ROOT / "scripts" / "init_draft.sh"),
+                    "bash",
+                    str(PROJECT_ROOT / "scripts" / "arcanum"),
+                    "draft",
                     self.current_manuscript_path,
                     d_name
                 ]
-                subprocess.run(["bash", *cmd], capture_output=True, text=True)
+                subprocess.run(cmd, capture_output=True, text=True)
                 if HAS_GTK and GLib is not None:
                     GLib.idle_add(self.refresh_all_discovery)
             self._start_worker(_worker)

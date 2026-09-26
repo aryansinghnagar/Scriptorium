@@ -183,6 +183,23 @@ name: "Ancient"
             self.assertEqual(len(reader), 2)
             self.assertEqual(reader[0]["word"], "Sol")
 
+    def test_family_tree(self) -> None:
+        (self.lang_dir / "Proto.md").write_text("""---
+name: "Proto-Elven"
+---
+""", encoding="utf-8")
+        (self.lang_dir / "High_Elven.md").write_text("""---
+name: "High Elven"
+proto_language: "Proto-Elven"
+---
+""", encoding="utf-8")
+
+        from scripts.lib.conlang import load_all_conlangs
+        langs = load_all_conlangs(self.world_dir)
+        self.assertIn("Proto-Elven", langs)
+        self.assertIn("High Elven", langs)
+        self.assertEqual(langs["High Elven"]["proto_language"], "Proto-Elven")
+
 
 if __name__ == "__main__":
     unittest.main()

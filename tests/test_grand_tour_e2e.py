@@ -47,12 +47,6 @@ from package_distribution import (
     package_submission_bundle,
 )
 from scripts.lib.ambient import generate_ambient_html_synthesizer, synthesize_wav
-from scripts.lib.archive_freeze import (
-    export_freeze_bundle,
-    scan_and_freeze_vault,
-    verify_vault_freeze,
-)
-from scripts.lib.barcode import export_barcode, validate_and_normalize_isbn
 from scripts.lib.branching_graph import BranchingNarrativeEngine
 from scripts.lib.calendar import (
     get_moon_phase,
@@ -69,11 +63,6 @@ from scripts.lib.climate import (
     calc_orographic_rain_shadow,
     calc_planetary_insolation,
     generate_climate_html_report,
-)
-from scripts.lib.cipher import (
-    cipher_vigenere,
-    generate_rune_svg,
-    text_to_runes,
 )
 from scripts.lib.codex_export import (
     build_single_file_codex,
@@ -107,31 +96,23 @@ from scripts.lib.economy import (
     calc_trade_margin,
     extract_economy_profiles,
 )
-from scripts.lib.editorial_council import conduct_editorial_council, generate_council_html_dashboard
 from scripts.lib.factions import (
     audit_faction_diplomacy,
     calc_campaign_logistics,
     calc_lanchester_battle,
     extract_faction_profiles,
 )
-from scripts.lib.fine_tuning import DatasetSynthesizer, export_fine_tuning_dataset
 from scripts.lib.genealogy import (
     generate_mermaid_flowchart,
     load_characters_and_houses,
     validate_genealogy,
 )
-from scripts.lib.idioms import audit_manuscript_idioms, generate_idioms_html_report
+from scripts.lib.stylistics import audit_manuscript_idioms, generate_idioms_html_report
 from scripts.lib.journey import calculate_journey, generate_journey_html_report
 from scripts.lib.local_rag import LocalLoreRetrievalEngine, generate_html_retrieval_viewer
 from scripts.lib.magic_system import (
     generate_magic_html_report,
     run_magic_audit,
-)
-from scripts.lib.tts_reader import clean_prose_for_speech, generate_tts_html_player
-from scripts.lib.media_overlay import (
-    build_chapter_overlay,
-    generate_smil_xml,
-    generate_synchronized_player_html,
 )
 from scripts.lib.omnibus import compile_omnibus_manuscript, discover_series_volumes
 from scripts.lib.pacing import generate_pacing_html_report, scan_manuscript_pacing
@@ -324,14 +305,6 @@ class TestGrandTourE2E(unittest.TestCase):
         self.assertEqual(len(timeline_res["paradoxes"]), 0)
 
         # ---------------------------------------------------------------------
-        # STAGE 6: Autonomous Editorial Council Review
-        # ---------------------------------------------------------------------
-        critique = conduct_editorial_council(ms_dir, world_path=world_dir)
-        self.assertGreater(critique.consensus_score, 0)
-        self.assertEqual(len(critique.reviews), 4)
-        self.assertGreater(critique.total_words, 0)
-
-        # ---------------------------------------------------------------------
         # STAGE 7: Local Semantic Retrieval (RAG) Indexing & Query
         # ---------------------------------------------------------------------
         rag_engine = LocalLoreRetrievalEngine()
@@ -341,25 +314,6 @@ class TestGrandTourE2E(unittest.TestCase):
         self.assertTrue(len(rag_results) > 0)
         top_match = rag_results[0]
         self.assertIn("Aetheric_Resonance", top_match.chunk.doc_path)
-
-        # ---------------------------------------------------------------------
-        # STAGE 8: Local AI Fine-Tuning Dataset Synthesis
-        # ---------------------------------------------------------------------
-        ft_synthesizer = DatasetSynthesizer(cosmos_dir)
-        ft_count = ft_synthesizer.scan_and_synthesize()
-        self.assertTrue(ft_count >= 1)
-
-        ft_out_dir = self.root / "fine_tuning_export"
-        summary = export_fine_tuning_dataset(
-            examples=ft_synthesizer.examples,
-            output_dir=ft_out_dir,
-            output_format="alpaca",
-            val_split=0.2,
-            generate_modelfile=True,
-        )
-        self.assertTrue((ft_out_dir / "train.jsonl").exists())
-        self.assertTrue((ft_out_dir / "Modelfile").exists())
-        self.assertTrue(summary["total_examples"] >= 1)
 
         # ---------------------------------------------------------------------
         # STAGE 9: Interactive Branching Narrative DAG Compilation
@@ -415,13 +369,6 @@ class TestGrandTourE2E(unittest.TestCase):
         self.assertTrue(len(omnibus_report["markdown_content"]) > 0)
         self.assertTrue(omnibus_report["total_chapters"] >= 1)
 
-        smil_out = self.root / "media_export" / "chapter_01.smil"
-        smil_out.parent.mkdir(parents=True, exist_ok=True)
-        overlay = build_chapter_overlay(ms_dir / "01_Chapter_01.md", "audio/chapter_01.mp3")
-        smil_xml = generate_smil_xml(overlay)
-        smil_out.write_text(smil_xml, encoding="utf-8")
-        self.assertTrue(smil_out.exists())
-        self.assertIn("<smil", smil_xml)
 
         # ---------------------------------------------------------------------
         # STAGE 12: Release Package Distribution & Manifest
@@ -442,7 +389,7 @@ class TestGrandTourE2E(unittest.TestCase):
         # STAGE 13: Sovereign Studio Desktop Hub Static Telemetry Compilation
         # ---------------------------------------------------------------------
         hub_data = collect_studio_hub_data(cosmos_dir)
-        self.assertEqual(hub_data["version"], "3.7.0")
+        self.assertEqual(hub_data["version"], "4.0.0")
         self.assertEqual(hub_data["metrics"]["total_chapters"], 2)
         self.assertTrue(hub_data["metrics"]["total_lore_entities"] >= 4)
 
@@ -528,22 +475,6 @@ class TestGrandTourE2E(unittest.TestCase):
         # ---------------------------------------------------------------------
         # STAGE 16: Cosmos Archive Freeze & Multi-Volume Dramatis Personae Synthesis
         # ---------------------------------------------------------------------
-        # 16a: Cosmos Archive Freeze & Merkle-Root Cryptographic Provenance Seal
-        freeze_manifest = scan_and_freeze_vault(cosmos_dir, version_tag="3.3.0")
-        self.assertEqual(freeze_manifest.version, "3.3.0")
-        self.assertEqual(len(freeze_manifest.root_sha256), 64)
-        self.assertTrue(freeze_manifest.total_files >= 5)
-
-        freeze_out_dir = self.root / "freeze_seal"
-        manifest_path, seal_path = export_freeze_bundle(freeze_manifest, freeze_out_dir)
-        self.assertTrue(manifest_path.exists())
-        self.assertTrue(seal_path.exists())
-        self.assertIn("PROVENANCE_SEAL", seal_path.name)
-
-        verification_result = verify_vault_freeze(freeze_manifest.to_dict(), cosmos_dir)
-        self.assertTrue(verification_result["is_verified"])
-        self.assertEqual(verification_result["error_count"], 0)
-
         # 16b: Multi-Volume Dramatis Personae Extraction & Cast Gallery Synthesis
         discovered_chars = scan_character_profiles(world_dir)
         self.assertTrue(len(discovered_chars) >= 1)
@@ -588,16 +519,6 @@ class TestGrandTourE2E(unittest.TestCase):
         magic_html = magic_html_out.read_text(encoding="utf-8")
         self.assertIn("Content-Security-Policy", magic_html)
         self.assertIn("Aetheric Resonance", magic_html)
-
-        # 17c: In-World Cryptographic Ciphers & Phonetic Runes
-        plain_secret = "DEFEND THE CITADEL"
-        secret_enc = cipher_vigenere(plain_secret, key="MITHRIL")
-        secret_dec = cipher_vigenere(secret_enc, key="MITHRIL", decode=True)
-        self.assertEqual(secret_dec, plain_secret)
-        rune_text = text_to_runes("Aethelgard Oath")
-        rune_svg = generate_rune_svg(rune_text, title="Ancient Oath")
-        self.assertIn("<svg", rune_svg)
-        self.assertIn("ANCIENT OATH", rune_svg)
 
         # 17d: Dynastic Genealogy & Succession Lineage
         genealogy_chars = load_characters_and_houses(world_dir)
@@ -855,15 +776,6 @@ population_density: 500.0
         self.assertTrue(port_html.exists())
         self.assertIn("Content-Security-Policy", port_html.read_text(encoding="utf-8"))
 
-        # 20f: EPUB 3 SMIL Media Overlays & Synchronized Audio Player
-        ch1_file = ms_dir / "01_Chapter_01.md"
-        media_overlay_obj = build_chapter_overlay(ch1_file, index=1, wpm=150)
-        self.assertEqual(media_overlay_obj.chapter_index, 1)
-        player_html = self.root / "audio_player.html"
-        generate_synchronized_player_html([media_overlay_obj], player_html)
-        self.assertTrue(player_html.exists())
-        self.assertIn("Content-Security-Policy", player_html.read_text(encoding="utf-8"))
-
         # 20g: Smart Typography Normalizer & Punctuation Engine
         raw_prose = '"Hello," he whispered... The war (1914-1918) ended--finally. Don\'t forget.'
         polished_prose, _typo_stats = normalize_typography_text(raw_prose)
@@ -872,18 +784,6 @@ population_density: 500.0
         self.assertIn("Don’t", polished_prose)
         clean_res = clean_target(ms_dir, in_place=False, make_backup=False)
         self.assertGreaterEqual(clean_res["summary"]["files_scanned"], 1)
-
-        # 20h: ISBN-13 Vector SVG/PNG Barcode Engine
-        clean_isbn_val = validate_and_normalize_isbn("978-0-345-39180-3")
-        self.assertEqual(clean_isbn_val, "9780345391803")
-        svg_barcode = self.root / "cover_barcode.svg"
-        export_barcode(clean_isbn_val, svg_barcode)
-        self.assertTrue(svg_barcode.exists())
-        self.assertIn("<svg", svg_barcode.read_text(encoding="utf-8"))
-        png_barcode = self.root / "cover_barcode.png"
-        export_barcode(clean_isbn_val, png_barcode)
-        self.assertTrue(png_barcode.exists())
-        self.assertTrue(png_barcode.stat().st_size > 100)
 
         # ---------------------------------------------------------------------
         # STAGE 21: Local Intelligence, Editorial Intelligence & Narrative Distribution Architecture
@@ -907,31 +807,6 @@ population_density: 500.0
         self.assertTrue(rag_html.exists())
         self.assertIn("Content-Security-Policy", rag_html.read_text(encoding="utf-8"))
 
-        # 21c: Multi-Perspective Autonomous Editorial Council Dashboard
-        council_report = conduct_editorial_council(ms_dir, world_path=world_dir)
-        self.assertGreaterEqual(council_report.consensus_score, 0)
-        self.assertEqual(len(council_report.reviews), 4)
-        council_dashboard = self.root / "stage21_council_dashboard.html"
-        generate_council_html_dashboard(council_report, council_dashboard)
-        self.assertTrue(council_dashboard.exists())
-        self.assertIn("Content-Security-Policy", council_dashboard.read_text(encoding="utf-8"))
-
-        # 21d: Local AI Fine-Tuning Synthesizer (Alpaca, ShareGPT, ChatML, Modelfile)
-        dataset_synth = DatasetSynthesizer(cosmos_dir)
-        synth_count = dataset_synth.scan_and_synthesize()
-        self.assertGreaterEqual(synth_count, 1)
-        ft_out_dir = self.root / "stage21_fine_tuning"
-        ft_summary = export_fine_tuning_dataset(
-            dataset_synth.examples,
-            output_dir=ft_out_dir,
-            output_format="chatml",
-            val_split=0.2,
-            generate_modelfile=True,
-        )
-        self.assertTrue((ft_out_dir / "train.jsonl").exists())
-        self.assertTrue((ft_out_dir / "Modelfile").exists())
-        self.assertGreaterEqual(ft_summary["total_examples"], 1)
-
         # 21e: Universal Structured Corpus & RAG Dataset Exporter
         corpus_scanner = CorpusScanner(cosmos_dir)
         corpus_scanner.scan()
@@ -945,17 +820,6 @@ population_density: 500.0
         corpus_summary_md = corpus_out_dir / "_corpus_summary.md"
         export_markdown_summary(corpus_scanner, corpus_summary_md)
         self.assertTrue(corpus_summary_md.exists())
-
-        # 21f: Offline Neural TTS & Audio Proofreader
-        tts_paragraphs = clean_prose_for_speech(
-            (ms_dir / "01_Chapter_01.md").read_text(encoding="utf-8"),
-            pronunciation_dict={"Aethelgard": "AY-thel-gard"},
-        )
-        self.assertGreaterEqual(len(tts_paragraphs), 1)
-        tts_html = self.root / "stage21_audio_player.html"
-        generate_tts_html_player(tts_paragraphs, title="Chapter 1 Proofread", output_path=tts_html)
-        self.assertTrue(tts_html.exists())
-        self.assertIn("Content-Security-Policy", tts_html.read_text(encoding="utf-8"))
 
         # 21g: Multi-Platform Release Distribution Packaging (Codex Bundle)
         codex_pkg = package_codex_bundle(cosmos_dir, self.root / "stage21_dist")

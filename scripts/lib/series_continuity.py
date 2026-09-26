@@ -63,6 +63,7 @@ def extract_book_entities(book_dir: Path) -> dict:
     """Extracts characters, physical traits, and deaths mentioned within a book volume."""
     text_content = ""
     deaths = set()
+    character_traits: dict[str, dict[str, Any]] = defaultdict(lambda: {"eyes": set(), "hair": set(), "mentions": 0, "custom": {}})
 
     for md_file in sorted(book_dir.rglob("*.md")):
         if not md_file.name.startswith((".", "_")) and "04_Back_Matter" not in md_file.parts:
@@ -79,6 +80,14 @@ def extract_book_entities(book_dir: Path) -> dict:
                     except ImportError:
                         parse_yaml_frontmatter = lambda c: {}  # noqa: E731
                 fm = parse_yaml_frontmatter(file_text)
+                c_name_temp = fm.get("name") or md_file.stem.replace("_", " ").replace("-", " ")
+                if isinstance(c_name_temp, str) and c_name_temp.strip():
+                    norm = c_name_temp.strip().title()
+                    for k, v in fm.items():
+                        if k not in ["name", "id", "death_date", "death_year", "death_volume", "is_deceased", "status", "eyes", "hair", "timeline"]:  # noqa: SIM102
+                            if norm not in PRONOUN_EXCLUSIONS:
+                                character_traits[norm]["custom"][k] = str(v)
+
                 c_name = fm.get("name") or md_file.stem.replace("_", " ").replace("-", " ")
                 if isinstance(c_name, str) and c_name.strip():
                     norm_c = c_name.strip().title()
@@ -93,7 +102,6 @@ def extract_book_entities(book_dir: Path) -> dict:
                         deaths.add(norm_c)
 
     # Characters mentioned
-    character_traits: dict[str, dict[str, Any]] = defaultdict(lambda: {"eyes": set(), "hair": set(), "mentions": 0})
 
     for line in text_content.splitlines():
         # Eye colors
@@ -145,6 +153,7 @@ def extract_book_entities(book_dir: Path) -> dict:
             k: {
                 "eyes": sorted(list(v["eyes"])) if isinstance(v.get("eyes"), (set, list)) else [],
                 "hair": sorted(list(v["hair"])) if isinstance(v.get("hair"), (set, list)) else [],
+                "custom": v.get("custom", {})
             }
             for k, v in character_traits.items()
         },
@@ -170,7 +179,7 @@ def scan_series_continuity(target_dir: Path) -> dict:
     mortality_violations = []
 
     # Cross-book trait tracking
-    global_traits = defaultdict(lambda: {"eyes": defaultdict(list), "hair": defaultdict(list)})
+    global_traits = defaultdict(lambda: {"eyes": defaultdict(list), "hair": defaultdict(list), "custom": defaultdict(lambda: defaultdict(list))})
     deceased_in = {}
 
     for v in volumes:
@@ -196,17 +205,27 @@ def scan_series_continuity(target_dir: Path) -> dict:
                 global_traits[char]["eyes"][eye].append(v_name)
             for hair in t["hair"]:
                 global_traits[char]["hair"][hair].append(v_name)
+            for ck, cv in t.get("custom", {}).items():
+                global_traits[char]["custom"][ck][cv].append(v_name)
 
     # Check physical contradictions across volumes
     for char, t_data in global_traits.items():
-        if len(t_data["eyes"]) > 1:
+        for ck, vals in t_data.get("custom", {}).items():
+            if len(vals) > 1:
+                desc_list = [f"{cv} in {', '.join(vols)}" for cv, vols in vals.items()]
+                contradictions.append({
+                    "character": char,
+                    "trait": f"Custom: {ck}",
+                    "message": f"Contradictory '{ck}' across books for '{char}': {'; '.join(desc_list)}."
+                })
+        if len(t_data["eyes"]) > 1:  # type: ignore[arg-type]
             desc_list = [f"{color} in {', '.join(vols)}" for color, vols in t_data["eyes"].items()]
             contradictions.append({
                 "character": char,
                 "trait": "Eye Color",
                 "message": f"Contradictory eye color across books for '{char}': {'; '.join(desc_list)}."
             })
-        if len(t_data["hair"]) > 1:
+        if len(t_data["hair"]) > 1:  # type: ignore[arg-type]
             desc_list = [f"{color} in {', '.join(vols)}" for color, vols in t_data["hair"].items()]
             contradictions.append({
                 "character": char,
@@ -335,3 +354,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

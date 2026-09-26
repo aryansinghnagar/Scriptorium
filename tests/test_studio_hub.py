@@ -90,10 +90,10 @@ class TestStudioHubEngine(unittest.TestCase):
         self.assertTrue(len(catalog) >= 10)
         engine_ids = [e["id"] for e in catalog]
         self.assertIn("zen_studio", engine_ids)
-        self.assertIn("editorial_council", engine_ids)
+        self.assertIn("corpus_export", engine_ids)
         self.assertIn("local_rag", engine_ids)
         self.assertIn("branching_graph", engine_ids)
-        self.assertIn("fine_tuning", engine_ids)
+        self.assertIn("causality", engine_ids)
 
     def test_scan_manuscript_chapters(self):
         chapters = scan_manuscript_chapters(self.ms_dir)

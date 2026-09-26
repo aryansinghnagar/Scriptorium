@@ -87,15 +87,6 @@ _ENGINES: dict[str, EngineSpec] = {
         cli_command="preflight",
         studio_tab="Publishing",
     ),
-    "barcode": EngineSpec(
-        name="barcode",
-        category=EngineCategory.CORE,
-        title="ISBN-13 Barcode Generator",
-        description="Vector SVG/PNG EAN-13 / Bookland ISBN barcode generation with checksum verification",
-        module_name="lib.barcode",
-        cli_command="barcode",
-        studio_tab="Publishing",
-    ),
     "frontmatter_builder": EngineSpec(
         name="frontmatter_builder",
         category=EngineCategory.CORE,
@@ -113,15 +104,6 @@ _ENGINES: dict[str, EngineSpec] = {
         module_name="lib.manuscript_diff",
         cli_command="compare",
         aliases=["diff", "redline"],
-        studio_tab="Editor",
-    ),
-    "tts_reader": EngineSpec(
-        name="tts_reader",
-        category=EngineCategory.CORE,
-        title="Offline Neural Audio Proofreader",
-        description="Local TTS synthesis and interactive WebAudio playback for proofreading",
-        module_name="lib.tts_reader",
-        cli_command="read",
         studio_tab="Editor",
     ),
     "typography_cleaner": EngineSpec(
@@ -202,15 +184,6 @@ _ENGINES: dict[str, EngineSpec] = {
         cli_command="causality",
         studio_tab="Worldbuilding",
     ),
-    "cipher": EngineSpec(
-        name="cipher",
-        category=EngineCategory.CRAFT,
-        title="In-World Ciphers & Runes",
-        description="Vigenère, Atbash, Caesar, and custom phonetic rune script transcribers",
-        module_name="lib.cipher",
-        cli_command="cipher",
-        studio_tab="Worldbuilding",
-    ),
     "conlang": EngineSpec(
         name="conlang",
         category=EngineCategory.CRAFT,
@@ -256,16 +229,6 @@ _ENGINES: dict[str, EngineSpec] = {
         cli_command="genealogy",
         aliases=["lineage"],
         studio_tab="Worldbuilding",
-    ),
-    "idioms": EngineSpec(
-        name="idioms",
-        category=EngineCategory.CRAFT,
-        title="Cultural Idioms & Metaphors",
-        description="World-specific idiomatic expression generator, metaphorical domain mapper, and prose scanner",
-        module_name="lib.idioms",
-        cli_command="audit idioms",
-        aliases=["idioms"],
-        studio_tab="Craft",
     ),
     "journey": EngineSpec(
         name="journey",
@@ -428,26 +391,6 @@ _ENGINES: dict[str, EngineSpec] = {
         aliases=["query-lore", "semantic-search", "lore-query"],
         studio_tab="Tools",
     ),
-    "plugin_market": EngineSpec(
-        name="plugin_market",
-        category=EngineCategory.CORE,
-        title="Speculative Fiction Plugin Marketplace",
-        description="Curated offline catalog, integrity verifier, and plugin installer",
-        module_name="lib.plugin_market",
-        cli_command="market",
-        aliases=["plugin-market", "marketplace"],
-        studio_tab="Tools",
-    ),
-    "fine_tuning": EngineSpec(
-        name="fine_tuning",
-        category=EngineCategory.CORE,
-        title="Local AI Fine-Tuning Synthesizer",
-        description="Compiles Alpaca, ShareGPT, ChatML and Ollama Modelfile datasets from lore and prose",
-        module_name="lib.fine_tuning",
-        cli_command="train-data",
-        aliases=["lora-dataset", "dataset-synth", "fine-tune"],
-        studio_tab="Tools",
-    ),
     "branching_graph": EngineSpec(
         name="branching_graph",
         category=EngineCategory.CRAFT,
@@ -490,16 +433,6 @@ _ENGINES: dict[str, EngineSpec] = {
         studio_tab="Diagnostics",
     ),
     # --- Phase 14: Sovereign Crown & Flathub Upstream Hardening ---
-    "archive_freeze": EngineSpec(
-        name="archive_freeze",
-        category=EngineCategory.CORE,
-        title="Cosmos Archive Freeze & Provenance Sealer",
-        description="Merkle-style root SHA-256 hash generator, ARCHIVE_MANIFEST.json and PROVENANCE_SEAL.md exporter, and bit-rot tamper validator",
-        module_name="lib.archive_freeze",
-        cli_command="freeze",
-        aliases=["archive-freeze", "seal-archive", "verify-archive"],
-        studio_tab="Publishing",
-    ),
     "dramatis_personae": EngineSpec(
         name="dramatis_personae",
         category=EngineCategory.CRAFT,
@@ -580,3 +513,5 @@ def load_engine_module(name: str) -> Any:
     if not spec:
         raise ValueError(f"Unknown engine: '{name}'")
     return importlib.import_module(spec.module_name)
+
+

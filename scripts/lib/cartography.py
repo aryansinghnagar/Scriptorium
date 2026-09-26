@@ -267,7 +267,7 @@ def generate_vector_svg_map(locations: list[dict], title: str = "World Map", gri
 
 
 def generate_cartography_html_viewer(locations: list[dict], title: str, output_path: Path) -> Path:
-    """Generates an interactive HTML map viewer with pan/zoom and sidebar cards."""
+    """Generates an interactive HTML map viewer and editor with pan/zoom and sidebar cards."""
     svg_map = generate_vector_svg_map(locations, title=title, grid_mode="hex", show_routes=True)
     
     locations_json = json.dumps(locations)
@@ -278,25 +278,29 @@ def generate_cartography_html_viewer(locations: list[dict], title: str, output_p
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src data: blob:;">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ars Arcanum — {html.escape(title)} Map Viewer</title>
+<title>Ars Arcanum — {html.escape(title)} Map Viewer & Editor</title>
 <style>
   :root {{
     --bg: #0f172a; --panel: #1e293b; --border: #334155;
     --text: #f8fafc; --muted: #94a3b8; --accent: #38bdf8;
   }}
   body {{ font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }}
-  #sidebar {{ width: 340px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }}
+  #sidebar {{ width: 340px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 20; }}
   .sidebar-header {{ padding: 1.25rem; border-bottom: 1px solid var(--border); }}
   .sidebar-header h2 {{ margin: 0; color: var(--accent); font-size: 1.25rem; }}
   .search-box {{ width: 100%; box-sizing: border-box; padding: 0.6rem; margin-top: 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); }}
+  .tools-panel {{ display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; padding: 0.5rem; border-bottom: 1px solid var(--border); }}
+  .tool-btn {{ background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; text-align: center; }}
+  .tool-btn.active {{ background: var(--accent); color: #000; font-weight: bold; }}
   .location-list {{ overflow-y: auto; flex: 1; padding: 0.5rem; }}
   .loc-card {{ background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s; }}
   .loc-card:hover {{ border-color: var(--accent); }}
   .loc-card h4 {{ margin: 0; color: var(--accent); }}
   .loc-card p {{ margin: 0.25rem 0 0 0; font-size: 0.8rem; color: var(--muted); }}
   #map-container {{ flex: 1; position: relative; overflow: hidden; background: #0b1120; cursor: grab; }}
-  #map-container:active {{ cursor: grabbing; }}
-  #svg-wrapper {{ transform-origin: 0 0; transition: transform 0.05s ease-out; }}
+  #map-container.mode-draw {{ cursor: crosshair; }}
+  #map-container:active:not(.mode-draw) {{ cursor: grabbing; }}
+  #svg-wrapper {{ transform-origin: 0 0; transition: transform 0.05s ease-out; position: absolute; }}
   .controls {{ position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; z-index: 10; }}
   .btn {{ background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; font-weight: 700; }}
   .btn:hover {{ background: #334155; }}
@@ -307,13 +311,21 @@ def generate_cartography_html_viewer(locations: list[dict], title: str, output_p
 <div id="sidebar">
   <div class="sidebar-header">
     <h2>🗺️ {html.escape(title)}</h2>
-    <p style="color:var(--muted); font-size:0.8rem; margin:4px 0 0 0;">{len(locations)} Indexed Realm Locations</p>
+    <p style="color:var(--muted); font-size:0.8rem; margin:4px 0 0 0;">Interactive Editor & Viewer</p>
     <input type="text" id="search" class="search-box" placeholder="Search landmarks, factions..." oninput="filterLocations()">
+  </div>
+  <div class="tools-panel">
+    <button class="tool-btn active" id="btn-pan" onclick="setMode('pan')">Pan / Zoom</button>
+    <button class="tool-btn" id="btn-landmass" onclick="setMode('landmass')">Draw Landmass</button>
+    <button class="tool-btn" id="btn-poi" onclick="setMode('poi')">Place POI</button>
+    <button class="tool-btn" id="btn-route" onclick="setMode('route')">Trace Route</button>
+    <button class="tool-btn" id="btn-boundary" onclick="setMode('boundary')">Define Boundary</button>
+    <button class="tool-btn" onclick="exportSVG()">Export SVG</button>
   </div>
   <div class="location-list" id="locList"></div>
 </div>
 
-<div id="map-container" onmousedown="startPan(event)" onwheel="zoom(event)">
+<div id="map-container" onmousedown="handleMouseDown(event)" onwheel="zoom(event)">
   <div class="controls">
     <button class="btn" onclick="resetZoom()">⟲ Reset</button>
     <button class="btn" onclick="zoomBtn(1.2)">➕</button>
@@ -326,7 +338,11 @@ def generate_cartography_html_viewer(locations: list[dict], title: str, output_p
 
 <script>
 const locations = {locations_json};
-let scale = 1, panX = 0, panY = 0, isPanning = false, startX = 0, startY = 0;
+let scale = 1, panX = 0, panY = 0, startX = 0, startY = 0;
+let mode = 'pan'; // pan, landmass, poi, route, boundary
+let isDrawing = false;
+let currentPath = null;
+let currentPoints = [];
 
 function renderList(items) {{
   const container = document.getElementById('locList');
@@ -350,21 +366,111 @@ function updateTransform() {{
   document.getElementById('svg-wrapper').style.transform = `translate(${{panX}}px, ${{panY}}px) scale(${{scale}})`;
 }}
 
-function startPan(e) {{
-  if (e.target.closest('.controls')) return;
-  isPanning = true;
-  startX = e.clientX - panX;
-  startY = e.clientY - panY;
-  window.onmousemove = doPan;
-  window.onmouseup = endPan;
+function setMode(newMode) {{
+  mode = newMode;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + mode).classList.add('active');
+  const mc = document.getElementById('map-container');
+  if (mode !== 'pan') mc.classList.add('mode-draw');
+  else mc.classList.remove('mode-draw');
 }}
+
+function getMouseCoords(e) {{
+  const svgWrapper = document.getElementById('svg-wrapper');
+  const rect = svgWrapper.getBoundingClientRect();
+  return {{
+    x: (e.clientX - rect.left) / scale,
+    y: (e.clientY - rect.top) / scale
+  }};
+}}
+
+function handleMouseDown(e) {{
+  if (e.target.closest('.controls') || e.target.closest('.tool-btn') || e.target.closest('#sidebar')) return;
+  
+  if (mode === 'pan') {{
+    isDrawing = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    window.onmousemove = doPan;
+    window.onmouseup = endAction;
+  }} else if (mode === 'landmass' || mode === 'boundary') {{
+    isDrawing = true;
+    currentPoints = [];
+    const coords = getMouseCoords(e);
+    currentPoints.push(coords);
+    const svg = document.querySelector('svg');
+    currentPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    currentPath.setAttribute('fill', mode === 'landmass' ? '#1e293b' : 'none');
+    currentPath.setAttribute('stroke', mode === 'landmass' ? '#475569' : '#ef4444');
+    currentPath.setAttribute('stroke-width', mode === 'landmass' ? '2' : '4');
+    if (mode === 'boundary') currentPath.setAttribute('stroke-dasharray', '10,5');
+    currentPath.setAttribute('opacity', '0.6');
+    svg.insertBefore(currentPath, svg.children[2]); // Insert behind markers
+    window.onmousemove = doDrawLine;
+    window.onmouseup = endAction;
+  }} else if (mode === 'route') {{
+    isDrawing = true;
+    currentPoints = [];
+    const coords = getMouseCoords(e);
+    currentPoints.push(coords);
+    const svg = document.querySelector('svg');
+    currentPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    currentPath.setAttribute('fill', 'none');
+    currentPath.setAttribute('stroke', '#d97706');
+    currentPath.setAttribute('stroke-width', '2');
+    currentPath.setAttribute('stroke-dasharray', '6,4');
+    svg.appendChild(currentPath);
+    window.onmousemove = doDrawLine;
+    window.onmouseup = endAction;
+  }} else if (mode === 'poi') {{
+    const coords = getMouseCoords(e);
+    const svg = document.querySelector('svg');
+    
+    // Add simple POI marker
+    const name = prompt("Enter POI Name:");
+    if (name) {{
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.innerHTML = `
+        <circle cx="${{coords.x}}" cy="${{coords.y}}" r="16" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-width="1.5" />
+        <circle cx="${{coords.x}}" cy="${{coords.y}}" r="5" fill="#f8fafc" />
+        <text x="${{coords.x}}" y="${{coords.y-12}}" font-size="16" text-anchor="middle">📍</text>
+        <text x="${{coords.x}}" y="${{coords.y+22}}" fill="#f8fafc" font-size="12" font-weight="700" text-anchor="middle" filter="drop-shadow(0 1px 2px #000)">${{name}}</text>
+      `;
+      svg.appendChild(g);
+      
+      locations.push({{name: name, type: 'default', faction: 'Unknown', x: coords.x, y: coords.y, description: 'User added POI'}});
+      renderList(locations);
+    }}
+  }}
+}}
+
 function doPan(e) {{
-  if (!isPanning) return;
+  if (!isDrawing || mode !== 'pan') return;
   panX = e.clientX - startX;
   panY = e.clientY - startY;
   updateTransform();
 }}
-function endPan() {{ isPanning = false; window.onmousemove = null; window.onmouseup = null; }}
+
+function doDrawLine(e) {{
+  if (!isDrawing || !currentPath) return;
+  const coords = getMouseCoords(e);
+  currentPoints.push(coords);
+  
+  let d = `M ${{currentPoints[0].x}},${{currentPoints[0].y}} `;
+  for (let i = 1; i < currentPoints.length; i++) {{
+    d += `L ${{currentPoints[i].x}},${{currentPoints[i].y}} `;
+  }}
+  if (mode === 'landmass' || mode === 'boundary') d += 'Z';
+  
+  currentPath.setAttribute('d', d);
+}}
+
+function endAction() {{
+  isDrawing = false;
+  currentPath = null;
+  window.onmousemove = null;
+  window.onmouseup = null;
+}}
 
 function zoom(e) {{
   e.preventDefault();
@@ -384,6 +490,26 @@ function focusLocation(x, y) {{
   panX = (container.clientWidth / 2) - (x * scale);
   panY = (container.clientHeight / 2) - (y * scale);
   updateTransform();
+}}
+
+function exportSVG() {{
+  const svg = document.querySelector('svg');
+  const serializer = new XMLSerializer();
+  let source = serializer.serializeToString(svg);
+  if(!source.includes('xmlns="http://www.w3.org/2000/svg"')){{
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+  }}
+  if(!source.includes('xmlns:xlink="http://www.w3.org/1999/xlink"')){{
+      source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+  }}
+  source = '<?xml version="1.0" standalone="no"?>\\r\\n' + source;
+  const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "cartography_export.svg";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }}
 
 renderList(locations);
